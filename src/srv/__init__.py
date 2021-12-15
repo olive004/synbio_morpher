@@ -1,0 +1,1 @@
+# Modules for running algorithmic analyses on data. Eg agnostic autoencode / nuclei detection / algorithmic complexity
