@@ -5,11 +5,10 @@ import sys
 from src.utils.decorators import time_it
 from src.utils.agnostic_system.base_system import BaseSystem
 
+
 @time_it
 def main(config_args=None):
     circuit = BaseSystem(config_args)
-    # circuit = construct_system(circuit)
-
     circuit.visualise()
 
 if __name__ == "__main__":

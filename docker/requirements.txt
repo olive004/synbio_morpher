@@ -2,3 +2,5 @@ fire
 matplotlib
 networkx
 numba
+pyvis
+webbrowser
