@@ -1,3 +1,4 @@
 
 
-def construct_system
+def construct_system(system: BaseSystem):
+    
