@@ -3,4 +3,4 @@ matplotlib
 networkx
 numba
 pyvis
-webbrowser
+python-libsbml # https://synonym.caltech.edu/software/libsbml/libsbml-docs/api/python/
