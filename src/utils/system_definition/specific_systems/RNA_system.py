@@ -1,4 +1,4 @@
-from src.utils.agnostic_system.base_system import BaseSystem
+from src.utils.system_definition.agnostic_system.base_system import BaseSystem
 
 
 class RNASystem(BaseSystem):

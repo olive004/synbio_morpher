@@ -1,0 +1,6 @@
+{
+  "zlib": "1.2",
+  "cxx_compiler_version": "4",
+  "cxx_compiler": "clangxx",
+  "boost_cpp": "1.70.0"
+}

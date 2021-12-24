@@ -1,0 +1,10 @@
+prefix=@PREFIX_PATH@
+exec_prefix=${prefix}/bin
+libdir=${prefix}/lib
+includedir=${prefix}/include
+
+Name: IntaRNA
+Description: RNA-RNA interaction prediction C++ library
+Version: 3.2.0
+Libs: -lz  -lboost_regex -lboost_program_options -lboost_filesystem -lboost_system -lboost_iostreams -lz -L/opt/anaconda1anaconda2anaconda3/lib -lRNA
+Cflags: 
