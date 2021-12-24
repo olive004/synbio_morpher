@@ -1,13 +1,16 @@
 from fire import Fire
 
 from src.utils.decorators import time_it
+from src.utils.system_definition.configurations import parse_kwargs
 from src.utils.system_definition.specific_systems import RNASystem
 
 
 @time_it
-def main(config_args=None):
+def main(config_file=None):
 
-    circuit = RNASystem(config_args)
+    kwargs = parse_kwargs(config_file)
+
+    circuit = RNASystem(kwargs)
     circuit.visualise()
 
 
