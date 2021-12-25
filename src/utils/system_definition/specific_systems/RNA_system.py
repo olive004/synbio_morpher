@@ -1,3 +1,4 @@
+import logging
 from src.utils.system_definition.agnostic_system.base_system import BaseSystem
 
 
@@ -7,5 +8,6 @@ class RNASystem(BaseSystem):
 
         if simulator == "intaRNA":
             from src.utils.parameter_prediction.IntaRNA.bin.CopomuS import CopomuS
+            logging.debug("Running CopomuS")
             self.simulator = CopomuS(**config_args)
     
