@@ -1,4 +1,5 @@
 import networkx as nx
+import logging
 
 
 def visualise_graph_pyvis(graph: nx.DiGraph,
@@ -14,7 +15,7 @@ def visualise_graph_pyvis(graph: nx.DiGraph,
     interactive_graph.set_edge_smooth('dynamic')
     interactive_graph.show(plot_name)
 
-    print("Opening graph in browser...")
+    logging.info("Opening graph in browser...")
     web_filename = 'file:///' + os.getcwd() + '/' + plot_name
     webbrowser.open(web_filename, new=1, autoraise=True)
 

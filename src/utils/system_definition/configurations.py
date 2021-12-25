@@ -19,4 +19,4 @@ def retrieve_default_args() -> Dict:
     fn = "scripts/common/default_args.json"
     with open(fn) as json_file:
         default_args = json.load(json_file)
-    return {}
+    return default_args
