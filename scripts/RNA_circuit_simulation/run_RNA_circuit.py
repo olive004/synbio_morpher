@@ -2,7 +2,7 @@ from fire import Fire
 
 from src.utils.decorators import time_it
 from src.utils.system_definition.configurations import parse_kwargs
-from src.utils.system_definition.specific_systems import RNASystem
+from src.utils.system_definition.specific_systems.RNA_system import RNASystem
 
 
 @time_it

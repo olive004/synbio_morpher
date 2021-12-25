@@ -19,11 +19,11 @@ import csv
 from tempfile import gettempdir
 from argparse import ArgumentParser, FileType, SUPPRESS
 from typing import List
-from copomus.mutation import Mutation
-from copomus.IntaRNA import IntaRNA
-from copomus.candidate_selectors import get_selector
-from copomus.candidate_filters import get_filter
-from copomus.mutation_generators import get_generator
+from src.utils.parameter_prediction.IntaRNA.bin.copomus.mutation import Mutation
+from src.utils.parameter_prediction.IntaRNA.bin.copomus.IntaRNA import IntaRNA
+from src.utils.parameter_prediction.IntaRNA.bin.copomus.candidate_selectors import get_selector
+from src.utils.parameter_prediction.IntaRNA.bin.copomus.candidate_filters import get_filter
+from src.utils.parameter_prediction.IntaRNA.bin.copomus.mutation_generators import get_generator
 
 
 class CopomuS:

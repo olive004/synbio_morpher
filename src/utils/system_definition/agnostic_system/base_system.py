@@ -1,7 +1,7 @@
 import numpy as np
 import networkx as nx
 
-from src.utils.fake_data_generation.toy_graphs import square_matrix
+from src.utils.data.fake_data_generation.toy_graphs import square_matrix
 
 
 class BaseSystem():
