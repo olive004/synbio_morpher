@@ -10,4 +10,5 @@ class RNASystem(BaseSystem):
             from src.utils.parameter_prediction.IntaRNA.bin.CopomuS import CopomuS
             logging.debug("Running CopomuS")
             self.simulator = CopomuS(**config_args)
+            self.simulator.main()
     
