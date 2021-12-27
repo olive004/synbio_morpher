@@ -2,30 +2,35 @@ import argparse
 import json
 import logging
 import os
-from typing import Dict, Iterable
+from typing import Dict, Iterable, List
 
 
-def get_simulator_names():
-    simulator_dir = os.path.join("src", "utils", "parameter_prediction")
-    return os.listdir(simulator_dir)
-
-
-def parse_cfg_args(config_file: str = None, dict_args: Dict = None):
-
-    if dict_args is None:
-        dict_args = retrieve_default_args()
-
-    pooled_cfgs = merge_dicts(load_simulator_cfgs(dict_args), config_file)
-    dict_args = merge_json_into_dict(dict_args, pooled_cfgs.values())
+def create_argparse_from_dict(dict_args: Dict):
     parser = argparse.ArgumentParser()
     args_namespace, left_argv = parser.parse_known_args(args=dict_args)
     args_namespace = update_namespace_with_dict(args_namespace, dict_args)
     return args_namespace, left_argv
 
 
+def get_simulator_names() -> List:
+    simulator_dir = os.path.join("src", "utils", "parameter_prediction")
+    return os.listdir(simulator_dir)
+
+
+def parse_cfg_args(config_file: str = None, dict_args: Dict = None) -> Dict:
+
+    if dict_args is None:
+        dict_args = retrieve_default_args()
+
+    pooled_cfgs = merge_dicts(load_simulator_cfgs(dict_args), config_file)
+    dict_args = expand_json_cfgs(pooled_cfgs)
+
+    return dict_args
+
+
 def expand_json_cfgs(paths_dict):
     grouped_cfgs = {}
-    for group, path in paths_dict:
+    for group, path in paths_dict.items():
         try:
             grouped_cfgs[group] = json.load(open(path))
         except FileNotFoundError:
