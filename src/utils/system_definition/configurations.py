@@ -12,32 +12,41 @@ def get_simulator_names():
     return simulators
 
 
-def parse_args(config_file: str = None, all_args: Dict = None) -> Dict:
+def parse_args(config_file: str = None, dict_args: Dict = None) -> Dict:
 
-    if all_args is None:
-        all_args = retrieve_default_args()
+    if dict_args is None:
+        dict_args = retrieve_default_args()
 
-    if config_file is not None:
+    simulator_cfgs = load_simulator_cfgs(dict_args)
+    simulator_cfgs = simulator_cfgs | config_file if config_file is not None else simulator_cfgs
+    dict_args = merge_dict_with_json(dict_args)
+    for sim, config_file in simulator_cfgs:
         configs = json.load(open(config_file))
-
-        all_args = all_args | configs
+        dict_args = dict_args | configs
     parser = argparse.ArgumentParser()
     args_namespace = parser.parse_args()
-    update_namespace_with_dict(args_namespace, all_args)
+    update_namespace_with_dict(args_namespace, dict_args)
     return args_namespace
 
 
-def parse_simulation_args(dict_args):
+def load_simulator_cfgs(dict_args) -> Dict:
     simulators = get_simulator_names()
     config_path = {}
     for simulator_name in simulators:
         if simulator_name in dict_args:
             config_path[simulator_name] = dict_args[simulator_name]
             try:
-                jf = json.load(config_path[simulator_name])
+                jf = json.load(open(config_path[simulator_name]))
             except FileNotFoundError:
                 logging.error(f'Path to simulator {simulator_name} not found')
     return config_path
+
+
+def merge_dict_with_json(old_dict: Dict, json_files):
+    for jfile in json_files:
+        json_dict = json.load(open(jfile))
+        old_dict = old_dict | json_dict
+    return old_dict
 
 
 def retrieve_default_args() -> Dict:
