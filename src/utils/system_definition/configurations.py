@@ -23,7 +23,14 @@ def parse_cfg_args(config_file: str = None, dict_args: Dict = None):
     return args_namespace, left_argv
 
 
-def expand_json_cfgs()
+def expand_json_cfgs(paths_dict):
+    grouped_cfgs = {}
+    for group, path in paths_dict:
+        try:
+            grouped_cfgs[group] = json.load(open(path))
+        except FileNotFoundError:
+            logging.error(f'JSON path {path} not found')
+    return grouped_cfgs
 
 
 def load_simulator_cfgs(dict_args) -> Dict:
