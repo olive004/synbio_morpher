@@ -8,9 +8,9 @@ from src.utils.system_definition.specific_systems.RNA_system import RNASystem
 @time_it
 def main(config_file=None):
 
-    kwargs = parse_kwargs(config_file)
+    parsed_args = parse_kwargs(config_file)
 
-    circuit = RNASystem(kwargs)
+    circuit = RNASystem(parsed_args)
     circuit.visualise()
 
 

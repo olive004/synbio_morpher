@@ -27,7 +27,7 @@ from src.utils.parameter_prediction.IntaRNA.bin.copomus.mutation_generators impo
 
 
 class CopomuS:
-    def __init__(self, opt_arg_file: str = None):
+    def __init__(self, parsed_args: str = None):
         self.query = ''
         self.target = ''
         self.qidxpos0 = 1
@@ -43,7 +43,7 @@ class CopomuS:
         self.alpha, self.beta = 0.0, 0.0
         self.threads = 0
 
-        self.opt_arg_file = opt_arg_file
+        self.parsed_args = parsed_args
 
     def main(self):
         # PARSE COMMAND LINE ARGS
@@ -148,7 +148,7 @@ class CopomuS:
         parser.add_argument('--beta', dest='beta', type=float,
                             default=defaults['beta'], help=SUPPRESS)
 
-        args = parser.parse_args(args=self.opt_arg_file)
+        args = parser.parse_known_args(args=self.parsed_args)
 
         mm = []  # filter out any duplicate entries for measures
         args.measures = defaults['measures'] if not args.measures else args.measures
