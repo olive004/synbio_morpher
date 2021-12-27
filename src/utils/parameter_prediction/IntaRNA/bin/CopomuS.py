@@ -148,7 +148,7 @@ class CopomuS:
         parser.add_argument('--beta', dest='beta', type=float,
                             default=defaults['beta'], help=SUPPRESS)
 
-        args = parser.parse_known_args(args=self.parsed_args)
+        args = parser.parse_known_args(namespace=self.parsed_args)
 
         mm = []  # filter out any duplicate entries for measures
         args.measures = defaults['measures'] if not args.measures else args.measures
