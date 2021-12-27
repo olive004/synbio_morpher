@@ -6,22 +6,24 @@ from typing import Dict, Iterable
 
 
 def get_simulator_names():
-    simulator_dir = os.join("src", "utils", "parameter_prediction")
-    simulators = {f for f in os.walk(simulator_dir)}
-    return simulators
+    simulator_dir = os.path.join("src", "utils", "parameter_prediction")
+    return os.listdir(simulator_dir)
 
 
-def parse_args(config_file: str = None, dict_args: Dict = None) -> Dict:
+def parse_cfg_args(config_file: str = None, dict_args: Dict = None):
 
     if dict_args is None:
         dict_args = retrieve_default_args()
 
     pooled_cfgs = merge_dicts(load_simulator_cfgs(dict_args), config_file)
-    dict_args = merge_json_into_dict(dict_args, simulator_cfgs.values())
+    dict_args = merge_json_into_dict(dict_args, pooled_cfgs.values())
     parser = argparse.ArgumentParser()
-    args_namespace = parser.parse_args()
-    update_namespace_with_dict(args_namespace, dict_args)
-    return args_namespace
+    args_namespace, left_argv = parser.parse_known_args(args=dict_args)
+    args_namespace = update_namespace_with_dict(args_namespace, dict_args)
+    return args_namespace, left_argv
+
+
+def expand_json_cfgs()
 
 
 def load_simulator_cfgs(dict_args) -> Dict:
@@ -40,7 +42,7 @@ def load_simulator_cfgs(dict_args) -> Dict:
 def merge_json_into_dict(old_dict: Dict, json_files: Iterable):
     for jfile in json_files:
         json_dict = json.load(open(jfile))
-        old_dict = old_dict | json_dict
+        old_dict = merge_dicts(old_dict, json_dict)
     return old_dict
 
 
@@ -48,7 +50,7 @@ def merge_dicts(*dict_likes):
     all_dicts = {}
     for dict_like in dict_likes:
         if type(dict_like) == dict:
-            all_dicts = all_dicts | dict_like
+            all_dicts = {**all_dicts, **dict_like}
     return all_dicts
 
 
