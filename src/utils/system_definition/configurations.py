@@ -12,9 +12,20 @@ def create_argparse_from_dict(dict_args: Dict):
     return args_namespace, left_argv
 
 
+def get_cfg_protocol(simulator):
+    simulator_names = get_simulator_names()
+    
+
+
 def get_simulator_names() -> List:
     simulator_dir = os.path.join("src", "utils", "parameter_prediction")
     return os.listdir(simulator_dir)
+
+
+def handle_simulator_cfgs(simulator, simulator_cfg_path):
+    simulator_cfg = load_json_as_dict(simulator_cfg_path)
+    cfg_protocol = get_cfg_protocol(simulator)
+    return cfg_protocol(simulator_cfg)
 
 
 def parse_cfg_args(config_file: str = None, dict_args: Dict = None) -> Dict:
@@ -22,33 +33,37 @@ def parse_cfg_args(config_file: str = None, dict_args: Dict = None) -> Dict:
     if dict_args is None:
         dict_args = retrieve_default_args()
 
-    pooled_cfgs = merge_dicts(load_simulator_cfgs(dict_args), config_file)
-    dict_args = expand_json_cfgs(pooled_cfgs)
+    dict_args = load_simulator_cfgs(dict_args)
+    dict_args = merge_dicts(dict_args, config_file)
 
     return dict_args
 
 
-def expand_json_cfgs(paths_dict):
-    grouped_cfgs = {}
-    for group, path in paths_dict.items():
-        try:
-            grouped_cfgs[group] = json.load(open(path))
-        except FileNotFoundError:
-            logging.error(f'JSON path {path} not found')
-    return grouped_cfgs
+# def expand_json_cfgs(paths_dict):
+#     grouped_cfgs = {}
+#     for group, path in paths_dict.items():
+#         try:
+#             grouped_cfgs[group] = json.load(open(path))
+#         except FileNotFoundError:
+#             logging.error(f'JSON path {path} not found')
+#     return grouped_cfgs
+
+
+def load_json_as_dict(json_pathname):
+    try:
+        jdict = json.load(open(json_pathname))
+    except FileNotFoundError:
+        logging.error(f'JSON path {json_pathname} not found')
+        SystemExit
+    return jdict
 
 
 def load_simulator_cfgs(dict_args) -> Dict:
-    simulators = get_simulator_names()
-    config_paths = {}
-    for simulator_name in simulators:
+    for simulator_name in get_simulator_names():
         if simulator_name in dict_args:
-            config_paths[simulator_name] = dict_args[simulator_name]
-            try:
-                jf = json.load(open(config_paths[simulator_name]))
-            except FileNotFoundError:
-                logging.error(f'Path to simulator {simulator_name} not found')
-    return config_paths
+            simulator_cfg = handle_simulator_cfgs(simulator_name, dict_args[simulator_name])
+            dict_args[simulator_name] = simulator_cfg
+    return dict_args
 
 
 def merge_json_into_dict(old_dict: Dict, json_files: Iterable):
