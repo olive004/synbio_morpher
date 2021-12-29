@@ -8,18 +8,18 @@ class RNASystem(BaseSystem):
         super().__init__(config_args)
 
         self.config_args = config_args
-        self.simulator = simulator
+        self.simulator_choice = simulator
 
         self.run_simulator()
 
     def run_simulator(self):
-        if self.simulator == "IntaRNA":
+        if self.simulator_choice == "IntaRNA":
             from src.utils.parameter_prediction.IntaRNA.bin.CopomuS import CopomuS
             logging.debug("Running CopomuS")
-            simulation = CopomuS(self.config_args)
-            simulation.parse_cmd_args()
+            sim_config_args = self.config_args[self.simulator_choice]
+            simulator = CopomuS(sim_config_args)
+            simulator.parse_cmd_args()
             # self.simulator.main()
 
             # intaRNA_cmd = "python3 -m src.utils.parameter_prediction.IntaRNA.bin.copomus.CopomuS " + 
             # os.system(intaRNA_cmd)
-    

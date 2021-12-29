@@ -40,15 +40,15 @@ def expand_json_cfgs(paths_dict):
 
 def load_simulator_cfgs(dict_args) -> Dict:
     simulators = get_simulator_names()
-    config_path = {}
+    config_paths = {}
     for simulator_name in simulators:
         if simulator_name in dict_args:
-            config_path[simulator_name] = dict_args[simulator_name]
+            config_paths[simulator_name] = dict_args[simulator_name]
             try:
-                jf = json.load(open(config_path[simulator_name]))
+                jf = json.load(open(config_paths[simulator_name]))
             except FileNotFoundError:
                 logging.error(f'Path to simulator {simulator_name} not found')
-    return config_path
+    return config_paths
 
 
 def merge_json_into_dict(old_dict: Dict, json_files: Iterable):

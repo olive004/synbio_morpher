@@ -17,7 +17,7 @@ if python_version() < __python_min__:
 
 import csv
 from tempfile import gettempdir
-from argparse import ArgumentParser, FileType, SUPPRESS
+from argparse import ArgumentParser, FileType, SUPPRESS, Namespace
 from typing import List
 from src.utils.parameter_prediction.IntaRNA.bin.copomus.mutation import Mutation
 from src.utils.parameter_prediction.IntaRNA.bin.copomus.IntaRNA import IntaRNA
@@ -25,9 +25,11 @@ from src.utils.parameter_prediction.IntaRNA.bin.copomus.candidate_selectors impo
 from src.utils.parameter_prediction.IntaRNA.bin.copomus.candidate_filters import get_filter
 from src.utils.parameter_prediction.IntaRNA.bin.copomus.mutation_generators import get_generator
 
+from src.utils.system_definition.configurations import create_argparse_from_dict
+
 
 class CopomuS:
-    def __init__(self, parsed_namespace_args: str = None):
+    def __init__(self, parsed_args_dict: str = None):
         self.query = ''
         self.target = ''
         self.qidxpos0 = 1
@@ -43,7 +45,9 @@ class CopomuS:
         self.alpha, self.beta = 0.0, 0.0
         self.threads = 0
 
-        self.parsed_namespace_args = parsed_namespace_args
+        self.parsed_namespace, self.parsed_args = create_argparse_from_dict(
+            parsed_args_dict)
+        # self.parsed_namespace, self.parsed_args = Namespace(), None
 
     def main(self):
         # PARSE COMMAND LINE ARGS
@@ -105,10 +109,14 @@ class CopomuS:
 
         parser = ArgumentParser(
             description='Checks different measures for rating mutations')
+        # parser.add_argument('-q', '--query', dest='query',
+        #                     required=True, help='The query sequence.')
+        # parser.add_argument('-t', '--target', dest='target',
+        #                     required=True, help='The target sequence.')
         parser.add_argument('-q', '--query', dest='query',
-                            required=True, help='The query sequence.')
+                            required=False, help='The query sequence.')
         parser.add_argument('-t', '--target', dest='target',
-                            required=True, help='The target sequence.')
+                            required=False, help='The target sequence.')
         parser.add_argument('--qIdxPos0', dest='qidxpos0', default=1,
                             type=int, help='The starting index for the query. (Default: 1)')
         parser.add_argument('--tIdxPos0', dest='tidxpos0', default=1, type=int,
@@ -148,8 +156,7 @@ class CopomuS:
         parser.add_argument('--beta', dest='beta', type=float,
                             default=defaults['beta'], help=SUPPRESS)
 
-        args = parser.parse_known_args(args=self.parsed_namespace_args[1],
-                                       namespace=self.parsed_namespace_args[0])
+        args = parser.parse_args(namespace=self.parsed_namespace)
 
         mm = []  # filter out any duplicate entries for measures
         args.measures = defaults['measures'] if not args.measures else args.measures
