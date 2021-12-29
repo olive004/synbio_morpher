@@ -4,6 +4,9 @@ import logging
 import os
 from typing import Dict, Iterable, List
 
+from src.utils.parameter_prediction.simulator_loading import find_simulator_loader
+from src.utils.misc.string_handling import remove_special_py_functions
+
 
 def create_argparse_from_dict(dict_args: Dict):
     parser = argparse.ArgumentParser()
@@ -12,19 +15,15 @@ def create_argparse_from_dict(dict_args: Dict):
     return args_namespace, left_argv
 
 
-def get_cfg_protocol(simulator):
-    simulator_names = get_simulator_names()
-    
-
-
 def get_simulator_names() -> List:
     simulator_dir = os.path.join("src", "utils", "parameter_prediction")
-    return os.listdir(simulator_dir)
+    simulators = remove_special_py_functions(os.listdir(simulator_dir))
+    return simulators
 
 
 def handle_simulator_cfgs(simulator, simulator_cfg_path):
     simulator_cfg = load_json_as_dict(simulator_cfg_path)
-    cfg_protocol = get_cfg_protocol(simulator)
+    cfg_protocol = find_simulator_loader(simulator)
     return cfg_protocol(simulator_cfg)
 
 
