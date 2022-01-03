@@ -1,0 +1,12 @@
+
+#########  IntaRNA  ################################################
+  
+To configure, compile and install do the following steps:
+  - run ./configure [--help for additional configuration options]
+  - run make
+  - run make install
+
+In case you run into problems, please contact us!
+
+Also refer to README.md file for further information.
+

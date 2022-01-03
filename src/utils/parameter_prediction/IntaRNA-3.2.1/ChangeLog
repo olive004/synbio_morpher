@@ -1,0 +1,3760 @@
+################################################################################
+#
+# Change log of IntaRNA available at 
+#
+# https://github.com/BackofenLab/IntaRNA
+#
+################################################################################
+
+################################################################################
+# changes in development version since last release 
+################################################################################
+
+# IntaRNA
+
+################################################################################  
+################################################################################
+
+
+################################################################################
+### version 3.2.1
+################################################################################  
+
+# IntaRNA
+- support for multi-seq input when `seedQ|TRange` given
+- BUGFIX: Andronescu07 energy parameter set was not loaded by name without file
+- BUGFIX: 'outMinPu' was not fully implemented
+- BUILDFIX: non-global import of boost::bind
+
+# CopomuS :
+- exit value 0 if no favorable interaction was found
+
+################################################################################  
+
+201127 Martin Raden
+ * bin/CommandLineParsing :
+   * changing import and usage of boost::bind and boost::placeholders namespace
+     (thanks to Behra Phani Rama Krishna)
+
+200615 Martin Raden
+ * IntaRNA/OutputConstraint :
+   + maxED : maximal ED penalty of each interacting subsequence
+ * bin/CommandLineParsing :
+   * getOutputConstraint() : 
+     + energy argument to setup OutputConstraint constructor call
+ * IntaRNA/Predictor :
+   * updateZall() :
+     + check for OutputConstraint.maxED
+ * IntaRNA/PredictorMfe :
+   * updateOptima() :
+     + check for OutputConstraint.maxED
+ * IntaRNA/PredictorMfe* :
+   * obsolete OutputConstraint variable removed
+
+200602 Martin Raden
+ * bin/CommandLineParsing :
+   + sequence error information now with sequence ID rather than number
+
+200602 Martin Raden
+ * bin/CommandLineParsing :
+   + explicit seedQ|TRange check for each sequence (support for multi-seq input)
+
+200429 Martin Raden
+ * python/copomus/candidate_selectors.py :
+   * bugfix: sys.exit(0) if not favorable interaction was found
+
+200312 Martin Raden
+ * bin/CommandLineParsing :
+   * validate_energyFile() : 
+     + bugfix: missing check for predefined Andronescu07 data set name
+
+################################################################################
+### version 3.2.0
+################################################################################  
+
+# IntaRNA
+- BUGFIX: accessibility blocking constraints were only applied to seed location
+- improved Zall estimate (and depending values) for `--model=X` (default)
+- new arguments:
+  - `qId|tId` : optional id (FASTA prefix) setup for sequence naming
+  - `acc|accW|accL` : meta accessibility setup for both query and target
+  - `intLenMax|intLoopMax` : meta interaction and interior loop length setup
+  
+# CopomuS
+- Compensatory mutation selector to support interaction validation experiments
+
+################################################################################
+
+200302 Martin Raden
+ * IntaRNA/IndexRange :
+   * fromString() :
+     * bugfix: + missing parsing of negative indices 
+ * IntaRNA/InteractionEnergy :
+   * areComplementary() : 
+     + check if both positions are accessible (to avoid additional checks in
+       predictor recursions)
+ * bin/IntaRNA :
+   * ambiguous nt warning now in verbose log (was info log) 
+
+200217 Martin Raden
+ * bin/CommandLineParsing :
+   * NumericParameter : 
+   * CharParameter :
+     + isSet() : checks if value and default differ
+   + qId|tId : id (prefix) for sequence naming
+   + acc|accW|accL : meta for q|t*
+   + intLenMax|intLoopMax : meta for q|t*
+   * resetParamDefault() :
+     + overwrite value (since set to default in constructor)
+   + validate_region|shape|shapeMethod|shapeConversion : generic checks for q|t
+   + validate_seedRange : generic checks for q|t
+   + validate_numberArgumentExcludeRange() : generic check excluding a range
+   + validate_id() : checks for line breaks in q|tId
+   * parseSequences() :
+   * parseSequencesFasta() :
+     + idPrefix handling
+   - obsolete functions
+     - validate_query|target
+     - validate_qAccW|L|Constr
+     - validate_q|tRegion|Shape|ShapeMethod|ShapeConversion
+     - validate_seedQ|TRange
+   * constructor() :
+     + extended default reset for new arguments
+     * q|tAcc* arguments now hidden
+     * validation calls refactored
+     + model|acc|intLenMax|intLoopMax now general arguments
+   * parse() :
+     + additional checks for meta arguments with setup of q|t variables
+     + usage of .isSet() where appropriate
+     + check that outSep is not within id prefix in outMode=C
+     + ensure intLenMax >= seedBP
+
+200207 Martin Raden + Fabio Gutmann
+ + python/CopomuS.py : Compensatory mutation selector to support interaction
+   validation experiments
+ + python/copomus/* : utility functions of CopomuS
+ * python/README.md : links to dedicated README.md of subfolders
+
+200131 Martin Raden
+ * IntaRNA/PredictorMfe2dHeuristicSeedExtension :
+   * fillHybridE_left() :
+     + extended Zall update (additional save cases considered)
+
+
+################################################################################
+### version 3.1.5
+################################################################################  
+
+# IntaRNA :
+- bugfix traceback of interactions with seed on right-boundary
+- bugfix traceback of seeds with bulges when outNoLP present
+
+################################################################################
+
+200131 Martin Raden
+ * IntaRNA/PredictorMfe*SeedExtension* :
+   * undo bugfix
+   * traceback() :
+     + additional check if seed exceeds right interaction boundary
+ * IntaRNA/SeedHandler :
+   * isFeasibleSeedBasePair() :
+     * debug checks obsolete since part of the check
+   * updateToNextSeed() :
+     * bugfix : right boundary was exclusive (but has to be inclusive)
+ * IntaRNA/SeedHandlerMfe :
+   * getSeedE()
+   * setSeedE()
+   * traceBackSeed()
+     * now using global indices (offset shift done internally)
+   * fillSeed() :
+     + additional feasibility test for noLP
+   * traceback() :
+     * bugfix noLP energy trace : energy was from wrong cells
+     * trace small to large gaps (should be faster)
+ * test/SeedHandlerMfe :
+   + traceback tests (number of bps in traced seeds)
+
+################################################################################
+### version 3.1.4
+################################################################################  
+
+# IntaRNA
+- bugfix generation and tracing of seeds with bulges and no GU ends
+- bugfix seed-extension prediction for seeds with bulges
+- noLP for seeds with bulges enabled
+
+# R
+- `IntaRNA_CSV_p-value.R` script to estimate p-values based on energy values
+- `IntaRNA_plotRegions.R` = renaming of former `plotRegions.R`
+
+################################################################################  
+
+200130 Martin Raden
+ * IntaRNA/SeedHandlerMfe :
+   * bugfix generation and tracing of seeds with bulges and no GU ends
+ * IntaRNA/PredictorMfe*SeedExtension* :
+   * bugfix enumeration of seeds with bulges
+ * bin/CommandLineParseing :
+   * error msgs rephrased
+   + noLP for seeds with bulges enabled
+   + setup noLP for seed constraints via outNoLP
+ * IntaRNA/SeedConstraint :
+   + isLpAllowed : whether or not lps are allowed in seeds
+ * IntaRNA/SeedHandlerMfe :
+   + support for noLP constraint
+ * test/SeedHandlerMfe :
+   + test with lp
+   + test no lp (boundary)
+   + test no lp (internal)
+ * test/*
+   * adaptation to SeedConstraint constructor changes
+
+200121 Martin Raden
+ + R/IntaRNA_CSV_p-value.R : former addPvalues2csv.R
+ + R/IntaRNA_plotRegions.R : former plotRegions.R
+ - R/addPvalues2csv.R : renamed
+ - R/plotRegions.R : renamed
+ * README.md : adapted to renamings
+ + R/Makefile.am : install R scripts
+ 
+191115 Martin Raden
+ + R/addPvalues2csv.R
+ * R/README.md :
+   + docu of addPvalue2csv.R
+
+################################################################################
+### version 3.1.3
+################################################################################  
+
+# IntaRNA
+- bugfix latest changes on traceback
+
+################################################################################  
+
+191104 Martin Raden
+ * PredictorMfe2dSeedExtension::
+   * traceBack() 
+     * bugfix tracback (reset of k2 iteration)
+
+191031 Martin Raden
+ * using c++11 raw strings where appropriate
+
+################################################################################
+### version 3.1.2
+################################################################################  
+
+# IntaRNA
+- `--outSep` = user-defined column separator for tabular CSV output
+- bugfix non-overlapping suboptimal enumeration
+- bugfix noLP optimization (missing case of direct left-stack extension)
+- CSV output
+  - new ensemble energy and partition function output for intra-molecular 
+    structures formed by seq1 and seq2 (`Eall1, Eall2, Zall1, Zall2`)
+  - new total energy output `Etotal` = (E+Eall1+Eall2) and 
+    `EallTotal` = (Eall+Eall1+Eall2)
+  - new `RT` output
+  - new `bpList` output
+
+# auxiliary R scripts
+- plotRegions.py - visualization of sequence regions covered by IntaRNA 
+  predictions, similar to the IntaRNA webserver output (thanks to @dgelsin)
+
+################################################################################
+
+191030 Martin Raden
+ * IntaRNA/OutputHandlerCsv :
+   + RT
+   * string2list() :
+     + support of '*' encoding to generate full list
+ * bin/CommandLineParsing :
+   + docu and implementation of '*' outCsvCol behaviour  
+ * IntaRNA/InteractionEnergyBasePair :
+   + computeIntraEall() : computes Eall1|2 via NussinovHandler
+   * getEall1|2() : call computeIntraEall if needed
+ * README.md
+   + RT CSV col
+
+191029 Martin Raden
+ * IntaRNA/PredictorMfe :
+   * getNextBest() :
+     * bugfix: energy check was applying duplicated ED values 
+       (thanks to Jens Georg)
+ * IntaRNA/PredictorMfe2dSeedExtension :
+ * IntaRNA/PredictorMfe2dHeuristicSeedExtension :
+ * IntaRNA/PredictorMfeEns2dSeedExtension :
+   * fillHybrid*_left() : 
+   * traceBack() : 
+     * bugfix: missing case in noLP mode (direct left-stack extension)
+ * IntaRNA/AccessibilityVrna :
+   + addConstraints() : dedicated function to add constraint to VrnaFoldCompound
+   * fillByRNAplfold() : using addConstraints()
+ * IntaRNA/InteractionEnergy :
+   + getBoltzmannWeight( Z_type ) : conversion from kcal/mol-based energies
+   + getEall1|2() : ensemble energy for seq1|2
+ * IntaRNA/InteractionEnergyBasePair :
+   + getEall1|2() : NOT IMPLEMENTED YET
+ * IntaRNA/InteractionEnergyIdxOffset :
+   + getEall1|2() : forward to wrapped energy handler
+ * IntaRNA/InteractionEnergyVrna :
+   + Eall1|2 : ensemble energies for seq1|2
+   + getEall1|2() : lazy computation of Eall1|2 using computeIntraEall()
+   + computeIntraEall() : Eall* computation via vrna_pf() using the respective
+     accessibility constraints
+ * IntaRNA/OutputHandlerEnsemble :
+   - no output of Zall
+   + output of RT, Eall1, Eall2, EallTotal 
+ * IntaRNA/OutputHandlerCsv :
+   + Eall1, Eall2, EallTotal, Etotal, Zall1, Zall2
+ * README.md :
+   + docu of new CSV columns (Eall1, Eall2, Zall1, Zall2, Etotal, EallTotal)
+   * ensemble output docu updated
+
+191021 Martin Raden
+ + R/plotRegions.R :  visualization of sequence regions covered by RRI
+ + R/README.md : plotRegions docu
+ * README.md : link to R/README.md
+
+191008 Martin Raden
+ * IntaRNA/OutputHandlerCsv :
+   + bpList output : list of base pairs
+ * README.md :
+   + bpList 
+   + outSep
+
+191008 Martin Raden
+ * bin/CommandLineParsing :
+   + 'outSep' argument to set column separator for tabular CSV output
+   * outSep applied to PredictionTracker*
+ * IntaRNA/PredictionTracker* : 
+   + explicit output column separator
+ * IntaRNA/OutputHandlerCsv :
+   * needsZall() :
+   * needBPs() :
+     - colSep argument : obsolete
+  
+191007 Martin Raden
+ * bin/CommandLineParsing :
+   * bugfix accNoLP and accNoGUend checks for energy!=V
+ * IntaRNA/NussinovHandler :
+   * getQ() :
+     * fix: return 1 if (i==j)
+ * IntaRNA/AccessibilityVrna :
+   * construction() : 
+     + bugfix: missing ED initialization for short sequences
+ * tests/AccessibilityBasePair :
+   + short sequence test
+ + tests/AccessibilityVrna  :
+   + short sequence test to validate ED initialization
+
+################################################################################
+### version 3.1.1 
+################################################################################  
+
+# IntaRNA
+- base pairs details only computed if needed for output (speedup for large -n)
+- predefined parameter sets for loading (Turner04, Turner99, Andronescu07)
+- 'tRegion' and 'qRegion' now available for and applied to multi-sequence input
+
+################################################################################  
+  
+190924 Martin Raden
+ * IntaRNA/general :
+   - numStringLength() : obsolete
+ * IntaRNA/OutputHandlerText : 
+   + explicit '+' for positive indices if relative indexing enabled
+ * bin/CommandLineParsing :
+   * validate_indexRangeList() :
+     + sequence id in error message
+   * parseRegion() :
+     + range check per sequence with sequence-specific error message
+     - single sequence input condition removed : ranges applied on all sequences
+ * IntaRNA/AccessibilityVrna :
+   * construction() : 
+     + bugfix: only call VRNA routines if seq.size() > 4
+  
+190923 Martin Raden
+ + m4/m4-ax_boost_iostreams.m4
+ + m4/m4-ax_check_zlib.m4
+ * configure.ac :
+   * ViennaRNA version >= 2.4.14
+   + check for boost::iostreams library
+   + check for zlib library
+ * IntaRNA/OutputConstraint :
+   + needBPs : whether or not traceback of interaction base pairs is needed
+ * IntaRNA/PredictorMfe :
+   * reportOptima() :
+     + traceback now optional based on OutputConstraint::needBPs
+ * IntaRNA/OutputHandlerCsv :
+   + needBPs() : checks whether or not base pair information is needed for the
+     CSV columns to print
+ * IntaRNA/VrnaHandler :
+   + Turner99 : const string representing RNA-Turner-1999 energy file
+   + Turner04 : const string representing RNA-Turner-2004 energy file
+   + Andronescu07 : const string representing RNA-Andronescu-2007 energy file
+   * constructor() :
+     * Turner04 = default parameter set
+     + load of Turner99/04 and Andronescu07 parameters via new VRNA-2.4.14 API
+ * bin/CommandLineParsing :
+   + outNeedsBPs : whether or not output requires interaction traceback
+   * energyVRNA :
+     + docu of Turner99/04 and Andronescu07 predefined models for loading
+     + default value = Turner04
+   * IntaRNA1 :
+     + default energyVRNA = Turner99
+   * getOutputHandler() :
+     + setup of outNeedsBPs
+ * IntaRNA/Interaction :
+   * dotBar : indexing based on RnaSequence::getInOutIndex()
+ * IntaRNA/OutputHandlerText :
+   * add() : 
+     * bugfix: isGU() test was using non-transformed bp indices
+ * README.md :
+   + docu of predefined parameter sets 
+
+################################################################################
+### version 3.1.0.2  
+################################################################################  
+
+190920 Martin Raden :
+ * IntaRNA/PredictorMfe :
+   * getNextBest() :
+     * ensure deterministic output for degenerate bestE interactions (left most)
+ * tests updated
+
+################################################################################
+### version 3.1.0.1
+################################################################################  
+
+# IntaRNA
++ Zall (estimates) and derived output now available for all prediction models
++ outMode=E : report of ensemble information only
+* ensemble-based prediction revised
+* seed-extension-based prediction revised
++ --seedNoGUend : prohibit GU base pairs at seed ends
++ outNoLP support in all prediction modes
+* FASTA input: sequence id = prefix up to first whitespace from FASTA header
+* new default for outOverlap = B: overlapping output enabled (was Q)
++ gzip-compressed file input/output if file name ends in '.gz'
++ --outNoGUend : omit interactions with GU-helix ends
++ --accNoLP : exclude lonely base pair in accessibility computation (energy==V) 
++ --accNoGUend : exclude GU-helix ends in accessibility computation (energy==V)
+* outMode=D : subsequence range now "START..END" instead of "START--END"
++ --q|tIdxPos0 : user defined sequence indexing for input parsing and output
+
+# package
++ (optional) intarnapvalue python3 module to compute p-values of IntaRNA mfe
+  predictions based on sequence shuffling and distribution fitting 
+
+# API
+* OutputHandler requires an OutputConstraint instances in construction
+* Predictor objects now access OutputConstraint instances via the OutputHandler;
+  this simplifies the signature of the member functions
+* OutputConstraint now guides whether or not Zall is required for output
+
+################################################################################  
+
+190919 Martin Raden :
+ * bin/CommandLineParsing :
+   * argument validation revised
+
+190918 Martin Raden :
+ * IntaRNA/general :
+   * numStringLength() : now template function
+ * IntaRNA/RnaSequence :
+   + idxPos0 : input/output index of first position
+   + getInOutIndex() : converts internal to in/out index
+   + getIndex() : converts in/out index to internal indexing
+   + getReversedIndex() : backward internal index
+ * IntaRNA/AccessibilityConstraint :
+   * construction from string now based on RnaSequence::getIndex()
+   * regionIndexList : allows for negative input indices
+ * IntaRNA/IndexRange :
+   + regexString : static string encoding of regex : allows for neg. in indices
+   * regex : init based on regexString
+   * construction from string now based on RnaSequence::getIndex()
+   * fromString() now based on RnaSequence::getIndex()
+ * IntaRNA/IndexRangeList :
+   * regexString : now based on IndexRange::regexString
+   * construction from string now based on RnaSequence::getIndex()
+   * fromString() now based on RnaSequence::getIndex()
+ * IntaRNA/InteractionEnergy :
+   * getE_contributions() 
+     * simplification using class members getIndex*()
+ * IntaRNA/OutputHandlerCsv :
+ * IntaRNA/OutputHandlerText :
+   * add() :
+     * index shifting for output based on RnaSequence::getInOutIndex()
+ * IntaRNA/OutputHandlerEnsemble :
+   - outputDone : obsolete
+ * IntaRNA/PredictionTrackerPairMinE :
+ * IntaRNA/PredictionTrackerSpotProbAll :
+   * writeData() :
+     * index shifting for output based on RnaSequence::getInOutIndex()
+ * IntaRNA/PredictionTrackerProfileMinE :
+ * IntaRNA/PredictionTrackerProfileSpotProb :
+   * writeProfile() :
+     * index shifting for output based on RnaSequence::getInOutIndex()
+ * IntaRNA/PredictionTrackerSpotProb :
+   * str_spot : allows for negative input indices
+   * destructor() :
+     * index shifting for output based on RnaSequence::getInOutIndex()
+     * "0&0" output changed to "idxPos0-1" to be more general
+   * Spot : 
+     - construction from string
+   + fromString() : creates a Spot from string using RnaSequence::getIndex()
+ * IntaRNA/ReverseAccessibility :
+   * getReversedIndex() : now based on RnaSequence::getReversedIndex()
+ * IntaRNA/SeedHandlerExplicit :
+   * checkSeedEncoding() : regex now allows for neg. input indices
+   * SeedData :
+     * construction from string now based on RnaSequence::getIndex()
+ * tests :
+   * adaptation of negative index input tests (now valid)
+   * RnaSequence :
+     + test for getInOutIndex() + getIndex()
+ * bin/CommandLineParsing :
+   + q|tIdxPos0 : start of indexing for query|target
+   * validate_indexRangeList(.., RnaSequence) : to get index shifting
+ * README.md :
+   + documentation of q|tIdxPos0 effects
+   + q|tIdxPos0 sequence indexing section
+
+190913 Martin Raden :
+ * configure.ac :
+   * LIBS exended
+ * IntaRNA/general :
+   * new|deleteOutStream :
+     + gzip-compression support enabled
+     * fstream replaced with boost::iostreams::filtering_ostream
+   + new|deleteInStream : analog to outstream handling to enable gzip support
+ * IntaRNA/InteractionEnergy :
+   - getBestE*() : obsolete
+   * isValidInternalLoop() : now public
+   + internalLoopGU : whether or not GU is allowed in non-stacked interior loops
+   + isInternalLoopGUallowed() : returns internalLoopGU
+   * isValidInternalLoop() :
+     + check internalLoopGU constraint
+ * IntaRNA/Predictor :
+   * updateZall() :
+     + bugfix: additional check for outConstraint.needZall
+ * IntaRNA/PredictorMfe :
+   - min*Energy : obsolete
+ * IntaRNA/PredictorMfe2dHeuristicSeed :
+   * fillHybridE() :
+     * bugfix Zall update : seed-only also if !noLP
+ * IntaRNA/InteractionEnergyIdxOffset : 
+   + bugfix: adding missing offset-based overwrites
+ * IntaRNA/OutputConstraint :
+   + noGUend : whether or not GU is allowed at interaction ends
+ * bin/CommandLineParsing :
+   * input file handling replaced with new|deleteInStream
+   + outNoGUend : whether or not GU is allowed at interaction and helix ends
+   * IntaRNAsTar :
+     + outNoGUend
+     + outNoLP
+ * README.md :
+   + gzip compression docu
+   + outNoGUend docu
+   * IntaRNAsTar docu
+ * tests :
+   + outNoGUend
+
+190912 Martin Raden :
+ + python/intarnapvalue : p-value computation for IntaRNA energy scores
+   (thanks to Fabio Gutmann)
+ * configure :
+   + check for python >= 3.6
+   + optional enabling of intarnapvalue installation (disabled by default)
+ * tests/data/Makefile.am :
+   + distribution of all tests ensured
+
+190911 Martin Raden :
+ * IntaRNA/SeedHandler :
+   * isFeasibleSeedBasePair() : now virtual and public
+ * IntaRNA/SeedHandlerIdxOffset :
+   + addSeeds() 
+   + isFeasibleSeedBasePair()
+   + areLoopOverlapping()
+ * IntaRNA/PredictorMfe2dSeedExtension :
+   * traceBack() :
+     * trace order optimized
+ * IntaRNA/PredictorMfeEns2dSeedExtensionHeuristic :
+   * fill*() : reduced to updateZ() calls to reduce code redundancy 
+
+190910 Martin Raden :
+ * IntaRNA/PredictorMfe2d*SeedExtension :
+   + noLP support
+ + tests for noLP seed extension (model=X)
+ * bin/CommandLineParsing :
+   * parseSequencesFasta() :
+     * name = FASTA header prefix up to first whitespace
+ * IntaRNA/PredictorMfe :
+   + HashIdx2E : hash for base pair to BestInteractionE objects
+   + mfe4leftEnd : (optional) hash to store best interaction for left boundary;
+     filled by updateMfe4leftEnd()
+   + updateMfe4leftEnd() : updates mfe4leftEnd
+   * getNextBest() :
+     + default implementation based on mfe4leftEnd
+   * updateOptima() :
+     + calls updateMfe4leftEnd() if outconstraint.reportOverlap != BOTH
+   * exact + seed-extension predictors :
+     - getNextBest() dummy functions : obsolete
+     - outConstraint.reportOverlap != BOTH error : obsolete
+   * heuristic non-seed-extension predictors :
+     + updateMfe4leftEnd() : dummy function to avoid mfe4leftEnd updates; since
+       local getNextBest() is based on local data member 
+ + tests for outOverlap=NQTB (model=X)
+
+190909 Martin Raden :
+ * Makefile.am :
+   - explicit personality list for link generation; replaced by
+   + automatic link generation for each personality
+ * IntaRNA/OutputHandlerCsv : 
+   + 'w' = Boltzmann weight output
+ * IntaRNA/Predictor :
+   + updateZall() : updates Zall with a given interaction energy
+ * IntaRNA/PredictorMfe :
+   * updateOptima() :
+     + calls updateZall() if needed
+ * IntaRNA/PredictorMfe2dHeuristic :
+   + update of Zall
+ * IntaRNA/PredictorMfe2dHeuristicSeed :
+   * bugfix Zall update
+ * IntaRNA/PredictorMfe2dSeed :
+   * bugfix updateOptima() call
+ * IntaRNA/PredictorMfeEns2dHeuristic :
+   * bugfix total energy computation
+   + updateZ() call corrected
+ * IntaRNA/PredictorMfeEns2dSeedHeuristic :
+   * updateZ() call order changed to reduce for-loop iterations
+ * README.md :
+   + w CVS output documentation
+   + E_add CVS output documentation
+   + RT(37Celsius)=0.6163173043012 docu
+
+190906 Martin Raden :
+ * IntaRNA/Interaction
+   + Boundary : 4-tuple of indices to store boundaries of an interaction site
+ * tests/runIntaRNA.sh :
+   * tests are run for all data/*.parameter files (no explicit listing anymore)
+ + tests/*-modelX|S : explicitly testing model=X or =S
+ * IntaRNA/PredictorMfe2dHeuristicSeed :
+   * fillHybridE() : updateOptima() now called for all tested cases to reduce
+     heuristic bias in subopt listing
+ * IntaRNA/PredictorMfeEns :
+   * renaming Z_partitions to Z_partition
+   + updateOptimaUsingZ() : calls updateOptima() for all Z_partition entries
+   + reportOptima() : calls updateOptimaUsingZ() and super class reportOptima()
+   + traceBack() : central traceback for all ensemble-based predictors
+   + BestInteraction template class
+   + BestInteractionE|Z typedefs
+   * Z_partition now hash of Interaction::Boundary keys that map to Z_type
+   - checkKeyBoundaries() : obsolete
+ * IntaRNA/PredictorMfeEns2d :
+   - traceBack()
+   * predict() :
+     - explicit updateOptima() calls
+ * IntaRNA/PredictorMfeEns2dHeuristic :
+   * predict() :
+     - explicit updateOptima() calls
+   * fillHybridZ() :
+     + explicit updateZ() calls for all recursion cases to reduce heuristic bias
+   - BestInteraction : replaced by PredictorMfe::BestInteraction
+ * IntaRNA/PredictorMfe2dSeedExtension :
+   - updateOptima() : obsolete
+   * predict() :
+     + explicit j boundary computation to reduce considered index tuples when
+       updating optima
+ * IntaRNA/PredictorMfe2dSeedExtensionRIblast :
+   - updateOptima() : obsolete
+ * IntaRNA/PredictorMfe2dHeuristicSeedExtension :
+   * rename updateOptima() to updateOptimalRightExt()
+   + updateOptima() called for all tested right extensions
+   + updateOptima() called for all tested seed+leftExtension
+   + extended search range for seed+leftExtension (so far limited by jOptRight)
+ * IntaRNA/PredictorMfeEns2dSeedExtension :
+   - explicit updateOptima() calls
+   * traceBack() : reduced to super class traceBack() call seed addition
+ * IntaRNA/PredictorMfeEns2dHeuristicSeedExtension :
+   - explicit updateOptima() calls
+   + extended search range for seed+leftExtension (so far limited by jOptRight)
+   + updateZ() called for all tested right extensions
+   + updateZ() called for all tested seed+leftExtension
+ * bin/CommandLineParsing :
+   + check for outOverlap=B if window-based computation with subopt output (n>1)
+ * IntaRNA/PredictorMfe2dHeuristic :
+   - BestInteraction : replaced by PredictorMfe::BestInteraction
+ * IntaRNA/SeedConstraint :
+   + bpGUendAllowed + is*() : whether or not GU is allowed at seed ends
+ * IntaRNA/SeedHandler :
+   * isFeasibleBasePair() :
+     + atSeedEnd argument: to enable seed end check if needed
+     + explicit GU-end checks if atSeedEnd==true 
+ * IntaRNA/SeedHandlerMfe :
+   + check for GU ends
+ * IntaRNA/SeedHandlerNoBulge :
+   * storeSeed() : 
+     + check for GU ends
+ * README.md :
+   + seedNoGUend documentation
+ 
+190905 Martin Raden :
+ * IntaRNA/PredictorMfe2dHeuristicSeedExtension :
+   + updateOptima() also for left+seed called (less heuristic bias)
+ * IntaRNA/PredictorMfeEns* : ensemble-mfe prediction revised
+
+190830 Martin Raden :
+ + IntaRNA/OutputHandlerEnsemble : reports ensemble information only
+
+190828 Martin Raden :
+ * Makefile.am :
+   + show test log if tests failed
+ * IntaRNA/OutputHandler* :
+   * bugfix: outConstraint was reference instead of full object
+
+190827 Martin Raden :
+ * IntaRNA/OutputConstraint :
+   + needZall : whether or not Zall is needed for output generation
+ * IntaRNA/OutputHandler* :
+   + outConstraint : OutputConstraint to be heeded
+   * constructor : required OutputConstraint object
+   * add() : outConstraint parameter obsolete
+ * IntaRNA/OutputHandlerCsv :
+   + needsZall() : checks whether or not the requested column types require Zall
+ * IntaRNA/Predictor* :
+   * outConstraint parameter in member functions obsolete
+ * bin/CommandLineParsing :
+   + outNeedsZall : flag to check whether or not Zall is needed for output
+ * IntaRNA/Predictor :
+   + Zall : overall partition function
+   * updateOptima( ..., incrementZall = true ) : Zall is incremented
+     if output.outConstraint.needZall == true
+   + getZall() : access to overall partition function
+   + incrementZall() : increments Zall (+ overflow check in debug mode)
+   * reportOptima() :
+     + calls output.incrementZ()
+   * initOptima() :
+     + init of Zall if needed
+ * IntaRNA/PredictorMfeEns :
+   - overallZ : replaced by Predictor::Zall
+   - reportOptima() : obsolete
+ * IntaRNA/PredictorMfeEns* :
+   * call of updateOptima( ..., incrementZall = false ) to avoid duplicated Zall
+     updates
+   * initZ() : - no init of Zall
+
+
+################################################################################  
+##### version 3.0.0
+################################################################################  
+
++ personality
+  + IntaRNA1,2,3
+  + IntaRNAexact
+  + IntaRNAhelix
+  + IntaRNAduplex
++ outNoLP
++ outCsvSort
++ output of all putative seeds (unless outMode=N or outBestSeedOnly)
++ seed bps are highlighted with '+' in text output mode (minimal + detailed)
+* model=X : new default = seed-extension-based prediction
++ model=P
++ support for multi-precision Z (via GNU quadmath library) : configure
++ mode=S
++ energyNoDangles
++ parameterFile
++ seedNoGU
++ seedMaxEhybrid
++ helixMinPu (replaces helixMaxED)
++ helixFullE : replaces helixNoED
++ model=B (replaces L)
+* reporting best (mfe) seed per interaction
+* outMode=C
+  + sorting
+  + columns Eall, Zall, P_E
+  * marker "NAN" for not available values
+* outMode=D
+  * index ranges without whitespaces, i.e. "1--5" instead of "1 -- 5"
+  + highlighting of all bps part of putative seeds
+  * gaped loop positions now represented by '-'
+* E_type now int (was float)
+- IntaRNA v1 output support not continued
+
+################################################################################  
+
+190809 Martin Raden :
+ * IntaRNA/general :
+   * deleteOutStream() :
+     * now reference to stream pointer to ensure update of original pointer
+   * E_INF = INTMAX / 8 (to ensure correct boundary checks in predictors)
+ * IntaRNA/OutputStreamHandlerSortedCsv :
+   * destructor() :
+     * BUGFIX: double deletion of outstream (fixes #157)
+ * IntaRNA/PredictorMfe2dSeed :
+   * traceback() :
+     * BUGFIX noLP traceback (fixes #153)
+ * IntaRNA/OutputHandlerText :
+   * add():
+     * non-existing positions in loops are now represented by '-' symbol (#155)
+     * always highlight seed bps with '+'
+ * bin/CommandLineParsing :
+   + resetParamDefault() : resets a parameter's default value and reports VLOG
+   + IntaRNA1 personality: defaults similar to v1
+   + IntaRNA2 personality: old v2 defaults
+   + IntaRNA3 personality: IntaRNA alias
+ * tests/data/*.parameter :
+   * adapt to new default model=X (was S)
+ + tests/data/Makefile.am : add test data to distribution
+
+190808 Martin Raden :
+ * renaming personality IntaRNAblock to IntaRNAhelix (since used in resp. paper)
+
+190716 Martin Raden :
+ * bin/CommandLineParsing :
+   * IntaRNAexact :
+     + model=X
+     + exact accessibility computation (*AccW = *AccL = 0)
+
+190716 Martin Raden :
+ * IntaRNA/Accessibility :
+   * decomposeByMaxED( ranges ) : 
+     + additional parameter for minimal range length
+ * bin/CommandLineParsing :
+   - high memory warning disabled
+   + set seedBP for minimal range length of range decomposition
+ * IntaRNA/IndexRange :
+   * overlappingWindows :
+     * bugfix: check for non-ascending was not using "!isAscending()"
+
+190607 Martin Raden :
+ * IntaRNA/general :
+   * deleteOutputStream() :
+     - no warning if not a file stream (to support temporary stringstreams)
+ * IntaRNA/OutputHandlerCsv :
+   + colTypeNumericSort : list of types that need numerical sorting
+   * notAvailable : now "NAN" (was "NA")
+   - colOrder : renamed to columns
+   + columns (former colOrder)
+ + IntaRNA/OutputStreamHandler : generic handler to wrap the output stream
+ + IntaRNA/OutputStreamHandlerSortedCsv : OSH that stores output in temporary
+   stringstream to be finally sorted by the values of a given column
+ * bin/CommandLineParsing :
+   - outStream : replaced by outStreamHandler
+   + outStreamHandler : central OutputStreamHandler object
+   + outCsvColSep : CSV column separator
+   + outCsvLstSep : CSV value-list separator 
+   + outCsvSort : optional parameter to define the CSV column for sorting
+   * destructor() :
+     * outStream deletion
+   * parse() :
+     + parsing and setup CSV sorting
+   - getOutputStream() : replaced by outStreamHandler->getOutStream()
+ * README.md :
+   + outCsvSort documentation
+ - perl/IntaRNA_1ui.pl : v1 support ends   
+ - perl/IntaRNA_up_1ui.pl : v1 support ends   
+
+190606 Martin Raden :
+ * IntaRNA/OutputHandlerText :
+ * IntaRNA/OutputHandlerCsv :
+   * add() :
+     * bugfix: Pu values were truncated like energies 
+ * IntaRNA/HelixHandlerNoBulgeMax :
+   * fillHelixSeed() :
+     * bugfix: leadingE computation was shifted by one index to the right
+ * bin/CommandLineParsing :
+   + output alias information [seq1|seq2] added to target|query parameter info
+   + outCsvSort parameter to trigger sorted CSV output
+   * getOutputHandler() :
+     + returns OutputHandlerCsvSorted if outCsvSort non-empty
+ * README.md 
+   * example output updated
+   + output alias information [seq1|seq2] added to detailed mode output
+
+190605 Martin Raden :
+ * IntaRNA/HelixHandlerNoBulgeMax :
+   * fillHelixSeed() :
+     * bugfix: complementarity check was using (i2,i2)
+
+190603 Martin Raden :
+ * IntaRNA/PredictorMfeEns2d :
+ * IntaRNA/PredictorMfeEns2dHeuristic :
+   * predict() :
+     * bugfix: noLP handling corrected
+ * IntaRNA/Predictor*SeedExtension* :
+   + warning that noLP not implemented yet
+ * renaming IntaRNA/PredictorMfeEns2dSeedExtensionRiBlast to
+   IntaRNA/PredictorMfeEns2dSeedExtensionRIblast
+
+190523 Frank Gelhausen + Martin Raden :
+ - IntaRNA/PredictorMfe4d : obsolete and was for testing only
+ - IntaRNA/PredictorMfe4dSeed : obsolete and was for testing only
+ + IntaRNA/PredictorMfe2dSeedExtension : exact mfe via SE
+ + IntaRNA/PredictorMfe2dSeedExtensionRiBlast : RIblast-like SE mfe
+ + IntaRNA/PredictorMfe2dHeuristicSeedExtension : heuristic SE mfe
+ + IntaRNA/PredictorMfeEns2d : exact ensemble mfe
+ + IntaRNA/PredictorMfeEns2dHeuristic : heuristic ensemble mfe
+ + IntaRNA/PredictorMfeEns2dSeedExtension : exact ensemble mfe via SE
+ + IntaRNA/PredictorMfeEns2dSeedExtensionRiBlast : RIblast-like SE ensemble mfe
+ + IntaRNA/PredictorMfeEns2dHeuristicSeedExtension : heuristic SE ensemble mfe
+ * configure.ac :
+   + support for multi-precision Z (via GNU quadmath library)
+ * IntaRNA/general :
+   + support for multi-precision Z (via GNU quadmath library)
+   + Z_log & Z_exp : placeholder to call correct function for current Z_type
+   - E_precisionEpsilon : obsolete
+ * IntaRNA/OutputHandlerText :
+   * range encoding now without whitespace, i.e. "i--j" instead of "i -- j"
+ * IntaRNA/PredictorMfeEns :
+   - getHybridZ() : replaced by getOverallZ()
+   + getOverallZ()
+   + checkKeyBoundaries() : to check if site-specific Z hashing is possible
+   + ZPartition : container to store and update site-specific Z values
+   + Z_partitions : member to store site-specific Z values
+   * updateZ() :
+     + check for partZ == 0 or INF
+     + update of Z_partitions
+
+190523 Martin Raden :
+ - IntaRNA/PredictorMaxProb : obsolete (will be replaced soon)
+ + IntaRNAens personality (model=P)
+ * IntaRNA/IndexRangeList :
+   * constructor(stringEncoding, +allowOverlap) : explicit init of allowOverlap
+ * IntaRNA/OutputHandler :
+   + Z + getZ() : overall partition function (if updated by predictor)
+   + incrementZ() : update of Z (assuming independent interaction sets)
+ * IntaRNA/OutputHandlerText :
+   + print ensemble energy if computable
+ * IntaRNA/OutputHandlerCsv :
+   * column docu corrected for E and seedE
+   + Eall, Zall, P_E
+   + notAvailable : string to mark not available values
+   * add() :
+     * replace signalling_NaN() with notAvailable
+     + handling of Eall, Zall, P_E
+ * IntaRNA/PredictorMfe :
+   * predict() :
+     + output.add() calls now omp_critical (since multiple predictors can call
+       in parallel)
+ * IntaRNA/PredictorMfeEns :
+   - overallZhybrid : replaced by overallZ
+   + overallZ
+   + reportOptima() : calls output.incrementZ(overallZ) to report overall Z
+   * initZ() :
+     - no call of initOptima()
+ + IntaRNA/PredictorMfeEnsSeedOnly : ensemble-based seed-only predictions
+ * bin/IntaRNA :
+   + transfer accumulated Z information from bestInteractions to final output
+ * bin/CommandLineParsing :
+   - remove documentation of (non-implemented) BED-file support from q|tRegion
+   * updating model=P docu
+   * parse() :
+     + check for model=P that no window-based prediction (wrong Z aggregation)
+   * validateRegion() :
+     + explicit non-overlapping list check
+   * parseRegion() :
+     * cleanup
+ * README.md :
+   + IntaRNAens
+   + model=P
+   + CSV output : Eall, Zall, P_E
+
+190522 Martin Raden :
+ * renaming personality IntaRNAup to IntaRNAexact
+ * renaming personality IntaRNAhelix to IntaRNAblock
+ + personality IntaRNAsTar : optimized parameters for sRNA-target prediction  
+
+190521 Martin Raden :
+ * IntaRNA/AccessibilityVrna :
+   - calc_ensemble_free_energy() :
+   - getPfScale() :
+   - fillByConstraints() :
+   - fillByRNAup() : obsolete and not conform to new VRNA API
+ * bin/CommandLineParsing :
+   + check for noSeed+mode=S and throw error
+
+190418 Martin Raden :
+ + IntaRNA/PredictorMfeSeedOnly : predicts only seed interactions
+ * bin/CommandLineParsing :
+   + mode=S : predicting seeds only
+   + personality=IntaRNAseed : enabling mode=S
+
+190414 Martin Raden :
+ * bin/CommandLineParsing :
+   * bugfix: helix constraints checks only done for model = B
+   + mode : renamed predMode
+   - predMode : renamed to mode
+   * NumberParameter :
+   * CharParameter :
+     * def value now non-constant to be changeable in constructor 
+   * constructor() :
+     - variable init now non-dynamic
+     + explicit en-bloc default update for each personality
+     + report of default changes via VLOG
+
+190412 Martin Raden :
+ * IntaRNA/Interaction :
+   * dotBracket() :
+     * bugfix: full string generation produced wrong tails
+
+190411 Martin Raden :
+ * bin/CommandLineParsing :
+   + link to github pages for further documentation
+
+190409 Martin Raden :
+ * IntaRNA/InteractionEnergy :
+   + energyWithDangles : whether or not dangling end contributions are to be 
+     considered for the overall energy computation
+   * getE() :
+   * getE_contributions() :
+   * getE_multi() :
+     + consideration of energyWithDangles parameter
+   * getE_multi() :
+     + bugfix: helix-end terms were missing
+ * IntaRNA/InteractionEnergy* :
+   * constructor() :
+     + energyWithDangles handling
+ * bin/CommandLineParsing :
+   + energyNoDangles : whether or not dangling end terms are considered
+   * getEnergyHandler() :
+     * bugfix : InteractionEnergyBP constructor call
+
+190404 Martin Raden :
+ * IntaRNA/InteractionEnergy :
+   * getE() :
+     + additional sanity checks to avoid energy range overflows
+
+190403 Martin Raden :
+ * IntaRNA/PredictorMfe :
+   * updateOptima() :
+     + bugfix: explicit handling of energies >= E_MAX
+
+190320 Martin Raden :
+ * IntaRNA/PredictorMfe2dHeuristic* :
+   + outNoLP support
+ * tests/data :
+   + tests with and without noLP
+ * .travis.yml : 
+   - viennarna not available via ppa anymore
+   + build IntaRNA via conda
+ * tests/Makefile.am :
+   * switch to parallel test harness to define shell script test driver
+
+190319 Martin Raden :
+ + tests/runIntaRNA.sh : runs tests using the IntaRNA binary
+ + tests/data :
+   + noLP-exact 
+   + noLP-exact-seed
+ * IntaRNA/Predictor* :
+   * predict() :
+     + "outNoLP not implemented" warnings where needed
+ * bin/CommandLineParsing :
+   * getSeedHandler() :
+     + "outNoLP not implemented" warning for SeedHandlerMfe
+ * README.md :
+   + outNoLP
+
+190318 Martin Raden :
+ * IntaRNA/OutputConstraint :
+   + noLP : whether or not lonely (non-stacked) interaction bps are allowed
+   * constructor( + noLP )
+ * IntaRNA/InteractionRange :
+   * energy init = E_INF (was signaling_NaN())
+ * IntaRNA/Interaction :
+   * energy init = E_INF (was signaling_NaN())
+   * IntaRNA/Interaction::Seed :
+     + operator == ()
+   + operator == ()
+     + check for second base pair
+ * IntaRNA/PredictorMfe :
+   * updateOptima() :
+   * reportOptima() :
+     * bugfix of degenerate energy handling + simplification
+ * IntaRNA/PredictorMfe2d :
+ * IntaRNA/PredictorMfe2dSeed :
+   + support for OutConstraint::noLP
+   * fillHybridE( + callUpdateOptima ) : updating optima now optional
+   * traceBack() :
+     * bugfix : call of fillHybridE( callUpdateOptima = false ) to avoid 
+       redundant updateOptima() calls
+   + support for OutConstraint::noLP
+ * bin/CommandLineParsing :
+   + outNoLP : whether or not lonely (non-stacked) interaction bps are allowed
+
+190315 Martin Raden :
+ * IntaRNA/Accessibility :
+   + decomposeByMaxED() : replaces decomposeByMinPu()
+   - decomposeByMinPu() : renamed to decomposeByMaxED()
+ * IntaRNA/InteractionEnergy :
+   + energyAdd + get*() : shift of the energy spectrum to be applied in getE()
+   * constructor( + energyAdd )
+   * getE() :
+     + energyAdd
+   * EnergyContributions :
+     + energyAdd member
+   * getE_contributions() :
+     + energyAdd
+ * IntaRNA/InteractionEnergy* :
+   * constructor( + energyAdd )
+ * SeedHandler :
+   + areLoopOverlapping() : tests whether or not the last x and the first x
+     loops of two seeds are formed by identical base pairs
+ - IntaRNA/OutputHandlerRangeOnly : obsolete
+ * OutputHandler* :
+   * add( + outConstraint )
+   - add( InteractionRange ) : obsolete
+ * IntaRNA/OutputHandlerText :
+ * IntaRNA/OutputHandlerCsv :
+   - outConstraint : now provided as argument to add()
+   * constructor( - outConstraint )
+ - IntaRNA/OutputHandlerRangeOnly : obsolete
+ * IntaRNA/PredictorMfe :
+ * IntaRNA/PredictorMaxProb :
+   * adaptation to OutputHandler::add() change
+ * bin/CommandLineParsing :
+   + calling decomposeByMaxED() only if outMinPu > 0
+   + energyAdd parameter + validate*() to shift energy spectrum
+   * getInteractionEnergy() : 
+     + set energyAdd
+ * BOOST_FOREACH replaced by c++11 for loop syntax
+
+190313 Martin Raden :
+ * IntaRNA/IndexRangeList :
+   + allowOverlapping member
+   + isAllowingOverlap() 
+   * constructor( + allowOverlapping )
+   + reverseInplace() : renamed non-const reverse method to make intention clear
+   - reverse() : replaced by reverseInplace()
+   * ostream operator now friend function
+   * covers() :
+   * overlaps() :
+   * insert() :
+     + support for non-overlapping ranges added
+ * IntaRNA/Interaction : 
+   * Seed :
+     + constructor() to enable default and explicit initialization
+     + < operator to enable automated (energy-based) sorting
+   + SeedSet : (energy-sorted) set of seeds
+   * seed member now SeedSet* (was Seed*) to support storage of multiple seeds
+   + getSeedRanges*() : provides an (overlapping) IndexRangeList of all seeds
+     stored within the interaction for the respective sequence
+   * ostream operator( BasePair ) now friend function
+ * IntaRNA/SeedHandler :
+   * traceBackSeed() now const function
+   + isSeedBound() : to check whether or not base pair marks a left-side seed
+     boundary
+   + addSeeds() : adds all seeds that overlap with base pairs of a given
+     interaction to its internal seed list
+ * IntaRNA/SeedHandler* :
+   + isSeedBound() 
+   * traceBackSeed() const
+ * IntaRNA/SeedHandlerExplicit :
+   + getSeedMaxBP() : provides the maximal number of base pairs within one of
+     the explicit seed encoded by the provided string
+ * IntaRNA/SeedHandlerMfe :
+   * getSeedE() const
+ * IntaRNA/Predictor*Seed :
+   + using SeedHandler::isSeedBound()
+   + calling seedHandler.addSeeds(interaction) for each interaction
+ * IntaRNA/HelixHandler* :
+   + using SeedHandler::isSeedBound()
+ * IntaRNA/OutputConstraint :
+   + bestSeedOnly : whether or not only the mfe seed is to be printed
+   * constructor( + bestSeedOnly )
+ * IntaRNA/OutputHandler* :
+   * adaptation to Interaction.seed change (SeedSet instead of Seed object)
+ * IntaRNA/OutputHandlerCsv :
+ * IntaRNA/OutputHandlerText :
+   + outConstraint : output constraint also used for predictors
+   * constructor( + outputConstraint )
+   * add() :
+     + support for multi seed output
+     + support for mfe seed output based on OutConstraint::bestSeedOnly
+ * IntaRNA/OutputHandlerCsv :
+   + listSep : separator of multi value entries within one CSV column
+   * constructor( + listSep )
+   * list2string() : 
+     + sep argument to explicitly specify separator to be used
+   * getHeader() : now based on list2string()
+ * IntaRNA/OutputHandlerText :
+   * add() :
+     + seed base pairs now represented by '+' (in detailed output mode)
+     * GU base pair check via InteractionEnergy::isGU()
+ * tests : adaptation to changes
+ * tests/SeedHandlerNoBulge :
+   + test isSeedBound()
+ + tests/runApiTests.cpp : renamed runTests.cpp
+ - tests/runTests.cpp : replaced by runApiTests.cpp
+ * IntaRNA/AccessibilityVrna :
+   * fillByRNAplfold() :
+     + throws error if vrna_probs_window() reports problems (zero return value)
+ * bin/CommandLineParsing :
+   + mode : renamed predMode
+   - predMode : replaced by mode
+   + outBestSeedOnly : whether or not to print only mfe seed information
+   * check if helixMaxBP >= seedBP now handle explicit seed input
+   * check for minimal sequence length based on seed now only if seeds computed
+ * README.md :
+   + outBestSeedOnly parameter 
+   + '+' seed bps in detailed text output
+   * restructuring of section order + new main sections defined
+
+190312 Martin Raden :
+ * IntaRNA/Accessibility* :
+   + verbose output how accessibility is computed
+ * bin/CommandLineParsing :
+   + Personality + get/Name() : enum of IntaRNA's known multiple personalities
+   + getPersonality() : checks how IntaRNA was called to react accordingly...
+   + personality argument and member
+   * construction() :
+     + takes now Personality instead of callName
+     + default setup based on selected personality
+ * Makefile.am :
+   + revealing personalities IntaRNAup, IntaRNAduplex and IntaRNAhelix as links 
+     in install directory
+ * README.md :
+   + multiple personalities and their use cases
+
+190311 Martin Raden :
+ * configure.ac :
+   + AC_PROG_LN_S : check for symboling linking
+ * Makefile.am :
+   + create IntaRNA alias as link to setup alternative defaults and behavior 
+ * bin/CommandLineParsing :
+   * construction( callName ) : takes argv[0] (== name of the called binary) to
+     setup default arguments and behavior of the respective IntaRNA alias
+
+190310 Martin Raden :
+ + IntaRNA/PredictorMfeEns : base class for ensemble-based predictors
+   + overallZhybrid : overall hybridization partition function since last 
+     predict() call
+   + initZ()
+   + updateZ()
+   + getHybridZ() : access to the overall hybridization partition function
+
+190308 Martin Raden :
+ * bin/CommandLineParsing :
+   + --parameterFile argument (specify additional parameters via config file);
+     command line arguments take precedence over config file parameters
+   + configFileName : file from where to read parameters from
+   * bool flags now set via boost not via explicit count check
+   + bool flags can now be explicitly set with value , eg --noSeed=false, eg
+     to overwrite arguments from config file  
+ + doc/figures/freepik-*.zip : original icon downloads from freepik.com
+ + doc/figures/icon-up.* : up arrow to be used for overview navigation
+ * README.md :
+   + parameterFile docu
+   + direct links to overview (table of content) after each subsection
+
+190307 Martin Raden :
+ * IntaRNA/SeedConstraint :
+   + bpGUallowed : whether or not GU base pairs are allowed within seeds
+   + isGUallowed() : returns bpGUallowed
+   + maxEhybrid : maximal hybridization energy
+   + getMaxEhybrid()
+ * IntaRNA/RnaSequence :
+   + bpGUcodes : base pair codes for GU and UG
+   + isGU() : tests whether or not two positions can form a GU base pair
+ * IntaRNA/InteractionEnergy :
+   + isGU() : tests whether or not two positions can form a GU base pair
+ * IntaRNA/SeedHandler :
+   * isFeasibleSeedBasePair() :
+     + check if GU base pair are allowed or not
+ * IntaRNA/HelixHandlerNoBulgeMax :
+   * fillHelixSeed() : 
+     * now based on seed iteration to speed up
+ * CommandLineParsing :
+   + helixMinPu : minimal unpaired probability (per sequence) of considered
+     helices (to make interface analogously to seed constraints)
+   - helixMaxED : replaced by helixMinPu
+   + seedNoGU : if present, GU base pairs are not allowed within seeds
+   + seedMaxEhybrid : maximal hybridization energy (excl.) for seeds
+ * README.md :
+   + seedNoGU
+   + seedMaxEhybrid
+   + helixMinPu
+   - helixMaxED
+   * figure links corrected (to be working within github pages) 
+
+190306 Martin Raden :
+ * README.md :
+   + helix constraints documented
+ * IntaRNA/HelixHandlerUnpaired :
+   * adaptation to HelixConstraint::evalFullE() semantics
+ * bin/CommandLineParsing :
+   + helixFullE : replaces helixNoED
+   - helixNoED : replaced by helixFullE
+   * model : renamed 'L' to 'B' since only using blocks of stable helices
+ * renaming Predictor*MaxHelix* to Predictor*HelixBlock*
+ * IntaRNA/SeedHandler :
+   + updateToNextSeed() : generic seed iteration functionality
+ * IntaRNA/SeedHandlerIdxOffset :
+ * IntaRNA/SeedHandlerExplicit :
+ * IntaRNA/SeedHandlerNoBulge :
+   + updateToNextSeed() : specialized seed iteration functionality
+ * IntaRNA/SeedHandlerIdxOffset :
+   + deleteOnDestruction : whether or not the original seedhandler is to be 
+     deleted within the destructor
+   * destructor() :
+     + check for deleteOnDestruction
+   * constructor( +deleteOnDestruction = true ) :
+     + deleteOnDestruction init
+
+190305 Martin Raden :
+ * IntaRNA/PredictorMfe2d :
+   * fillHybridE() : 
+     + explicit initialization (formerly done via initHybridE)
+     * now virtual and to be overwritten by subclasses
+   - initHybridE() : obsolete
+   - hybridErange : obsolete
+ * IntaRNA/PredictorMfe2dSeed : runtime optimization
+   + fillHybridE() : overwrites super class function and fills both matrices
+     in one go to avoid recomputation of loop energies etc.
+   - updateOptima() : obsolete
+   - hybridErange : obsolete
+   - fillHybridE_seed() : now part of fillHybridE()
+ * IntaRNA/PredictorMfe2dHeuristic :
+   * predict() :
+     - matrix initialization now implicit in fillHybridE()
+   * fillHybridE() :
+     + explicit base pairing checks and field initialization
+ * IntaRNA/PredictorMfe2dHeuristicSeed :
+   + fillHybridE() : overwrites super class function and fills both matrices
+     in one go to avoid recomputation of loop energies etc.
+ * IntaRNA/SeedHandler :
+   * isFeasibleSeedBasePair() :
+     + check for accessibility constraints
+ * IntaRNA/HelixConstraint :
+   + checkFullE & evalFullE() : whether or not to use full helix energy for 
+     constraint checks or loop terms only
+   - useNoED : replaced by checkFullE
+ * IntaRNA/HelixHandler* :
+   * adaptation to HelixConstraint::evalFullE()
+ * renaming PredictorMfe2dHelix* to PredictorMfe2dMaxHelix*, since only maximal
+   helices are considered for interaction prediction
+ + IntaRNA/HelixHandlerNoBulgeMax : computes for each base pair the canonical 
+   helix extension to the right with minimal energy (according the given 
+   HelixConstraint) and stores this energy along with the respective helix
+   length
+ - IntaRNA/HelixHandlerStackingOnly : replaced by HelixHandlerNoBulgeMax
+ * IntaRNA/HelixHandler :
+   * getHelixHandler() :
+     * HelixHandlerStackingOnly replaced by HelixHandlerNoBulgeMax
+ + tests/HelixHandlerNoBulgeMax* : renamed HelixHandlerStackingOnly tests
+ - tests/HelixHandlerStackingOnly* : renamed
+ * bin/CommandLineParsing :
+   + helixFullE : replaces helixNoED
+   - helixNoED : replaced by helixFullE
+   * model : renamed 'H' to 'L' since only using blocks of stable helices
+ * README.md :
+   + helixFullE documentation 
+   * model docu updated
+
+190304 Martin Raden + Frank Gelhausen :
+ * API change: E_type now int (was float); all internally used energy values
+   are now integer-encoded values in dcal/mol (instead of kcal/mol) as done
+   within the VRNA package. this avoids floating point operation issues of the
+   traceback routines.
+   NOTE: this change will have minor impact on the reported interactions and
+   their energies! Thus, results will not equal 2.* predictions!
+ + IntaRNA::E_kcal_type = float to represent input/output energies in kcal/mol
+ + IntaRNA::Z_type = float to represent partition functions, temperature and
+   probabilities
+ + type conversion routines for E_kcal_type, E_type, Z_type
+ * 'outMaxE' value now exclusive concerning interaction reporting (all reporeted
+   interactions have a lower energy)
+ * IntaRNA/InteractionEnergyVrna :
+   * replacing deprecated 'ViennaRNA::E_Stem(..)' with 'ViennaRNA::vrna_E_ext_stem(..)'
+   + Evrna_2_E() to convert VRNA energy values to E_type
+ * IntaRNA/NussinovHandler :
+   + takes basePairEnergy for minimization (was maximization with hard coded +1 per bp)
+ * IntaRNA/PredictorMaxProb :
+   + updateOptima(energy) : was missing
+ * IntaRNA/PredictorMfe :
+   * updateOptima() :
+     * now using Interaction::compareEnergy() instead of explicit energy comparison
+   * reportOptima() :
+     * energy check extended to be conform to Interaction::compareEnergy()
+ * IntaRNA/PredictorsMfe2d*Seed :
+   * early abortion check corrected
+ * IntaRNA/AccessibilityBasePair :
+   + VLOG time logging
+ * IntaRNA/Accessibility :
+   * decomposeByMinPu() :
+     + bugfix: explicit minPu==0 handling
+ * bin/CommandLineParsing :
+   * get*Ranges() :
+     + additional Accessibility argument to avoid recomputation (what a mess..)
+ * IntaRNA/PredictorMfe2d :
+   * initHybridE() : 
+     - E_MAX since it was masking global variable with wrong value
+
+##### version 2.4.1
+
+190409 Martin Raden :
+ * IntaRNA/Makefile :
+   + add missing HelixConstraint.h (thanks to A. R. Garcia and M. Fuchs)
+
+##### version 2.4.0
+
+190228 Martin Raden :
+ * easylogging++ :
+   * kDefaultLogFileParam now part of header to be accessible
+ * bin/IntaRNA :
+   * bugfix: check whether or not --default-log-file specified was always true
+     such that all log output was going to the default "/dev/null" if not 
+     specified by the user 
+ * IntaRNA/PredictorMfe2dHelixHeuristic* :
+   * bugfix: check for too small interior loops was based on individual gap
+     length instead of sum of unpaired positions
+ * IntaRNA/PredictorMfe2dHelixHeuristicSeed :
+   * updateOptima() :
+     + update superclass mfe information to enable early abortion
+   * predict() :
+     + check if non-seed mfe prediction is within allowed range; otherwise abort
+ * IntaRNA/PredictorMfe2dSeed :
+   * fillHybridE_seed() :
+     - bugfix: wrong assert removed
+ * tests updated
+
+190224 Martin Raden :
+ * renaming PredictorMfe2dLimStack* to PredictorMfe2dHelix*
+ * README.md :
+   + general interaction discussion
+   + model parameter
+   + publication links
+   + helix-based prediction + parameters
+ + doc/figures/icon-no.*
+ + doc/figures/icon-yes.*
+
+190223 Martin Raden / Rick Gelhausen :
+ + integration of helix-based RNA-RNA interaction prediction
+ + IntaRNA/HelixConstraint : constraints for considered inter-molecular helices
+ + IntaRNA/HelixHandler : general interface to enumerate inter-molecular helices
+ + IntaRNA/HelixHandlerIdxOffset : allows index shifting for localized access
+ + IntaRNA/HelixHandlerStackingOnly : enumerates only canonical helices
+ + IntaRNA/HelixHandlerStackingOnlySeed : canonical helices that contain a seed
+ + IntaRNA/HelixHandlerUnpaired : enumerate helices that can contain bulges
+ + IntaRNA/HelixHandlerUnpairedSeed : (bulged) helices that contain a seed
+ + IntaRNA/PredictorMfe2dLimStackHeuristic : helix-based interaction prediction
+ + IntaRNA/PredictorMfe2dLimStackHeuristicSeed : helix-based interaction 
+   prediction that enforces the seed constraint
+ * IntaRNA/SeedHandlerIdxOffset :
+   * now subclass of SeedHandler
+   + energy access via InteractionEnergyIdxOffset member
+ * tests :
+   + HelixConstraint
+   + HelixHandlerStackingOnly 
+   + HelixHandlerIdxOffset + HelixHandlerStackingOnly 
+   + HelixHandlerStackingOnlySeed 
+   + HelixHandlerIdxOffset + HelixHandlerStackingOnlySeed 
+   + HelixHandlerUnpaired
+   + HelixHandlerIdxOffset + HelixHandlerUnpaired
+   + HelixHandlerUnpairedSeed
+   + HelixHandlerIdxOffset + HelixHandlerUnpairedSeed
+   + PredictorMfe2dLimStackHeuristic
+   + PredictorMfe2dLimStackHeuristicSeed
+   + SeedHandlerIdxOffset
+   + SeedHandlerMfe
+ * bin/CommandLineParsing :
+   * replace 'pred' with 'model' = defines underlying interaction model
+   + new model 'H' = helix-based prediction
+   + new 'Helix' parameter group
+
+190207 Martin Raden :
+ * IntaRNA/OutputHandlerText :
+   * detailed output reordered and extended
+     * Pu now below respective ED
+     * Pu now with ':' prefix instead of '+' (thanks to Sebastian Will)
+     + E(hybrid) information (thanks to Sebastian Will)
+   * NOTE: this causes changes in the detailed ASCII output!
+ * README.md :
+   * minor fixes
+ * IntaRNA/OutputHandlerText :
+   * add() :
+     * explicit handling of duplicated base pairs (might happen due to explicit
+       seeds containing only a single base pair) (thanks to Sebastian Will)
+
+190128 Martin Raden :
+ * bump easylogging++ version to v9.96.7
+
+190110 Martin Raden :
+ * CommandLineParsing :
+   * windowOverlap : default changed to 150 (was 0) to avoid the need to set for
+     default q|tAccW values
+
+##### version 2.3.1
+
+181108 Martin Raden :
+ + IntaRNA/PredictionTrackerSpotProbAll : exhaustively computes and prints all
+   spot probabilities (ie for all intermolecular index pairs)
+ * bin/CommandLineParsing :
+   + registration and documentation of PredictionTrackerSpotProbAll usage
+ * README.md :
+   * exhaustive spot prob calculation documented
+
+180907 Martin Raden :
+ * IntaRNA/OutputHandlerCsv :
+   + 'hybridDP|Bfull' output for full sequence lengths
+ * IntaRNA/Interaction :
+   * dotBar() :
+   * dotBracket() :
+     + "fullLength" argument to trigger full-length or interaction-site-only 
+       output
+ * README.md : 
+   + 'hybridD(P|B)full' documentation
+
+##### version 2.3.0
+
+180906 Martin Raden :
+ * bin/CommandLineParsing :
+   * VRNA version information in --version output corrected
+ * README.md :
+   + window-based prediction docu
+   * minor corrections and extensions
+
+180905 Martin Raden :
+ * configure.ac :
+   + final configuration output
+ * IntaRNA/PredictorMfe4d : 
+   * predict() :
+     * bugfix initialization problem : was only initializing cells not to be 
+       filled, which caused random prediction problems (issue #117)
+     - debug cell allocation information
+     - sophisticated (but buggy) check for cells not needed for computation
+   * fillHybridE() :
+     * bugfix : maxInteractionWidth check (have to use <= instead of <)
+     - cell initialization check removed (since obsolete and causing problems,
+       see issue #117)
+ * IntaRNA/PredictorMfe4dSeed : 
+   * predict() :
+     * bugfix initialization problem : was only initializing cells not to be 
+       filled, which caused random prediction problems (issue #117)
+     - debug cell allocation information
+     - sophisticated (but buggy) check for cells not needed for computation
+ * README.md :
+   * prediction mode documentation corrected
+   
+180905 Martin Raden, Sebastian Holler : window-based prediction enabled
+ * bin/CommandLineParsing :
+   + windowWidth parameter + validator to define length of windows
+   + windowOverlap parameter + validator to define overlap of subsequent windows
+   * parse() :
+     + checks for window* parameter dependencies/interactions
+ * bin/IntaRNA :
+   + window-decomposition of ranges
+   + parallelization of window-based processing if only one query/target
+ * IntaRNA/IndexRange :
+   + overlappingWindows() : provides a vector of overlapping windows for 
+     window-based processing
+ * IntaRNA/OutputHandlerInteractionlist :
+   * add() : 
+     + check for identity before insert to avoid duplications in list
+ * tests/IndexRange :
+   + check for overlappingWindows()
+ + tests/OutputHandlerInteractionList :
+   + order test
+   + duplicated insert test
+
+180819 Martin Raden :
+ + IntaRNA/SeedHandlerNoBulge : optimized seed handler if no bulges are allowed
+   within seeds
+ + tests/SeedHandlerNoBulge_test : comparing output with SeedHandlerMfe
+ * IntaRNA/SeedHandler :
+   + isFeasibleSeedBasePair() : checks whether or not a given base pair can be
+     part of a seed (complementary, in valid region, with ED below threshold)
+ * bin/CommandLineParsing :
+   * getSeedHandler() :
+     + provides SeedHandlerNoBulge if no unpaired bases are allowed within seed
+ * IntaRNA/SeedHandlerMfe :
+   * fillSeed() :
+     + time measurement in verbose mode
+     + usage of SeedHandler::isFeasibleSeedBasePair() where appropriate
+
+180807 Martin Raden :
+ * Makefile.am :
+   + set GCC_COLORS (if not already present) to enable gcc output coloring
+
+180711 Martin Raden :
+ * IntaRNA/Interaction :
+   * operator < : 
+     * bugfix: right base pair access was incorrect (thanks to Sebastian Holler)
+
+180710 Martin Raden :
+ * IntaRNA/Predictor* :
+   * traceback() :
+     * sanity check corrected (debug mode only) to handle single bp interaction
+
+180705 Martin Raden :
+ + IntaRNA/PredictionTrackerProfileSpotProb : computes a profile for each 
+   sequence position about the probability that a position is covered by an
+   interaction (but not necessarily base paired within) = spot probability
+ * IntaRNA/Makefile :
+   + PredictionTrackerProfileSpotProb
+ * bin/CommandLineParsing :
+   + PredictionTrackerProfileSpotProb
+   * '--out' argument :
+     + q|tSpotProb : generate spot probability profile for query|target
+   * getCodeForOutPrefix() :
+     + parsing of "q|tSpotProb"
+ * README.md : 
+   + docu of spot probability profiles 
+ 
+##### version 2.2.1
+
+180627 Martin Raden / Milad Miladi :
+ * adaptation to VRNA v2.4.8
+    
+180328 Martin Raden :
+ * IntaRNA/OutputHandlerCsv :
+ * IntaRNA/OutputHandlerIntaRNA1 :
+ * IntaRNA/OutputHandlerText :
+     + data first written to local stream before pushed (via OMP critical) to
+       final output stream. This should fix some multi-threading output issues.
+ * IntaRNA/OutputHandlerText :
+   + usage of reportedInteractions member
+   * destructor() :
+     + check if nothing was reported and provide according output
+ * bin/CommandLineParsing :
+   * "version" output extended with used VRNA and boost version
+     
+##### version 2.2.0
+
+180319 Martin Raden :
+ * IntaRNA/PredictorMfe2dHeuristic :
+   * traceBack() :
+     * bugfix: wrong sanity check in debug mode (thanks to Rick Gelhausen)
+ * IntaRNA/Predictor :
+   * updateOptima() :
+     * bugfix: PredictionTracker call was not doing lastPos-handling
+ * README.md : 
+   + spotProb docu added
+ + IntaRNA/PredictionTrackingSpotProb : tracks for a given set of interaction
+   spots their probability to be covered/spanned by an interaction. furthermore,
+   the probability that none of the spots of interest is covered is provided.
+ + test/PredictionTrackingSpotProb
+ * bin/CommandLineParsing :
+   * OutputPrefixCodes :
+     + OP_spotProb : for spotProb output mode
+   + outSpotProbSpots : member to store the spots to be tracked (if provided)
+   * --out argument :
+   * validate_out() :
+   * getPredictor() : 
+     + handling of "spotProb" prefix for spot probability tracking
+
+180312 Martin Raden :
+ * IntaRNA/PredictorMaxProb :
+ * IntaRNA/PredictorMfe :
+   * updateOptima() :
+     * bugfix : call of predTracker->updateOptimumCalled() was done without
+       index offset information (fixes github issue #110) 
+ * IntaRNA/AccessibilityVrna :
+   * callbackForStorage() :
+     * bugfix : copying was not heeding maximal interaction length 
+       (fixes github issue #112)
+ * configure :
+   * bump VRNA dependency to v2.4.4 for recent SHAPE-related bugfix
+ * README.md :
+   + SHAPE-reactivity-related section 
+ * IntaRNA/AccessibilityConstraint :
+   + regexShapeMethod : regex for shapeMethod parsing
+   + regexShapeConversion : regex for shapeConversion parsing
+   + shapeMethod member + getter
+   + shapeConversion member + getter
+   * constructor :
+     + argument for shapeMethod/shapeConversion
+     + sanity check of shapeMethod/shapeConversion if shapeFile non-empty
+   * copyconstructor :
+     + copying of shape* members
+   * regex : bugfix : was not correctly encoding dotbracket strings or index
+     range lists
+   * operator= :
+     + shape members copied
+ * tests/AccessibilityConstraint :
+   * adaptation to AccessibilityConstraint constructor changes
+   + tests for regex matching
+ * IntaRNA/Accessibility :
+   * adaptation to AccessibilityConstraint constructor changes
+ * IntaRNA/AccessibilityVrna :
+   * fillByRNAplfold() :
+     + get shapeMethod and shapeConversion from AccessibilityConstraint
+ * bin/CommandLineParsing :
+   * adaptation to AccessibilityConstraint constructor changes
+   + SHAPE argument list
+     * q|tShape : moved here from query|target argument list
+     + q|tShapeMethod : method to convert SHAPE to pseudo energies
+     + q|tShapeConversion : method to convert SHAPE to pairing probabilitie
+   * validate_structureConstraintArgument() :
+     * bugfix: check had to be reversed
+
+1802 Martin Raden :
+ * IntaRNA/AccessibilityConstraint :
+   * constructor() :
+     - default arguments removed to avoid wrong constructor selection
+     + shapeFile argument to pass file name of SHAPE reactivity data to be used
+   + shapeFile member + getter
+   * isEmpty() :
+     + check if shapeFile empty
+   * operator<< :
+     + output of shapeFile if non-empty
+ * IntaRNA/Accessibility :
+   * adaptation to AccessibilityConstraint constructor changes
+ * IntaRNA/AccessibilityVrna :
+   * fillByRNAplfold() :
+     + call vrna_constraints_add_SHAPE() if shapeFile of AccessibilityConstraint
+       not empty
+ * bin/CommandLineParsing :
+   + q/tShape argument + validation : file name from which to read SHAPE
+     reactivity data to guide accessibility computation (via soft constraints)
+   * adaptation to AccessibilityConstraint constructor changes
+   * unification of parsing code update via usage of updateParsingCode()
+
+180111 Martin Raden :
+ * IntaRNA/Accessibility:
+   + decomposeByMinPu() : decomposes a given list of ranges to subranges by
+     excluding all positions that have an unpaired probability below a given
+     threshold
+ * bin/CommandLineParsing :
+   + '--outMinPu' argument + validators
+   * get*Ranges() :
+     + calling Accessibility->decomposeByMinPu() for each range list
+     + energy argument (needed for RT access)
+
+171216 Martin Raden :
+ * bin/CommandLineParsing :
+   - check for equal length of sequence and constraint removed since obsolete
+
+171214 Martin Raden :
+ * m4:
+   * *.m4 : updated to recent versions
+   + m4-ax_boost_*.m4 : boost library checks 
+
+171213 Martin Raden :
+ * configure.ac :
+   * leading spaces in macros removed
+   + default macro definitions if pkg.m4 not available
+   + silent make output enabled per default (full output with 'make V=1')
+   - obsolete pkg-config m4 check removed
+
+171211 Martin Raden :
+ * IntaRNA/PredictorMfe :
+   * traceBack() : 
+     + argument outConstraint (needed to bugfix the PredictorMfe2d computation)
+   * reportOptima() :
+     + forwards outConstraint to traceBack() call
+ * IntaRNA/PredictorMfe* :
+   * adaption to traceBack() interface changes
+ * IntaRNA/PredictorMfe2d :
+   * traceBack() :
+     * bugfix: outConstraint missing in fillHybridE() call but called with 
+       (&outConstraint = i1) and (i1 = i2), which caused infinite tracebacks
+   * initHybridE() :
+     - default argument values (=0) removed to avoid wrong argument use (see
+       traceBack() bugfix)
+     - special initialization removed to simplify code (and not applied anyway)
+   * fillHybridE() :
+     - default argument values (=0) removed to avoid wrong argument use (see
+       traceBack() bugfix)
+     * computation simplified
+ * IntaRNA/PredictorMfe2d :
+   * fillHybridE() :
+     * bugfix: outConstraint missing in fillHybridE() call but called with 
+       (&outConstraint = i1) and (i1 = i2), which caused infinite tracebacks
+ * IntaRNA/PredictorMfe2dSeed :
+   * fillHybridE_seed() :
+     + outConstraint argument
+     * bugfix: outConstraint missing in fillHybridE() call but called with 
+       (&outConstraint = i1) and (i1 = i2), which caused infinite tracebacks
+
+171127 Martin Raden :
+ * bin/CommandLineParsing :
+   * getThreads() :
+     * returns threads.max if threads.val == 0
+   * threads :
+     * min value = 0 (request maximal number of threads)
+     * parameter docu updated accordingly
+   * validateRegion() :
+     + instantiate range list to ensure that it is ascending and non-overlapping
+   + outPerRegion : parameter flag to define how reporting per region should be
+     done
+   + reportBestPerRegion() : access to outPerRegion
+ * IntaRNA/IndexRangeList :
+   * sanity checks now also in non-debug mode to ensure sane instances
+ * IntaRNA/IndexRange :
+   * operator+/-(int shift) : returns a shifted range
+ * bin/IntaRNA :
+   * bugfix: verbose range report was not shifting ranges by +1
+   + use OutputHandlerInteractionList to handle predictions for all region
+     combinations for a query-target combination; setup maximal size based on 
+     CommandLineParsing::reportBestPerRegion()
+ * README.md :
+   + '--outPerRegion' docu added
+ * IntaRNA/Interaction :
+   + operator < : less-than comparison based on energy and indexing/#bp/seed.E
+ + IntaRNA/OutputHandlerInteractionList : stores the best k interactions sorted
+   by Interaction::operator<()
+
+171123 Martin Raden :
+ * bin/CommandLineParsing :
+   * validate_outputTarget() :
+     + check whether or not parent directory of output file exists
+     + check whether or not the output file can be overwritten (if existing)
+ * IntaRNA/general :
+   * E_precisionEpsilon : now = sqrt(numeric_limits<E_type>::min())
+     (was 1000*numeric_limits<E_type>::epsilon(), which was much too large)
+ * IntaRNA/AccessibilityVrna :
+   * callbackForStorage() :
+     * undo last change, i.e. check for 0-pUvalues now again via '==' instead of
+       E_equal
+ * IntaRNA/AccessibilityVrna :
+ * IntaRNA/InteractionEnergyVrna :
+   * construction() :
+     * now computation is considered thread-safe, i.e. no omp_critical needed
+ * bin/IntaRNA :
+   + parallelization of query accessibility computation
+ * README.md :
+   - non-parallelization of accessibility computation not true anymore
+
+171122 Martin Raden :
+ * README.md :
+   + discussion and examples for range-based constraint encoding
+ * tests/AccessibilityConstraint :
+   + test for range-based encoding parsing
+ * IntaRNA/IndexRangeList :
+   + regexString : string encoding of regex without start/end matching to be
+     used in other regex encodings
+ * IntaRNA/AccessibilityConstraint :
+   + dotBracket_constraints : list of constraint encodings
+   + regionIndexList : regular expression string that matches the region list
+     for a single constraint encoding
+   + regex : overall regex that matches both dotBracketAlphabet as well as
+     range-based encodings
+   + operator << : prints the constraint in range-based encoding
+   * construction :
+     + length now mandatory since not necessarily available via constraint 
+       string encoding length
+     + parsing of range-based encoding with according error messages
+ * bin/CommandLineParsing :
+   * get*Accessibility():
+     + constraint parsing now encapsulated by try-catch to report dedicated
+       error messages for query/target encodings
+   + *AccConstr parameter description extended with range-based encoding
+   * validate_structureConstraintArgument() :
+     - obsolete structure check removed
+     * validation now via regex
+
+171117 Martin Raden :
+ * bin/CommandLineParsing :
+   * unify input error handling via throw
+   + check if accessibility available for RegionLenMax-based decomposition
+   * validate_*AccConstr() :
+     - check that not in plfold-based mode
+   * AccConstr :
+     + paired constraint option
+ * IntaRNA/VrnaHandler : 
+   + modle.compute_bpp = 1 to enable correct ED computation via plfold routines
+ * IntaRNA/AccessibilityVrna :
+   * construction() : 
+     - checks to enable constraints only for RNAup-based computation
+     - RNAup-based computation option removed
+     * plfold-based computation only
+   * callbackForStorage() :
+     * prob_unpaired == 0 check via E_equal()
+   * fillByRNAplfold() :
+     - debug check that no constraint is defined
+     + constraint setup
+ * README.md :
+   + --q/tAccConstr description
+ * IntaRNA/AccessibilityConstraint :
+   + dotBracket_unconstrained : holds unconstrained encoding char
+   + dotBracket_paired : holds paired encoding char
+   * dotBracket_alphabet : now compiled from static vars only (excludes round
+     brackets that were part of it so far but never enabled)
+   - is*(from,to) : obsolete (and wrong) checks for regions removed
+   + paired : list of ranges marked as paired
+   + isMarkedPaired(i) : whether or not a position is marked as paired
+   * constructor() :
+     + parse paired ranges
+     - check for round brackets (obsolete)
+   * is*() : take paired into account
+   * getVrnaDotBracket() :
+     + returns '|' for paired positions
+ * IntaRNA/Accessibility* :
+   * getED() :
+     * bugfix : do accessibility check only on interval ends (not whole region)
+ * tests/AccessibilityConstraint_test :
+   + test for position marked as paired
+
+171116 Martin Raden :
+ * configure.ac :
+   + --enable-static-linking flag added to build statically linked binaries
+ * IntaRNA/PredictorMfe2dHeuristic :
+   * undo change of 171111 since it is effecting seed-based predictor as well
+     and it is not benchmarked yet.. (thanks to Alex Gawronski)
+
+171113 Martin Raden :
+ * IntaRNA/IndexRangeList :
+   + get() : (constant) access to a certain range
+ + tests/testEasyLoggingSetup.icc : easylogging setup to be included in all
+   tests to enable (debug) logging from the IntaRNA lib
+ * tests/*_test.cpp :
+   + inclusion of testEasyLoggingSetup.icc
+ * Makefile.am :
+   + clean test executable to ensure rebuild
+ * tests/Makefile.am :
+   + easylogging++ compiler flags
+ * IntaRNA/Accessibility :
+   + decomposeByMaxEd() : automatically identifies highly accessible regions of
+     the sequence and provides list of according intervals where each is below
+     a given threshold in length (also lower bound provided). This is done by
+     iteratively identifying the max ED window (of given size) within too long
+     ranges and removing it, which results either in a shrink of the range or
+     a decomposition into two ranges. This is repeated until all ranges are 
+     sufficiently short.
+     (thanks to Alex Gawronski)
+ * tests/AccessibilityFromStream_test :
+   + test Accessibility.decomposeByMaxEd()
+ * bin/CommandLineParsing :
+   + qRegionLenMax/tRegionLenMax : (optional) maximal length of automatically
+     identified highly accessible regions in query/target
+   * qRegion/tRegion : mutable to enable lazy computation in get*Region()
+   * get*Region() :
+     + lazy computation of regions if according ?RegionLenMax > 0; uses a 
+       winSize == seedBP and a minimal range length of seedBP
+   * parse() :
+     + ensure that no manual regions defined if ?ReginLenMax provided 
+
+171111 Martin Raden :
+ * IntaRNA/PredictorMfe2dHeuristic :
+   * init curCellEtotal = E_INF to ignore effects of low ED of single positions
+     (already applied that way in PredictorMfe2dHeuristicSeed)
+
+171110 Martin Raden :
+ * CommandLineParsing :
+   + qSet : parameter to define sequence subset to be considered for prediction
+   + tSet : parameter to define sequence subset to be considered for prediction
+     (thanks to Alex Gawronski)
+ * IndexRange :
+   + LAST_INDEX : placeholder for last available index
+ * README.md :
+   + --qSet/--tSet docu added
+   * fixing easylogging lib use example
+
+171019 Martin Raden :
+ * configure.ac :
+   + in debug mode, set ELPP_DEBUG_ERRORS compiler define
+ * IntaRNA/general.h :
+   - ELPP_* defines removed since set via configure or not needed
+ * bin/CommandLineParsing :
+   + argument "--default-log-file" to redirect log output to file (except ERROR)
+   + logFileName : dummy variable for --default-log-file argument
+ * README.md :
+   + --default-log-file docu added
+   + -v/--verbose docu added
+ * bin/IntaRNA :
+   + log-file handling
+   + flushing log streams on exit
+
+##### version 2.1.0
+
+171010 Martin Raden :
+ * README.md :
+   + explicit seed description
+ * AccessibilityVrna :
+   * fillByConstraints() :
+   * fillByRNAup() :
+   * callbackForStorage() :
+     * BUGFIX : only check for block-constraint for region ends (is allowed to
+       contain a blocked subregion)
+
+171009 Martin Raden :
+ * tests/*BasePair_test :
+   * explicit use of std::abs (should fix test error of github issue #91)
+   * BUGFIX: test values wrong (were derived from rounded values)
+     -> fixes github issue #91 (thanks to @sjannielefevre) 
+ * AccessibilityBasePair :
+   * constructor() :
+     + RT sanity check to avoid division by zero
+ * NussinovHandler :
+   + printMatrix() : utility function for debug to see matrix content
+   * getQ(), getQb(), getPbp(), getPu() :
+     * BUGFIX : boundary checks partially wrong
+     + explicit lower bound handling
+ + SeedHandlerMfe : former SeedHandler implementation for mfe-seed access
+ * SeedHandler : now abstract interface
+ * Predictor*Seed :
+   * constructor() :
+     * takes now directly a SeedHandler instance instead of a SeedConstraint
+ * CommandLineParsing :
+   + getSeedHandler() : provides the seed handler according to the user input
+   * getPredictor() :
+     * uses now getSeedHandler() to setup Predictor*Seed instances
+   + '--seedTQ' argument for explicit seed encodings
+ * SeedHandlerMfe() :
+   * constructor() : sanity check in debug mode 
+ + SeedHandlerExplicit() : seed handler for explicitly defined seed interactions
+   + checkSeedEncoding() : tests sanity of seed encoding
+   + SeedData() : data structure that parses and holds explicit seed information
+ * SeedConstraint :
+   + explicitSeeds + getter : explicit seed encodings to be used
+ + tests/SeedHandlerExplicit :
+   + test checkSeedEncoding()
+   + test SeedData() parsing
+
+171006 Martin Raden :
+ * AccessibilityVrna :
+   * fillByRNAup() :
+     * BUGFIX : have to check whether region is blocked not if constrained
+ * AccessibilityBasePair :
+ * AccessibilityFromStream :
+   + "not implemented" notification if accessibility constraints given
+
+171005 Martin Raden :
+ * configure.ac :
+   + disable-log-coloring : sets INTARNA_LOG_COLORING for console log coloring
+ * bin/IntaRNA :
+   * colored log output depends now on INTARNA_LOG_COLORING macro
+ * IntaRNA/AccessibilityVrna :
+   + callbackForStorage() : callback function to use new VRNA API
+   * fillByRNAplfold() : window-based PU computation via new VRNA API
+
+171004 Martin Raden :
+ * configure.ac :
+   * bump minimal ViennaRNA version to 2.4.1 (for constraint interface) 
+   * bump easylogging++ version to 9.95
+   + easylogging preprocessor macros to get new version compiled
+ + src/easylogging++.cc : source code of new easylogging++ version
+ + src/easylogging++.LICENCE.txt : licence information of easylogging++
+ + lib 'easylogging' since new version comes with source file
+ * tests : adaptation to new easylogging++ version and library
+ * bin/IntaRNA : 
+   * adaptation to new easylogging++ version and library
+
+##### version 2.0.5
+
+170926 Martin Raden :
+ * IntaRNA/PredictorMfe4d :
+   * getNextBest() : BUGFIX : matrix access was not using interaction end 
+     distance and interaction data was wrongly storing distance as right index;
+     this was causing segfaults when requesting more than one prediction output
+     (thanks to Rick Gelhausen)
+ 
+170926 Martin Raden :
+ * IntaRNA/PredictorMfe4dSeed :
+ * IntaRNA/PredictorMfe2dHeuristicSeed :
+   + updateOptima() to disable predTracker updates when fillHybridE() of super
+     class is called; 
+     --> BUGFIX : so far resulting tracker profiles were a mix of non-seeded and
+         seeded interactions and thus not complementary with the predicted
+         interactions
+
+##### version 2.0.4
+
+170706 Martin Raden :
+ * IntaRNA/OutputHandlerCsv :
+   + E_hybrid : hybrid-only energy = E - ED1 - ED2
+   + E_norm : length-normalized energy = E / ln( length1*length2 )
+   + E_hybridNorm : length-normalized hybrid-only energy =  E_hybrid / ln(l1*l2)
+
+170705 Martin Raden :
+ * perl/Intarna*.pl :
+   * shebang corrected (thanks to Patrick Wright)
+
+170503 Martin Mann :
+ * README.md :
+   * output file description updated
+   + description of easylogging++ initialization for library usage 
+     (thanks to Maria Waldl) 
+ * bin/CommandLineParsing :
+   * getFullFilename() : 
+     * bugfix : handling of paths in file name definitions
+       (thanks to Milad Miladi)
+     * sequence index now suffix of filename (added in front of file extension) 
+
+##### version 2.0.3
+
+170503 Martin Mann :
+ * README.md :
+   + OS X install instructions (thanks to Lars Barquist)
+ + IntaRNA/NussinovHandler : (thanks to Mostafa Mahmoud) implementation of
+   intramolecular structure prediction, partition function and probability
+   computation using a variant of the Nussinov-Jacobson model
+ * IntaRNA/AccessibilityBasePair :
+   * uses NussinovHandler for computation
+ * IntaRNA/InteractionEnergyBasePair :
+   * uses NussinovHandler for computation
+   + computeES() : fill a given ES value container
+   * getES*() : enabled
+ + tests for NussinovHandler 
+ + tests for InteractionEnergyBasePair
+ + doc/latex-deps : provides required doxygen-latex dependencies
+
+170413 Martin Mann :
+ * doc/* 
+   + added to distribution build
+
+170412 Martin Mann :
+ * configure.ac :
+   * doxygen docu generation now truely optional
+   * pkgconfig usage now truely optional (check for m4 functions)
+ * Makefile.am :
+   * doxygen docu generation now truely optional
+   - include of doc/doxygen.am obsolete
+   + @DX_RULES@ : doxygen rules generated by configure
+ - doc/doxygen.am : obsolete
+
+170411 Martin Mann :
+ * PredictorHeuristicSeed :
+   * predict() :
+     * bugfix : reinit was not overwriting all hybridE_seed entries 
+       (thanks to Alex Gawronski)
+
+##### version 2.0.2
+
+170328 Martin Mann :
+ * PredictorHeuristic* :
+   * predict() :
+     * bugfix : reinit was not overwriting all matrix entries 
+       (thanks to Alex Gawronski)
+
+170307 Martin Mann :
+ * header defines prefixed with INTARNA_
+ * general.h :
+   + checks if defines with general names are already present
+   * intarna specific defines prefixed with INTARNA_
+ * configure.ac :
+   * VRNA configure flag conform with LocARNA (--with-vrna)
+ * README.md
+   + (minimal) library information added
+ * CommandLineParsing :
+   + argument boundaries for outDeltaE and outMaxE
+ * SeedHandler :
+   * traceBackSeed() : 
+     * bugfix: was not using offset1/2
+
+170306 Martin Mann :
+ + src/IntaRNA : subfolder that holds all libIntaRNA related sources
+ + "IntaRNA" namespace for all libIntaRNA sources
+ + libIntaRNA.a build
+ * tests adapted to library usage
+ * configure.ac :
+   + pkg-config based VRNA version check (optional)
+   + --disable-pkg-config switch
+   * tests rewritten using AS_IF()
+   + AC_CONFIG_MACRO_DIR() replaces individual m4_include() calls
+   + VRNA_REQUIRED_VERSION variable
+   + AC_PROG_RANLIB
+   + pkg-config related files and commands
+
+170227 Martin Mann :
+ * InteractionEnergy :
+   + getE_multi() : generic function to get the energy contribution of a 
+     intramolecularly structured gap between two interaction sites
+ * InteractionEnergy :
+ * InteractionEnergyBasePair :
+ * InteractionEnergyIdxOffset :
+ * InteractionEnergyVrna :
+   - getEU() : renamed to getE_multiUnpaired()
+   + getE_multiUnpaired() : former getEU()
+   + getE_multiHelix() : penalty for the intermolecular site that is part of the
+     intermolecular multiloop as a helix (right interaction site)
+   + getE_multiClosing() : penalty for closing the multi-site gap (on the left)
+
+##### version 2.0.1 
+
+170221 Martin Mann :
+ * PredictionTrackerPairMinE :
+   * writeData() :
+     * column order reversed to be index ascending
+
+170219 Martin Mann :
+ * RnaSequence :
+   + operator == : equality check (id,length,seq)
+ * PredictionTrackerPairMinE :
+   * writeData() :
+     + col/row header now includes sequence position beside according nucleotide
+ * PredictionTrackerProfileMinE :
+   * writeProfile() :
+     + additional column for according nucleotide
+ * CommandLineParsing : 
+   + getFullFilename() : provides the fill in/output file name given a suffix,
+     i.e. adding a sequence specific prefix if needed
+   * validate_?AccFile() :
+     + getFullFilename() usage for multi-sequence accessibility input
+     + additional check to hinder STDIN-based multi-sequence accessibility input
+   * write*Accessibility() :
+     + getFullFilename() usage for multi-sequence accessibility output
+   * construction() :
+     - ?AccFile : no validation on parsing (requires prior full sequence parse)
+   * parse() :
+     + ?AccFile validation after sequence parsing is done
+     * bugfix: *AccConstr presence check corrected
+     * *Acc : accessibility load from file for multi-sequence input enabled
+     - generation of additional output files for multi-sequence input enabled
+   * get*Accessibility() :
+     + getFullFilename() usage for multi-sequence accessibility input
+   * getPredictor() :
+     + getFullFilename() usage for multi-sequence prediction tracking output
+   
+
+170217 Martin Mann :
+ * README.md :
+   + outfile section
+   + minE profile docu
+   * accessibility output corrected
+ + doc/figures/profile-minE.png : minE profile example
+ * CommandLineParsing :
+   - out*File : replaced by --out multi-arg handling
+   - validate_out*File() : obsolete
+   + OutPrefixCode : encodings for all valid prefixes of --out
+   + getCodeForPrefix() : provides the OutPrefixCode for a given prefix string
+   + outPrefix2streamName : holds for each registered --out prefix the user
+     provided file/stream name or an empty string if not provided
+     (filled by validate_out())
+   * out : now a vector of arguments to enable multi-arg occurrences
+   * write*Accessibility : uses now outPrefix2streamName values
+   * constructor :
+     + initialization of outPrefix2streamName
+     * argument help unified
+   * parse() :
+     + duplication check for --out arguments to avoid file write clashes
+   + PredictionTrackerPairMinE enabled
+ * Interaction :
+   + Seed : class to concentrate all seed-related information
+   - seedRange : replaced by seed member
+   + seed : optional Seed object
+   * setSeedRange() : fills seed member
+   + operator=(Interaction) : copy function that creates new seed object
+   + copy constructor: to copy seed object
+ * OutputHandler* :
+   * adaption to Interaction::Seed change
+
+170214 Martin Mann :
+ + PredictionTrackerPairMinE : tracks for all intermolecular index pairs the
+   minimal energy of any interaction covering this pair
+ + PredictionTrackerHub : forwards tracking information to all registered
+   trackers
+ * CommandLineParsing : 
+   * getPredictor() :
+     + PredictionTrackerHub used for tracker setup
+
+170212 Martin Mann :
+ * general :
+   + newOutputStream() : returns a pointer to a (newly allocated) output 
+     stream depending on the provided string
+   + deleteOutputStream() : deletes (if necessary) the pointer returned by
+     newOutputStream
+ * CommandLineParsing :
+   * bugfix : -n argument description wrong [thanks to Michael Uhl]
+   + out*minEFile + validator : stream name of minE profile output
+   * destruction :
+     + using deleteOutputStream()
+   * parse() :
+     + using newOutputStream()
+     + checks for out*minEfile
+   * getPredictor() :
+     + PredictionTracker setup
+   * writeAccessibility() :
+     + using newOutputStream()
+     + using deleteOutputStream()
+ * InteractionEnergy :
+   + getE( Z ) : ensemble energy from partition function
+ + OutputHandlerHub : hub for a list of OutputHandler objects to that the output
+   requests are forwarded
+ + PredictionTracker : general interface to track all step results produced by
+   a Predictor instance
+   + updateOptimumCalled() : triggered when a Predictor calls updateOptimum()
+ + PredictionTrackerProfileMinE : produces a profile of the minimum interaction
+   energy for each position of the interacting RNAs (covered by any interaction)
+   + stream-based construction
+   + filename/streamname-based construction
+ * Predictor :
+   + predTracker : optional PredictionTracker pointer
+   * constructor :
+     + predTracker
+   * destruction :
+     + delete predTracker
+ * PredictorMfe :
+   * updateOptimum() :
+     + calling predTracker->updateOptimumCalled() if non-NULL predTracker
+ * PredictorMfe* :
+   * constructor :
+     + predTracker
+ * PredictorMaxProb* :
+   * constructor :
+     + predTracker
+   * updateOptimum() :
+     + calling predTracker->updateOptimumCalled() if non-NULL predTracker
+   * using energy.getE( Z ) 
+ + tests : PredictionTrackerProfileMinE
+ * tests : rename OutputRangeOnly -> OutputHandlerRangeOnly
+
+##### version 2.0.0 
+
+170206 Martin Mann :
+ * src/Makefile.am :
+   + AUTOMAKE_OPTIONS = std-options : checks for std options of binary
+ * tests/Makefile.am :
+   * tests now build via 'check' make target (autotools-based setup)
+ * Makefile.am :
+   * adaptions to test Makefile changes
+
+170203 Martin Mann :
+ * configure.ac : 
+   + check for VRNA >= 2.3.0 via function 'vrna_md_copy' exists
+ * AccessibilityConstraint
+   + maxBpSpan + getter : maximal base pair span to be considered for 
+     accessibility computation
+ * Accessibility* :
+   - getES() : now part of InteractionEnergy interface
+ * AccessibilityVrna :
+   - EsMatrix : moved to InteractionEnergyVrna
+   - esValues : moved to InteractionEnergyVrna
+   - computeES() : moved to InteractionEnergyVrna
+   * constructor() :
+     - plFoldL : now via AccessibilityConstraint.getMaxBpSpan()
+     - computeES
+   * ED >= 0 ensured
+ * InteractionEnergy :
+   * getES*() now abstract and to be implemented in subclass
+   - getES*() implementation based on Accessibility interface
+ * InteractionEnergyBasePair :
+   + getES*() : throws exception since not implemented yet
+   * constructor() :
+     + initES : whether or not to compute precompute ES values
+ * InteractionEnergyVrna :
+   * constructor() :
+     + initES : whether or not to compute precompute ES values
+   + EsMatrix data type
+   + esValues1/2 : optional ES value data
+   + getES*() : returns esValues* entry if available; throws exception otherwise
+   + computeES() : inits ES values based on VRNA routines
+ * VrnaHandler :
+   * getModel() :
+     * uses now vrna_md_copy() (VRNA >= 2.3.0) for model copying
+ * CommandLineParsing :
+   * energy : 
+     - 'F' : replaced by 'V'
+     + 'V' : VRNA based computation
+   - OutputMode : replaced by char encoding
+   * outMode : now char encoding
+ * OutputHandlerText :
+   + detailedOutput : flag to switch between detailed and reduced output
+   * add() : 
+     + heeds detailedOutput flag
+   * construction() :
+     + detailedOutput flag handling
+ * PredictorMfe2d :
+   * initHybridE() :
+     + outConstraint argument
+     * bugfix : maxE check was not considering outConstraint.maxE
+   * fillHybridE() :
+     + outConstraint argument
+ * PredictorMfe4d* :
+   * predict :
+     * bugfix : maxE check was not considering outConstraint.maxE
+
+170202 Martin Mann :
+ * CommandLineParsing :
+   * outMaxE maximum now 999 (was 0)
+   - PredictionMode : replaced by char-based setup
+   * seedMaxUPq -> seedQMaxUP
+   * seedMaxUPt -> seedTMaxUP
+   * seedRangeq -> seedQRange
+   * seedRanget -> seedTRange
+   + pred + validator : setup of prediction target (mfe-si, maxprob-si, ...)
+   * predMode : 
+     * char-based setup
+     - max-prob mode (now selected via --pred=P)
+   * outOverlap : char-based setup
+   * outAccFileq -> outQAccFile
+   * outAccFilet -> outTAccFile
+   * outPuFileq -> outQPuFile
+   * outPuFilet -> outTPuFile
+   * get*Accessibility() :
+     * computeES setup now via pred.val
+   * getPredictor() :
+     + support for different prediction targets via pred.val switch
+ * OutputConstraint :
+   * constructor() :
+     - (maxE < 0) check removed
+ + intarna_config.h.in : header containing package version and configure 
+   information
+ * configure.ac : 
+   + generate intarna_config.h
+   + AC_SUBST(INTARNA_MULITHREADING)
+ * AccessibilityDisabled :
+   * getES() : 
+     - no error is thrown anymore
+ * perl/*.pl : adaptions to CLI changes
+
+170201 Martin Mann :
+ * CommandLineParsing :
+   * max sequence number now 99999
+   * setup of threads parameter only if INTARNA_MULITHREADING
+ * configure.ac : 
+   + --disabled-multithreading : sets INTARNA_MULITHREADING to 0, otherwise 1
+ * enclose all OMP stuff with INTARNA_MULITHREADING preprocessor checks
+ * AccessibilityVrna :
+   * computeES() : bugfix
+ 
+170131 Martin Mann :
+ * CommandLineParsing :
+   + opts_cmdline_short : short option list for abbreviated help output
+   * constructor() :
+     + setup of opts_cmdline_short
+   * parse() 
+     + handling of short and full help output
+     + disallow multi-threading for IntaRNA v1 output (due to separators)
+   * q|tAcc : renamed 'F' option to 'C' for 'computation of accessibilities'
+   * adaption to OutputHandlerIntaRNA1* rename
+   + OutputMode::V1_NORMAL : normal version 1.* output
+   + threads + validate + getter : OMP max thread number
+ - OutputHandlerIntaRNA1detailed : renamed to OutputHandlerIntaRNA1
+ + OutputHandlerIntaRNA1 : former OutputHandlerIntaRNA1detailed
+   + detailedOutput : flag to switch between detailed and normal v1 output
+   + OMP : ensure no parallel write to output stream
+ * perl/IntaRNA*_1ui.pl :
+   + normal output enabled (-o flag now with effect)
+ * intaRNA :
+   * adaption to OutputHandlerIntaRNA1* rename
+   + OMP : parallelization of target/query processing
+   + OMP : exception handling within parallelized loops due to missing OMP 
+     exception forwarding
+   * final exception handling now always returns -1 (even in debug mode)
+ * OutputHandlerCsv : 
+   + E_loops output
+   + OMP : ensure no parallel write to output stream
+ * OutputHandlerText : 
+   + OMP : ensure no parallel write to output stream
+ * AccessibilityVrna :
+   + OMP : ensure no parallel VRNA-calls since not threadsafe
+ + m4/m4_ax_openmp.mp4 : OMP checks
+ * configure.ac :
+   - backward compatibility stuff for autoconf < 2.65 
+   + OMP check and AM_CXXFLAGS setup
+
+170130 Martin Mann :
+ * CommandLineParsing :
+   + stdinUsed : flag to ensure STDIN is used for input only once
+   + setStdinUsed() : sets stdinUsed = true if not already or throws log 
+     otherwise
+   * q/tAcc : 
+     + 'P' : unpaired probabilities in RNAplfold style from --q/tAccFile
+     + 'E' : ED values in RNAplfold-Pu-like style from --q/tAccFile
+   + validate_q/tAccFile() 
+   * get*Accessibility() :
+     + AccessibilityFromStream support
+     * bugfix : maxLength setup has to be = min(maxLength,accW)
+   + outAccFile* + validate : output ED values to file/stream
+   + outPuFile* + validate : output Pu values to file/stream
+   + validate_outputTarget() : generic text function for stream names
+   * validate_out() : calls validate_outputTarget()
+   + write*Accessibility() : write the given accessibility to file/stream if
+     requested by the user
+   + writeAccessibility() : writes accessibility data to file/stream in the 
+     requested format
+   * q/tIntLenMax argument info :
+     + information that --q/tAccW might overwrite
+ * Accessibility :
+   * getMaxLength() : return value non-const size_t
+   + writeRNAplfold_ED_text() : Pu output in RNAplfold style
+   + writeRNAplfold_Pu_text() : ED output in RNAplfold style
+   + writeRNAplfold_text() : generic RNAplfold Pu-styled text output
+ * AccessibilityFromStream :
+   + InStreamType::ED_RNAplfold_Text : ED input in RNAplfold style
+   + parseED_RNAplfold_text() : read ED input in RNAplfold style
+   * parsePu_RNAplfold_text() : using parseRNAplfold_text()
+   + parseRNAplfold_text() : generic RNAplfold Pu-styled text input
+     + reduces availMaxLength if not enough data in input and outputs a user
+       information
+   + availMaxLength : stores the maximal window length parsed from the input,
+     init = Accessibility::getMaxLength()
+   + getMaxLength() : provides availMaxLength
+ * AccessibilityVrna :
+   * getED() :
+     + accessibility constraint check
+ * AccessibilityConstraint :
+   + isAccessible( range )
+   + isMarkedAccessible( range ) 
+   + isMarkedBlocked( range )
+   + isUnconstrained( range ) 
+ * README.md :
+   + docu for read/write of ED and Pu values for accessibility initialization
+
+170129 Martin Mann :
+ * PredictorMfe2dHeuristic* :
+   * fillHybrid*() : 
+     + interaction length check before energy evaluation
+     
+170128 Martin Mann :
+ * Makefile :
+   + info for testing directive
+ * AccessibilityDisabled :
+   * constructor :
+     - defaults removed
+ * AccessibilityVrna :
+   * constructor :
+     * argument order changed
+ + AccessibilityFromStream : populates ED values from stream
+   + InStreamType::Pu_RNAplfold_Text
+   + parsePu_RNAplfold_Text() : parse RNAplfold unpaired probability text output
+ * CommandLineParsing :
+   + q/tAccFile : file/stream to read accessibilities from
+   + q/tAcc : 
+     + 'P' : read unpaired probability from file : RNAplfold text output
+   + stream name checks now case insensitive
+
+170127 Martin Mann :
+ * SeedConstraint : 
+   + maxED + getter : maximal ED value per sequence for a seed region
+   * constructor ()
+     + maxED
+ * SeedHandler :
+   * fillSeed() :
+     + skip seed regions with ED > maxED
+ * RnaSequence :
+   * SequenceAlphabet order changed
+ * OutputHandlerText :
+   * add() :
+     + seed ED values added
+ * OutputHandlerCsv :
+   + Pu, seedPu, start/end, ED, E_*, seedStart/End, seedED
+   * id : replacement of colSep occurrences
+ * CommandLineParsing :
+   + seedMinPu + validator
+   * constructor() :
+     + seedMaxED argument
+     * outCsvCol : + spaces to unlink ID list
+   * outCsvCols_default = id1,start1,end1,id2,start2,end2,subseqDP,hybridDP,E
+ * intaRNA :
+   + storing of queryAcc object to avoid recomputation for different targets
+
+170126 Martin Mann :
+ * Interaction :
+   + dotBracket() : converts to VRNA-like dot-bracket notation
+   + dotBar() : converts to position+interaction encoding using dot and bar
+   + dotSomething() : generic function to generate substrings for dotBracket()
+     and dotBar()
+ * test/Interaction :
+   + dotBracket()
+   + dotBar()
+ * PredictorMfe : 
+   * reportOptima() : 
+     * bugfix : nextBest() called too often
+ * OutputHandlerText :
+   * add(range) inlined
+ + OutputHandlerCsv : produces customizable CVS table output  
+ * CommandLineParsing :
+   * OutputMode : 
+     + CSV
+   + outCsvCols* + validator : argument variable + default value
+   + initOutputHandler() : prints initial output
+   * constructor :
+     * outMode argument : support for CSV
+     + outCsvCols argument
+     * out argument : short option removed
+   * parse() :
+     + parseStyle setup to guide parsing
+     - intial output moved to initOutputHandler()
+     + initOutputHandler() call
+     + CSV check
+   * getOutputHandler() :
+     + CSV
+ * intaRNA : 
+   + generic exception handling
+
+170125 Martin Mann :
+ * perl/*.pl : 
+   * bugfix : -L setup was using -w argument
+
+170123 Martin Mann :
+ * AccessibilityVrna :
+   * fillByConstraints() : bugfix of line shift for ED filling
+   * fillByRNAplfold() :
+   * fillByRNAup() :
+     + explicit handling of Pu == 0 to trigger ED = ED_UPPER_BOUND
+ * intaRNA :
+   * debug exception catch message extended (debugger hint)
+ * PredictorMfe2dHeuristic :
+ * PredictorMfe2dHeuristicSeed :
+   * traceBack() : bugfix : right boundary (j1,j2) could be inserted again
+   * loop check simplified
+ * CommandLineParsing :
+   * fix of plfold L <= W check (only enabled if W>0)
+
+170122 Martin Mann :
+ * AccessibilityVrna :
+   * fillByRNAplfold : bugfix memleak (pl return value not freed)
+ * consistent use of CLEANUP() to deallocate memory allocations done via 'new'
+ * intaRNA :
+   * global try-catch-block now always enabled but forwards exception in debug
+     mode (for debugger use)
+ * PredictorMaxProb* :
+ * PredictorMfe4d* :
+   * clear() : bugfix memleak (4th dimension not freed)
+ * RnaSequence :
+   * SequenceAlphabet now 'ACGUN' to simplify checks
+
+170120 Martin Mann :
+ * Accessibility :
+   + getES() : computes the ensemble energy of all local structures of a 
+     subsequence under the assumption that the subsequence is part of a 
+     multiloop
+ * AccessibilityDisabled :
+   + getES() : throws an exception since not computable
+ * AccessibilityVrna :
+   + EsMatrix type = triangular matrix
+   + esValues : stores ES values if non-NULL
+   + getES() : computed via McCaskill algorithm
+   * constructor() :
+     * vrnaHandler now const
+     + computeES argument to trigger ES computation
+     * RNAup-based ED computation also when plFoldW > seqLength
+   + computeES() : computes the ES values via VRNA 3 interface
+ * CommandLineParsing :
+   * get*Accessibility() :
+     + computeES flag = true in DEBUG mode (has to be replace by predictor
+       selection based setup)
+ * InteractionEnergy :
+   * getES*() : now implemented based on accS*.getES()
+   + getEU() abstract : energy for k unpaired bases within a multiloop
+ * InteractionEnergyBasePair :
+   - getES*() : implemented in superclass
+   + getEU() : returns 0
+ * InteractionEnergyIdxOffset :
+   + getEU() forward
+ * InteractionEnergyVrna :
+   - getES*() : implemented in superclass
+   + getEU() : returns k * VRNA.MLbase
+ * ReverseAccessibility :
+   + getES() forward
+
+170119 Martin Mann :
+ * CommandLineParsing : 
+   + out : output stream selection
+   + outStream : output stream to write to
+   + argument 'outMode' : former 'out'
+   * argument 'out' now sets output stream
+   * getOutputStream() : returns now outStream
+   * destructor()
+     + deletion of outStream if file stream
+   * parse() :
+     + creation of file stream for output if out != STDOUT|STDERR
+ * perl/*.pl :
+   * adaptions to argument change
+
+170118 Martin Mann :
+ * CommandLineParsing :
+   * validate_sequenceArgument() :
+   * parseSequences() :
+     * uses now RnaSequence::isValidSequenceIUPAC()
+
+170117 Martin Mann :
+ * RnaSequence :
+   * SequenceAlphabet : now 'ACGU' only
+   + SequenceAlphabetIUPAC : all IUPAC-conform nucleotide encodings
+   * areComplementary() :
+   * getCodeForChar() :
+   * getUpperCase() :
+     + checks in debug mode only
+   * isAmbiguous() :
+     * check reduced to 'N'
+   * RnaSequence() :
+     * ambiguity check uses now converted sequence
+   + isValidSequenceIUPAC() : check for IUPAC conformity
+ * CommandLineParsing :
+   * validateSequenceAlphabet() :
+     * now checks with RnaSequence::isValidSequenceIUPAC()
+   + information about IUPAC sequence encoding
+
+170111 Martin Mann :
+ * CommandLineParsing :
+   * IntaRNA v1 input details corrected
+
+161230 Martin Mann :
+ * CommandLineParsing :
+   * parseSequencesFasta() : 
+     + bugfix : was not reading final lines without newline at the end
+ * OutputHandlerIntaRNA1detailed :
+   * output corrected
+
+161229 Martin Mann :
+ * CommandLineParsing :
+   * IntaRNA_v1_detailed init output now more like v1 output
+ * PredictorMfe2dHeuristic* :
+   * getNextBest() :
+     * bugfix : seq1 range overlap check
+ * PredictorMfe4d :
+   * getNextBest() :
+     * bugfix : getE() using wrong index order
+ * PredictorMfe4dSeed :
+   * getNextBest() :
+     * bugfix : getE() using wrong index order
+   * predict() :
+     * bugfix : hybridE_seed resize missing
+   * fillHybridE_seed() :
+     + additional early check for too small interaction sites (no seed)
+   * traceBack() :
+     * bugfix : energy check right of seed corrected
+     * bugfix : check entry existence before access
+ * intaRNA :
+   + exception catch + handling only in non-debug mode (eases debug)
+
+161224 Martin Mann :
+ * OutputHandler :
+   + reportedInteractions : count of reported interactions
+   + reported() : returns reportedInteractions
+ * intaRNA :
+   + setup of separator output for IntaRNA v1 output
+ * OutputHandlerIntaRNA1detailed :
+   + intialOutputDone : tag to store whether or not something was already done
+   + prinSeparator : tag whether or not a separator is to be printed
+   * constructor()
+     - initial output (now part of add())
+   * add() 
+     + initial output for first reported interactions
+     + counting of non-empty interactions
+   + addSeparator() : sets printSeparator 
+
+161222 Martin Mann :
+ * perl/IntaRNA_1ui.pl :
+   - seed energy restriction (only needed to mimic IntaRNA v1 behaviour)
+   + output mode setup
+ * CommandLineParsing :
+   + OutputMode : enum for different output modes
+   + PredictionMode_min/max 
+   + outMode + validator : output mode argument variable
+   * predMode : init via min/max enum entries
+   * constructor :
+     * argument values via toString() and enum entries to be consistent
+     + '--out,-o' : argument to setup output mode
+   * parse() :
+     + IntaRNA1_detailed input output
+   * getOutputHandler() :
+     - IntaRNA1_detailed input output
+     + switch based on outMode.val
+   * getPredictor() :
+     + PredictorMfe4dSeed support
+ * OutputHandlerIntaRNA1detailed :
+   * output corrected
+ + perl/IntaRNA_up_1ui.pl : IntaRNA v1-styled interface wrapper for IntaRNA_up,
+   i.e. RNAup like computation (4d space&time) including seed constraints
+ + PredictorMfe4dSeed : seed-constraint incorporating full RNAup-like predictor
+
+161221 Martin Mann :
+ * RnaSequence : 
+   * SequenceAlphabet += tT
+   * getUpperCase() : 
+     * replacement of 'T' with 'G'
+ * Predictor :
+   * updateOptima() : additional flag to avoid recomputation of overall energy
+ * PredictorMfe2dHeuristic* :
+   * fillHybridE() :
+     + temporary vars to reduce full energy recomputation
+ * SeedHandler :
+   * fillSeed() :
+     + returns now the number of valid seeds found 
+ * PredictorMfe2dHeuristicSeed :
+   * predict() :
+     + stops computation if
+       + no seed interaction possible
+       + mfe without seed not < outConstraint.maxE 
+ * SeedHandler : 
+   * best hybrid energy now via table access (avoid recomputation)
+ * Predictor*Seed :
+   * bugfix : reported seed energy missed E_init term
+ * OutputHandlerIntaRNA1detailed :
+   * bugfix : newline missing at end of each interaction output
+
+161219 Martin Mann :
+ * src/Makefile :
+   * bin file name changed to "IntaRNA"
+ * .travis : bin file name changed
+ + perl/IntaRNA-1ui.pl : wrapper to enable IntaRNA v1 like parameter usage
+ * OutputConstraint :
+   + maxE : maximal energy to be reported
+ * CommandLineParsing :
+   + outMaxE + validator : argument for maximal energy of reported interactions
+ * PredictorMfe :
+   * initOptima() : initializes with OutputConstraint.maxE
+   * reportOptima() : ensures energy is below OutputConstraint.maxE
+ * .gitignore : 
+   + .* : all hidden files ignored
+ + perl/Makefile.am
+   + perl wrapper packaging and install
+ * configure.ac : 
+   + perl/Makefile
+
+161216 Martin Mann :
+ * README.md
+   + feature comparison table started
+ + configure.ac :
+   * -fopenmp now always added to CXXFLAGS (also if VRNA path not specified)
+ + OutputHandlerIntaRNA1detailed : output similar to IntaRNA v1.2.*
+ * CommandLineParsing :
+   * getOutputHandler() :
+     + temporarily : init output of IntaRNA 1.* mode
+     * temporarily : IntaRNA 1 output
+   + getOutputStream() : stream to be passed to OutputHandler instances
+
+161215 Martin Mann :
+ * AccessibilityConstraint :
+   * construction : bugfix reverse handling
+ * CommandLineParsing : 
+   * getSeedConstraint()
+     + now with energy argument arguments to access seed lengths
+     + reverses seed ranges for seq2
+ * IndexRangeList :
+   * List now std::list (before std::vector)
+   + covers(range) + tests
+   + reverse() + tests : reverses the indices and range order
+ * PredictorMfe2d :
+ * PredictorMfe2dSeed :
+   * predict() : bugfix : throw without "new"
+ * Predictor*Seed :
+   * bugfix : uses now SeedHandlerIdxOffset instead of SeedHandler
+   + seed handler offset setup
+ * RnaSequence :
+   * areComplementary() : bugfix : throw without "new"
+ * SeedConstraint :
+   * members not const (otherwise getter not needed)
+   + getRanges*() : write access for ranges
+ * SeedHandler : 
+   * public functions virtual
+   + offset* : index offset (needed for restricted matrices)
+   * fillSeed() :
+     * bugfix : sanity checks corrected
+     * bugfix : index offset was missing
+   * traceBack() :
+     * bugfix : index offset was missing
+ + SeedHandlerIdxOffset : index shift wrapper for SeedHandler
+
+161214 Martin Mann :
+ * intaRNA :
+   * query/target enumeration swapped, such that seq1 == target in prediction
+     and output
+ * OutputConstraint : data structure defining all output constraints
+   + enum ReportOverlap : 4 possibilities where overlapping is allowed
+   + reportMax : max number of (suboptimal) interactions to report
+   + reportOverlap : the overlap constraint for reported interactions
+   + deltaE : maximal energy difference to mfe to be reported
+ * Predictor :
+   * reportMax/reportNonOverlapping replaced by outConstraint
+     * predict()
+     * initOptima()
+     * reportOptima()
+ * IndexRange :
+   + regex : regex to match valid string encoding 
+   + fromString() : parse string encoding
+   + operator == ()
+   + operator != ()
+   * operator << () : now regex conform
+ * IndexRangeList :
+   + regex : regex to match valid string encoding 
+   + fromString() : parse string encoding
+   * operator << () : regex conform
+   + operator == ()
+   + operator != ()
+   * insert() : 
+     + no duplicated insertions
+     + overlap checks
+   * overlaps() : bugfix of predecessor check
+   + shift() : shifts all indices by a given term and creates a new valid list
+ * CommandLineParsing : 
+   - outNonOverlapping : replaced by outOverlap
+   - isOutNonOverlapping() : obsolete
+   - isOutputReportMax() : obsolete
+   + outOverlap + validator : overlap encoding
+   + getOutputConstraint() : central data structure for output constraints
+   - regexRangeEncoding : obsolete due to IndexRangeList::regex
+   * parseRegion() : now uses IndexRangeList string constructor and shift() for
+     initialization
+ * general :
+   + E_precisionEpsilon : variable holding the precision epsilon value for 
+     energy equivalence comparisons
+ * SeedConstraint :
+   + range1 + getter : ranges for seed search in seq1
+   + range2 + getter : ranges for seed search in seq2
+
+161213 Martin Mann :
+ * PredictorMfe2d :
+   * initHybridE : 
+     * code optimizations to reduce lookups
+ * Predictor* :
+   + initOptima()
+   + updateOptima()
+   + reportOptima()
+     = generic optima handling
+   - *Mfe() : replaced by *Optima()
+   - *MaxPro() : replaced by *Optima()
+ * IndexRangeList :
+   + overlaps( range r ) : whether or not one of the ranges overlaps with r
+   + tests
+ * Predictor* :
+   * reportOptima( parameters )
+ * PredictorMfe :
+   + reportedInteractions : index range lists to enable non-overlapping 
+     interaction reporting
+   + getNextBest() : abstract interface to access the next best non-overlapping
+     interaction (based on reportedInteractions)
+     -> implemented by all subclasses
+   * reportOptima() : now screens for non-overlapping suboptimal interactions
+     using getNextBest()
+
+161212 Martin Mann :
+ * InteractionEnergy* :
+   + getES*() : ensemble energy of intramolecular substructures within a given
+     sequence interval under the assumption that the region is part of an
+     intermolecular multiloop, i.e. contains at least one intramolecular bp
+     NOTE: not implemented yet, only functions set up
+ * CommandLineParsing : 
+   + oNumber + validator : max number of subopts to report
+   + oNonOverlapping : whether or not overlapping interactions to report
+   + opts_output : new output param category
+   + getOutputNumber()
+   + isOutputNonOverlapping()
+ * intaRNA :
+   + predict() calls now with getOutputNumber() and isOutputNonOverlapping()
+ * Interaction :
+   + compareEnergy() : checks whether a given interaction has energy higher
+     than a given value
+   * operator << (BasePair) now externally defined
+ * Predictor* :
+   * predict( + reportMax, + reportNonOverlapping ) : for multi-interaction out
+ * PredictorMfe :
+   * initMfe( + reportMax, + reportNonOverlapping ) : for multiple 
+     overlapping interaction reporting
+   - mfeInteraction : replaced by list of interactions
+   + InteractionList : type of double-linked list of interactions
+   + mfeInteractions : list of (overlapping) lowest energy interactions
+   + traceBack() : now part of abstract interface to be used in reportMfe()
+   + reportMfe() : for all interactions from list with E<0: calls traceBack()
+     and adds to output handler
+   * updateMfe() : 
+     + lowest energy interaction list update
+     + exclusion of duplicated list insertions (e.g. due to matrix recomputation)
+
+161207 Martin Mann :
+ * Interaction :
+   - addInteraction() : obsolete
+   + seedRange : optional seed information
+   + setSeedRange() : initializes or overwrites seedRange 
+ * PredictorMfe2dSeed :
+ * PredictorMfe2dHeuristicSeed :
+   * traceBack() : 
+     + storing seed interaction information
+ * OutputHandlerText : 
+   * add() : 
+     + seed information printed (if available)
+     + interaction position printed
+     + energy unit added
+
+161120 Martin Mann :
+ * autotools-init.sh :
+   * sh -> bash 
+   + pipefail : script fails on first failed command
+ * CommandLineParsing :
+   + new predictors registered
+   * default predictor : heuristic
+   + time/space infor for each predictor
+   * bugfix: accessibility length/window check now after individual checks
+ * Interaction :
+   + ostream operator for Interaction::BasePair
+   * ostream operator uses BasePair operator to reduce redundancy
+ + SeedHandler : central handler for seed interaction and access for a given
+     SeedConstraint
+   + fillSeed() : computes the seed information
+   + traceBackSeed() : traces a specific seed start
+   + getSeedE() : the seed energy for a seed start (or INF if no seed possible)
+   + getSeedLength*() : the seed length for a seed start (or 0 if not possible)
+ * PredictorMfe :
+   * updateMfe() : 
+     - dangling end based pre-check removed (not sure if valid)
+ * PredictorMfe2d :
+   * interface documentation corrected
+ * PredictorMfe2dSeed :
+   - seed calculation methods and data structure (move to SeedHandler)
+   + seedHandler (generated in constructor)
+   * fillHybridE_seed() : 
+     * bugfix : init of all cells was not ensured
+     * sanity checks now include lower i boundary
+ * PredictorMfe4d : prediction info adapted
+ + PredictorMfe2dHeuristic : heuristic mfe prediction in n^2 time and space
+ + PredictorMfe2dHeuristicSeed : heuristic mfe prediction in n^2 time and space
+     including seed constraint  
+
+161023 Martin Mann :
+ * AccessibilityConstraint :
+   - isBlocked() : renamed to isMarkedBlocked()
+   * isAccessible() : now : whether or not a position is available for 
+     interaction
+   + isMarkedAccessible() : former isAccessible()
+   + isMarkedBlocked() : former isBlocked()
+ * AccessibilityDisabled :
+   * getED() : checks now for constraint.isAccessible()
+ * InteractionEnergy :
+   + getBasePair() : generates an Interaction BasePair for given indices
+   + getIndex*() : generates the computation indices for a given base pair
+   + getED*() : fast access to ED of a sequence
+   + isAccessible*() : checks for accessibility and non-ambiguity
+   + size*() : sequence length
+   * isValidInteraction() : now protected
+   * isAllowedLoopRegion() : now protected
+ + InteractionEnergyIdxOffset : wrapper for an InteractionEnergy that handles 
+   index shifts due to a given offset. To this end, all according functions are
+   overwritten, which eases formulations of Predictors.
+ * Predictor :
+   * energy : now InteractionEnergyIdxOffset object
+ * PredictorXXX :
+   - i*offset : obsolete due to energy class change
+   * all offsets are now obsolete with extended InteractionEnergy interface and 
+     InteractionEnergyIdxOffset energy access : this simplifies the formulation
+     of the algorithms and makes debugging easier.
+ - test/InteractionEnergy_test.cpp : obsolete
+
+161020 Martin Mann :
+ * configure.ac :
+   + boost_regex lib registered
+ * CommandLineParsing :
+   + argument qRegion : query interaction regions (sorted, non-overlapping)
+   + argument tRegion : target interaction regions
+   + getter and validator
+   + regexRangeEncoding : regex to validate range string encodings
+   + parseRegion() : parses region argument
+ * IndexRange :
+   * constructor() :
+     * default to = RnaSequence::lastPos
+ * IndexRangeList :
+   * push_back() : ascending check corrected
+ * intaRNA :
+   + predicts only for all index range combinations
+ * ReverseAccessibility : 
+   + getReversedIndexRange() : reverses an index range
+ * PredictorMfe2dSeed :
+   * bugfix : rotating seedE_rec usage not possible; reset to full 5D array
+   * bugfix : index offset added 
+
+161019 Martin Mann :
+ + m4/m4_ax_cxx_compile_stdcxx.m4 : enables c11 compiler support check
+ * configure.ac : 
+   + ensures c11 compiler compliance via m4_ax_cxx_compile_stdcxx.m4
+   * defining "_DEBUG" instead of "DEBUG" in debug mode
+   - enable-c11 flag removed since obsolete (c11 now mandatory)
+ * .travis : adaption to configure changes
+ + easylogging++.h : v9.83 of header-only logging lib (MIT license)
+ * general.h :
+   + includes config.h for configure-based flags
+   + IN_DEBUG_MODE : compiler flag to mark debug mode
+   + includes easylogging++.h : global logging support
+   + easylogging++ log file setup (disabled)
+ * AccessibilityConstraint :
+   + isUnconstrained() : checks whether or not a position is unconstrained
+   * isBlocked() :
+   * isAccessible() :
+     + quick check for empty list
+ * AccessibilityVrna :
+   - log stream : obsolete
+   * construction :
+     + base pair span forwarded to fill* functions
+     * fillRNAup() also used if sliding window size == 0 (since fastest)
+   * fill*() :
+     + timing added (debug mode only)
+     + verbose log of computation mode
+   * fillByConstraints() :
+   * getPfScale() :
+   * fillByRNAup() :
+     + uses now base pair span
+ * CommandLineParsing :
+   - logStream : obsolete (global logging)
+   + seedMaxE argument : maximal overall energy of a seed interaction
+   + validate_seedMaxE()
+   + seedConstraint : central seed constraint object for all predictors
+   * getSeedConstraint() : returns constant reference to central object
+ * InteractionEnergy :
+   - getInterLoop() : replaced by getInterLeft()
+   + getInterLeft() : left side loop extension (former getInterLoop())
+   + getPr_danglingLeft() : probability of dangling ends on the left side
+   + getPr_danglingRight() : probability of dangling ends on the right side
+   * getE() :
+   * getE_contributions() :
+     * using getPr_dangling*() for dangling end energy computation
+ * Predictor* :
+   * predict() :
+     + verbose log for prediction mode
+     + performance logging in debug mode
+ * PredictorMfe2dSeed :
+   * fillSeed() :
+     + over energy computation for seed now includes getE_init()
+     * seed max energy boundary now via SeedConstraint.getMaxE()
+   * traceBackSeed() :
+     * bugfix : j2 initialization
+ * SeedConstraint :
+   + maxE + getter : maximal overall energy a seed is allowed to have
+
+161017 Martin Mann :
+ * CommandLineParsing :
+   - seedMinBP : renamed to seedBP
+   - getSeedMinBp : obsolete
+   + noSeedRequired : whether or not to enforce seed constraint for interactions
+   + seedBP : number of base pairs within seed
+   + seedMaxUP : maximal overall number of unpaired bases in seed
+   + seedMaxUPq : maximal number of unpaired bases within query's seed
+   + seedMaxUPt : maximal number of unpaired bases within target's seed
+   + validator_*() for arguments
+   + getSeedConstraint() : provides the seed according to the arguments
+   * parse() :
+     + noSeedRequired setup
+   * getPredictor() : predictor type depends now on noSeedRequired member setup
+ * general.h :
+   + E_isNotINF() : check for energy != E_INF
+   + E_isINF() : check for energy == E_INF
+ * InteractionEnergy :
+   * getE() :
+     + overall energy only computed if hybridE != E_INF
+ * OutputHandlerText :
+   * add() :
+     + output text for empty interaction
+ * PredictorMaxProb :
+   * fillHybridZ() : bugfix of boundary checks
+   * updateMaxProbInteraction() : bugfix : offset missing
+ * PredictorMfe :
+   * updateMfe() :
+     * feasibility check extended with dangling end energies (can be < 0)
+     * bugfix : offset missing
+ * PredictorMfe2d/4d :
+   * checks via E_isINF and E_isNotINF
+ + PredictorMfe2dSeed : predicts interactions that fulfill the seed constraint
+ + SeedConstraint : defines a seed constraint
+   + bp : number of base pairs
+   + maxUnpairedOverall : maximal overall number of unpaired bases
+   + maxUnpaired1 : maximal number of unpaired bases in first sequence
+   + maxUnpaired2 : maximal number of unpaired bases in second sequence
+   + getMaxLength*() : provides maximal length of a seed given the constraints
+   + ostream operator
+
+161012 Martin Mann :
+ * CommandLineParsing :
+   + parseSequencesFasta() : read FASTA format from input stream
+   * validate_sequenceArgument() :
+     + stream/file support enabled
+   * parseSequence() :
+     + stream/file support enabled
+ * intaRNA :
+   * bugfix: queryAcc cleanup in inner loop
+
+161012 Martin Mann :
+ * AccessibilityVrna :
+   * getPf* :
+     + local vrna_md_t model for according window sizes
+ * CommandLineParsing :
+   * getOutputHandler() : + energy handler as argument
+   + energyFile : file name of the VRNA energy parameter file to be used
+   + validate_energyFile()
+   + validateFile() : generic file existence and readability check
+   + updateParsingCode() : central utility function for parsing code updates
+   * parse() :
+     + update of vrnaHandler after parsing
+     + energFile handling
+     + updateParsingCode() usage
+   * validate_sequenceArgument() 
+     + validateFile() usage
+ * general.h
+   + E_equal() : checks for (semi)equality for floating point variables
+ * intaRNA : adaptions to interface changes
+ * InteractionEnergy :
+   + EnergyContributions : individual energy contributions for an interaction
+   + getE_contributions() : provides an EnergyContributions container for a 
+     given interaction
+   + getE_init() : the duplex initiation energy
+   + getE_interLoop() : former getInterLoopE()
+   + getE_danglingLeft() : former getDanglingLeft()
+   + getE_danglingRight() : former getDanglingRight()
+   + getE_endLeft() : former getEndLeft()
+   + getE_endRight() : former getEndRight()
+   + getBestE_interLoop() : former getBestStackingEnergy()
+   + getBestE_dangling() : former getBestDangleEnergy()
+   + getBestE_end() : former getBestEndEnergy()
+   - getInterLoopE() : renamed
+   - getDangling*() : renamed
+   - getEnd*() : renamed
+   - getBest*Energy() : renamed
+   - getBestInitEnergy() : obsolete
+   * isValidInternalLoop() :
+     + returns false on (i1==j1 || i2==j2)
+ * InteractionEnergyBasePair :
+   * adaptions to interface changes
+   + getE_init() : returns -1.0
+   * getE_interLoop() : returns only interior loop energies (no init)
+ * InteractionEnergyVrna :
+   * adaptions to interface changes
+   * getE_interLoop() : returns only interior loop energies (no init)
+   * getE_dangling*() : substracts end energies to get dangling end 
+     contributions only (combined value from the VRNA interface)
+ * OutputHandlerText :
+   + energy : used energy handler for interaction computation
+   * construction() : + energy argument
+   * add() : 
+     + provide energy contribution details
+ * PredictorMaxProb :
+   * fillHybridZ() :
+     + explicit energy.getE_init() handling
+ * PredictorMfe :
+   * adaption to interface changes
+ * PredictorMfe2d/4d :
+   * fillHybridE() :
+     + explicit energy.getE_init() handling
+   * traceback() :
+     * bugfix: i2/j2 index computation for offset > 0
+     + explicit energy.getE_init() handling
+ * VrnaHandler :
+   * constructor() :
+     + vrnaParamFile argument : for loading non-default energy parameters
+     - max_bp_span : now in getModel()
+     - window_size : now in getModel()
+     * default for max_bp_span/window_size = -1
+   * getModel() :
+     * now creates a new model object per call to enable different parameters
+       e.g. for different accessibility computations
+     + max_bp_span argument
+     + window_size argument
+ * test/InteractionEnergyBasePair : adaption to interface changes
+
+161007 Martin Mann :
+ + PredictorMfe : generic interface for mfe predictors to reduce code redundancy
+   + mfeInteraction
+   + i1offset
+   + i2offset
+   + initMfe()
+   + updateMfe()
+   + min..E() : minimal energy contributions to avoid recomputation
+ * PredictorMfe4d 
+   * now PredictorMfe subclass
+   - PredictorMfe members
+   * using energy.areComplementary()
+   * bugfix : single interaction energy was doubled
+   * bugfix : ED-based cell computation skipping was check reversed
+   * fillHybridE() :
+     - energy argument was obsolete
+ + PredictorMfe2d : space efficient mfe predictor using 2D matrices only
+   + predict() : computes best interaction screening all possible right 
+     interaction ends
+   + initHybridE() : initializes the cells used for current right interaction 
+     ends
+     * bugfix : ED-based cell computation skipping was check reversed
+   + fillHybridE() : computes all possible interactions for current right
+     interaction ends and reports them to updateMfe()
+   + traceBack() : recomputes interactions for the right side of the current
+     interaction site and traces the details of the interaction of interest
+ * PredictorMaxProb :
+   * bugfix : single interaction energy was doubled
+ * InteractionEnergy :
+   + areComplementary() : checks two positions if complementary
+ * CommandLineParsing :
+   + predMode argument (mode,m)
+   + validate_predMode() : checks the argument value
+   * getPredictor() : returns predictor by argument setup
+
+161006 Martin Mann :
+ - PredictorMfeRNAup : renamed to PredictorMfe4d
+ + PredictorMfe4d : former PredictorMfeRNAup
+   * overall energies computed in updateMfeInteraction()
+ * InteractionEnergy : 
+   + getE() : computes the overall energy for a given interaction site and
+     hybridization energy
+     E = hybridE + ED1 + ED2 
+         + dangleLeftE*prob(leftFree) + dangleRightE*prob(rightFree)
+         + closeLeftE + closeRightE
+   + getBoltzmannWeight() : the Boltzmann weight for a given energy
+ * InteractionEnergy* : 
+   + getEndLeft/Right() : the penalty for ending the interaction
+   + getBestEndEnergy() : best energy penalty for interaction ends
+ * InteractionEnergyVrna :
+   + bpGC/CG : base pair type encoding for GC/CG base pair
+   + isGC() : tests whether two positions resemble a GC/CG base pair
+ * PredictorMaxProb :
+   - getBoltzmannWeight() : now part of InteractionEnergy 
+   * overall energies/weights computed in updateMaxProbInteraction()
+
+161005 Martin Mann :
+ * Predictor :
+   + getMaxInteractionWidth() : upper width bound for an interacting site
+ * PredictorMaxProb :
+ * PredictorMfeRNAup :
+   * matrix initialization of end regions reduced to the accessible window
+     widths using getMaxInteractionWidth()
+   * adaption of recursion to varying matrix sizes
+ + test/Interaction
+ * test/Makefile.am : clear binary before each test run (ensures relinking)
+ * Interaction :
+   * isValid() : bugfix : wrong return for single bp interaction
+
+161005 Martin Mann :
+ * Accessibility* :
+   - AccessibilityConstraintAlphabet : now part of AccessibilityConstraint
+   * ED_UPPER_BOUND = E_INF
+   * uses now AccessibilityConstraint object instead of dot-bracket string
+ + AccessibilityConstraint : encodes an accessibility constraint based
+   + init via dot-bracket VRNA-like encoding
+   + getVrnaDotBracket() : get according VRNA-styled dot-bracket encoding
+   + isAccessible() : check for explicit "accessible" marking
+   + isBlocked() : check for explicit "blocked" marking
+   + isEmpty() : check if any constraint information present
+ * CommandLineParsing :
+   * getTargetAccessibility() : creation of AccessibilityConstraint object
+   * getQueryAccessibility() : creation of AccessibilityConstraint object
+ + IndexRange : represents an ascending or descending range of (sequence) indices
+   + isAscending() : check if ascending range encoding
+   + isDescending() : check if descending range encoding
+   + ostream operator
+   + less-than operator
+ * Interaction :
+   + construction from InteractionRange
+   * sequence handling via pointers to enable assignment operator
+   * basePairs : public
+   - getBasePairs() : obsolete for public member
+   * energy : public
+   - get/setEnergy() : obsolete for public member
+   + isEmpty() : check if any base pairs present
+   + assignment operator (InteractionRange)
+ * InteractionEnergy* :
+   + getBestStackingEnergy() : access to the best stacking energy contribution
+   + getBestInitEnergy() : access to the best initiation energy contribution
+   + getBestDangleEnergy() : access to the best dangling end energy contribution
+ + InteractionRange : represents two interacting ranges of two sequences based
+   on two according IndexRange objects
+   + construction from Interaction (boundaries)
+   + isSane() : checks ordering of index ranges
+   + ostream operator
+   + less-than operator
+   + assignment operator (Interaction)
+ * src/Makefile.am : adaption to source changes
+ * OutputHandler* :
+   + add(InteractionRange)
+ + OutputHandlerRangeOnly : converts reported Interactions into an 
+   InteractionRange and forwards the output to a successive OutputHandler
+ * OutputHandlerText :
+   * adaption to Interaction interface changes
+ * Predictor* :
+   * predict(IndexRange,IndexRange) : takes to ranges instead of 4 coordinates
+ * PredictorMaxProb :
+   * maxProbInteraction : now an InteractionRange 
+ * PredictorMfeRNAup :
+   + getE() : computes the overall energy for a given interaction site
+   * updateMfe() : takes only the overall energy instead of individual contribs
+ * ReverseAccessibility :
+   * adaption to AccessibilityConstraint usage
+ * RnaSequence :
+   + isAmbiguous() : checks a certain sequence position for ambiguity
+ + test/AccessibilityConstraint
+ + test/IndexRange
+ + test/InteractionRange
+ + test/OutputRangeOnly
+
+161004 Martin Mann :
+ * general :
+   - E_MAX : replaced by E_INF
+   + E_INF : infinity representation for E_type
+
+161001 Martin Mann :
+ - tests/test* : renamed to *_test
+ + tests/*_test.cpp : test files for the according classes
+ * tests/Makefile : 
+   + wildcard based test file listing
+ * travis :
+   + make test added
+ * configure.ac : back to automake 1.11 features
+ * */Makefile.am : test target adapted to configure change
+ 
+160930 Martin Mann :
+ * InteractionEnergy* :
+   + getRT() : provides the RT constant for this energy model to compute
+     Boltzmann weights
+ + PredictorMaxProb : computes the interaction site with maximal probability
+   and reports the according boundaries and the site's ensemble energy to the
+   output handler 
+160930 Martin Mann :
+ * PredictorMfeRNAup :
+   * mfeInteraction base pairs now updated instead of recreation (reduced memory
+     allocation events) 
+ - PredictorRNAup.* : renamed to PredictorMfeRNAup.*
+ + PredictorMfeRNAup.* : rename to be class name conform
+ * Makefile.am : adaption to file rename
+ * intaRNA : 
+   + call CommandLineParsing.getPredictor() to get predictor
+ * CommandLineParsing :
+   + getPredictor() : generates the predictor according to the user request
+160930 Martin Mann :
+ * InteractionEnergyVrna :
+   * getDangling*() : bugfix : dangling sequence code was not given
+ * ReverseAccessibility :
+   + getReversedIndex() : get index in reversed sequence
+ * Interaction :
+   + energy + get/set() : optional energy value for the interaction (init NaN)
+ * Predictor :
+   * output non-const
+   * constructor :
+     * output non-const (otherwise no filling possible)
+   + predict() : triggers prediction
+ - PredictorRNAup : renamed PredictorMfeRNAup
+ + PredictorMfeRNAup :
+   + mfeInteraction : holds the mfe interaction
+   - hybridEmin : now part of mfeInteraction
+   + initMfe() : initializes mfe and mfe interaction
+   + updateMfe() : updated mfe and mfe interaction
+   * fillHybridE() :
+     * global temp variables to reduce allocation effort
+     + dangling end contribution added
+   * constructor() : only initializes data structures, no computation triggered
+   + predict() : does the computation and output reporting
+   + clear() : clears temporary data structures
+   * destructor() : calls now only clear()
+   + i1offset : the offset for the first sequence for index handling
+   + i2offset : the offset for the second sequence for index handling
+ * OutputHandlerText :
+   + add() : 
+     + prints interaction energy
+ * RnaSequence
+   + last : placeholder to represent the last position within a sequence
+ * intaRNA :
+   * calls predictor->predict()
+ * AccessibilityVrna :
+   * calc_ensemble_free_energy() 
+     * input check preprocessor defines corrected
+
+160929 Martin Mann :
+ * CommandLineParsing :
+   + ReturnCode : enum for different return codes for parsing
+   - parsingResultNotSet : obsolete (covered by ReturnCode)
+   * adaption to ReturnCode usage
+ * intaRNA :
+   * adaption to ReturnCode
+   + PredictorRNAup temporarily hard-coded
+ + unit tests added using Catch header library
+   * configure.ac : 
+     + generate tests/Makefile
+     + AM_EXTRA_RECURSIVE_TARGETS([tests]) : recursive "tests" make target
+     * AM_INIT_AUTOMAKE([1.13]) : need v1.13 for AM_EXTRA_RECURSIVE_TARGETS
+   * Makefile.am :
+     + go to subdir 'tests' for 'tests' make directive only
+   + tests/Makefile.am : compile and run tests 
+   + catch.hpp : Catch library version 1.5.7
+   + tests/runTests.cpp : central test program
+   + tests/testInteractionEnergy.cpp 
+   + tests/testInteractionEnergyBasePair.cpp 
+   + tests/testRnaSequence.cpp
+ * RnaSequence :
+   + areComplementary() : tests for base pair complementarity
+   * constructor : input checks in debug mode
+ * Accessibility + subclasses :
+   * constructor : accConstraint now pointer to enable NULL argument
+ * CommandLineParsing :
+   * argument docu extended
+   * adaption to Accessibility interface change
+   + energy argument added
+   + validate_energy()
+ * InteractionEnergy :
+   * energy getters now const
+   * isAllowedLoopRegion() 
+     * now public
+     * bugfix of maxInternalLoppSize check 
+   + getMaxInternalLoopSize*() to access individual max internal loop size
+   + isValidInternalLoop() : checks an internal loop request
+ * InteractionEnergyVrna :
+   * energy getters : bugfix normalization dcal to kcal
+   * interface adaption
+   * getInterLoopE() : 
+   * getDanglingLeft() : 
+   * getDanglingRight() : 
+     * bugfix of sequence access
+ * InteractionEnergyBasePair :
+   * interface adaption
+ * PredictorRNAup :
+   * E2dMatrix : now quadratic matrix for interaction widths w1,w2
+   * E4dMatrix : now quadratic matrix for interaction starts i1,i2
+   + hybridEmin : global minimal energy value computed
+   * (de/con)structor : matrix deletion/initialization adapted
+   * fillHybridE() :
+     + two round computation: first hybridizations only, than ED values added
+
+160928 Martin Mann :
+ * AccessibilityVrna :
+   + fillByConstraints() : intarna-1 way of computing ED values
+   + fillByRNAup() : RNAup-like ED value computation
+   + fillByRNAplfold() : RNAplfold-like ED value computation
+   * remaining interface adapted to local computation and data structures
+   * using boost::banded_matrix for ED storage
+   * constructor() :
+     + ED setup depends on whether or not structure constraint present
+   * getPfScale() : bugfix : now use global accessibility constraint for 
+     mfe/ensemble energy computation
+   * Accessibility member access now via getter
+   * adaption to possibly empty accConstraint
+ * Accessibility :
+   * constructor() : accConstraint now empty if not provided to reduce memory
+   * checkIndices() : checks only in DEBUG mode enabled
+ * CommandLineParsing :
+   * cleanup 
+ * intaRNA :
+   * adaption to parse return value change
+ * InteractionEnergyVrna :
+   * destructor : bugfix : has to use 'free' for VRNA cleanup
+ * VrnaHandler :
+   + getRT() : computes the RT constant for the current temperature
+ * configure.ac :
+   * VRNA check extended
+ + PredictorRNAup : RNAup-like interaction prediction
+ * Makefile.am : adaption to source file changes
+ * configure.ac :
+   + additional check for "-std=c++11" support of the compiler
+ * InteractioNEnergy :
+   + getAccessibility* : access to full accessibility objects
+   - getLength* : obsolete
+
+160927 Martin Mann :
+ + AccessibilityVrna : vrna-based accessibility computation 
+   (former AccessibilityVienna)
+ + InteractionEnergy : former Energy
+ + InteractionEnergyBasePair : former EnergyBasePair
+ + InteractionEnergyVrna : former EnergyVienna
+ - AccessibilityVienna : renamed 
+ - Energy : renamed
+ - EnergyBasePair : renamed
+ - EnergyVienna : renamed
+ * Accessibility :
+   + ostream operator : prints ED values
+ * AccessibilityVrna :
+   - modelDetails : obsolete
+ * RnaSequence :
+   + ostream operator : prints "ID(Sequence)"
+ + VrnaHandler : central handler for VRNA folding parameter setup
+   * model generation now done in constructor
+   * model access non-const due to VRNA interface ("features" on the fly 
+     initialization of model if not initialized yet, thus non-const)
+ * CommandLineParsing : 
+   + vrnaHandler
+   + getTemperature() : getter for user defined temperature
+   * adaption to renames
+ 
+
+160923 Martin Mann :
+ * .travis :
+   * sudo: true (was false)
+
+160922 Martin Mann :
+############### MOVE FROM CVS TO GIT INTARNA REPO ############################
+ * README : 
+   + compilation information
+   + refers to README.md
+ + README.md (by Bjoern Gruening)
+ * COPYING : refers to LICENSE
+ + LICENSE : now MIT license for intarna 2.*
+ * configure.ac : replaced by new version for intarna 2.*
+ .travis.yml : updated to Vienna 2.2.10 usage 
+ + m4/m4_ax_boost_base.m4 : boost m4 checks for configure.ac usage
+ + autotools-init.sh : calls autotools to generate system specific files
+   ==> NOTE : CALL AFTER CHECKOUT <==
+ - depcomp : temporary autotools file generated by 'bash autotools-init.sh'
+ - install-sh : temporary autotools file generated by 'bash autotools-init.sh'
+ - configure : temporary autotools file generated by 'bash autotools-init.sh'
+ - missing : temporary autotools file generated by 'bash autotools-init.sh'
+ - Makefile.in : temporary autotools file generated by 'bash autotools-init.sh'
+ - aclocal.m4 : temporary autotools file generated by 'bash autotools-init.sh'
+ - src/*.h : old source removed
+ - src/*.c* : old source removed
+ - src/data/ : old energy data removed
+ + src/*.h : new source data for version 2.*
+ + src/*.cpp : new source data for version 2.*
+ * src/Makefile.am : updated for new source files
+
+160921 Martin Mann :
+ * RnaSequence.h : documentation corrected
+ * CommandLineParsing :
+   + validateSequenceAlphabet() : checks 
+     + sequence alphabet check
+     + ambiguity check for warning
+   * parseSequences() :
+     + validateSequenceAlphabet() call
+
+150616 Martin Mann
+ * CommandLineParsing :
+   * parse() 
+     + check for minimal sequence length (>= seedMinBP)
+
+140719 Martin Mann
+ * EnergyBasePair : 
+   * getInterLoopE() : BUGFIX : was returning loop energy instead of negated 
+     base pair number only
+
+140716 Martin Mann
+ + OutputHandlerText : prints reported interaction in a simple text format to
+   stream similar to IntaRNA 1.* output
+   
+140714 Martin Mann
+ * general : 
+   + CHECKNOTNULL macro to throw an exception with message if a given pointer is
+     not initialized
+ + Predictor : general interaction prediction interface
+ + Interaction : interaction information container to be filled by predictors 
+   and to be handled by output handlers
+ + OutputHandler : general interaction reporting handler interface
+
+140703 Martin Mann
+ * Accessibility* :
+   + global accessibility constraint support (some sequence positions have to be
+     unstructured both in structure ensemble and interaction and are thus 
+     omitted from interaction prediction via ED_UPPER_BOUND accessibility 
+     values)
+ * CommandLineParsing :
+   + *AccConst : parameter + checks for accessibility constraints
+   + validateSequenceNumber() : sequence number check (for depending parameters)
+
+140701 Martin Mann
+ * intaRNA :
+   + general computation setup started
+ * general :
+   + CLEANUP : macro to delete a pointer and to set it to NULL
+ * CommandLineParsing :
+   + CharParameter : ensures a char parameter is from a given alphabet
+   + validate_charArgument() : generic check function
+   + validate_numberArgument() : generic check function
+   + several parameters including check functions, defaults, etc.
+   + get*Accessibility() : generates an Accessibility object according to the 
+     user parameters
+   + getEnergyHandler() : generates an Energy object according to the parameters
+ * ReverseAccessibility :
+   + access to original sequence and accessibility object
+ * RnaSequence :
+   + ambiguity check
+
+140630 Martin Mann
+ + ReverseAccessibility : reversed index access to a sequence and its 
+   accessibility (ED) values as needed for the energy computation
+ * AccessibilityVienna :
+   * Vienna RNA package calls corrected
+   + partFoldParams : central partition function folding parameter object 
+ + Energy : abstract interface to compute energy contributions
+   + getDangling*() : dangling end penalties
+ + EnergyBasePair : energy computation in terms of number of base pairs
+ + EnergyVienna : energy computation via Vienna RNA package
+
+140627 Martin Mann
+ * Accessibility* :
+   + maxLength : maximal length of accessible regions to consider, defaults to 
+     the sequence's length
+ + E_type : global type for energy variables/values
+ + T_type : global type for temperature variables/values
+ + E_MAX : constant : maximal value for energies
+
+140625 Martin Mann
+ * configure :
+   + Vienna RNA package v2.* path support and checks
+ + Accessibility : abstract interface to get accessibility energies for regions
+ + AccessibilityNone : Accessibility implementation that always returns zero
+ + AccessibilityVienna : Accessibility implementation that computes _all_ ED 
+   values based on ensemble energies computed via the Vienna RNA package
+ * RnaSequence :
+   + as* : access functions for different sequence encodings
+
+140624 Martin Mann
+ + general.h :
+   + macro to stop at unimplemented source code locations via std::runtime_error 
+ + RnaSequence : class that represents an RNA sequence with according 
+   functionality
+   + integer encoding
+   + string validation
+ * CommandLineParser :
+   + query and target : 
+     + support for direct sequence input
+     + preparation for stream/file parsing
+
+140618 Martin Mann
+ + cygwin boost installation using
+     ./b2 --prefix=/cygdrive/c/Research/Software/boost/1.55.0  --layout=tagged
+        --without-python --without-mpi --without-context threading=single 
+        link=static variant=release install
+ + src/CommandLineParsing : class that handles command line argument parsing
+   and checking via boost::program_options
+   NOTE: under cygwin a boost build from source is needed to get the libraries
+         correctly compiled and linkable (boost lib from cygwin repos is not
+         working)
+
+140617 Martin Mann
+ + autoconf setup
+
+140617 ********  start reimplementation of IntaRNA  ******************
+
+
+#############################################################################
+
+2011-06-10 Andreas Richter      version 1.2.5
+   * fixed bug in string clearing when option -v is used and no
+     significant interactions are found
+   * fixed bug in parameter checking
+
+2011-03-24 Andreas Richter      version 1.2.4
+   * changes in error messages
+
+2010-08-13 Andreas Richter	version 1.2.3
+   * fixed bug in computation of C matrix for parameter -n
+
+2009-10-08 Andreas Richter
+   * added support for ambiguous nucleotide(s) "N"
+
+2009-09-11 Andreas Richter      version 1.2.2
+   * fixed bug in automated setting the maximal length of unpaired region in
+     target
+
+2009-09-07 Andreas Richter
+   * fixed bug in range check for parameter -w (disallow values <3)
+   * fixed bugs in calculation of ED values of target RNA and binding RNA with
+     RNAplfold and RNAup, respectively, concerning pf_scale for RNAplfold and in
+     combination with values 0 for parameter -a/-b (weights for ED values) 
+
+2009-06-11 Andreas Richter
+   * threshold for seed accessibility added as EXPERIMENTAL FEATURE
+
+2009-06-11 Andreas Richter      version 1.2.1
+   * fixed bug of wrong seed region positions when options -f, -m and -t are used together
+   * fixed bug in range check of parameter -f
+
+2009-05-29 Andreas Richter
+   * weight for ED values of target RNA and binding RNA in energy added
+
+2009-02-23 Andreas Richter      version 1.2
+   * new default parameters (-p 6, -U, -P)
+   * ED calculation of target RNA now by new RNAplfold of Vienna Package 1.8.x
+
+2008-12-10 Andreas Richter      version 1.1.1
+   * ED calculation of small RNA by RNAup (-U option) added
+
+2008-10-31 Anke Busch           version 1.1
+   * bug in ED calculation of small RNA fixed
+
+2008-10-24 Andreas Richter
+   * bug in calculation of suboptimal solutions fixed
+
+2008-10-02 Andreas Richter
+   * new parameter -f that allows to defined search region for seed
+   * more efficient calculation of matrices
+   * minor bug in dangling end contributions fixed
+
+2008-09-03 Andreas Richter
+   * temperature-dependent calculation of interaction implemented
+
+2008-08-04 Andreas Richter
+   * intermolecular initiation free energy added
+
+2008-07-16 Andreas Richter
+   * complete approach without heuristic (-n option) added
+
+2008-07-11 Andreas Richter
+   * seed calculation corrected (C matrix indices)
+
+2008-07-08  Andreas Richter
+   * dangling end energy contributions corrected
+
+2008-07-03  Andreas Richter
+   * integrity check for -u parameter added
+   
+2008-06-11  Anke Busch          version 1.0.0
