@@ -54,7 +54,7 @@ class CopomuS:
         self.parse_cmd_args()
 
         # CHECK INTARNA BIN AND VERSION
-        IntaRNA.check_binary(__intarna_min__)
+        # IntaRNA.check_binary(__intarna_min__)
 
         # SELECT CANDIDATES
         bp_func = get_selector(
