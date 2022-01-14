@@ -5,7 +5,7 @@ from src.utils.data.fake_data_generation.toy_graphs import square_matrix
 
 
 class BaseSystem():
-    def __init__(self, config_args):
+    def __init__(self, config_args: dict = None):
         super().__init__()
 
         self.interactions = self.init_interaction_matrix()
