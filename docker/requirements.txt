@@ -6,3 +6,4 @@ networkx
 numba
 pyvis
 python-libsbml # https://synonym.caltech.edu/software/libsbml/libsbml-docs/api/python/
+sympy

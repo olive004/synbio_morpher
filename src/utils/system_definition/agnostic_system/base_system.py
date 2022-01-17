@@ -15,13 +15,18 @@ class BaseSystem():
 
     def build_graph(self, source_matrix=None) -> nx.DiGraph:
         if source_matrix is not None:
-            return nx.from_numpy_matrix(source_matrix)
-        return nx.from_numpy_matrix(self.interactions)
+            return nx.from_numpy_matrix(source_matrix, create_using=nx.DiGraph)
+        return nx.from_numpy_matrix(self.interactions, create_using=nx.DiGraph)
 
     def init_interaction_matrix(self, config_args=None):
         return InteractionMatrix(toy=False).matrix
 
     def visualise(self, mode="pyvis"):
+        self.graph = self.build_graph(self.interactions)
+
+        if self.node_labels:
+            self.graph = nx.relabel_nodes(self.graph, self.node_labels)
+
         if mode == 'pyvis':
             from src.utils.visualisation.graph_drawer import visualise_graph_pyvis
             visualise_graph_pyvis(self.graph)

@@ -3,10 +3,15 @@ import logging
 
 
 def visualise_graph_pyvis(graph: nx.DiGraph,
-                          plot_name='test_graph.html'):
+                          plot_name='test_graph.html',
+                          new_vis=False):
     from pyvis.network import Network
     import webbrowser
     import os
+
+    if new_vis:
+        from src.utils.misc.string_handling import make_time_str
+        plot_name = f'test_graph_{make_time_str()}.html'
 
     interactive_graph = Network(height=800, width=800, directed=True, notebook=True)
     interactive_graph.from_nx(graph, edge_weight_transf=lambda x: round(x, 4))
