@@ -10,9 +10,9 @@ FROM quay.io/biocontainers/intarna:3.2.0--h176a8bc_0
 #  Install python dependencies
 ################################################################################
 WORKDIR /usr/lib
-# COPY ./requirements.txt /usr/lib/install_requirements/requirements.txt
-# RUN cd /usr/lib/install_requirements && \
-#     pip install -r ./requirements.txt
+COPY ./requirements.txt /usr/lib/install_requirements/requirements.txt
+RUN cd /usr/lib/install_requirements && \
+    pip install -r ./requirements.txt
 
 ################################################################################
 #  setup environment
@@ -23,6 +23,5 @@ ENV PYTHONPATH=/workdir
 ENV MNT ../
 WORKDIR /workdir
 # ENTRYPOINT ["/bin/bash"]
-ADD ../ /workdir/
 
 

@@ -1,5 +1,5 @@
 argparse
-# biopython==1.79
+biopython
 fire
 matplotlib
 networkx
