@@ -6,17 +6,13 @@
 FROM quay.io/biocontainers/intarna:3.2.0--h176a8bc_0
 # WORKDIR /Users/oliviagallup/Desktop/Kode/Oxford/DPhil/Gene_circuit_glitch_prediction
 
-
-
-# FROM micrographia/base_pytorch:latest
-
 ################################################################################
 #  Install python dependencies
 ################################################################################
 WORKDIR /usr/lib
-COPY ./requirements.txt /usr/lib/install_requirements/requirements.txt
-RUN cd /usr/lib/install_requirements && \
-    pip3 install -r ./requirements.txt
+# COPY ./requirements.txt /usr/lib/install_requirements/requirements.txt
+# RUN cd /usr/lib/install_requirements && \
+#     pip install -r ./requirements.txt
 
 ################################################################################
 #  setup environment
@@ -26,4 +22,7 @@ ENV ROOT_DIR=/workdir
 ENV PYTHONPATH=/workdir
 ENV MNT ../
 WORKDIR /workdir
-ENTRYPOINT ["/bin/bash"]
+# ENTRYPOINT ["/bin/bash"]
+ADD ../ /workdir/
+
+

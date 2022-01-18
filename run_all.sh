@@ -5,6 +5,7 @@ CURRENT_ENV_PATH = /Users/oliviagallup/Desktop/Kode/Oxford/DPhil/env_gene_circ/b
 source $CURRENT_ENV_PATH
 
 # Configure non-pip dependencies
+source ./src/setup/start_docker.sh
 source ./src/setup/install_deps.sh
 
 # Clean up dependencies
