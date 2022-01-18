@@ -1,4 +1,4 @@
 {
-    "query": "/Users/oliviagallup/Desktop/Kode/Oxford/DPhil/Gene_circuit_glitch_prediction/src/utils/data/example_data/toy_mRNA.fasta",
-    "target": "/Users/oliviagallup/Desktop/Kode/Oxford/DPhil/Gene_circuit_glitch_prediction/src/utils/data/example_data/toy_ncRNA.fasta"
+    "query": "./src/utils/data/example_data/toy_mRNA.fasta",
+    "target": "./src/utils/data/example_data/toy_ncRNA.fasta"
 }

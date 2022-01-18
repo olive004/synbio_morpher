@@ -1,4 +1,4 @@
 {
     "dummy_arg": "yes",
-    "IntaRNA": "/Users/oliviagallup/Desktop/Kode/Oxford/DPhil/Gene_circuit_glitch_prediction/scripts/RNA_circuit_simulation/configs/repressilator/intaRNA_args.json"
+    "IntaRNA": "./scripts/RNA_circuit_simulation/configs/repressilator/intaRNA_args.json"
 }

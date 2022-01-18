@@ -4,7 +4,6 @@
 # quay.io/repository/biocontainers/intarna
 # FROM 16a5962af907:3.2.0--h176a8bc_0
 FROM quay.io/biocontainers/intarna:3.2.0--h176a8bc_0
-# WORKDIR /Users/oliviagallup/Desktop/Kode/Oxford/DPhil/Gene_circuit_glitch_prediction
 
 ################################################################################
 #  Install python dependencies
