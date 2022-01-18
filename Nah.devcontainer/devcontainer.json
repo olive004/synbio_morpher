@@ -1,5 +1,0 @@
-{
-    "image": "quay.io/biocontainers/intarna:3.2.0--h176a8bc_0",
-    "forwardPorts": [3000],
-    "extensions": ["dbaeumer.vscode-eslint"]
-  }
