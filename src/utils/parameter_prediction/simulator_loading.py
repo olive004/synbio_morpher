@@ -3,6 +3,11 @@ import sys
 from src.utils.data.data_format_tools.manipulate_fasta import load_seq_from_FASTA
 
 
+extra_simulators = [
+    "CopomuS"
+]
+
+
 def find_simulator_loader(simulator: str):
     if simulator == "IntaRNA":
         return load_IntaRNA

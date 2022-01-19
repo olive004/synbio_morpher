@@ -18,6 +18,8 @@ def create_argparse_from_dict(dict_args: Dict):
 def get_simulator_names() -> List:
     simulator_dir = os.path.join("src", "utils", "parameter_prediction")
     simulators = remove_special_py_functions(os.listdir(simulator_dir))
+    from src.utils.parameter_prediction.simulator_loading import extra_simulators
+    simulators = simulators + extra_simulators
     return simulators
 
 

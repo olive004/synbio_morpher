@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # FROM intarna_docker
-# quay.io/repository/biocontainers/intarna
+# https://quay.io/repository/biocontainers/intarna
 # FROM 16a5962af907:3.2.0--h176a8bc_0
 FROM quay.io/biocontainers/intarna:3.2.0--h176a8bc_0
 
@@ -17,7 +17,6 @@ RUN cd /usr/lib/install_requirements && \
 #  setup environment
 ################################################################################
 ENV ROOT_DIR=/workdir
-# ENV TORCH_HOME=/workdir/src/pkg/model_zoo
 ENV PYTHONPATH=/workdir
 ENV MNT ../
 WORKDIR /workdir
