@@ -1,6 +1,6 @@
 from fire import Fire
 
-from src.utils.decorators import time_it
+from src.utils.misc.decorators import time_it
 from src.utils.system_definition.agnostic_system.base_system import BaseSystem
 
 
