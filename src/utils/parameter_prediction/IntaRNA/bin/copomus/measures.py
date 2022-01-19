@@ -3,8 +3,8 @@
 
 import os
 from tempfile import gettempdir
-from copomus.mutation import Mutation
-from copomus.indexing import idx_to_array_index
+from src.utils.parameter_prediction.IntaRNA.bin.copomus.mutation import Mutation
+from src.utils.parameter_prediction.IntaRNA.bin.copomus.indexing import idx_to_array_index
 
 
 class Measure:

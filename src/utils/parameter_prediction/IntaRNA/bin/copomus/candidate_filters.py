@@ -2,7 +2,7 @@
 # Author: Fabio Gutmann <https://github.com/fabio-gut>
 
 from typing import Tuple, List
-from copomus.indexing import idx_to_array_index
+from src.utils.parameter_prediction.IntaRNA.bin.copomus.indexing import idx_to_array_index
 
 
 def _filter_bp_type(bps: List[Tuple[int, int]], q: str, t: str, qidxpos0: int, tidxpos0: int, bp_type='') -> \

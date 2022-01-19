@@ -3,7 +3,7 @@
 
 from dataclasses import dataclass, field
 from typing import List
-from copomus.indexing import idx_to_array_index
+from src.utils.parameter_prediction.IntaRNA.bin.copomus.indexing import idx_to_array_index
 
 
 @dataclass()

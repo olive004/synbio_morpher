@@ -8,6 +8,7 @@ from subprocess import Popen, PIPE, run
 
 class IntaRNA:
     """IntaRNA python3 wrapper"""
+
     def __init__(self):
         pass
 
@@ -17,12 +18,14 @@ class IntaRNA:
         Checks weather or not the IntaRNA binary can be found in PATH and exits with returncode 1 if not found.
         :param required_version: The minimum required version for IntaRNA
         """
-        p = run('IntaRNA --version', shell=True, stdout=PIPE, stderr=PIPE, universal_newlines=True)
+        p = run('IntaRNA --version', shell=True, stdout=PIPE,
+                stderr=PIPE, universal_newlines=True)
         if p.returncode:
             sys.stderr.write('Please add the IntaRNA binary to your PATH.\n')
             sys.exit(1)
         if p.stdout.split('\n')[0].split()[1] < required_version:
-            sys.stderr.write(f'This tool requires IntaRNA version {required_version}, please upgrade\n')
+            sys.stderr.write(
+                f'This tool requires IntaRNA version {required_version}, please upgrade\n')
             sys.exit(1)
 
     def run(self, query: str, target: str, qidxpos0: int, tidxpos0: int, outcsvcols: str, threads: int, n: int = 1,
@@ -45,8 +48,12 @@ class IntaRNA:
         if not extra_params:
             extra_params = []
         param_file = f'--parameterFile={param_file}' if param_file else ''
-        p = Popen(['IntaRNA', '-q', query, '-t', target, '--outMode=C', f'--outcsvcols={outcsvcols}',
-                   f'--qIdxPos0={qidxpos0}', f'--tIdxPos0={tidxpos0}', f'--outNumber={n}', f'--threads={threads}', param_file]
+        p = Popen(['IntaRNA', '-q', query, '-t', target, '--outMode=C',
+                   f'--outcsvcols={outcsvcols}',
+                   f'--qIdxPos0={qidxpos0}', 
+                   f'--tIdxPos0={tidxpos0}', 
+                   f'--outNumber={n}', 
+                   f'--threads={threads}', param_file]
                   + extra_params, stdout=PIPE, stderr=PIPE, universal_newlines=True)
 
         stdout, stderr = p.communicate()

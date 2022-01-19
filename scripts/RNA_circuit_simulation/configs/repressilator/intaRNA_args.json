@@ -1,4 +1,11 @@
 {
-    "query": "/Users/oliviagallup/Desktop/Kode/Oxford/DPhil/Gene_circuit_glitch_prediction/src/utils/data_processing/example_data/toy_mRNA.fasta",
-    "target": "/Users/oliviagallup/Desktop/Kode/Oxford/DPhil/Gene_circuit_glitch_prediction/src/utils/data_processing/example_data/toy_ncRNA.fasta"
+    "query": "./src/utils/data/example_data/toy_mRNA.fasta",
+    "target": "./src/utils/data/example_data/toy_ncRNA.fasta",
+    "qidxpos0": 1,
+    "tidxpos0": 1,
+    "outcsvcols": "bpList",
+    "threads": 0,
+    "n": 1,
+    "param_file": "./scripts/RNA_circuit_simulation/configs/repressilator/intaRNA_parameterFile.sh",
 }
+            

@@ -1,0 +1,13 @@
+version: '3.4'
+
+services:
+  genecircuitglitchprediction:
+    image: genecircuitglitchprediction
+    build:
+      context: .
+      dockerfile: ./docker/vs_code_interface/Dockerfile
+  intarna:
+    image: intarna
+    build:
+      context: .
+      dockerfile: ./docker/intarna/Dockerfile

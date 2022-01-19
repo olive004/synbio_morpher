@@ -1,3 +1,5 @@
+argparse
+biopython
 fire
 matplotlib
 networkx
