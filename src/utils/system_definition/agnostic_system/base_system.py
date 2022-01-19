@@ -10,7 +10,7 @@ class BaseSystem():
 
         self.interactions = self.init_interaction_matrix()
 
-        self.node_labels = None
+        self.nodes = None
         self.graph = self.build_graph(self.interactions)
 
     def build_graph(self, source_matrix=None) -> nx.DiGraph:
@@ -24,8 +24,8 @@ class BaseSystem():
     def visualise(self, mode="pyvis"):
         self.graph = self.build_graph(self.interactions)
 
-        if self.node_labels:
-            self.graph = nx.relabel_nodes(self.graph, self.node_labels)
+        if self.nodes:
+            self.graph = nx.relabel_nodes(self.graph, self.nodes)
 
         if mode == 'pyvis':
             from src.utils.visualisation.graph_drawer import visualise_graph_pyvis
@@ -37,11 +37,11 @@ class BaseSystem():
     def label_nodes(self, labels):
         if type(labels) == list:
             current_nodes = self.get_graph_labels()
-            self.node_labels = dict(zip(current_nodes, labels))
+            self.nodes = dict(zip(current_nodes, labels))
         elif type(labels) == dict:
-            self.node_labels = labels
+            self.nodes = labels
 
-        self.graph = nx.relabel_nodes(self.graph, self.node_labels)
+        self.graph = nx.relabel_nodes(self.graph, self.nodes)
 
     def get_graph_labels(self):
         return sorted(self.graph)
