@@ -1,7 +1,7 @@
 import numpy as np
 import networkx as nx
 
-from src.utils.data.fake_data_generation.toy_graphs import square_matrix
+from src.utils.data.fake_data_generation.toy_graphs import square_matrix_rand
 
 
 class BaseSystem():
@@ -19,10 +19,13 @@ class BaseSystem():
             return nx.from_numpy_matrix(source_matrix, create_using=nx.DiGraph)
         return nx.from_numpy_matrix(self.interactions, create_using=nx.DiGraph)
 
-    def make_inputs(self, configs=None):
-        return toy_inputs()
+    def determine_input_type(self) -> str:
+        raise NotImplementedError
 
-    def init_interaction_matrix(self, config_args=None):
+    def make_inputs(self, configs=None):
+        return list(np.range(np.random.randint(1, 10)))
+
+    def init_interaction_matrix(self, config_args=None) -> np.array:
         return InteractionMatrix(toy=False).matrix
 
     def visualise(self, mode="pyvis"):
@@ -47,16 +50,12 @@ class BaseSystem():
 
         self.graph = nx.relabel_nodes(self.graph, self.node_labels)
 
-    def get_graph_labels(self):
+    def get_graph_labels(self) -> dict:
         return sorted(self.graph)
 
 
 class BaseSpecies():
-
-    dt = 1
-
-    def __init__(self):
-        super().__init__()
+    def __init__(self, ):
 
         # Probability distribution for each interaction component?
         # Can also use different types of moments of prob distribution
@@ -65,7 +64,7 @@ class BaseSpecies():
         self.data = None
         self.rates = {
             "generation": 1,
-            "removal"
+            "removal": 1
         }
 
 
@@ -74,26 +73,22 @@ class InteractionMatrix():
                  toy=False,
                  num_nodes=None):
         super().__init__()
-        
+
         self.toy = toy
+        self.config_args = config_args
 
         if toy:
-            self.matrix = self.make_toy_matrix()
+            self.matrix = self.make_toy_matrix(num_nodes)
         else:
-            self.matrix = 
+            self.matrix = self.make_matrix()
 
-    def make_matrix(self, num_nodes=3):
-        if self.toy:
+    def make_matrix(self):
+        num_nodes = self.config_args
+        return square_matrix_rand(num_nodes)
+
+    def make_toy_matrix(self, num_nodes=None):
+        if not num_nodes:
             min_nodes = 2
             max_nodes = 15
             num_nodes = np.random.randint(min_nodes, max_nodes)
-            return square_matrix(num_nodes)
-        return square_matrix(num_nodes)
-
-    def make_toy_matrix(self):
-        min_nodes = 2
-        max_nodes = 15
-        num_nodes = np.random.randint(min_nodes, max_nodes)
-        return make_matrix(num_nodes)
-
-    make matrix
+        return self.make_matrix(num_nodes)

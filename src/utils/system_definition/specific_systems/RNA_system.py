@@ -1,6 +1,6 @@
 import logging
 import os
-from src.utils.system_definition.agnostic_system.base_system import BaseSystem
+from src.utils.system_definition.agnostic_system.base_system import BaseSystem, BaseSpecies
 from src.utils.parameter_prediction.simulators import InteractionSimulator
 
 
@@ -18,9 +18,16 @@ class RNASystem(BaseSystem):
     def run_simulator(self):
         return self.simulator.run()
 
+if input_type=="RNA":
+            return RNASpecies
+
     def simulate_interaction_strengths(self):
         self.interactions = self.get_part_to_part_intrs()
         
     def get_part_to_part_intrs(self):
         data = self.run_simulator()
-        
+
+
+class RNASpecies(BaseSpecies):
+    def __init__(self, config_args, simulator="IntaRNA"):
+        super().__init__(config_args)

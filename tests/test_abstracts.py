@@ -1,24 +1,16 @@
 import unittest
+import numpy as np
 from src.utils.system_definition.agnostic_system.base_system import BaseSystem
-
-
-def main(config_args=None):
-    circuit = BaseSystem(config_args)
-    circuit.visualise()
-
-
-
 
 
 class TestBaseSystem(unittest.TestCase):
 
-    def test_sum(self):
-        self.assertEqual(sum([1, 2, 3]), 6, "Should be 6")
+    def test_label_nodes(self):
+        circuit = BaseSystem()
+        new_labels = list(np.range(len(circuit.graph)))
+        circuit.label_nodes(new_labels)
+        self.assertEqual(circuit.graph, new_labels, "Re-labelling failed.")
 
-    def test_sum_tuple(self):
-        self.assertEqual(sum((1, 2, 2)), 6, "Should be 6")
-
-    def test
 
 if __name__ == '__main__':
     unittest.main()
