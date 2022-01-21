@@ -9,7 +9,8 @@ def main(config_file=None):
 
     kwargs = compose_kwargs(config_file)
     circuit = instantiate_system(kwargs)
-    circuit.visualise()
+    circuit.data
+    # circuit.visualise()
 
 
 if __name__ == "__main__":

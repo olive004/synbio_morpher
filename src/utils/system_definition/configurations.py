@@ -8,6 +8,7 @@ from src.utils.parameter_prediction.simulator_loading import find_simulator_load
 from src.utils.misc.string_handling import remove_special_py_functions
 from src.utils.data.data_format_tools.common import merge_dicts
 
+
 ROOT_DIR = os.environ['ROOT_DIR']
 
 
@@ -55,7 +56,8 @@ def load_json_as_dict(json_pathname):
 def load_simulator_cfgs(dict_args) -> Dict:
     for simulator_name in get_simulator_names():
         if simulator_name in dict_args:
-            simulator_cfg = handle_simulator_cfgs(simulator_name, dict_args[simulator_name])
+            simulator_cfg = handle_simulator_cfgs(
+                simulator_name, dict_args[simulator_name])
             dict_args[simulator_name] = simulator_cfg
     return dict_args
 

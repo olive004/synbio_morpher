@@ -8,7 +8,10 @@ class BaseSystem():
     def __init__(self, config_args: dict = None):
         super().__init__()
 
-        self.nodes = self.make_inputs(config_args)
+        if config_args is None:
+            config_args = {}
+
+        self.data = config_args.get("data", None)
         self.interactions = self.init_interaction_matrix()
 
         self.node_labels = None
@@ -21,9 +24,6 @@ class BaseSystem():
 
     def determine_input_type(self) -> str:
         raise NotImplementedError
-
-    def make_inputs(self, configs=None):
-        return list(np.range(np.random.randint(1, 10)))
 
     def init_interaction_matrix(self, config_args=None) -> np.array:
         return InteractionMatrix(toy=False).matrix

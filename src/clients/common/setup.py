@@ -26,5 +26,5 @@ def compose_kwargs(config_file):
 def instantiate_system(kwargs):
 
     system_cfg_args = parse_cfg_args(kwargs)
-    system_type = get_system_type(kwargs.get("system_type"))
-    circuit = RNASystem(system_cfg_args)
+    SystemType = get_system_type(kwargs.get("system_type"))
+    return SystemType(system_cfg_args)
