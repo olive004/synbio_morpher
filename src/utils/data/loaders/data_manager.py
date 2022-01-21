@@ -4,6 +4,7 @@ from functools import partial
 class DataManager():
     def __init__(self, source):
         self.data = self.load_data(source)
+        self.sample_names = list(self.data.values())
 
     def load_data(self, source):
         from src.utils.data.data_format_tools.common import determine_data_format

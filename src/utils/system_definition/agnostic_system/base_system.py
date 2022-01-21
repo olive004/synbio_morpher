@@ -41,23 +41,22 @@ class BaseSystem():
             visualise_graph_pyplot(self.graph)
 
     @property
-    def nodes(self):
-        return self._nodes
+    def node_labels(self):
+        return self._node_labels
 
-    @nodes.setter
-    def nodes(self, nodes: dict):
-        if type(nodes) == dict:
-            self.label_nodes(list(nodes.keys()))
-        self._nodes = list(nodes.values())
+    @node_labels.getter
+    def node_labels(self):
+        return self.node_labels
 
-    def label_nodes(self, labels):
+    @node_labels.setter
+    def node_labels(self, labels: dict):
         if type(labels) == list:
             current_nodes = self.get_graph_labels()
-            self.node_labels = dict(zip(current_nodes, labels))
+            self._node_labels = dict(zip(current_nodes, labels))
         elif type(labels) == dict:
-            self.node_labels = labels
+            self._node_labels = labels
 
-        self.graph = nx.relabel_nodes(self.graph, self.node_labels)
+        self.graph = nx.relabel_nodes(self.graph, self._node_labels)
 
     def get_graph_labels(self) -> dict:
         return sorted(self.graph)

@@ -25,7 +25,7 @@ class RNASystem(BaseSystem):
         return self.simulator.run()
 
     def process_data(self):
-        self.nodes = self.data.names
+        self.nodes = self.data.sample_names
 
     def simulate_interaction_strengths(self):
         self.interactions = self.get_part_to_part_intrs()
