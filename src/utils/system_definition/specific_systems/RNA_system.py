@@ -5,14 +5,14 @@ from src.utils.parameter_prediction.simulators import InteractionSimulator
 
 
 class RNASystem(BaseSystem):
-    def __init__(self, config_args, simulator="IntaRNA"):
-        super().__init__(config_args)
+    def __init__(self, simulator_args, simulator="IntaRNA"):
+        super().__init__(simulator_args)
 
-        self.config_args = config_args
+        self.simulator_args = simulator_args
         self.simulator_choice = simulator
 
         self.simulator = InteractionSimulator(
-            self.config_args, self.simulator_choice)
+            self.simulator_args, self.simulator_choice)
 
         self.run_simulator()
 
@@ -31,5 +31,5 @@ class RNASystem(BaseSystem):
 
 
 class RNASpecies(BaseSpecies):
-    def __init__(self, config_args, simulator="IntaRNA"):
-        super().__init__(config_args)
+    def __init__(self, simulator_args, simulator="IntaRNA"):
+        super().__init__(simulator_args)

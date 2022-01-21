@@ -7,6 +7,8 @@ from typing import Dict, Iterable, List
 from src.utils.parameter_prediction.simulator_loading import find_simulator_loader
 from src.utils.misc.string_handling import remove_special_py_functions
 
+ROOT_DIR = os.environ['ROOT_DIR']
+
 
 def create_argparse_from_dict(dict_args: Dict):
     parser = argparse.ArgumentParser()
@@ -38,17 +40,7 @@ def parse_cfg_args(config_file: str = None, dict_args: Dict = None) -> Dict:
     dict_args = merge_dicts(dict_args, config_file)
 
     return dict_args
-
-
-# def expand_json_cfgs(paths_dict):
-#     grouped_cfgs = {}
-#     for group, path in paths_dict.items():
-#         try:
-#             grouped_cfgs[group] = json.load(open(path))
-#         except FileNotFoundError:
-#             logging.error(f'JSON path {path} not found')
-#     return grouped_cfgs
-
+    
 
 def load_json_as_dict(json_pathname):
     try:
@@ -83,7 +75,7 @@ def merge_dicts(*dict_likes):
 
 
 def retrieve_default_args() -> Dict:
-    fn = "scripts/common/default_args.json"
+    fn = os.path.join(ROOT_DIR, 'scripts', 'common', 'default_args.json')
     default_args = json.load(open(fn))
     return default_args
 
