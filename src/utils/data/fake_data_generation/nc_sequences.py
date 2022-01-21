@@ -19,11 +19,11 @@ def write_seq_file(fname, stype='RNA', count=5, slength=20):
             seq_generator = generate_RNA
             raise NotImplementedError
         for i in range(count):
-            seq_name = '>' + stype + str(i) + '\n'
+            seq_name = '>' + stype + '_' + str(i) + '\n'
             f.write(seq_name)
-            f.write(seq_generator(slength))
+            f.write(seq_generator(slength) + '\n')
 
 
 def create_toy_circuit(stype='RNA', count=5, slength=20):
-    fname = './example_data/toy_mRNA_circuit.fasta'
+    fname = './src/utils/data/example_data/toy_mRNA_circuit.fasta'
     write_seq_file(fname, stype, count, slength)
