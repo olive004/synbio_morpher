@@ -6,10 +6,10 @@ from typing import Dict, Iterable, List
 
 from src.utils.parameter_prediction.simulator_loading import find_simulator_loader
 from src.utils.misc.string_handling import remove_special_py_functions
-from src.utils.data.data_format_tools.common import merge_dicts
+from src.utils.data.data_format_tools.common import merge_dicts, load_json_as_dict
 
 
-ROOT_DIR = os.environ['ROOT_DIR']
+# ROOT_DIR = os.environ['ROOT_DIR']
 
 
 def create_argparse_from_dict(dict_args: Dict):
@@ -37,20 +37,10 @@ def parse_cfg_args(config_file: dict = None, dict_args: Dict = None) -> Dict:
 
     if dict_args is None:
         dict_args = retrieve_default_args()
-
     dict_args = load_simulator_cfgs(dict_args)
     dict_args = merge_dicts(dict_args, config_file)
 
     return dict_args
-
-
-def load_json_as_dict(json_pathname):
-    try:
-        jdict = json.load(open(json_pathname))
-    except FileNotFoundError:
-        logging.error(f'JSON path {json_pathname} not found')
-        SystemExit
-    return jdict
 
 
 def load_simulator_cfgs(dict_args) -> Dict:
@@ -63,7 +53,7 @@ def load_simulator_cfgs(dict_args) -> Dict:
 
 
 def retrieve_default_args() -> Dict:
-    fn = os.path.join(ROOT_DIR, 'scripts', 'common', 'default_args.json')
+    fn = os.path.join('scripts', 'common', 'default_args.json')
     default_args = json.load(open(fn))
     return default_args
 

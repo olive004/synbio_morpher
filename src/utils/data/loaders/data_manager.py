@@ -21,3 +21,7 @@ class DataManager():
         else:
             raise NotImplementedError(
                 "Other filetypes than fasta not supported yet.")
+
+    @property
+    def size(self):
+        return len(self.data)

@@ -25,8 +25,9 @@ class BaseSystem():
     def determine_input_type(self) -> str:
         raise NotImplementedError
 
-    def init_interaction_matrix(self, config_args=None) -> np.array:
-        return InteractionMatrix(toy=False).matrix
+    def init_interaction_matrix(self) -> np.array:
+        matrix_size = self.data.size
+        return InteractionMatrix(num_nodes=matrix_size).matrix
 
     def visualise(self, mode="pyvis"):
         self.graph = self.build_graph(self.interactions)
@@ -70,8 +71,8 @@ class BaseSpecies():
 
 class InteractionMatrix():
     def __init__(self, config_args=None,
-                 toy=False,
-                 num_nodes=None):
+                 num_nodes=None,
+                 toy=False):
         super().__init__()
 
         self.toy = toy
@@ -80,10 +81,11 @@ class InteractionMatrix():
         if toy:
             self.matrix = self.make_toy_matrix(num_nodes)
         else:
-            self.matrix = self.make_matrix()
+            self.matrix = self.make_rand_matrix(num_nodes)
 
-    def make_matrix(self):
-        num_nodes = self.config_args
+    def make_rand_matrix(self, num_nodes):
+        if num_nodes is None or num_nodes == 0:
+            num_nodes = 1
         return square_matrix_rand(num_nodes)
 
     def make_toy_matrix(self, num_nodes=None):
@@ -91,4 +93,4 @@ class InteractionMatrix():
             min_nodes = 2
             max_nodes = 15
             num_nodes = np.random.randint(min_nodes, max_nodes)
-        return self.make_matrix(num_nodes)
+        return self.make_rand_matrix(num_nodes)

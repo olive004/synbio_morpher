@@ -19,10 +19,6 @@ class RNASystem(BaseSystem):
     def run_simulator(self):
         return self.simulator.run()
 
-    def make_inputs(self, configs=None):
-        if input_type == "RNA":
-            return RNASpecies
-
     def simulate_interaction_strengths(self):
         self.interactions = self.get_part_to_part_intrs()
         
