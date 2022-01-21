@@ -7,7 +7,7 @@ def compose_kwargs(config_file):
     data_manager = DataManager(config_file.get("data"))
 
     kwargs = {
-        "data_type": config_file.get("type", "RNA")
+        "data_type": config_file.get("type", "RNA"),
         "data": data_manager,
     }
     # mcgb kwargs
