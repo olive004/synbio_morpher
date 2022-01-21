@@ -10,6 +10,8 @@ def main(config_file=None):
 
     parsed_namespace_args = parse_cfg_args(config_file)
 
+    kwargs = compose_kwargs(config_file)
+    circuit = instantiate_system(kwargs)
     circuit = RNASystem(parsed_namespace_args)
     circuit.visualise()
 
