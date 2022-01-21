@@ -11,14 +11,16 @@ class RNASystem(BaseSystem):
         self.config_args = config_args
         self.simulator_choice = simulator
 
-        self.simulator = InteractionSimulator(self.config_args, self.simulator_choice)
+        self.simulator = InteractionSimulator(
+            self.config_args, self.simulator_choice)
 
         self.run_simulator()
 
     def run_simulator(self):
         return self.simulator.run()
 
-if input_type=="RNA":
+    def make_inputs(self, configs=None):
+        if input_type == "RNA":
             return RNASpecies
 
     def simulate_interaction_strengths(self):
