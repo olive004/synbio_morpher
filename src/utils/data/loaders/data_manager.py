@@ -10,7 +10,7 @@ class DataManager():
         filepath = source
         data_type = determine_data_format(filepath)
         loader = self.get_loader(data_type)
-        load_json_as_dict(source)
+        data = loader(source)
 
     def get_loader(self, data_type):
         if data_type == "fasta":
@@ -18,4 +18,3 @@ class DataManager():
             return load_seq_from_FASTA
         else:
             raise NotImplementedError("Other filetypes than fasta not supported yet.")
-
