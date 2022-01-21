@@ -1,13 +1,13 @@
+from src.utils.data.loaders.data_manager import DataManager
 from src.utils.system_definition.configurations import parse_cfg_args
+from src.utils.system_definition.setup import get_system_type
 from src.utils.system_definition.specific_systems.RNA_system import RNASystem
 
 
 def compose_kwargs(config_file):
-
     data_manager = DataManager(config_file.get("data"))
-
     kwargs = {
-        "data_type": config_file.get("type", "RNA"),
+        "system_type": config_file.get("system_type"),
         "data": data_manager,
     }
     # mcgb kwargs
@@ -25,6 +25,6 @@ def compose_kwargs(config_file):
 
 def instantiate_system(kwargs):
 
-    simulator_cfg = kwargs
-    parsed_namespace_args = parse_cfg_args(simulator_cfg)
-    circuit = RNASystem(parsed_namespace_args)
+    system_cfg_args = parse_cfg_args(kwargs)
+    system_type = get_system_type(kwargs.get("system_type"))
+    circuit = RNASystem(system_cfg_args)

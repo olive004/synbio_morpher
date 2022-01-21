@@ -1,5 +1,5 @@
 {
-    "type": "RNA",
+    "system_type": "RNA",
     "data": "./src/utils/data/example_data/toy_mRNA_circuit.fasta",
     "interaction_simulator": "IntaRNA"
 }
