@@ -1,5 +1,4 @@
 from functools import partial
-from src.utils.system_definition.configurations import load_json_as_dict
 
 
 class DataManager():
@@ -25,3 +24,11 @@ class DataManager():
     @property
     def size(self):
         return len(self.data)
+
+    @property
+    def sample_names(self):
+        if type(self.data) == dict:
+            return list(self.data.values())
+        else:
+            import numpy as np
+            return list(np.range(len(self.data)))
