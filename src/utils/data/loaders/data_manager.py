@@ -26,10 +26,26 @@ class DataManager():
     def size(self):
         return len(self.data)
 
+    @size.getter
+    def size(self):
+        return len(self.data)
+
     @property
+    def sample_names(self):
+        return self._sample_names
+
+    @sample_names.getter
     def sample_names(self):
         if type(self.data) == dict:
             return list(self.data.values())
         else:
             import numpy as np
             return list(np.range(len(self.data)))
+
+    @sample_names.setter
+    def sample_names(self, value):
+        if type(value) == list or type(value) == dict:
+            self._sample_names = value
+        else:
+            raise ValueError(f'Wrong type "{type(value)}" for ' +
+                             'setting data sample_names to {value}')
