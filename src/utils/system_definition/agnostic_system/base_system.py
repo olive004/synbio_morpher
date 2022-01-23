@@ -13,12 +13,14 @@ class BaseSystem():
         self.data = config_args.get("data", None)
         self.interactions = self.init_interaction_matrix()
 
-        self.graph = self.build_graph(self.interactions)
-
     def build_graph(self, source_matrix=None) -> nx.DiGraph:
         if source_matrix is not None:
-            return nx.from_numpy_matrix(source_matrix, create_using=nx.DiGraph)
-        return nx.from_numpy_matrix(self.interactions, create_using=nx.DiGraph)
+            inters = source_matrix
+        else: 
+            inters = self.interactions
+        graph = nx.from_numpy_matrix(inters, create_using=nx.DiGraph)
+        graph = nx.relabel_nodes(graph, self._node_labels)
+        return graph
 
     def determine_input_type(self) -> str:
         raise NotImplementedError
@@ -41,12 +43,24 @@ class BaseSystem():
             visualise_graph_pyplot(self.graph)
 
     @property
+    def graph(self):
+        self._graph = self.build_graph(self.interactions)
+        return self._graph
+
+    @graph.setter
+    def graph(self, new_graph):
+        assert type(new_graph) == nx.DiGraph, 'Cannot set graph to' + \
+            f' type {type(new_graph)}.'
+        self._graph = new_graph
+
+    @property
     def node_labels(self):
+        self._node_labels = None
         return self._node_labels
 
-    @node_labels.getter
-    def node_labels(self):
-        return self.node_labels
+    # @node_labels.getter
+    # def node_labels(self):
+    #     return self._node_labels
 
     @node_labels.setter
     def node_labels(self, labels: dict):
