@@ -22,6 +22,12 @@ class BaseSystem():
         graph = nx.relabel_nodes(graph, self._node_labels)
         return graph
 
+    def refresh_graph(self):
+        self.graph = self.build_graph()
+    
+    def get_graph_labels(self) -> dict:
+        return sorted(self.graph)
+
     def determine_input_type(self) -> str:
         raise NotImplementedError
 
@@ -69,11 +75,10 @@ class BaseSystem():
             self._node_labels = dict(zip(current_nodes, labels))
         elif type(labels) == dict:
             self._node_labels = labels
+        self.refresh_graph()
 
         self.graph = nx.relabel_nodes(self.graph, self._node_labels)
 
-    def get_graph_labels(self) -> dict:
-        return sorted(self.graph)
 
 
 class BaseSpecies():
