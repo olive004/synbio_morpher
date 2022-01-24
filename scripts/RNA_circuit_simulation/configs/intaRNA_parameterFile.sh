@@ -7,7 +7,7 @@ helixMaxE=0
 helixFullE=1
 
 # Seed:
-noSeed=1
+noSeed=0
 seedBP=7
 
 # Interaction:

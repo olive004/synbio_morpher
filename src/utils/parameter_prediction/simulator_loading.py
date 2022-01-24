@@ -17,8 +17,12 @@ def find_simulator_loader(simulator: str):
 
 def load_IntaRNA(args: dict) -> dict:
     # Currently can only support one query / target sequence
-    args['query'] = load_seq_from_FASTA(args['query'])[0]
-    args['target'] = load_seq_from_FASTA(args['target'])[0]
+    if args['query'] == 0 and args['target'] == 0: 
+        args['query'] = None
+        args['target'] = None
+    else:
+        args['query'] = load_seq_from_FASTA(args['query'])[0]
+        args['target'] = load_seq_from_FASTA(args['target'])[0]
 
     # sys.path.insert(0, path_IntaRNA)
     return args
