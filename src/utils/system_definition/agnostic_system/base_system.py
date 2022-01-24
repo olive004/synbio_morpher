@@ -7,6 +7,13 @@ import logging
 from src.utils.data.fake_data_generation.toy_graphs import square_matrix_rand
 
 
+FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
+FORMAT = "%(filename)s:%(funcName)s():%(lineno)i: %(message)s %(levelname)s"
+logging.basicConfig(level=logging.DEBUG, format=FORMAT)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+
 class BaseSpecies():
     def __init__(self, ):
 
@@ -56,15 +63,17 @@ class BaseSystem():
 
         self.data = config_args.get("data", None)
         self.interactions = self.init_interaction_matrix()
-        self.node_labels = None
+        self.init_graph()
+
+    def init_graph(self):
+        self._node_labels = None
+        self.graph = self.build_graph()
 
     def build_graph(self, source_matrix=None) -> nx.DiGraph:
         if source_matrix is not None:
             inters = source_matrix
         else: 
             inters = self.interactions
-        logging.debug('interactions')
-        logging.debug(self.interactions)
         graph = nx.from_numpy_matrix(inters, create_using=nx.DiGraph)
         if self.node_labels is not None:
             graph = nx.relabel_nodes(graph, self.node_labels)
@@ -86,8 +95,6 @@ class BaseSystem():
 
     def visualise(self, mode="pyvis"):
         self.refresh_graph()
-        logging.debug('graph labels')
-        logging.debug(self.get_graph_labels())
 
         if mode == 'pyvis':
             from src.utils.visualisation.graph_drawer import visualise_graph_pyvis
@@ -120,19 +127,15 @@ class BaseSystem():
 
     @property
     def node_labels(self):
-        print('node label get')
         return self._node_labels
 
     @node_labels.setter
     def node_labels(self, labels: dict):
-        logging.debug('node_labels set')
         current_nodes = self.get_graph_labels()
         if type(labels) == list:
             self._node_labels = dict(zip(current_nodes, labels))
         else:
             labels = list(range(len(self.interactions)))
             self._node_labels = dict(zip(current_nodes, labels))
-        self.graph = nx.relabel_nodes(self.graph, self._node_labels)
-        logging.debug('nl graph labels')
-        logging.debug(self.get_graph_labels())
+        self.graph = nx.relabel_nodes(self.graph, self.node_labels)
 

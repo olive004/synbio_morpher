@@ -3,6 +3,12 @@ import os
 from src.utils.system_definition.agnostic_system.base_system import BaseSystem, BaseSpecies
 from src.utils.parameter_prediction.simulators import InteractionSimulator
 
+FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
+FORMAT = "%(filename)s:%(funcName)s():%(lineno)i: %(message)s %(levelname)s"
+logging.basicConfig(level=logging.DEBUG, format=FORMAT)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
 
 class RNASystem(BaseSystem):
     def __init__(self, simulator_args, simulator="IntaRNA"):
@@ -26,16 +32,9 @@ class RNASystem(BaseSystem):
         return self.simulator.run()
 
     def process_data(self):
-        self.nodes_labels = self.data.sample_names
-        self.nodes_labels = 1
-
-        logging.debug('pd graph labels')
-        logging.debug(self.get_graph_labels())
-        logging.debug('self.nodes_labels')
-        logging.debug(self.nodes_labels)
+        self.node_labels = self.data.sample_names
 
     def simulate_interaction_strengths(self):
-        # self.interactions = self.get_part_to_part_intrs()
         pass
 
 
