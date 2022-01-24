@@ -1,9 +1,8 @@
 
 
 
-class Simulator():
+class InteractionSimulator():
     def __init__(self, config_args, simulator_choice: str):
-        super().__init__(config_args)
         
         self.simulator_choice = simulator_choice
         self.sim_config_args = config_args[self.simulator_choice]
@@ -21,3 +20,14 @@ class Simulator():
             simulator = CopomuS(self.sim_config_args)
             simulator.main()
             raise NotImplementedError
+
+        else:
+            data = None
+    
+        return data
+
+    def make_interactions(self):
+        data = self.run()
+
+        
+
