@@ -48,11 +48,11 @@ class IntaRNA:
         if not extra_params:
             extra_params = []
         param_file = f'--parameterFile={param_file}' if param_file else ''
-        p = Popen(['IntaRNA', '-q', query, '-t', target, '--outMode=C',
-                   f'--outcsvcols={outcsvcols}',
-                   f'--qIdxPos0={qidxpos0}', 
-                   f'--tIdxPos0={tidxpos0}', 
-                   f'--outNumber={n}', 
+        p = Popen(['IntaRNA', '-q', query, '-t', target,
+                   '--outMode=C', f'--outcsvcols={outcsvcols}',
+                   f'--qIdxPos0={qidxpos0}',
+                   f'--tIdxPos0={tidxpos0}',
+                   f'--outNumber={n}',
                    f'--threads={threads}', param_file]
                   + extra_params, stdout=PIPE, stderr=PIPE, universal_newlines=True)
 

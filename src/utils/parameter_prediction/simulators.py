@@ -1,23 +1,19 @@
+import numpy as np
+from src.utils.parameter_prediction.interactions import InteractionData, RawSimulationHandling
 
 
-
-class Simulator():
+class InteractionSimulator():
     def __init__(self, config_args, simulator_choice: str):
-        super().__init__(config_args)
-        
-        self.simulator_choice = simulator_choice
-        self.sim_config_args = config_args[self.simulator_choice]
 
-    def run(self):
-        
-        if self.simulator_choice == "IntaRNA":
-            from src.utils.parameter_prediction.IntaRNA.bin.copomus.IntaRNA import IntaRNA
-            simulator = IntaRNA()
-            data = simulator.run(**self.sim_config_args)
-            return data
+        self.simulation_handler = RawSimulationHandling(simulator_choice, config_args)
 
-        if self.simulator_choice == "CopomuS":
-            from src.utils.parameter_prediction.IntaRNA.bin.CopomuS import CopomuS
-            simulator = CopomuS(self.sim_config_args)
-            simulator.main()
-            raise NotImplementedError
+    def run(self, batch=None, allow_self_interaction=True):
+        """ Makes nested dictionary for querying interactions as 
+        {sample1: {sample2: interaction}} """
+
+        simulation_func = self.simulation_handler.get_simulation(allow_self_interaction)
+        data = simulation_func(batch)
+        data = InteractionData(data, simulation_handler=self.simulation_handler)
+        return data
+
+        
