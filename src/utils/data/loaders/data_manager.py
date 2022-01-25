@@ -2,8 +2,8 @@ from functools import partial
 
 
 class DataManager():
-    def __init__(self, source):
-        self.data = self.load_data(source)
+    def __init__(self, source=None, data=None):
+        self.data = self.load_data(source) if data is None else data
         self.sample_names = list(self.data.values())
 
     def load_data(self, source):

@@ -1,4 +1,4 @@
-import logging
+import numpy as np
 
 
 class InteractionSimulator():
@@ -7,21 +7,21 @@ class InteractionSimulator():
         self.simulator_choice = simulator_choice
         self.sim_config_args = config_args[self.simulator_choice]
 
-    def run(self, batch=None, self_interaction=True):
-        
+    def run(self, batch=None, allow_self_interaction=True):
+        """ Makes nested dictionary for querying interactions as 
+        {sample1: {sample2: interaction}} """
         if self.simulator_choice == "IntaRNA":
-            data = self.simulate_intaRNA_data()
-            return data
+            data = self.simulate_intaRNA_data(batch, allow_self_interaction)
 
         if self.simulator_choice == "CopomuS":
-            from src.utils.parameter_prediction.IntaRNA.bin.CopomuS import CopomuS
-            simulator = CopomuS(self.sim_config_args)
-            simulator.main()
+            # from src.utils.parameter_prediction.IntaRNA.bin.CopomuS import CopomuS
+            # simulator = CopomuS(self.sim_config_args)
+            # simulator.main()
             raise NotImplementedError
 
         else:
             data = None
-    
+        data = InteractionData(data, simulator_type="IntaRNA")
         return data
 
     def run_iteratively(self, batch):
@@ -30,10 +30,7 @@ class InteractionSimulator():
                 self.sim_config_args["query"] = data_pair[0]
                 self.sim_config_args["target"] = data_pair[1]
 
-    def make_interactions(self):
-        data = self.run()
-
-    def simulate_intaRNA_data(self, batch, self_interaction):
+    def simulate_intaRNA_data(self, batch, allow_self_interaction):
         from src.utils.parameter_prediction.IntaRNA.bin.copomus.IntaRNA import IntaRNA
         simulator = IntaRNA()
         if batch is not None:
@@ -42,7 +39,7 @@ class InteractionSimulator():
             for i, (label_i, sample_i) in enumerate(zip(batch_labels, batch_data)):
                 current_pair = {}
                 for j, (label_j, sample_j) in enumerate(zip(batch_labels, batch_data)):
-                    if not self_interaction and i==j:
+                    if not allow_self_interaction and i==j:
                         continue
                     if i>j:  # Skip symmetrical
                         current_pair[label_j] = data[label_j][label_i]
@@ -55,4 +52,3 @@ class InteractionSimulator():
             data = simulator.run(**self.sim_config_args)
         return data
         
-
