@@ -21,7 +21,6 @@ outMode=N
 outNumber=2
 outOverlap=B
 threads=1
-
 outCsvCols=E,bpList,Pu1,Pu2
 # Helix (only if --model=B):
 # --helixMinBP 2         # minimal number of base pairs inside a helix 

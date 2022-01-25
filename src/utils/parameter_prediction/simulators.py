@@ -10,23 +10,7 @@ class InteractionSimulator():
     def run(self, batch=None, self_interaction=True):
         
         if self.simulator_choice == "IntaRNA":
-            from src.utils.parameter_prediction.IntaRNA.bin.copomus.IntaRNA import IntaRNA
-            simulator = IntaRNA()
-            if batch is not None:
-                data = {}
-                batch_data, batch_labels = list(batch.values()), list(batch.keys())
-                for i, (label_i, sample_i) in enumerate(zip(batch_labels, batch_data)):
-                    current_pair = {}
-                    for j, (label_j, sample_j) in enumerate(zip(batch_labels, batch_data)):
-                        if not self_interaction and i==j:
-                            continue
-                        self.sim_config_args["query"] = sample_i
-                        self.sim_config_args["target"] = sample_j
-                        current_pair[label_j] = simulator.run(**self.sim_config_args)
-                        logging.debug(current_pair[label_j])
-                    data[label_i] = current_pair
-            else: 
-                data = simulator.run(**self.sim_config_args)
+            data = self.simulate_intaRNA_data()
             return data
 
         if self.simulator_choice == "CopomuS":
@@ -49,5 +33,26 @@ class InteractionSimulator():
     def make_interactions(self):
         data = self.run()
 
+    def simulate_intaRNA_data(self, batch, self_interaction):
+        from src.utils.parameter_prediction.IntaRNA.bin.copomus.IntaRNA import IntaRNA
+        simulator = IntaRNA()
+        if batch is not None:
+            data = {}
+            batch_data, batch_labels = list(batch.values()), list(batch.keys())
+            for i, (label_i, sample_i) in enumerate(zip(batch_labels, batch_data)):
+                current_pair = {}
+                for j, (label_j, sample_j) in enumerate(zip(batch_labels, batch_data)):
+                    if not self_interaction and i==j:
+                        continue
+                    if i>j:  # Skip symmetrical
+                        current_pair[label_j] = data[label_j][label_i]
+                    else:
+                        self.sim_config_args["query"] = sample_i
+                        self.sim_config_args["target"] = sample_j
+                        current_pair[label_j] = simulator.run(**self.sim_config_args)
+                data[label_i] = current_pair
+        else: 
+            data = simulator.run(**self.sim_config_args)
+        return data
         
 
