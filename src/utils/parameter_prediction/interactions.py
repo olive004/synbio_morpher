@@ -1,5 +1,6 @@
 import numpy as np
 from functools import partial
+from src.utils.misc.decorators import time_it
 
 
 class RawSimulationHandling():
@@ -20,6 +21,7 @@ class RawSimulationHandling():
         def simulate_vanilla(batch):
             return None
 
+        @time_it
         def simulate_intaRNA_data(batch, allow_self_interaction, sim_kwargs):
             from src.utils.parameter_prediction.IntaRNA.bin.copomus.IntaRNA import IntaRNA
             simulator = IntaRNA()

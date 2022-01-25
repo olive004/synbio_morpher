@@ -1,4 +1,3 @@
-import numpy as np
 from src.utils.parameter_prediction.interactions import InteractionData, RawSimulationHandling
 
 

@@ -9,7 +9,8 @@ from src.clients.common.setup import compose_kwargs, instantiate_system
 def main(config_file=None):
 
     from src.utils.data.fake_data_generation.nc_sequences import create_toy_circuit
-    create_toy_circuit(count=100)  # takes 160.3416s 
+    # create_toy_circuit(count=100)  # takes 160.3416s 
+    create_toy_circuit(count=10)  # takes 160.3416s 
 
     config_file = os.path.join("scripts", "RNA_circuit_simulation", "configs", "toy_RNA.json")
     kwargs = compose_kwargs(config_file)

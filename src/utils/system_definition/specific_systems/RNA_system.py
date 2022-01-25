@@ -1,5 +1,5 @@
 import logging
-import os
+from src.utils.misc.decorators import time_it
 from src.utils.system_definition.agnostic_system.base_system import BaseSystem, BaseSpecies
 from src.utils.parameter_prediction.simulators import InteractionSimulator
 
@@ -21,10 +21,10 @@ class RNASystem(BaseSystem):
 
         self.simulate_interaction_strengths()
 
+    @time_it
     def get_part_to_part_intrs(self):
         self.data = self.run_simulator()
         return self.data.matrix
-
 
     def run_simulator(self, data=None):
         data = data if data is not None else self.data.data
