@@ -22,8 +22,9 @@ class RNASystem(BaseSystem):
         self.simulate_interaction_strengths()
 
     def get_part_to_part_intrs(self):
-        self.data.data = self.run_simulator()
-        logger.debug(self.data.data)
+        self.data = self.run_simulator()
+        return self.data.matrix
+
 
     def run_simulator(self, data=None):
         data = data if data is not None else self.data.data
@@ -35,8 +36,7 @@ class RNASystem(BaseSystem):
         self.node_labels = self.data.sample_names
 
     def simulate_interaction_strengths(self):
-        self.get_part_to_part_intrs()
-        pass
+        self.interactions = self.get_part_to_part_intrs()
 
 
 class RNASpecies(BaseSpecies):
