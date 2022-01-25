@@ -1,7 +1,7 @@
 {
     "qidxpos0": 1,
     "tidxpos0": 1,
-    "outcsvcols": "bpList",
+    "outcsvcols": "E, Etotal, Pu1, Pu2, bpList",
     "threads": 0,
     "n": 1,
     "param_file": "./scripts/RNA_circuit_simulation/configs/intaRNA_parameterFile.sh"

@@ -49,3 +49,6 @@ class DataManager():
         else:
             raise ValueError(f'Wrong type "{type(value)}" for ' +
                              'setting data sample_names to {value}')
+
+    def __repr__(self) -> str:
+        return str(self.data)

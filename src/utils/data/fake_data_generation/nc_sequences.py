@@ -1,7 +1,7 @@
 import random
 
 
-def generate_RNA(length=20):
+def generate_RNA(length):
     nucleotide_pool = {
         'A': 0.2,
         'C': 0.3,
@@ -11,7 +11,7 @@ def generate_RNA(length=20):
     return ''.join(random.choice(list(nucleotide_pool.keys())) for n in range(length))
 
 
-def write_seq_file(fname, stype='RNA', count=5, slength=20):
+def write_seq_file(fname, stype, count, slength):
     with open(fname, 'w') as f:
         if stype == 'RNA':
             seq_generator = generate_RNA

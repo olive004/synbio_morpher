@@ -22,13 +22,14 @@ class RNASystem(BaseSystem):
         self.simulate_interaction_strengths()
 
     def get_part_to_part_intrs(self):
+        logger.debug(self.data)
         data = self.run_simulator()
         logger.debug(data)
 
     def run_simulator(self):
         self.simulator = InteractionSimulator(
             self.simulator_args, self.simulator_choice)
-        return self.simulator.run(self.data)
+        return self.simulator.run(self.data.data)
 
     def process_data(self):
         self.node_labels = self.data.sample_names
