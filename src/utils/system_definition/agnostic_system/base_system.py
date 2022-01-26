@@ -62,12 +62,29 @@ class BaseSystem():
             config_args = {}
 
         self.data = config_args.get("data", None)
-        self.interactions = self.init_interaction_matrix()
+
+        # Species
+        self.interactions = self.init_matrix()
+        self.degradations = self.init_matrix()
+        self.activations = self.init_matrix()
+        self.copynumber = self.init_matrix(init_type="zeros")
+
         self.init_graph()
 
     def init_graph(self):
         self._node_labels = None
         self.graph = self.build_graph()
+
+    def init_matrix(self, init_type="rand") -> np.array:
+        matrix_size = np.random.randint(5) if self.data is None \
+            else self.data.size
+        if init_type=="rand":
+            return InteractionMatrix(num_nodes=matrix_size).matrix
+        elif init_type=="randint":
+            return np.random.randint(0, 100, (matrix_size, matrix_size))
+        elif init_type=="zeros":
+            return np.zeros((matrix_size, matrix_size))
+        raise ValueError(f"Matrix init type {init_type} not recognised.")
 
     def build_graph(self, source_matrix=None) -> nx.DiGraph:
         if source_matrix is not None:
@@ -87,11 +104,6 @@ class BaseSystem():
 
     def determine_input_type(self) -> str:
         raise NotImplementedError
-
-    def init_interaction_matrix(self) -> np.array:
-        matrix_size = np.random.randint(5) if self.data is None \
-            else self.data.size
-        return InteractionMatrix(num_nodes=matrix_size).matrix
 
     def visualise(self, mode="pyvis"):
         self.refresh_graph()
