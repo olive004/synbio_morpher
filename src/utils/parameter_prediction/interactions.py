@@ -1,6 +1,7 @@
 import numpy as np
 from functools import partial
 from src.utils.misc.decorators import time_it
+from src.utils.data.fake_data_generation.toy_graphs import square_matrix_rand
 
 
 class RawSimulationHandling():
@@ -58,6 +59,33 @@ class RawSimulationHandling():
 
         else:
             return simulate_vanilla
+
+
+class InteractionMatrix():
+    def __init__(self, config_args=None,
+                 num_nodes=None,
+                 toy=False):
+        super().__init__()
+
+        self.toy = toy
+        self.config_args = config_args
+
+        if toy:
+            self.matrix = self.make_toy_matrix(num_nodes)
+        else:
+            self.matrix = self.make_rand_matrix(num_nodes)
+
+    def make_rand_matrix(self, num_nodes):
+        if num_nodes is None or num_nodes == 0:
+            num_nodes = 1
+        return square_matrix_rand(num_nodes)
+
+    def make_toy_matrix(self, num_nodes=None):
+        if not num_nodes:
+            min_nodes = 2
+            max_nodes = 15
+            num_nodes = np.random.randint(min_nodes, max_nodes)
+        return self.make_rand_matrix(num_nodes)
 
 
 class InteractionData():
