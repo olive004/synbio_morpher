@@ -83,3 +83,4 @@ def visualise_graph_pyplot(graph: nx.DiGraph):
     ax1 = plt.subplot(111)
     nx.draw(graph)
     plt.show()
+    raise NotImplementedError

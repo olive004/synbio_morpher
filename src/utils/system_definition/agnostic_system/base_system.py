@@ -1,5 +1,4 @@
-from hashlib import new
-from multiprocessing.sharedctypes import Value
+from distutils.command.config import config
 import numpy as np
 import networkx as nx
 import logging
@@ -16,38 +15,25 @@ logger.setLevel(logging.DEBUG)
 
 
 class BaseSpecies():
-    def __init__(self, ):
+    def __init__(self, config_args: dict) -> None:
 
         # Probability distribution for each interaction component?
         # Can also use different types of moments of prob distribution
         # for each
 
-        self.data = None
-        self.rates = {
-            "generation": 1,
-            "removal": 1
-        }
-
-
-class BaseSystem():
-    def __init__(self, config_args: dict = None):
-
-        if config_args is None:
-            config_args = {}
-
         self.data = config_args.get("data", None)
 
-        # Species
         self.interactions = self.init_matrix()
-        self.degradations = self.init_matrix()
-        self.activations = self.init_matrix()
-        self.copynumber = self.init_matrix(init_type="zeros")
-
-        self.init_graph()
-
-    def init_graph(self):
-        self._node_labels = None
-        self.graph = self.build_graph()
+        self.degradation_rates = self.init_matrix()
+        self.creation_rates = self.init_matrix()
+        self.copynumbers = self.init_matrix(init_type="zeros")
+        
+        self.params = {
+            "interactions": self.interactions,
+            "degradation_rates": self.degradation_rates,
+            "creation_rates": self.creation_rates,
+            "copynumbers": self.copynumbers
+        }
 
     def init_matrix(self, init_type="rand") -> np.array:
         matrix_size = np.random.randint(5) if self.data is None \
@@ -60,11 +46,38 @@ class BaseSystem():
             return np.zeros((matrix_size, matrix_size))
         raise ValueError(f"Matrix init type {init_type} not recognised.")
 
+    @property
+    def interactions(self):
+        return self._interactions
+
+    @interactions.setter
+    def interactions(self, new_interactions):
+        if type(new_interactions) == np.ndarray:
+            self._interactions = new_interactions
+        else:
+            raise ValueError('Cannot set interactions to' + \
+            f' type {type(new_interactions)}.')
+
+
+class BaseSystem():
+    def __init__(self, config_args: dict = None):
+
+        if config_args is None:
+            config_args = {}
+
+        self.species = BaseSpecies(config_args)
+
+        self.init_graph()
+
+    def init_graph(self):
+        self._node_labels = None
+        self.graph = self.build_graph()
+
     def build_graph(self, source_matrix=None) -> nx.DiGraph:
         if source_matrix is not None:
             inters = source_matrix
         else: 
-            inters = self.interactions
+            inters = self.species.interactions
         graph = nx.from_numpy_matrix(inters, create_using=nx.DiGraph)
         if self.node_labels is not None:
             graph = nx.relabel_nodes(graph, self.node_labels)
@@ -100,18 +113,6 @@ class BaseSystem():
         self._graph = new_graph
 
     @property
-    def interactions(self):
-        return self._interactions
-
-    @interactions.setter
-    def interactions(self, new_interactions):
-        if type(new_interactions) == np.ndarray:
-            self._interactions = new_interactions
-        else:
-            raise ValueError('Cannot set interactions to' + \
-            f' type {type(new_interactions)}.')
-
-    @property
     def node_labels(self):
         return self._node_labels
 
@@ -121,7 +122,7 @@ class BaseSystem():
         if type(labels) == list:
             self._node_labels = dict(zip(current_nodes, labels))
         else:
-            labels = list(range(len(self.interactions)))
+            labels = list(range(len(self.species.interactions)))
             self._node_labels = dict(zip(current_nodes, labels))
         self.graph = nx.relabel_nodes(self.graph, self.node_labels)
 
