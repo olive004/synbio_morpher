@@ -6,7 +6,6 @@ import logging
 from src.utils.parameter_prediction.interactions import InteractionMatrix
 
 
-
 FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
 FORMAT = "%(filename)s:%(funcName)s():%(lineno)i: %(message)s %(levelname)s"
 logging.basicConfig(level=logging.DEBUG, format=FORMAT)
@@ -23,11 +22,11 @@ class BaseSpecies():
 
         self.data = config_args.get("data", None)
 
-        self.interactions = self.init_matrix()
-        self.degradation_rates = self.init_matrix()
-        self.creation_rates = self.init_matrix()
-        self.copynumbers = self.init_matrix(init_type="zeros")
-        
+        self.interactions = self.init_matrix(ndims=2, init_type="randint")
+        self.degradation_rates = self.init_matrix(ndims=1, init_type="randint")
+        self.creation_rates = self.init_matrix(ndims=1, init_type="randint")
+        self.copynumbers = self.init_matrix(ndims=1, init_type="randint")
+
         self.params = {
             "interactions": self.interactions,
             "degradation_rates": self.degradation_rates,
@@ -35,15 +34,20 @@ class BaseSpecies():
             "copynumbers": self.copynumbers
         }
 
-    def init_matrix(self, init_type="rand") -> np.array:
+    def init_matrix(self, ndims=2, init_type="rand") -> np.array:
         matrix_size = np.random.randint(5) if self.data is None \
             else self.data.size
-        if init_type=="rand":
+        if ndims > 1:
+            matrix_shape = tuple([matrix_size]*ndims)
+        else:
+            matrix_shape = (1, matrix_size)
+
+        if init_type == "rand":
             return InteractionMatrix(num_nodes=matrix_size).matrix
-        elif init_type=="randint":
-            return np.random.randint(0, 100, (matrix_size, matrix_size))
-        elif init_type=="zeros":
-            return np.zeros((matrix_size, matrix_size))
+        elif init_type == "randint":
+            return np.random.randint(0, 100, matrix_shape).astype(np.float64)
+        elif init_type == "zeros":
+            return np.zeros(matrix_shape)
         raise ValueError(f"Matrix init type {init_type} not recognised.")
 
     @property
@@ -55,8 +59,8 @@ class BaseSpecies():
         if type(new_interactions) == np.ndarray:
             self._interactions = new_interactions
         else:
-            raise ValueError('Cannot set interactions to' + \
-            f' type {type(new_interactions)}.')
+            raise ValueError('Cannot set interactions to' +
+                             f' type {type(new_interactions)}.')
 
 
 class BaseSystem():
@@ -76,7 +80,7 @@ class BaseSystem():
     def build_graph(self, source_matrix=None) -> nx.DiGraph:
         if source_matrix is not None:
             inters = source_matrix
-        else: 
+        else:
             inters = self.species.interactions
         graph = nx.from_numpy_matrix(inters, create_using=nx.DiGraph)
         if self.node_labels is not None:
@@ -85,7 +89,7 @@ class BaseSystem():
 
     def refresh_graph(self):
         self.graph = self.build_graph()
-    
+
     def get_graph_labels(self) -> dict:
         return sorted(self.graph)
 
@@ -125,4 +129,3 @@ class BaseSystem():
             labels = list(range(len(self.species.interactions)))
             self._node_labels = dict(zip(current_nodes, labels))
         self.graph = nx.relabel_nodes(self.graph, self.node_labels)
-

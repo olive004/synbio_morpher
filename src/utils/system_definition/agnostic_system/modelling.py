@@ -1,3 +1,4 @@
+from copy import copy
 import numpy as np
 
 
@@ -5,10 +6,19 @@ class Deterministic():
     def __init__(self) -> None:
         pass
 
-    def dxdt_RNA(self, copynumbers, interactions, creation_rate, degradation_rate):
+    def dxdt_RNA(self, copynumbers, interactions, creation_rates, degradation_rates):
         k = interactions
         x = copynumbers
-        return creation_rate + np.multiply(x, k, x.T) + x * degradation_rate
+        # print(interactions)
+        # print(copynumbers)
+        # print(creation_rates)
+        # print(degradation_rates)
+        print(x.T)
+        print(np.matmul(x, k))
+        print(np.matmul(np.matmul(x, k), x.T))
+        print(x * degradation_rates)
+        print(creation_rates + np.matmul(np.matmul(x, k), x.T) + x * degradation_rates)
+        return creation_rates + np.matmul(np.matmul(x, k), x.T) + x * degradation_rates
 
     def plot(self, data):
         from matplotlib import pyplot as plt
