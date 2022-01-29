@@ -14,9 +14,6 @@ class Deterministic():
         # print(creation_rates)
         # print(degradation_rates)
         print(x.T)
-        print(np.matmul(x, k))
-        print(np.matmul(np.matmul(x, k), x.T))
-        print(x * degradation_rates)
         print(creation_rates + np.matmul(np.matmul(x, k), x.T) + x * degradation_rates)
         return creation_rates + np.matmul(np.matmul(x, k), x.T) + x * degradation_rates
 
