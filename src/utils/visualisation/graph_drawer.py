@@ -84,3 +84,14 @@ def visualise_graph_pyplot(graph: nx.DiGraph):
     nx.draw(graph)
     plt.show()
     raise NotImplementedError
+
+
+class VisODE():
+    def __init__(self) -> None:
+        pass
+
+    def plot(self, data):
+        from matplotlib import pyplot as plt
+        plt.figure()
+        plt.plot(data)
+        plt.savefig('test_plot.png')

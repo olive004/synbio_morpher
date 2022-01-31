@@ -47,14 +47,17 @@ class RNASystem(BaseSystem):
         modeller = Deterministic()
 
         max_time = 10
-        all_copynumbers = np.zeros((self.species.data.size, max_time))
-        all_copynumbers[0] = deepcopy(self.species.copynumbers)
+        self.species.all_copynumbers = np.zeros(
+            (self.species.data.size, max_time))
+        self.species.all_copynumbers[0] = deepcopy(self.species.copynumbers)
         current_copynumbers = deepcopy(self.species.copynumbers)
         for tstep in range(max_time-1):
-            current_copynumbers += modeller.dxdt_RNA(all_copynumbers[tstep], self.species.interactions,
-                                                    self.species.creation_rates, self.species.degradation_rates)
-            all_copynumbers[tstep+1] = current_copynumbers
-        modeller.plot(all_copynumbers)
+            current_copynumbers += modeller.dxdt_RNA(self.species.all_copynumbers[tstep],
+                                                     self.species.interactions,
+                                                     self.species.creation_rates,
+                                                     self.species.degradation_rates)
+            self.species.all_copynumbers[tstep+1] = current_copynumbers
+        modeller.plot(self.species.all_copynumbers)
 
 
 class RNASpecies(BaseSpecies):

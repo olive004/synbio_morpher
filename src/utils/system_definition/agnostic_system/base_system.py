@@ -26,6 +26,7 @@ class BaseSpecies():
         self.degradation_rates = self.init_matrix(ndims=1, init_type="randint")
         self.creation_rates = self.init_matrix(ndims=1, init_type="randint")
         self.copynumbers = self.init_matrix(ndims=1, init_type="randint")
+        self.all_copynumbers = None  # For modelling
 
         self.params = {
             "interactions": self.interactions,
