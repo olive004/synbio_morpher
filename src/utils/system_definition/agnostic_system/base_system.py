@@ -45,7 +45,7 @@ class BaseSpecies():
         if init_type == "rand":
             return InteractionMatrix(num_nodes=matrix_size).matrix
         elif init_type == "randint":
-            return np.random.randint(0, 100, matrix_shape).astype(np.float64)
+            return np.random.randint(10, 1000, matrix_shape).astype(np.float64)
         elif init_type == "zeros":
             return np.zeros(matrix_shape)
         raise ValueError(f"Matrix init type {init_type} not recognised.")
@@ -61,6 +61,15 @@ class BaseSpecies():
         else:
             raise ValueError('Cannot set interactions to' +
                              f' type {type(new_interactions)}.')
+
+    @property
+    def copynumbers(self):
+        return self._copynumbers
+
+    @copynumbers.setter
+    def copynumbers(self, value):
+        # This may not be as fast as a[a < 0] = 0
+        self._copynumbers = value.clip(min=0)
 
 
 class BaseSystem():
