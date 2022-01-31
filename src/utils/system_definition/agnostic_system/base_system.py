@@ -23,9 +23,12 @@ class BaseSpecies():
         self.data = config_args.get("data", None)
 
         self.interactions = self.init_matrix(ndims=2, init_type="randint")
-        self.degradation_rates = self.init_matrix(ndims=1, init_type="randint")
-        self.creation_rates = self.init_matrix(ndims=1, init_type="randint")
-        self.copynumbers = self.init_matrix(ndims=1, init_type="randint")
+        self.degradation_rates = self.init_matrix(ndims=1, init_type="uniform",
+                                                  uniform_val=20)
+        self.creation_rates = self.init_matrix(ndims=1, init_type="uniform",
+                                               uniform_val=50)
+        self.copynumbers = self.init_matrix(ndims=1, init_type="uniform",
+                                            uniform_val=5)
         self.all_copynumbers = None  # For modelling
 
         self.params = {
@@ -35,7 +38,7 @@ class BaseSpecies():
             "copynumbers": self.copynumbers
         }
 
-    def init_matrix(self, ndims=2, init_type="rand") -> np.array:
+    def init_matrix(self, ndims=2, init_type="rand", uniform_val=1) -> np.array:
         matrix_size = np.random.randint(5) if self.data is None \
             else self.data.size
         if ndims > 1:
@@ -47,6 +50,8 @@ class BaseSpecies():
             return InteractionMatrix(num_nodes=matrix_size).matrix
         elif init_type == "randint":
             return np.random.randint(10, 1000, matrix_shape).astype(np.float64)
+        elif init_type == "uniform":
+            return np.ones(matrix_shape) * uniform_val
         elif init_type == "zeros":
             return np.zeros(matrix_shape)
         raise ValueError(f"Matrix init type {init_type} not recognised.")
@@ -70,7 +75,20 @@ class BaseSpecies():
     @copynumbers.setter
     def copynumbers(self, value):
         # This may not be as fast as a[a < 0] = 0
-        self._copynumbers = value.clip(min=0)
+        if value is not None:
+            self._copynumbers = value.clip(min=0)
+
+    @property
+    def all_copynumbers(self):
+        return self._all_copynumbers
+
+    @all_copynumbers.setter
+    def all_copynumbers(self, value):
+        # This may not be as fast as a[a < 0] = 0
+        if value is not None:
+            value[value < 0] = 0
+            # self._all_copynumbers = value.clip(min=0)
+            self._all_copynumbers = value
 
 
 class BaseSystem():

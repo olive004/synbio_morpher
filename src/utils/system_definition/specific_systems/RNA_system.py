@@ -44,6 +44,7 @@ class RNASystem(BaseSystem):
     def model_circuit(self):
         logging.basicConfig(level=logging.INFO)
         from src.utils.system_definition.agnostic_system.modelling import Deterministic
+        from src.utils.misc.numerical import zero_out_negs
         modeller = Deterministic()
 
         max_time = 10
@@ -56,8 +57,10 @@ class RNASystem(BaseSystem):
                                                      self.species.interactions,
                                                      self.species.creation_rates,
                                                      self.species.degradation_rates)
+            current_copynumbers = zero_out_negs(current_copynumbers)
             self.species.all_copynumbers[tstep+1] = current_copynumbers
-        modeller.plot(self.species.all_copynumbers)
+        legend_keys = list(self.species.data.sample_names)
+        modeller.plot(self.species.all_copynumbers, legend_keys)
 
 
 class RNASpecies(BaseSpecies):
