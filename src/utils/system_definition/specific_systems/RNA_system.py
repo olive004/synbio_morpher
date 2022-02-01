@@ -47,9 +47,9 @@ class RNASystem(BaseSystem):
         from src.utils.misc.numerical import zero_out_negs
         modeller = Deterministic()
 
-        max_time = 10
+        max_time = 100
         self.species.all_copynumbers = np.zeros(
-            (self.species.data.size, max_time))
+            (max_time, self.species.data.size))
         self.species.all_copynumbers[0] = deepcopy(self.species.copynumbers)
         current_copynumbers = deepcopy(self.species.copynumbers)
         for tstep in range(max_time-1):
@@ -59,6 +59,7 @@ class RNASystem(BaseSystem):
                                                      self.species.degradation_rates)
             current_copynumbers = zero_out_negs(current_copynumbers)
             self.species.all_copynumbers[tstep+1] = current_copynumbers
+            
         legend_keys = list(self.species.data.sample_names)
         modeller.plot(self.species.all_copynumbers, legend_keys)
 
