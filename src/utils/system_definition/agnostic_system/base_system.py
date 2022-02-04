@@ -23,6 +23,7 @@ class BaseSpecies():
         self.data = config_args.get("data", None)
 
         self.interactions = self.init_matrix(ndims=2, init_type="randint")
+        self.complexes = self.init_matrix(ndims=2, init_type="zeros")
         self.degradation_rates = self.init_matrix(ndims=1, init_type="uniform",
                                                   uniform_val=20)
         self.creation_rates = self.init_matrix(ndims=1, init_type="uniform",
@@ -32,10 +33,11 @@ class BaseSpecies():
         self.all_copynumbers = None  # For modelling
 
         self.params = {
-            "interactions": self.interactions,
-            "degradation_rates": self.degradation_rates,
             "creation_rates": self.creation_rates,
-            "copynumbers": self.copynumbers
+            "copynumbers": self.copynumbers,
+            "complexes": self.complexes,
+            "degradation_rates": self.degradation_rates,
+            "interactions": self.interactions
         }
 
     def init_matrix(self, ndims=2, init_type="rand", uniform_val=1) -> np.array:

@@ -89,6 +89,9 @@ class InteractionMatrix():
 
 
 class InteractionData():
+    # R = the gas constant = 8.314 J/mol·K
+    # T = 298 K
+    RT = np.multiply(8.314, 298)
     def __init__(self, data, simulation_handler: RawSimulationHandling):
         self.simulation_handling = simulation_handler
         self.data, self.matrix = self.parse(data)
@@ -109,3 +112,12 @@ class InteractionData():
             return 0
         interaction_calculator = self.simulation_handling.get_protocol()
         return interaction_calculator(data)
+
+    def energy_to_rate(self, energies):
+        """ Translate interaction binding energy to binding rate """
+        # AG = RT ln(K)
+        # AG = RT ln(kb/kd)
+        # K = e^(G / RT)
+
+        K = np.exp(np.divide(energies, self.RT))
+        return K
