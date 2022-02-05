@@ -23,8 +23,6 @@ class Deterministic():
         print(interactions)
         print(copynumbers)
         print(coupling)
-        # print(np.matmul(np.matmul(x, k), x.T))
-        # print(np.matmul(x, k))
         logging.debug(alpha + coupling + x * degradation_rates)
         return alpha + coupling + x * degradation_rates
 

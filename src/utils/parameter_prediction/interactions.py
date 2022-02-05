@@ -1,18 +1,37 @@
 import numpy as np
+import logging
 from functools import partial
 from src.utils.misc.decorators import time_it
 from src.utils.data.fake_data_generation.toy_graphs import square_matrix_rand
 
 
 class RawSimulationHandling():
+    # R = the gas constant = 8.314 J/mol·K
+    # T = 298 K
+    RT = np.multiply(8.314, 298)
+
     def __init__(self, simulator, config_args) -> None:
         self.simulator = simulator
         self.sim_kwargs = config_args[simulator]
 
     def get_protocol(self):
 
+        def energy_to_rate(energies):
+            """ Translate interaction binding energy to binding rate """
+            # AG = RT ln(K)
+            # AG = RT ln(kb/kd)
+            # K = e^(G / RT)
+            K = np.exp(np.divide(energies, self.RT))
+            return K
+
         def intaRNA_calculator(data):
-            return data.get('E', 0)
+            raw_data = data.get('E', 0)
+            logging.debug(raw_data)
+            raw_data = energy_to_rate(raw_data)
+            logging.debug(raw_data)
+            import sys
+            sys.exit()
+            return raw_data
 
         if self.simulator == "IntaRNA":
             return intaRNA_calculator
@@ -89,11 +108,10 @@ class InteractionMatrix():
 
 
 class InteractionData():
-    # R = the gas constant = 8.314 J/mol·K
-    # T = 298 K
-    RT = np.multiply(8.314, 298)
+
     def __init__(self, data, simulation_handler: RawSimulationHandling):
         self.simulation_handling = simulation_handler
+        self.simulation_protocol = self.simulation_handling.get_protocol()
         self.data, self.matrix = self.parse(data)
 
     def parse(self, data):
@@ -110,14 +128,4 @@ class InteractionData():
     def calculate_interaction(self, data):
         if data == False:
             return 0
-        interaction_calculator = self.simulation_handling.get_protocol()
-        return interaction_calculator(data)
-
-    def energy_to_rate(self, energies):
-        """ Translate interaction binding energy to binding rate """
-        # AG = RT ln(K)
-        # AG = RT ln(kb/kd)
-        # K = e^(G / RT)
-
-        K = np.exp(np.divide(energies, self.RT))
-        return K
+        return self.simulation_protocol(data)
