@@ -16,25 +16,37 @@ class RawSimulationHandling():
 
     def get_protocol(self):
 
-        def energy_to_rate(energies):
-            """ Translate interaction binding energy to binding rate """
-            # AG = RT ln(K)
-            # AG = RT ln(kb/kd)
-            # K = e^(G / RT)
-            K = np.exp(np.divide(energies, self.RT))
-            return K
-
-        def intaRNA_calculator(data):
-            raw_data = data.get('E', 0)
-            logging.debug(raw_data)
-            raw_data = energy_to_rate(raw_data)
-            logging.debug(raw_data)
-            import sys
-            sys.exit()
-            return raw_data
+        def intaRNA_calculator(sample):
+            raw_sample = sample.get('E', 0)
+            return raw_sample
 
         if self.simulator == "IntaRNA":
             return intaRNA_calculator
+
+    def get_postprocessing(self):
+
+        def energy_to_rate(energies):
+            """ Translate interaction binding energy to binding rate:
+            AG = RT ln(K)
+            AG = RT ln(kb/kd)
+            K = e^(G / RT)
+            """
+            K = np.exp(np.divide(energies, self.RT))
+            return K
+
+        def zero_false_rates(rates):
+            rates[rates == 1] = 0
+            return rates
+
+        def processor(input, funcs):
+            for func in funcs:
+                input = func(input)
+            return input
+
+        if self.simulator == "IntaRNA":
+            return partial(processor, funcs=[
+                energy_to_rate,
+                zero_false_rates])
 
     def get_simulation(self, allow_self_interaction=True):
 
@@ -112,6 +124,7 @@ class InteractionData():
     def __init__(self, data, simulation_handler: RawSimulationHandling):
         self.simulation_handling = simulation_handler
         self.simulation_protocol = self.simulation_handling.get_protocol()
+        self.simulation_postproc = self.simulation_handling.get_postprocessing()
         self.data, self.matrix = self.parse(data)
 
     def parse(self, data):
@@ -121,11 +134,13 @@ class InteractionData():
     def make_matrix(self, data):
         matrix = np.zeros((len(data), len(data)))
         for i, (sample_i, sample_interactions) in enumerate(data.items()):
-            for j, (sample_j, raw_data) in enumerate(sample_interactions.items()):
-                matrix[i, j] = self.calculate_interaction(raw_data)
+            for j, (sample_j, raw_sample) in enumerate(sample_interactions.items()):
+                matrix[i, j] = self.fetch_interaction(raw_sample)
+        logging.debug(matrix)
+        matrix = self.simulation_postproc(matrix)
         return matrix
 
-    def calculate_interaction(self, data):
-        if data == False:
+    def fetch_interaction(self, sample):
+        if sample == False:
             return 0
-        return self.simulation_protocol(data)
+        return self.simulation_protocol(sample)

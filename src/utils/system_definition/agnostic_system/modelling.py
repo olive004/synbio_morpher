@@ -24,6 +24,9 @@ class Deterministic():
         print(copynumbers)
         print(coupling)
         logging.debug(alpha + coupling + x * degradation_rates)
+        import sys
+        sys.exit()
+
         return alpha + coupling + x * degradation_rates
 
     def plot(self, data, legend_keys):
