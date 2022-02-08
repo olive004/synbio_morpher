@@ -1,3 +1,5 @@
+from copy import deepcopy
+import numpy as np
 import logging
 from src.utils.misc.decorators import time_it
 from src.utils.system_definition.agnostic_system.base_system import BaseSystem, BaseSpecies
@@ -14,29 +16,58 @@ class RNASystem(BaseSystem):
     def __init__(self, simulator_args, simulator="IntaRNA"):
         super(RNASystem, self).__init__(simulator_args)
 
-        self.process_data()
+        self.process_species()
 
         self.simulator_args = simulator_args
         self.simulator_choice = simulator
 
+        self.cell_dbl_growth_rate = 2 / 3600  # 2 h^-1 or 30 mins or 1800s
+        self.creation_rates = self.init_matrix(ndims=1, init_type="uniform",
+                                               uniform_val=0.05)
+        self.degradation_rates = self.init_matrix(ndims=1, init_type="uniform",
+                                                  uniform_val=0.0005)
+
         self.simulate_interaction_strengths()
+        self.model_circuit()
 
     @time_it
     def get_part_to_part_intrs(self):
-        self.data = self.run_simulator()
-        return self.data.matrix
+        interactions = self.run_simulator()
+        return interactions.matrix
 
     def run_simulator(self, data=None):
-        data = data if data is not None else self.data.data
+        data = data if data is not None else self.species.data.data
         self.simulator = InteractionSimulator(
             self.simulator_args, self.simulator_choice)
         return self.simulator.run(data)
 
-    def process_data(self):
-        self.node_labels = self.data.sample_names
+    def process_species(self):
+        self.node_labels = self.species.data.sample_names
 
     def simulate_interaction_strengths(self):
-        self.interactions = self.get_part_to_part_intrs()
+        self.species.interactions = self.get_part_to_part_intrs()
+
+    def model_circuit(self):
+        logging.basicConfig(level=logging.INFO)
+        from src.utils.system_definition.agnostic_system.modelling import Deterministic
+        from src.utils.misc.numerical import zero_out_negs
+        modeller = Deterministic()
+
+        max_time = 100
+        self.species.all_copynumbers = np.zeros(
+            (max_time, self.species.data.size))
+        self.species.all_copynumbers[0] = deepcopy(self.species.copynumbers)
+        current_copynumbers = deepcopy(self.species.copynumbers)
+        for tstep in range(max_time-1):
+            current_copynumbers += modeller.dxdt_RNA(self.species.all_copynumbers[tstep],
+                                                     self.species.interactions,
+                                                     self.species.creation_rates,
+                                                     self.species.degradation_rates)
+            current_copynumbers = zero_out_negs(current_copynumbers)
+            self.species.all_copynumbers[tstep+1] = current_copynumbers
+            
+        legend_keys = list(self.species.data.sample_names)
+        modeller.plot(self.species.all_copynumbers, legend_keys)
 
 
 class RNASpecies(BaseSpecies):

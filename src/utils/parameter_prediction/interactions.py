@@ -1,20 +1,52 @@
 import numpy as np
+import logging
 from functools import partial
 from src.utils.misc.decorators import time_it
+from src.utils.data.fake_data_generation.toy_graphs import square_matrix_rand
 
 
 class RawSimulationHandling():
+    # R = the gas constant = 8.314 J/mol·K
+    # T = 298 K
+    RT = np.multiply(8.314, 298)
+
     def __init__(self, simulator, config_args) -> None:
         self.simulator = simulator
         self.sim_kwargs = config_args[simulator]
 
     def get_protocol(self):
 
-        def intaRNA_calculator(data):
-            return data.get('E', 0)
+        def intaRNA_calculator(sample):
+            raw_sample = sample.get('E', 0)
+            return raw_sample
 
         if self.simulator == "IntaRNA":
             return intaRNA_calculator
+
+    def get_postprocessing(self):
+
+        def energy_to_rate(energies):
+            """ Translate interaction binding energy to binding rate:
+            AG = RT ln(K)
+            AG = RT ln(kb/kd)
+            K = e^(G / RT)
+            """
+            K = np.exp(np.divide(energies, self.RT))
+            return K
+
+        def zero_false_rates(rates):
+            rates[rates == 1] = 0
+            return rates
+
+        def processor(input, funcs):
+            for func in funcs:
+                input = func(input)
+            return input
+
+        if self.simulator == "IntaRNA":
+            return partial(processor, funcs=[
+                energy_to_rate,
+                zero_false_rates])
 
     def get_simulation(self, allow_self_interaction=True):
 
@@ -60,9 +92,39 @@ class RawSimulationHandling():
             return simulate_vanilla
 
 
+class InteractionMatrix():
+    def __init__(self, config_args=None,
+                 num_nodes=None,
+                 toy=False):
+        super().__init__()
+
+        self.toy = toy
+        self.config_args = config_args
+
+        if toy:
+            self.matrix = self.make_toy_matrix(num_nodes)
+        else:
+            self.matrix = self.make_rand_matrix(num_nodes)
+
+    def make_rand_matrix(self, num_nodes):
+        if num_nodes is None or num_nodes == 0:
+            num_nodes = 1
+        return square_matrix_rand(num_nodes)
+
+    def make_toy_matrix(self, num_nodes=None):
+        if not num_nodes:
+            min_nodes = 2
+            max_nodes = 15
+            num_nodes = np.random.randint(min_nodes, max_nodes)
+        return self.make_rand_matrix(num_nodes)
+
+
 class InteractionData():
+
     def __init__(self, data, simulation_handler: RawSimulationHandling):
         self.simulation_handling = simulation_handler
+        self.simulation_protocol = self.simulation_handling.get_protocol()
+        self.simulation_postproc = self.simulation_handling.get_postprocessing()
         self.data, self.matrix = self.parse(data)
 
     def parse(self, data):
@@ -72,12 +134,13 @@ class InteractionData():
     def make_matrix(self, data):
         matrix = np.zeros((len(data), len(data)))
         for i, (sample_i, sample_interactions) in enumerate(data.items()):
-            for j, (sample_j, raw_data) in enumerate(sample_interactions.items()):
-                matrix[i, j] = self.calculate_interaction(raw_data)
+            for j, (sample_j, raw_sample) in enumerate(sample_interactions.items()):
+                matrix[i, j] = self.fetch_interaction(raw_sample)
+        logging.debug(matrix)
+        matrix = self.simulation_postproc(matrix)
         return matrix
 
-    def calculate_interaction(self, data):
-        if data == False:
+    def fetch_interaction(self, sample):
+        if sample == False:
             return 0
-        interaction_calculator = self.simulation_handling.get_protocol()
-        return interaction_calculator(data)
+        return self.simulation_protocol(sample)
