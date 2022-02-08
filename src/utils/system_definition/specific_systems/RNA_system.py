@@ -21,6 +21,12 @@ class RNASystem(BaseSystem):
         self.simulator_args = simulator_args
         self.simulator_choice = simulator
 
+        self.cell_dbl_growth_rate = 2 / 3600  # 2 h^-1 or 30 mins or 1800s
+        self.creation_rates = self.init_matrix(ndims=1, init_type="uniform",
+                                               uniform_val=0.05)
+        self.degradation_rates = self.init_matrix(ndims=1, init_type="uniform",
+                                                  uniform_val=0.0005)
+
         self.simulate_interaction_strengths()
         self.model_circuit()
 
