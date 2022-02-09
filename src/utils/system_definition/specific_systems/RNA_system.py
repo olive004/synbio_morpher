@@ -21,11 +21,16 @@ class RNASystem(BaseSystem):
         self.simulator_args = simulator_args
         self.simulator_choice = simulator
 
-        self.cell_dbl_growth_rate = 2 / 3600  # 2 h^-1 or 30 mins or 1800s
-        self.creation_rates = self.init_matrix(ndims=1, init_type="uniform",
-                                               uniform_val=0.05)
-        self.degradation_rates = self.init_matrix(ndims=1, init_type="uniform",
-                                                  uniform_val=0.0005)
+        self.cell_dbl_growth_rate = 2 / 3600  # 2 h^-1 or 30 mins or 1800s - Dilution rate
+        self.avg_RNA_cell = 100
+
+        self.transcription_rate = self.cell_dbl_growth_rate * self.avg_RNA_cell
+        self.species.copynumbers = self.species.init_matrix(ndims=1, init_type="uniform",
+                                                            uniform_val=100)
+        self.species.degradation_rates = self.species.init_matrix(ndims=1, init_type="uniform",
+                                                                  uniform_val=self.cell_dbl_growth_rate)
+        self.species.creation_rates = self.species.init_matrix(ndims=1, init_type="uniform",
+                                                               uniform_val=self.transcription_rate)
 
         self.simulate_interaction_strengths()
         self.model_circuit()
@@ -65,7 +70,7 @@ class RNASystem(BaseSystem):
                                                      self.species.degradation_rates)
             current_copynumbers = zero_out_negs(current_copynumbers)
             self.species.all_copynumbers[tstep+1] = current_copynumbers
-            
+
         legend_keys = list(self.species.data.sample_names)
         modeller.plot(self.species.all_copynumbers, legend_keys)
 
