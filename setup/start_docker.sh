@@ -1,4 +1,4 @@
-# docker pull quay.io/biocontainers/intarna
+docker pull quay.io/biocontainers/intarna
 
 # If image not built yet
 docker build -t genetic_glitch:latest docker
