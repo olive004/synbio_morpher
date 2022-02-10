@@ -3,6 +3,8 @@ import numpy as np
 from functools import partial
 from Bio.Seq import Seq
 
+from src.utils.misc.helper import next_wrapper
+
 
 def generate_str_from_dict(str_dict, length):
     return ''.join(random.choice(list(str_dict.keys())) for n in range(length))
@@ -19,14 +21,14 @@ def generate_mutated_template(template: str, mutate_prop, mutation_pool):
 
 def generate_split_template(template:str, count):
     template_complement = str(Seq(template).complement())
-    import logging
-    logging.debug(template_complement)
 
-    fold = int(len(template) / count)
+    fold = max(int(len(template) / count), 1)
+    seqs = []  # could preallocate 
     for i in range(0, len(template), fold):
-        template[i:i+fold]
-    import sys
-    sys.exit()
+        complement = template_complement[i:i+fold]
+        new_seq = template[:i] + complement + template[i+fold:]
+        seqs.append(new_seq)
+    return seqs
 
 
 def write_seq_file(seq_generator, fname, stype, count):
@@ -68,8 +70,8 @@ def create_toy_circuit(stype='RNA', count=5, slength=20, protocol="random",
                                 mutation_pool=nucleotide_pool)
     elif protocol == "template_split":
         template = generate_str_from_dict(nucleotide_pool, slength)
-        generate_split_template(template, 5)
-        # seq_generator = partial()
+        sequences = generate_split_template(template, count)
+        seq_generator = partial(next_wrapper, generator=iter(sequences))
     elif protocol == "random":
         seq_generator = partial(generate_str_from_dict,
                                 str_dict=nucleotide_pool, slength=slength)
