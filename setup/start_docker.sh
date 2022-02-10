@@ -9,5 +9,5 @@ docker create -it \
 --mount type=bind,source="$(pwd)",target=/workdir/gcg \
 genetic_glitch:latest
 docker container start gcg
-docker exec -it gcg /bin/bash
+docker exec -it gcg /bin/bash 
 # docker container stop gcg

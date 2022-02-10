@@ -1,3 +1,4 @@
 {
-    "features":{"buildkit" : true}
+    "features":{"buildkit" : true},
+    "hosts": ["unix:///var/run/docker.sock", "tcp://127.0.0.1:2375"]
 }
