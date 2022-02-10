@@ -1,7 +1,7 @@
 import random
-from typing import MutableMapping
 import numpy as np
 from functools import partial
+from Bio.Seq import Seq
 
 
 def generate_str_from_dict(str_dict, length):
@@ -15,6 +15,18 @@ def generate_mutated_template(template: str, mutate_prop, mutation_pool):
         template[idx] = np.random.choice(list(mutation_pool.keys()), p=list(mutation_pool.values()))
     template = ''.join(template)
     return template
+
+
+def generate_split_template(template:str, count):
+    template_complement = str(Seq(template).complement())
+    import logging
+    logging.debug(template_complement)
+
+    fold = int(len(template) / count)
+    for i in range(0, len(template), fold):
+        template[i:i+fold]
+    import sys
+    sys.exit()
 
 
 def write_seq_file(seq_generator, fname, stype, count):
@@ -54,9 +66,11 @@ def create_toy_circuit(stype='RNA', count=5, slength=20, protocol="random",
                                 template=template, 
                                 mutate_prop=proportion_to_mutate,
                                 mutation_pool=nucleotide_pool)
-
+    elif protocol == "template_split":
+        template = generate_str_from_dict(nucleotide_pool, slength)
+        generate_split_template(template, 5)
+        # seq_generator = partial()
     elif protocol == "random":
-
         seq_generator = partial(generate_str_from_dict,
                                 str_dict=nucleotide_pool, slength=slength)
     else:
