@@ -19,10 +19,21 @@ def generate_mutated_template(template: str, mutate_prop, mutation_pool):
     return template
 
 
+def generate_mixed_template(template: str, count):
+    template_complement = str(Seq(template).complement())
+    seqs = []  # could preallocate 
+
+    template = list(template)
+    interval = max(int(len(template) / count), 1)
+    for c in range(count):
+        idxs = np.arange()
+
+
+
 def generate_split_template(template:str, count):
     template_complement = str(Seq(template).complement())
-
     fold = max(int(len(template) / count), 1)
+
     seqs = []  # could preallocate 
     for i in range(0, len(template), fold):
         complement = template_complement[i:i+fold]
@@ -42,7 +53,11 @@ def write_seq_file(seq_generator, fname, stype, count):
 
 def create_toy_circuit(stype='RNA', count=5, slength=20, protocol="random",
                        proportion_to_mutate=0):
-    """ Protocol can be 'random', 'template_mix', or 'template_split'. 
+    """ Protocol can be 
+    'random': Random sequence generated with weighted characters
+    'template_mix': A template sequence is interleaved with complementary characters
+    'template_mutate': A template sequence is mutated according to weighted characters
+    'template_split': Parts of a template sequence are made complementary
 
     """
     fname = './src/utils/data/example_data/toy_mRNA_circuit.fasta'
@@ -62,15 +77,17 @@ def create_toy_circuit(stype='RNA', count=5, slength=20, protocol="random",
         }
     else:
         raise NotImplementedError
-    if protocol == "template_mix":
-        template = generate_str_from_dict(nucleotide_pool, slength)
+    template = generate_str_from_dict(nucleotide_pool, slength)
+    if protocol == "template_mutate":
         seq_generator = partial(generate_mutated_template,
                                 template=template, 
                                 mutate_prop=proportion_to_mutate,
                                 mutation_pool=nucleotide_pool)
     elif protocol == "template_split":
-        template = generate_str_from_dict(nucleotide_pool, slength)
         sequences = generate_split_template(template, count)
+        seq_generator = partial(next_wrapper, generator=iter(sequences))
+    elif protocol == "template_mix":
+        sequences = generate_mixed_template(template, count)
         seq_generator = partial(next_wrapper, generator=iter(sequences))
     elif protocol == "random":
         seq_generator = partial(generate_str_from_dict,
