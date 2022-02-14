@@ -1,3 +1,4 @@
+from itertools import permutations
 import random
 import numpy as np
 from functools import partial
@@ -37,20 +38,22 @@ def calculate_complementarity_pattern(length, num_combinations):
                      'complementary slots for permuting.')
 
 
+def convert_symbolic_complement(real_seq, symbolic_complement):
+    comp_seq = str(Seq(real_seq).complement())
+    real_seq =
+
+
 def generate_mixed_template(template: str, count):
-    
     complementarity_level = calculate_complementarity_pattern(
         len(template), count)
-    assert count < len(template), \
-        f"Desired sequence length {len(template)} too short to accomodate {count} samples."
-    template_complement = str(Seq(template).complement())
-    seqs = []  # could preallocate
 
-    # template = list(template)
-    
-    
-    
-    
+    symbolic_complement = np.concatenate(np.ones(complementarity_level),
+                                         np.zeros(len(template) - complementarity_level))
+    seq_permutations = list(permutations(symbolic_complement))
+    seq_permutations = rank_by_mixedness(seq_permutations)
+
+    for i, seq in enumerate(seq_permutations):
+        seq_permutations[i] = convert_symbolic_complement(seq)
 
 
 def generate_split_template(template: str, count):
