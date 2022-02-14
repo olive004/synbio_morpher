@@ -7,6 +7,7 @@ from Bio.Seq import Seq
 
 from src.utils.misc.helper import next_wrapper
 from src.utils.misc.string_handling import ordered_merge
+from src.utils.misc.numerical import nPr
 
 
 def generate_str_from_dict(str_dict, length):
@@ -28,14 +29,15 @@ def rank_by_mixedness(inputs: List[str]):
     return inputs
 
 
-def calculate_complementarity_pattern(length, num_combinations):
-    from src.utils.misc.numerical import nPr
-    max_slots = length / 2
-    for slots in range(max_slots):
+def calculate_complementarity_pattern(length, num_combinations, prioritise_high_slot_num=True):
+    max_slots = int(length / 2)
+    slot_iteration = range(max_slots, 0, -1) if prioritise_high_slot_num \
+        else range(max_slots)
+    for slots in slot_iteration:
         possible_combos = nPr(length, slots)
         if possible_combos >= num_combinations:
             return slots
-    raise ValueError(f'Template of size {length} only has a maximum of {max_slots}'
+    raise ValueError(f'Template of size {length} only has a maximum of {max_slots} '
                      'complementary slots for permuting.')
 
 
@@ -126,3 +128,18 @@ def create_toy_circuit(stype='RNA', count=5, slength=20, protocol="random",
                                 str_dict=nucleotide_pool, slength=slength)
         raise NotImplementedError
     write_seq_file(seq_generator, fname, stype, count)
+
+
+
+def main():
+    template = 'ACTGTGTGCCCCTAAACCGCGCT'
+    count = 5
+    complementarity_level = calculate_complementarity_pattern(
+        len(template), count)
+    print(complementarity_level)
+    print(len(template) - complementarity_level)
+    np.ones(complementarity_level)
+    np.zeros(int(len(template) - complementarity_level))
+    symbolic_complement = generate_mixed_binary(len(template), complementarity_level, count)
+    seq_permutations = list(permutations(symbolic_complement, count))
+    print(seq_permutations)
