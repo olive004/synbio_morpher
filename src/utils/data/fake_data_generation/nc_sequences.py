@@ -29,7 +29,7 @@ def rank_by_mixedness(inputs: List[str]):
     return inputs
 
 
-def calculate_complementarity_pattern(length, num_combinations, prioritise_high_slot_num=True):
+def get_num_complementary_slots(length, num_combinations, prioritise_high_slot_num=True):
     max_slots = int(length / 2)
     slot_iteration = range(max_slots, 0, -1) if prioritise_high_slot_num \
         else range(max_slots)
@@ -46,9 +46,29 @@ def convert_symbolic_complement(real_seq, symbolic_complement):
     return ordered_merge(real_seq, comp_seq, symbolic_complement)
 
 
+def calculate_pattern_length(length, count):
+    # TODO: Smallest pattern length is desirable
+    # High orthogonality between sequences as well however
+    # The pattern length depends on count
+    pattern_length = 
+    
+
+def binary_arpeggiator(sequence, count):
+    length = len(sequence)
+    interval = int(sequence / count)
+    arpeggiation = np.arange(0, length, interval)
+
+    all_seqs = []
+
+    
+
+
+
 def generate_mixed_template(template: str, count):
-    complementarity_level = calculate_complementarity_pattern(
+    complementarity_level = get_num_complementary_slots(
         len(template), count)
+
+    pattern_length = calculate_pattern_length(len(template), count)
 
     symbolic_complement = np.concatenate(np.ones(complementarity_level),
                                          np.zeros(len(template) - complementarity_level))
@@ -134,7 +154,7 @@ def create_toy_circuit(stype='RNA', count=5, slength=20, protocol="random",
 def main():
     template = 'ACTGTGTGCCCCTAAACCGCGCT'
     count = 5
-    complementarity_level = calculate_complementarity_pattern(
+    complementarity_level = get_num_complementary_slots(
         len(template), count)
     print(complementarity_level)
     print(len(template) - complementarity_level)
