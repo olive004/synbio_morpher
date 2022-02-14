@@ -6,6 +6,7 @@ from typing import List
 from Bio.Seq import Seq
 
 from src.utils.misc.helper import next_wrapper
+from src.utils.misc.string_handling import ordered_merge
 
 
 def generate_str_from_dict(str_dict, length):
@@ -40,7 +41,7 @@ def calculate_complementarity_pattern(length, num_combinations):
 
 def convert_symbolic_complement(real_seq, symbolic_complement):
     comp_seq = str(Seq(real_seq).complement())
-    real_seq =
+    return ordered_merge(real_seq, comp_seq, symbolic_complement)
 
 
 def generate_mixed_template(template: str, count):
