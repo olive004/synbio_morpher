@@ -7,7 +7,7 @@ from Bio.Seq import Seq
 
 from src.utils.misc.helper import next_wrapper
 from src.utils.misc.string_handling import ordered_merge
-from src.utils.misc.numerical import nPr
+from src.utils.misc.numerical import nPr, generate_mixed_binary
 
 
 def generate_str_from_dict(str_dict, length):
