@@ -1,6 +1,7 @@
 import random
 import numpy as np
 from functools import partial
+from typing import List
 from Bio.Seq import Seq
 
 from src.utils.misc.helper import next_wrapper
@@ -11,30 +12,54 @@ def generate_str_from_dict(str_dict, length):
 
 
 def generate_mutated_template(template: str, mutate_prop, mutation_pool):
-    mutate_idxs = np.random.randint(len(template), size=int(len(template)*mutate_prop))
+    mutate_idxs = np.random.randint(
+        len(template), size=int(len(template)*mutate_prop))
     template = list(template)
     for idx in mutate_idxs:
-        template[idx] = np.random.choice(list(mutation_pool.keys()), p=list(mutation_pool.values()))
+        template[idx] = np.random.choice(
+            list(mutation_pool.keys()), p=list(mutation_pool.values()))
     template = ''.join(template)
     return template
 
 
+def rank_by_mixedness(inputs: List[str]):
+    return inputs
+
+
+def calculate_complementarity_pattern(length, num_combinations):
+    from src.utils.misc.numerical import nPr
+    max_slots = length / 2
+    for slots in range(max_slots):
+        possible_combos = nPr(length, slots)
+        if possible_combos >= num_combinations:
+            return slots
+    raise ValueError(f'Template of size {length} only has a maximum of {max_slots}'
+                     'complementary slots for permuting.')
+
+
 def generate_mixed_template(template: str, count):
+    
+    complementarity_level = calculate_complementarity_pattern(
+        len(template), count)
+    assert count < len(template), \
+        f"Desired sequence length {len(template)} too short to accomodate {count} samples."
     template_complement = str(Seq(template).complement())
-    seqs = []  # could preallocate 
+    seqs = []  # could preallocate
 
-    template = list(template)
-    interval = max(int(len(template) / count), 1)
-    for c in range(count):
-        idxs = np.arange()
+    # template = list(template)
+    
+    
+    
+    
 
 
-
-def generate_split_template(template:str, count):
+def generate_split_template(template: str, count):
+    assert count < len(template), \
+        f"Desired sequence length {len(template)} too short to accomodate {count} samples."
     template_complement = str(Seq(template).complement())
     fold = max(int(len(template) / count), 1)
 
-    seqs = []  # could preallocate 
+    seqs = []  # could preallocate
     for i in range(0, len(template), fold):
         complement = template_complement[i:i+fold]
         new_seq = template[:i] + complement + template[i+fold:]
@@ -80,7 +105,7 @@ def create_toy_circuit(stype='RNA', count=5, slength=20, protocol="random",
     template = generate_str_from_dict(nucleotide_pool, slength)
     if protocol == "template_mutate":
         seq_generator = partial(generate_mutated_template,
-                                template=template, 
+                                template=template,
                                 mutate_prop=proportion_to_mutate,
                                 mutation_pool=nucleotide_pool)
     elif protocol == "template_split":
