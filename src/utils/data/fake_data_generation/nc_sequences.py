@@ -46,21 +46,17 @@ def convert_symbolic_complement(real_seq, symbolic_complement):
     return ordered_merge(real_seq, comp_seq, symbolic_complement)
 
 
-def calculate_pattern_length(length, count):
-    # TODO: Smallest pattern length is desirable
-    # High orthogonality between sequences as well however
-    # The pattern length depends on count
-    pattern_length = 
-    
-
 def binary_arpeggiator(sequence, count):
     length = len(sequence)
-    interval = int(sequence / count)
+    interval = int(length / count)
     arpeggiation = np.arange(0, length, interval)
 
-    all_seqs = []
+    for c in range(count):
+        seq = np.zeros(length)
+        seq[arpeggiation] = 1
 
-    
+
+
 
 
 
