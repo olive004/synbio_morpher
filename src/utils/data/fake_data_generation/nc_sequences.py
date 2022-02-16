@@ -1,5 +1,4 @@
 from itertools import permutations
-import random
 import numpy as np
 from functools import partial
 from typing import List
@@ -10,8 +9,7 @@ from src.utils.misc.string_handling import ordered_merge
 from src.utils.misc.numerical import nPr, generate_mixed_binary
 
 
-def generate_str_from_dict(str_dict, length):
-    return ''.join(random.choice(list(str_dict.keys())) for n in range(length))
+
 
 
 def generate_mutated_template(template: str, mutate_prop, mutation_pool):
@@ -25,20 +23,20 @@ def generate_mutated_template(template: str, mutate_prop, mutation_pool):
     return template
 
 
-def rank_by_mixedness(inputs: List[str]):
-    return inputs
+# def rank_by_mixedness(inputs: List[str]):
+#     return inputs
 
 
-def get_num_complementary_slots(length, num_combinations, prioritise_high_slot_num=True):
-    max_slots = int(length / 2)
-    slot_iteration = range(max_slots, 0, -1) if prioritise_high_slot_num \
-        else range(max_slots)
-    for slots in slot_iteration:
-        possible_combos = nPr(length, slots)
-        if possible_combos >= num_combinations:
-            return slots
-    raise ValueError(f'Template of size {length} only has a maximum of {max_slots} '
-                     'complementary slots for permuting.')
+# def get_num_complementary_slots(length, num_combinations, prioritise_high_slot_num=True):
+#     max_slots = int(length / 2)
+#     slot_iteration = range(max_slots, 0, -1) if prioritise_high_slot_num \
+#         else range(max_slots)
+#     for slots in slot_iteration:
+#         possible_combos = nPr(length, slots)
+#         if possible_combos >= num_combinations:
+#             return slots
+#     raise ValueError(f'Template of size {length} only has a maximum of {max_slots} '
+#                      'complementary slots for permuting.')
 
 
 def convert_symbolic_complement(real_seq, symbolic_complement):
@@ -46,33 +44,25 @@ def convert_symbolic_complement(real_seq, symbolic_complement):
     return ordered_merge(real_seq, comp_seq, symbolic_complement)
 
 
-def binary_arpeggiator(sequence, count):
-    length = len(sequence)
-    interval = int(length / count)
-    arpeggiation = np.arange(0, length, interval)
+# def binary_arpeggiator(sequence, count):
+#     length = len(sequence)
+#     interval = int(length / count)
+#     arpeggiation = np.arange(0, length, interval)
 
-    for c in range(count):
-        seq = np.zeros(length)
-        seq[arpeggiation] = 1
-
-
-
-
+#     for c in range(count):
+#         seq = np.zeros(length)
+#         seq[arpeggiation] = 1
 
 
 def generate_mixed_template(template: str, count):
-    complementarity_level = get_num_complementary_slots(
-        len(template), count)
+    
+    symbolic_complement = generate_mixed_binary(len(template), count)
+    # seq_permutations = list(permutations(symbolic_complement))
+    # seq_permutations = rank_by_mixedness(seq_permutations)
+    seq_permutations = [None] * count
 
-    pattern_length = calculate_pattern_length(len(template), count)
-
-    symbolic_complement = np.concatenate(np.ones(complementarity_level),
-                                         np.zeros(len(template) - complementarity_level))
-    seq_permutations = list(permutations(symbolic_complement))
-    seq_permutations = rank_by_mixedness(seq_permutations)
-
-    for i, seq in enumerate(seq_permutations):
-        seq_permutations[i] = convert_symbolic_complement(seq)
+    for i, symb in enumerate(symbolic_complement):
+        seq_permutations[i] = convert_symbolic_complement(symb)
 
 
 def generate_split_template(template: str, count):
