@@ -5,11 +5,22 @@ from typing import List
 from Bio.Seq import Seq
 
 from src.utils.misc.helper import next_wrapper
-from src.utils.misc.string_handling import ordered_merge, generate_str_from_dict
+from src.utils.misc.string_handling import ordered_merge, generate_str_from_dict, list_to_str
 from src.utils.misc.numerical import nPr, generate_mixed_binary
 
 
-
+RNA_POOL = {
+    'A': 0.2,
+    'C': 0.3,
+    'G': 0.3,
+    'U': 0.2
+}
+DNA_POOL = {
+    'A': 0.2,
+    'C': 0.3,
+    'G': 0.3,
+    'T': 0.2
+}
 
 
 def generate_mutated_template(template: str, mutate_prop, mutation_pool):
@@ -41,7 +52,7 @@ def generate_mutated_template(template: str, mutate_prop, mutation_pool):
 
 def convert_symbolic_complement(real_seq, symbolic_complement):
     comp_seq = str(Seq(real_seq).complement())
-    return ordered_merge(real_seq, comp_seq, symbolic_complement)
+    return list_to_str(ordered_merge(real_seq, comp_seq, symbolic_complement))
 
 
 # def binary_arpeggiator(sequence, count):
@@ -54,18 +65,20 @@ def convert_symbolic_complement(real_seq, symbolic_complement):
 #         seq[arpeggiation] = 1
 
 
-def generate_mixed_template(template: str, count):
+def generate_mixed_template(template: str, count) -> list:
+    # TODO: Generate proper permutations or arpeggiations, 
+    # rank by mixedness and similarity. Can use list(permutations())
+    # and ranking function in future.
     
     symbolic_complement = generate_mixed_binary(len(template), count)
-    # seq_permutations = list(permutations(symbolic_complement))
-    # seq_permutations = rank_by_mixedness(seq_permutations)
     seq_permutations = [None] * count
 
     for i, symb in enumerate(symbolic_complement):
         seq_permutations[i] = convert_symbolic_complement(template, symb)
+    return seq_permutations
 
 
-def generate_split_template(template: str, count):
+def generate_split_template(template: str, count) -> list:
     assert count < len(template), \
         f"Desired sequence length {len(template)} too short to accomodate {count} samples."
     template_complement = str(Seq(template).complement())
@@ -73,10 +86,10 @@ def generate_split_template(template: str, count):
 
     seqs = []  # could preallocate
     for i in range(0, len(template), fold):
-        complement = template_complement[i:i+fold]
-        new_seq = template[:i] + complement + template[i+fold:]
+        complement = template_complement[i:(i+fold)]
+        new_seq = template[:i] + complement + template[(i+fold):]
         seqs.append(new_seq)
-    return seqs
+    return seqs[:count]
 
 
 def write_seq_file(seq_generator, fname, stype, count):
@@ -99,19 +112,9 @@ def create_toy_circuit(stype='RNA', count=5, slength=20, protocol="random",
     """
     fname = './src/utils/data/example_data/toy_mRNA_circuit.fasta'
     if stype == 'RNA':
-        nucleotide_pool = {
-            'A': 0.2,
-            'C': 0.3,
-            'G': 0.3,
-            'U': 0.2
-        }
+        nucleotide_pool = RNA_POOL
     elif stype == 'DNA':
-        nucleotide_pool = {
-            'A': 0.2,
-            'C': 0.3,
-            'G': 0.3,
-            'T': 0.2
-        }
+        nucleotide_pool = DNA_POOL
     else:
         raise NotImplementedError
     template = generate_str_from_dict(nucleotide_pool, slength)
@@ -138,11 +141,9 @@ def create_toy_circuit(stype='RNA', count=5, slength=20, protocol="random",
 
 
 def main():
+    # Testing
     template = 'ACTGTGTGCCCCTAAACCGCGCT'
-    count = 5
-    symbolic_complement = generate_mixed_binary(len(template), count)
-    seq_permutations = [None] * count
-
-    for i, symb in enumerate(symbolic_complement):
-        seq_permutations[i] = convert_symbolic_complement(template, symb)
+    count = 10
+    seq_permutations = generate_mixed_template(template, count)
+    assert len(seq_permutations) == count, 'Wrong sequence length.'
     print(seq_permutations)

@@ -17,7 +17,7 @@ def make_time_str():
     return now.strftime("%Y_%m_%d_%H%M%S")
 
 
-def ordered_merge(list1, list2, mask):
+def ordered_merge(list1, list2, mask) -> list:
     # its = [iter(l) for l in lists]
     # for m in mask:
     #     yield next(its[i])
@@ -25,7 +25,7 @@ def ordered_merge(list1, list2, mask):
     merged = deepcopy(list1)
     for i, (n,c,m) in enumerate(zip(list1, list2, mask)):
         merged[i] = c if m else n
-    return list_to_str(merged)
+    return merged
 
 
 def remove_special_py_functions(string_list: list) -> list:

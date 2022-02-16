@@ -31,7 +31,7 @@ def generate_mixed_binary(length, count):
     interval = int(length / count)
     all_sequences = np.zeros((count, length))
     for c in range(count):
-        idxs = np.arange(c, length, interval)
+        idxs = np.arange(c, length, count)
         all_sequences[c, idxs] = 1
 
     return all_sequences
