@@ -3,6 +3,14 @@ from copy import deepcopy
 import numpy as np
 
 
+SCIENTIFIC = {
+    # R = the gas constant = 8.314 J/mol·K
+    # T = 298 K
+    'RT': np.multiply(8.314, 298),
+    'mole': np.multiply(6.02214076, np.power(10, 23))
+}
+
+
 def zero_out_negs(npmatrix):
     return npmatrix.clip(min=0)
 

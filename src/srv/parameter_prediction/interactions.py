@@ -1,14 +1,13 @@
+import errno
 import numpy as np
 import logging
 from functools import partial
 from src.utils.misc.decorators import time_it
+from src.utils.misc.numerical import SCIENTIFIC
 from src.utils.data.fake_data_generation.toy_graphs import square_matrix_rand
 
 
 class RawSimulationHandling():
-    # R = the gas constant = 8.314 J/mol·K
-    # T = 298 K
-    RT = np.multiply(8.314, 298)
 
     def __init__(self, simulator, config_args) -> None:
         self.simulator = simulator
@@ -17,9 +16,6 @@ class RawSimulationHandling():
     def get_protocol(self):
 
         def intaRNA_calculator(sample):
-            print(sample)
-            import sys
-            sys.exit()
             raw_sample = sample.get('E', 0)
             return raw_sample
 
@@ -34,7 +30,7 @@ class RawSimulationHandling():
             AG = RT ln(kb/kd)
             K = e^(G / RT)
             """
-            K = np.exp(np.divide(energies, self.RT))
+            K = np.exp(np.divide(energies, SCIENTIFIC['RT']))
             return K
 
         def zero_false_rates(rates):
@@ -94,6 +90,17 @@ class RawSimulationHandling():
         else:
             return simulate_vanilla
 
+    def get_unit_conv(self):
+
+        def energy_intaRNA(raw_input):
+            """ IntaRNA by default outputs kJ/mol. Turn into J/[single molecule]. """
+            raw_input = raw_input / 1000 / SCIENTIFIC['mole']
+
+        if self.simulator == "IntaRNA":
+            return energy_intaRNA
+        else:
+            raise NotImplementedError
+
 
 class InteractionMatrix():
     def __init__(self, config_args=None,
@@ -128,6 +135,7 @@ class InteractionData():
         self.simulation_handling = simulation_handler
         self.simulation_protocol = self.simulation_handling.get_protocol()
         self.simulation_postproc = self.simulation_handling.get_postprocessing()
+        self.unit_converter = self.simulation_handling.get_unit_conv()
         self.data, self.matrix = self.parse(data)
 
     def parse(self, data):
@@ -138,7 +146,9 @@ class InteractionData():
         matrix = np.zeros((len(data), len(data)))
         for i, (sample_i, sample_interactions) in enumerate(data.items()):
             for j, (sample_j, raw_sample) in enumerate(sample_interactions.items()):
-                matrix[i, j] = self.get_interaction(raw_sample)
+                matrix[i, j] = self.unit_converter(self.get_interaction(raw_sample),
+                                                    sample_i,
+                                                    sample_j)
         logging.debug(matrix)
         matrix = self.simulation_postproc(matrix)
         return matrix
