@@ -15,6 +15,7 @@ def main(config_file=None):
     config_file = os.path.join("scripts", "RNA_circuit_simulation", "configs", "toy_RNA.json")
     kwargs = compose_kwargs(config_file)
     circuit = instantiate_system(kwargs)
+    print(circuit.species.interactions)
     circuit.visualise()
 
 

@@ -17,7 +17,10 @@ class NetworkCustom(Network):
 
         edge_weights = [
             w for (u, v, w) in nx_graph.edges.data('weight', default=0)]
-        edge_w_range = (np.min(edge_weights), np.max(edge_weights))
+        if np.all(edge_weights == 0):
+            edge_w_range = (0, 0)
+        else:
+            edge_w_range = (np.min(edge_weights), np.max(edge_weights))
         opacity_range = (0, 1)
         if invert_opacity:
             opacity_range = (1, 0)
