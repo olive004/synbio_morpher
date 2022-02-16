@@ -1,9 +1,9 @@
-from distutils.command.config import config
 import numpy as np
 import networkx as nx
 import logging
 
 from src.srv.parameter_prediction.interactions import InteractionMatrix
+from src.utils.results.result_writer import ResultWriter
 
 
 FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
@@ -100,6 +100,7 @@ class BaseSystem():
             config_args = {}
 
         self.species = BaseSpecies(config_args)
+        self.result_writer = ResultWriter()
 
         self.init_graph()
 
@@ -136,7 +137,8 @@ class BaseSystem():
             from src.utils.results.visualisation import visualise_graph_pyplot
             visualise_graph_pyplot(self.graph, new_vis=new_vis)
 
-        
+        for result in self.result_writer.results:
+            result['vis_func'](result['data'], **result['vis_kwargs'])
 
     @property
     def graph(self):

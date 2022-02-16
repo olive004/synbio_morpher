@@ -21,7 +21,8 @@ class RNASystem(BaseSystem):
         self.simulator_args = simulator_args
         self.simulator_choice = simulator
 
-        self.cell_dbl_growth_rate = 2 / 3600  # 2 h^-1 or 30 mins or 1800s - Dilution rate
+        # 2 h^-1 or 30 mins or 1800s - Dilution rate
+        self.cell_dbl_growth_rate = 2 / 3600
         self.avg_RNA_pcell = 100
 
         self.transcription_rate = self.cell_dbl_growth_rate * self.avg_RNA_pcell
@@ -71,8 +72,10 @@ class RNASystem(BaseSystem):
             current_copynumbers = zero_out_negs(current_copynumbers)
             self.species.all_copynumbers[tstep+1] = current_copynumbers
 
-        legend_keys = list(self.species.data.sample_names)
-        modeller.plot(self.species.all_copynumbers, legend_keys, new_vis=self.new_vis)
+        self.result_writer.add_result(self.species.all_copynumbers,
+                                      visualisation_type='time_series',
+                                      vis_func=modeller.plot,
+                                      **{'legend_keys': list(self.species.data.sample_names)})
 
 
 class RNASpecies(BaseSpecies):
