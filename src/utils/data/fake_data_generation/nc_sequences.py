@@ -5,7 +5,7 @@ from typing import List
 from Bio.Seq import Seq
 
 from src.utils.misc.helper import next_wrapper
-from src.utils.misc.string_handling import ordered_merge
+from src.utils.misc.string_handling import ordered_merge, generate_str_from_dict
 from src.utils.misc.numerical import nPr, generate_mixed_binary
 
 
@@ -62,7 +62,7 @@ def generate_mixed_template(template: str, count):
     seq_permutations = [None] * count
 
     for i, symb in enumerate(symbolic_complement):
-        seq_permutations[i] = convert_symbolic_complement(symb)
+        seq_permutations[i] = convert_symbolic_complement(template, symb)
 
 
 def generate_split_template(template: str, count):
@@ -140,12 +140,9 @@ def create_toy_circuit(stype='RNA', count=5, slength=20, protocol="random",
 def main():
     template = 'ACTGTGTGCCCCTAAACCGCGCT'
     count = 5
-    complementarity_level = get_num_complementary_slots(
-        len(template), count)
-    print(complementarity_level)
-    print(len(template) - complementarity_level)
-    np.ones(complementarity_level)
-    np.zeros(int(len(template) - complementarity_level))
-    symbolic_complement = generate_mixed_binary(len(template), complementarity_level, count)
-    seq_permutations = list(permutations(symbolic_complement, count))
+    symbolic_complement = generate_mixed_binary(len(template), count)
+    seq_permutations = [None] * count
+
+    for i, symb in enumerate(symbolic_complement):
+        seq_permutations[i] = convert_symbolic_complement(template, symb)
     print(seq_permutations)
