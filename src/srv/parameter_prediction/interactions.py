@@ -24,12 +24,19 @@ class RawSimulationHandling():
 
     def get_postprocessing(self):
 
+        def unit_conversion(energies):
+            """ IntaRNA by default outputs kJ/mol. Turn into J/[single molecule]. """
+            converted = round(energies * 1000 / SCIENTIFIC['mole'], 24)
+            print(converted)
+            return converted
+
         def energy_to_rate(energies):
             """ Translate interaction binding energy to binding rate:
             AG = RT ln(K)
             AG = RT ln(kb/kd)
             K = e^(G / RT)
             """
+            energies = energies * 1000  # convert kJ to J
             K = np.exp(np.divide(energies, SCIENTIFIC['RT']))
             return K
 
@@ -90,17 +97,6 @@ class RawSimulationHandling():
         else:
             return simulate_vanilla
 
-    def get_unit_conv(self):
-
-        def energy_intaRNA(raw_input):
-            """ IntaRNA by default outputs kJ/mol. Turn into J/[single molecule]. """
-            raw_input = raw_input / 1000 / SCIENTIFIC['mole']
-
-        if self.simulator == "IntaRNA":
-            return energy_intaRNA
-        else:
-            raise NotImplementedError
-
 
 class InteractionMatrix():
     def __init__(self, config_args=None,
@@ -135,7 +131,6 @@ class InteractionData():
         self.simulation_handling = simulation_handler
         self.simulation_protocol = self.simulation_handling.get_protocol()
         self.simulation_postproc = self.simulation_handling.get_postprocessing()
-        self.unit_converter = self.simulation_handling.get_unit_conv()
         self.data, self.matrix = self.parse(data)
 
     def parse(self, data):
@@ -146,9 +141,7 @@ class InteractionData():
         matrix = np.zeros((len(data), len(data)))
         for i, (sample_i, sample_interactions) in enumerate(data.items()):
             for j, (sample_j, raw_sample) in enumerate(sample_interactions.items()):
-                matrix[i, j] = self.unit_converter(self.get_interaction(raw_sample),
-                                                    sample_i,
-                                                    sample_j)
+                matrix[i, j] = self.get_interaction(raw_sample)
         logging.debug(matrix)
         matrix = self.simulation_postproc(matrix)
         return matrix

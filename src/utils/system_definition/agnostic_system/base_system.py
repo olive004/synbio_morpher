@@ -126,15 +126,15 @@ class BaseSystem():
     def determine_input_type(self) -> str:
         raise NotImplementedError
 
-    def visualise(self, mode="pyvis"):
+    def visualise(self, mode="pyvis", new_vis=False):
         self.refresh_graph()
 
         if mode == 'pyvis':
             from src.utils.visualisation.graph_drawer import visualise_graph_pyvis
-            visualise_graph_pyvis(self.graph)
+            visualise_graph_pyvis(self.graph, new_vis=new_vis)
         else:
             from src.utils.visualisation.graph_drawer import visualise_graph_pyplot
-            visualise_graph_pyplot(self.graph)
+            visualise_graph_pyplot(self.graph, new_vis=new_vis)
 
     @property
     def graph(self):
