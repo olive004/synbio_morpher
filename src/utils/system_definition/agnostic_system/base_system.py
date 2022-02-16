@@ -3,7 +3,7 @@ import networkx as nx
 import logging
 
 from src.srv.parameter_prediction.interactions import InteractionMatrix
-from src.utils.results.result_writer import ResultWriter
+from src.srv.results.result_writer import ResultWriter
 
 
 FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
@@ -131,14 +131,14 @@ class BaseSystem():
         self.refresh_graph()
 
         if mode == 'pyvis':
-            from src.utils.results.visualisation import visualise_graph_pyvis
+            from src.srv.results.visualisation import visualise_graph_pyvis
             visualise_graph_pyvis(self.graph, new_vis=new_vis)
         else:
-            from src.utils.results.visualisation import visualise_graph_pyplot
+            from src.srv.results.visualisation import visualise_graph_pyplot
             visualise_graph_pyplot(self.graph, new_vis=new_vis)
 
         for result in self.result_writer.results:
-            result['vis_func'](result['data'], **result['vis_kwargs'])
+            result['vis_func'](result['data'], new_vis=new_vis, **result['vis_kwargs'])
 
     @property
     def graph(self):

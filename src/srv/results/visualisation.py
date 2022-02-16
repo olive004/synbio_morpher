@@ -5,6 +5,7 @@ from pyvis.network import Network
 
 
 class NetworkCustom(Network):
+    """ This has since been merged into Networkx officially. """
     def from_nx(self, nx_graph, node_size_transf=(lambda x: x), edge_weight_transf=(lambda x: x),
                 default_node_size=10, default_edge_weight=1, show_edge_weights=False,
                 use_weighted_opacity=True, invert_opacity=True):
@@ -20,6 +21,7 @@ class NetworkCustom(Network):
         if np.all(edge_weights == 0):
             edge_w_range = (0, 0)
         else:
+            logging.debug(edge_weights)
             edge_w_range = (np.min(edge_weights), np.max(edge_weights))
         opacity_range = (0, 1)
         if invert_opacity:

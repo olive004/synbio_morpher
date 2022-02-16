@@ -2,7 +2,7 @@
 
 class ResultWriter():
     def __init__(self) -> None:
-        self.results = None
+        self.results = []
 
     def add_result(self, result, visualisation_type, vis_func, **vis_kwargs):
         """ visualisation_type: 'plot', 'graph' """
