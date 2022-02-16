@@ -130,11 +130,13 @@ class BaseSystem():
         self.refresh_graph()
 
         if mode == 'pyvis':
-            from src.utils.visualisation.graph_drawer import visualise_graph_pyvis
+            from src.utils.results.visualisation import visualise_graph_pyvis
             visualise_graph_pyvis(self.graph, new_vis=new_vis)
         else:
-            from src.utils.visualisation.graph_drawer import visualise_graph_pyplot
+            from src.utils.results.visualisation import visualise_graph_pyplot
             visualise_graph_pyplot(self.graph, new_vis=new_vis)
+
+        
 
     @property
     def graph(self):

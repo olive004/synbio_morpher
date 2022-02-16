@@ -99,10 +99,13 @@ class VisODE():
     def __init__(self) -> None:
         pass
 
-    def plot(self, data, legend_keys=None) -> None:
+    def plot(self, data, legend_keys=None, new_vis=False) -> None:
+        from src.utils.misc.string_handling import make_time_str
         from matplotlib import pyplot as plt
+        timestamp = '' if not(new_vis) else '_' + make_time_str()
+        filename = f'test_plot{timestamp}.png'
         plt.figure()
         plt.plot(data)
         if legend_keys:
             plt.legend(legend_keys)
-        plt.savefig('test_plot.png')
+        plt.savefig(filename)

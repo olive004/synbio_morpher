@@ -22,6 +22,6 @@ class Deterministic():
 
         return alpha - coupling - x * degradation_rates
 
-    def plot(self, data, legend_keys):
-        from src.utils.visualisation.graph_drawer import VisODE
-        VisODE().plot(data, legend_keys)
+    def plot(self, data, legend_keys, new_vis=False):
+        from src.utils.results.visualisation import VisODE
+        VisODE().plot(data, legend_keys, new_vis)

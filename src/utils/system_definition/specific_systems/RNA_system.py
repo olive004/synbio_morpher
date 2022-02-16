@@ -72,7 +72,7 @@ class RNASystem(BaseSystem):
             self.species.all_copynumbers[tstep+1] = current_copynumbers
 
         legend_keys = list(self.species.data.sample_names)
-        modeller.plot(self.species.all_copynumbers, legend_keys)
+        modeller.plot(self.species.all_copynumbers, legend_keys, new_vis=self.new_vis)
 
 
 class RNASpecies(BaseSpecies):
