@@ -15,19 +15,10 @@ class Deterministic():
         alpha = creation_rates
 
         # Create middle term for each species
-        # THERE'S DEFINITELY A MORE EFFICIENT WAY TO DO THIS
+        # TODO: THERE'S DEFINITELY A MORE EFFICIENT WAY TO DO THIS
         coupling = np.zeros(copynumbers.shape)
         for current_species in range(len(copynumbers)):
             coupling[current_species] = np.average(x * k[current_species] * x.T)
-
-        print(interactions)
-        print(copynumbers)
-        print(creation_rates)
-        print(degradation_rates)
-        print(coupling)
-        logging.debug(alpha - coupling - x * degradation_rates)
-        # import sys
-        # sys.exit()
 
         return alpha - coupling - x * degradation_rates
 
