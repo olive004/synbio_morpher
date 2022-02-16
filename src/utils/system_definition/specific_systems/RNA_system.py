@@ -3,7 +3,7 @@ import numpy as np
 import logging
 from src.utils.misc.decorators import time_it
 from src.utils.system_definition.agnostic_system.base_system import BaseSystem, BaseSpecies
-from src.utils.parameter_prediction.simulators import InteractionSimulator
+from src.srv.parameter_prediction.simulators import InteractionSimulator
 
 FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
 FORMAT = "%(filename)s:%(funcName)s():%(lineno)i: %(message)s %(levelname)s"

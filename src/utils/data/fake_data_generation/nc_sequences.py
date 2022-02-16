@@ -1,11 +1,12 @@
 from itertools import permutations
+import random
 import numpy as np
 from functools import partial
 from typing import List
 from Bio.Seq import Seq
 
 from src.utils.misc.helper import next_wrapper
-from src.utils.misc.string_handling import ordered_merge, generate_str_from_dict, list_to_str
+from src.utils.misc.string_handling import ordered_merge, list_to_str
 from src.utils.misc.numerical import nPr, generate_mixed_binary
 
 
@@ -21,6 +22,10 @@ DNA_POOL = {
     'G': 0.3,
     'T': 0.2
 }
+
+
+def generate_str_from_dict(str_dict, length):
+    return ''.join(random.choice(list(str_dict.keys())) for n in range(length))
 
 
 def generate_mutated_template(template: str, mutate_prop, mutation_pool):
@@ -118,6 +123,7 @@ def create_toy_circuit(stype='RNA', count=5, slength=20, protocol="random",
     else:
         raise NotImplementedError
     template = generate_str_from_dict(nucleotide_pool, slength)
+    template = 'CGCGCGCGCGCGCGCGCGCGCGCCGCGCG'
     if protocol == "template_mutate":
         seq_generator = partial(generate_mutated_template,
                                 template=template,

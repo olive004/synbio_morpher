@@ -1,10 +1,5 @@
 from datetime import datetime
 from copy import deepcopy
-import random
-
-
-def generate_str_from_dict(str_dict, length):
-    return ''.join(random.choice(list(str_dict.keys())) for n in range(length))
 
 
 def list_to_str(input_listlike):
