@@ -3,7 +3,7 @@ import numpy as np
 import networkx as nx
 import logging
 
-from src.utils.parameter_prediction.interactions import InteractionMatrix
+from src.srv.parameter_prediction.interactions import InteractionMatrix
 
 
 FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"

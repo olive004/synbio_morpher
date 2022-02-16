@@ -17,6 +17,9 @@ class RawSimulationHandling():
     def get_protocol(self):
 
         def intaRNA_calculator(sample):
+            print(sample)
+            import sys
+            sys.exit()
             raw_sample = sample.get('E', 0)
             return raw_sample
 
@@ -55,7 +58,7 @@ class RawSimulationHandling():
 
         @time_it
         def simulate_intaRNA_data(batch, allow_self_interaction, sim_kwargs):
-            from src.utils.parameter_prediction.IntaRNA.bin.copomus.IntaRNA import IntaRNA
+            from src.srv.parameter_prediction.IntaRNA.bin.copomus.IntaRNA import IntaRNA
             simulator = IntaRNA()
             if batch is not None:
                 data = {}
@@ -135,12 +138,12 @@ class InteractionData():
         matrix = np.zeros((len(data), len(data)))
         for i, (sample_i, sample_interactions) in enumerate(data.items()):
             for j, (sample_j, raw_sample) in enumerate(sample_interactions.items()):
-                matrix[i, j] = self.fetch_interaction(raw_sample)
+                matrix[i, j] = self.get_interaction(raw_sample)
         logging.debug(matrix)
         matrix = self.simulation_postproc(matrix)
         return matrix
 
-    def fetch_interaction(self, sample):
+    def get_interaction(self, sample):
         if sample == False:
             return 0
         return self.simulation_protocol(sample)

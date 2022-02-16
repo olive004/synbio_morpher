@@ -4,7 +4,7 @@ import logging
 import os
 from typing import Dict, Iterable, List
 
-from src.utils.parameter_prediction.simulator_loading import find_simulator_loader
+from src.srv.parameter_prediction.simulator_loading import find_simulator_loader
 from src.utils.misc.string_handling import remove_special_py_functions
 from src.utils.data.data_format_tools.common import merge_dicts, load_json_as_dict
 
@@ -20,9 +20,9 @@ def create_argparse_from_dict(dict_args: Dict):
 
 
 def get_simulator_names() -> List:
-    simulator_dir = os.path.join("src", "utils", "parameter_prediction")
+    simulator_dir = os.path.join("src", "srv", "parameter_prediction")
     simulators = remove_special_py_functions(os.listdir(simulator_dir))
-    from src.utils.parameter_prediction.simulator_loading import extra_simulators
+    from src.srv.parameter_prediction.simulator_loading import extra_simulators
     simulators = simulators + extra_simulators
     return simulators
 

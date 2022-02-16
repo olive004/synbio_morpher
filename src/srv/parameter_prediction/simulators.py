@@ -1,4 +1,4 @@
-from src.utils.parameter_prediction.interactions import InteractionData, RawSimulationHandling
+from src.srv.parameter_prediction.interactions import InteractionData, RawSimulationHandling
 
 
 class InteractionSimulator():
