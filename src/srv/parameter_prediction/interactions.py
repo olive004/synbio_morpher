@@ -24,11 +24,10 @@ class RawSimulationHandling():
 
     def get_postprocessing(self):
 
-        def unit_conversion(energies):
-            """ IntaRNA by default outputs kJ/mol. Turn into J/[single molecule]. """
-            converted = round(energies * 1000 / SCIENTIFIC['mole'], 24)
-            print(converted)
-            return converted
+        # def unit_conversion(energies):
+        #     """ IntaRNA by default outputs kJ/mol. Turn into J/[single molecule]. """
+        #     converted = round(energies * 1000 / SCIENTIFIC['mole'], 24)
+        #     return converted
 
         def energy_to_rate(energies):
             """ Translate interaction binding energy to binding rate:

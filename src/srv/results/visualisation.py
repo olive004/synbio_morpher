@@ -14,11 +14,12 @@ class NetworkCustom(Network):
         """
         assert(isinstance(nx_graph, nx.Graph))
         edges = nx_graph.edges(data=True)
+        logging.debug(edges)
         nodes = nx_graph.nodes(data=True)
 
         edge_weights = [
             w for (u, v, w) in nx_graph.edges.data('weight', default=0)]
-        if np.all(edge_weights == 0):
+        if np.all(edge_weights == 0) or edge_weights == []:
             edge_w_range = (0, 0)
         else:
             logging.debug(edge_weights)
@@ -70,9 +71,7 @@ def visualise_graph_pyvis(graph: nx.DiGraph,
     import webbrowser
     import os
 
-    if new_vis:
-        from src.utils.misc.string_handling import make_time_str
-        plot_name = f'test_graph_{make_time_str()}.html'
+    if new_vis:        logging.debug(type(self.species.interactions))
 
     interactive_graph = NetworkCustom(
         height=800, width=800, directed=True, notebook=True)
