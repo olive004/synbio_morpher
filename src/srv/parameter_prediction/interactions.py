@@ -141,7 +141,7 @@ class InteractionData():
         for i, (sample_i, sample_interactions) in enumerate(data.items()):
             for j, (sample_j, raw_sample) in enumerate(sample_interactions.items()):
                 matrix[i, j] = self.get_interaction(raw_sample)
-        logging.debug(matrix)
+        logging.info(matrix)
         matrix = self.simulation_postproc(matrix)
         return matrix
 

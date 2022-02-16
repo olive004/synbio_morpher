@@ -14,7 +14,6 @@ class NetworkCustom(Network):
         """
         assert(isinstance(nx_graph, nx.Graph))
         edges = nx_graph.edges(data=True)
-        logging.debug(edges)
         nodes = nx_graph.nodes(data=True)
 
         edge_weights = [
@@ -22,7 +21,7 @@ class NetworkCustom(Network):
         if np.all(edge_weights == 0) or edge_weights == []:
             edge_w_range = (0, 0)
         else:
-            logging.debug(edge_weights)
+            logging.info(edge_weights)
             edge_w_range = (np.min(edge_weights), np.max(edge_weights))
         opacity_range = (0, 1)
         if invert_opacity:
@@ -71,8 +70,6 @@ def visualise_graph_pyvis(graph: nx.DiGraph,
     import webbrowser
     import os
 
-    if new_vis:        logging.debug(type(self.species.interactions))
-
     interactive_graph = NetworkCustom(
         height=800, width=800, directed=True, notebook=True)
     interactive_graph.from_nx(graph, edge_weight_transf=lambda x: round(x, 4))
@@ -84,8 +81,6 @@ def visualise_graph_pyvis(graph: nx.DiGraph,
     logging.info("Opening graph in browser...")
     web_filename = 'file:///' + os.getcwd() + '/' + plot_name
     webbrowser.open(web_filename, new=1, autoraise=True)
-
-    print('debug over')
 
 
 def visualise_graph_pyplot(graph: nx.DiGraph):
