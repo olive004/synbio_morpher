@@ -11,10 +11,10 @@ from src.utils.misc.numerical import nPr, generate_mixed_binary
 
 
 RNA_POOL = {
-    'A': 0.2,
-    'C': 0.3,
-    'G': 0.3,
-    'U': 0.2
+    'A': 0.1,
+    'C': 0.4,
+    'G': 0.4,
+    'U': 0.1
 }
 DNA_POOL = {
     'A': 0.2,
@@ -75,10 +75,9 @@ def generate_mixed_template(template: str, count) -> list:
     # rank by mixedness and similarity. Can use list(permutations())
     # and ranking function in future.
     
-    symbolic_complement = generate_mixed_binary(len(template), count)
+    symbolic_complements = generate_mixed_binary(len(template), count)
     seq_permutations = [None] * count
-
-    for i, symb in enumerate(symbolic_complement):
+    for i, symb in enumerate(symbolic_complements):
         seq_permutations[i] = convert_symbolic_complement(template, symb)
     return seq_permutations
 

@@ -4,8 +4,13 @@ import logging
 from pyvis.network import Network
 
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+
 class NetworkCustom(Network):
     """ This has since been merged into Networkx officially. """
+
     def from_nx(self, nx_graph, node_size_transf=(lambda x: x), edge_weight_transf=(lambda x: x),
                 default_node_size=10, default_edge_weight=1, show_edge_weights=False,
                 use_weighted_opacity=True, invert_opacity=True):
@@ -21,7 +26,7 @@ class NetworkCustom(Network):
         if np.all(edge_weights == 0) or edge_weights == []:
             edge_w_range = (0, 0)
         else:
-            logging.info(edge_weights)
+            logger.info(edge_weights)
             edge_w_range = (np.min(edge_weights), np.max(edge_weights))
         opacity_range = (0, 1)
         if invert_opacity:
@@ -78,7 +83,7 @@ def visualise_graph_pyvis(graph: nx.DiGraph,
     interactive_graph.set_edge_smooth('dynamic')
     interactive_graph.show(plot_name)
 
-    logging.info("Opening graph in browser...")
+    logger.info("Opening graph in browser...")
     web_filename = 'file:///' + os.getcwd() + '/' + plot_name
     webbrowser.open(web_filename, new=1, autoraise=True)
 
