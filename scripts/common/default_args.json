@@ -1,5 +1,4 @@
 {
     "dummy_arg": "yes",
-    "CopomuS": "./scripts/RNA_circuit_simulation/configs/repressilator/intaRNA_args.json",
     "IntaRNA": "./scripts/RNA_circuit_simulation/configs/repressilator/intaRNA_args.json"
 }

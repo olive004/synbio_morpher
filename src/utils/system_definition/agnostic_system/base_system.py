@@ -1,74 +1,165 @@
 import numpy as np
 import networkx as nx
+import logging
 
-from src.utils.data.fake_data_generation.toy_graphs import square_matrix
-
-
-class BaseSystem():
-    def __init__(self, config_args: dict = None):
-        super().__init__()
-
-        self.interactions = self.init_interaction_matrix()
-
-        self.node_labels = None
-        self.graph = self.build_graph(self.interactions)
-
-    def build_graph(self, source_matrix=None) -> nx.DiGraph:
-        if source_matrix is not None:
-            return nx.from_numpy_matrix(source_matrix, create_using=nx.DiGraph)
-        return nx.from_numpy_matrix(self.interactions, create_using=nx.DiGraph)
-
-    def init_interaction_matrix(self, config_args=None):
-        return InteractionMatrix(toy=False).matrix
-
-    def visualise(self, mode="pyvis"):
-        self.graph = self.build_graph(self.interactions)
-
-        if self.node_labels:
-            self.graph = nx.relabel_nodes(self.graph, self.node_labels)
-
-        if mode == 'pyvis':
-            from src.utils.visualisation.graph_drawer import visualise_graph_pyvis
-            visualise_graph_pyvis(self.graph)
-        else:
-            from src.utils.visualisation.graph_drawer import visualise_graph_pyplot
-            visualise_graph_pyplot(self.graph)
-
-    def label_nodes(self, labels):
-        if type(labels) == list:
-            current_nodes = self.get_graph_labels()
-            self.node_labels = dict(zip(current_nodes, labels))
-        elif type(labels) == dict:
-            self.node_labels = labels
-
-        self.graph = nx.relabel_nodes(self.graph, self.node_labels)
-
-    def get_graph_labels(self):
-        return sorted(self.graph)
+from src.srv.parameter_prediction.interactions import InteractionMatrix
+from src.srv.results.result_writer import ResultWriter
 
 
-class Component():
-    def __init__(self):
-        super().__init__()
+FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
+FORMAT = "%(filename)s:%(funcName)s():%(lineno)i: %(message)s %(levelname)s"
+logging.basicConfig(level=logging.INFO, format=FORMAT)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+
+class BaseSpecies():
+    def __init__(self, config_args: dict) -> None:
 
         # Probability distribution for each interaction component?
         # Can also use different types of moments of prob distribution
         # for each
 
+        self.data = config_args.get("data", None)
 
-class InteractionMatrix():
-    def __init__(self, config_args=None,
-                 toy=False):
-        super().__init__()
-        
-        self.toy = toy
+        self.interactions = self.init_matrix(ndims=2, init_type="randint")
+        self.complexes = self.init_matrix(ndims=2, init_type="zeros")
+        self.degradation_rates = self.init_matrix(ndims=1, init_type="uniform",
+                                                  uniform_val=20)
+        self.creation_rates = self.init_matrix(ndims=1, init_type="uniform",
+                                               uniform_val=50)
+        self.copynumbers = self.init_matrix(ndims=1, init_type="uniform",
+                                            uniform_val=5)
+        self.all_copynumbers = None  # For modelling
 
-        self.matrix = self.make_toy_matrix()
+        self.params = {
+            "creation_rates": self.creation_rates,
+            "copynumbers": self.copynumbers,
+            "complexes": self.complexes,
+            "degradation_rates": self.degradation_rates,
+            "interactions": self.interactions
+        }
 
-    def make_toy_matrix(self):
-        if self.toy:
-            min_nodes = 2
-            max_nodes = 15
-            num_nodes = np.random.randint(min_nodes, max_nodes)
-            return square_matrix(num_nodes)
-        return square_matrix()
+    def init_matrix(self, ndims=2, init_type="rand", uniform_val=1) -> np.array:
+        matrix_size = np.random.randint(5) if self.data is None \
+            else self.data.size
+        if ndims > 1:
+            matrix_shape = tuple([matrix_size]*ndims)
+        else:
+            matrix_shape = (1, matrix_size)
+
+        if init_type == "rand":
+            return InteractionMatrix(num_nodes=matrix_size).matrix
+        elif init_type == "randint":
+            return np.random.randint(10, 1000, matrix_shape).astype(np.float64)
+        elif init_type == "uniform":
+            return np.ones(matrix_shape) * uniform_val
+        elif init_type == "zeros":
+            return np.zeros(matrix_shape)
+        raise ValueError(f"Matrix init type {init_type} not recognised.")
+
+    @property
+    def interactions(self):
+        return self._interactions
+
+    @interactions.setter
+    def interactions(self, new_interactions):
+        if type(new_interactions) == np.ndarray:
+            self._interactions = new_interactions
+        else:
+            raise ValueError('Cannot set interactions to' +
+                             f' type {type(new_interactions)}.')
+
+    @property
+    def copynumbers(self):
+        return self._copynumbers
+
+    @copynumbers.setter
+    def copynumbers(self, value):
+        # This may not be as fast as a[a < 0] = 0
+        if value is not None:
+            self._copynumbers = value.clip(min=0)
+
+    @property
+    def all_copynumbers(self):
+        return self._all_copynumbers
+
+    @all_copynumbers.setter
+    def all_copynumbers(self, value):
+        # This may not be as fast as a[a < 0] = 0
+        if value is not None:
+            value[value < 0] = 0
+            # self._all_copynumbers = value.clip(min=0)
+            self._all_copynumbers = value
+
+
+class BaseSystem():
+    def __init__(self, config_args: dict = None):
+
+        if config_args is None:
+            config_args = {}
+
+        self.species = BaseSpecies(config_args)
+        self.result_writer = ResultWriter()
+
+        self.init_graph()
+
+    def init_graph(self):
+        self._node_labels = None
+        self.graph = self.build_graph()
+
+    def build_graph(self, source_matrix=None) -> nx.DiGraph:
+        if source_matrix is not None:
+            inters = source_matrix
+        else:
+            inters = self.species.interactions
+        graph = nx.from_numpy_matrix(inters, create_using=nx.DiGraph)
+        if self.node_labels is not None:
+            graph = nx.relabel_nodes(graph, self.node_labels)
+        return graph
+
+    def refresh_graph(self):
+        self.graph = self.build_graph()
+
+    def get_graph_labels(self) -> dict:
+        return sorted(self.graph)
+
+    def determine_input_type(self) -> str:
+        raise NotImplementedError
+
+    def visualise(self, mode="pyvis", new_vis=False):
+        self.refresh_graph()
+
+        if mode == 'pyvis':
+            from src.srv.results.visualisation import visualise_graph_pyvis
+            visualise_graph_pyvis(self.graph, new_vis=new_vis)
+        else:
+            from src.srv.results.visualisation import visualise_graph_pyplot
+            visualise_graph_pyplot(self.graph, new_vis=new_vis)
+
+        for result in self.result_writer.results:
+            result['vis_func'](result['data'], new_vis=new_vis, **result['vis_kwargs'])
+
+    @property
+    def graph(self):
+        return self._graph
+
+    @graph.setter
+    def graph(self, new_graph):
+        assert type(new_graph) == nx.DiGraph, 'Cannot set graph to' + \
+            f' type {type(new_graph)}.'
+        self._graph = new_graph
+
+    @property
+    def node_labels(self):
+        return self._node_labels
+
+    @node_labels.setter
+    def node_labels(self, labels: dict):
+        current_nodes = self.get_graph_labels()
+        if type(labels) == list:
+            self._node_labels = dict(zip(current_nodes, labels))
+        else:
+            labels = list(range(len(self.species.interactions)))
+            self._node_labels = dict(zip(current_nodes, labels))
+        self.graph = nx.relabel_nodes(self.graph, self.node_labels)

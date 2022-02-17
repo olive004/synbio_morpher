@@ -1,4 +1,7 @@
 *.DS_Store
 *.html
+*.png
 *.pyc
 *.pysave
+*.cpython-38.pyc
+__pycache__
