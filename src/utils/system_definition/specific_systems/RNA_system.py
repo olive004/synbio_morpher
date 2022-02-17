@@ -73,7 +73,7 @@ class RNASystem(BaseSystem):
             self.species.all_copynumbers[tstep+1] = current_copynumbers
 
         self.result_writer.add_result(self.species.all_copynumbers,
-                                      visualisation_type='time_series',
+                                      category='time_series',
                                       vis_func=modeller.plot,
                                       **{'legend_keys': list(self.species.data.sample_names)})
 
