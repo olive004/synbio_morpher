@@ -3,13 +3,13 @@ import numpy as np
 import logging
 from src.utils.misc.decorators import time_it
 from src.utils.system_definition.agnostic_system.base_system import BaseSystem, BaseSpecies
-from src.utils.parameter_prediction.simulators import InteractionSimulator
+from src.srv.parameter_prediction.simulators import InteractionSimulator
 
 FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
 FORMAT = "%(filename)s:%(funcName)s():%(lineno)i: %(message)s %(levelname)s"
-logging.basicConfig(level=logging.DEBUG, format=FORMAT)
+logging.basicConfig(level=logging.INFO, format=FORMAT)
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
 class RNASystem(BaseSystem):
@@ -21,11 +21,17 @@ class RNASystem(BaseSystem):
         self.simulator_args = simulator_args
         self.simulator_choice = simulator
 
-        self.cell_dbl_growth_rate = 2 / 3600  # 2 h^-1 or 30 mins or 1800s
-        self.creation_rates = self.init_matrix(ndims=1, init_type="uniform",
-                                               uniform_val=0.05)
-        self.degradation_rates = self.init_matrix(ndims=1, init_type="uniform",
-                                                  uniform_val=0.0005)
+        # 2 h^-1 or 30 mins or 1800s - Dilution rate
+        self.cell_dbl_growth_rate = 2 / 3600
+        self.avg_RNA_pcell = 100
+
+        self.transcription_rate = self.cell_dbl_growth_rate * self.avg_RNA_pcell
+        self.species.copynumbers = self.species.init_matrix(ndims=1, init_type="uniform",
+                                                            uniform_val=100)
+        self.species.degradation_rates = self.species.init_matrix(ndims=1, init_type="uniform",
+                                                                  uniform_val=self.cell_dbl_growth_rate)
+        self.species.creation_rates = self.species.init_matrix(ndims=1, init_type="uniform",
+                                                               uniform_val=self.transcription_rate)
 
         self.simulate_interaction_strengths()
         self.model_circuit()
@@ -65,9 +71,11 @@ class RNASystem(BaseSystem):
                                                      self.species.degradation_rates)
             current_copynumbers = zero_out_negs(current_copynumbers)
             self.species.all_copynumbers[tstep+1] = current_copynumbers
-            
-        legend_keys = list(self.species.data.sample_names)
-        modeller.plot(self.species.all_copynumbers, legend_keys)
+
+        self.result_writer.add_result(self.species.all_copynumbers,
+                                      visualisation_type='time_series',
+                                      vis_func=modeller.plot,
+                                      **{'legend_keys': list(self.species.data.sample_names)})
 
 
 class RNASpecies(BaseSpecies):

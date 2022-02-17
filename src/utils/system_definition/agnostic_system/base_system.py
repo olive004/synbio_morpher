@@ -1,16 +1,16 @@
-from distutils.command.config import config
 import numpy as np
 import networkx as nx
 import logging
 
-from src.utils.parameter_prediction.interactions import InteractionMatrix
+from src.srv.parameter_prediction.interactions import InteractionMatrix
+from src.srv.results.result_writer import ResultWriter
 
 
 FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
 FORMAT = "%(filename)s:%(funcName)s():%(lineno)i: %(message)s %(levelname)s"
-logging.basicConfig(level=logging.DEBUG, format=FORMAT)
+logging.basicConfig(level=logging.INFO, format=FORMAT)
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
 class BaseSpecies():
@@ -100,6 +100,7 @@ class BaseSystem():
             config_args = {}
 
         self.species = BaseSpecies(config_args)
+        self.result_writer = ResultWriter()
 
         self.init_graph()
 
@@ -126,15 +127,18 @@ class BaseSystem():
     def determine_input_type(self) -> str:
         raise NotImplementedError
 
-    def visualise(self, mode="pyvis"):
+    def visualise(self, mode="pyvis", new_vis=False):
         self.refresh_graph()
 
         if mode == 'pyvis':
-            from src.utils.visualisation.graph_drawer import visualise_graph_pyvis
-            visualise_graph_pyvis(self.graph)
+            from src.srv.results.visualisation import visualise_graph_pyvis
+            visualise_graph_pyvis(self.graph, new_vis=new_vis)
         else:
-            from src.utils.visualisation.graph_drawer import visualise_graph_pyplot
-            visualise_graph_pyplot(self.graph)
+            from src.srv.results.visualisation import visualise_graph_pyplot
+            visualise_graph_pyplot(self.graph, new_vis=new_vis)
+
+        for result in self.result_writer.results:
+            result['vis_func'](result['data'], new_vis=new_vis, **result['vis_kwargs'])
 
     @property
     def graph(self):
