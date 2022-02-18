@@ -29,7 +29,7 @@ def binary_arpeggiator(sequence, count):
         seq[arpeggiation] = 1
 
 
-def generate_mixed_binary(length, count):
+def generate_mixed_binary(length, count, zeros_to_ones=True):
     # TODO: This could be much better. Generate
     # sequences in a way that
     # 1. maximizes sequence orthogonality
@@ -37,10 +37,11 @@ def generate_mixed_binary(length, count):
     assert count <= length, f'Currently can only produce as many sequences as length of base ' \
         'sequence. {count} sequences too many for length {length}.'
     interval = int(length / count)
-    all_sequences = np.zeros((count, length))
+    all_sequences = np.zeros((count, length)) \
+        if zeros_to_ones else np.ones((count, length))
     for c in range(count):
         idxs = np.arange(c, length, count)
-        all_sequences[c, idxs] = 1
+        all_sequences[c, idxs] = 1 if zeros_to_ones else 0
 
     return all_sequences
 
