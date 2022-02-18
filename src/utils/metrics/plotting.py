@@ -13,7 +13,7 @@ class Timeseries():
         final_deriv = np.average(
             self.get_derivative()[:-int(len(self.data)*0.05)])
         is_steady_state_reached = final_deriv < self.stability_threshold
-        return is_steady_state_reached
+        return (is_steady_state_reached, final_deriv)
 
     def fold_change(self):
         division_vector = deepcopy(self.data[:, -1]).clip(1)
@@ -27,8 +27,8 @@ class Timeseries():
 
     def generate_analytics(self):
         analytics = {
-            'fold_change': self.fold_change(),
             'first_derivative': self.get_derivative(),
+            'fold_change': self.fold_change(),
             'steady_state': self.stability()
         }
         return analytics

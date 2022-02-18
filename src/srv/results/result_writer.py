@@ -23,3 +23,24 @@ class ResultWriter():
             'vis_kwargs': vis_kwargs
         }
         return result_entry
+
+    def make_report(self, keys, source: dict, new_report=False):
+        filename = 'report.txt'
+        for writeable in keys:
+            with open(filename, w) as fn: 
+                source.get(writeable, default='')
+
+    def write_metrics(self, result: dict, new_report):
+        metrics = result.get('metrics', default={})
+        if 'first_derivative' in metrics.keys():
+            result['vis_func'](metrics['first_derivative'],
+                               new_vis=new_report, **result['vis_kwargs'])
+        writeables = ['steady_state, fold_change']
+        self.make_report(writeables, metrics, new_report)
+
+    def write_all(self, new_report=False):
+
+        for result in self.results:
+            result['vis_func'](
+                result['data'], new_vis=new_report, **result['vis_kwargs'])
+            self.write_metrics(result, new_report=new_report)
