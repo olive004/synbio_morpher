@@ -27,7 +27,7 @@ class ResultWriter():
     def make_report(self, keys, source: dict, new_report=False):
         filename = 'report.txt'
         for writeable in keys:
-            with open(filename, w) as fn: 
+            with open(filename, 'w') as fn: 
                 source.get(writeable, default='')
 
     def write_metrics(self, result: dict, new_report):
