@@ -49,7 +49,7 @@ def generate_mixed_template(template: str, count) -> list:
     # rank by mixedness and similarity. Can use list(permutations())
     # and ranking function in future.
     
-    symbolic_complements = generate_mixed_binary(len(template), count)
+    symbolic_complements = generate_mixed_binary(len(template), count, zeros_to_ones=False)
     seq_permutations = [None] * count
     for i, symb in enumerate(symbolic_complements):
         seq_permutations[i] = convert_symbolic_complement(template, symb)
