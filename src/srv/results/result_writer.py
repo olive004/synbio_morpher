@@ -27,9 +27,9 @@ class ResultWriter():
     def make_report(self, keys, source: dict, new_report=False):
         filename = 'report.txt'
         for writeable in keys:
-            with open(filename, w) as fn: 
-                source.get(writeable, default='')
-
+            with open(filename, 'w') as fn:
+                fn.write(source.get(writeable, default=''))
+                
     def write_metrics(self, result: dict, new_report):
         metrics = result.get('metrics', default={})
         if 'first_derivative' in metrics.keys():
