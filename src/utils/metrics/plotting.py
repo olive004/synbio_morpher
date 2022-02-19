@@ -25,6 +25,11 @@ class Timeseries():
         # logging.info(np.gradient(self.data))
         return np.gradient(self.data)
 
+    def frequency(self):
+        spectrum = np.fft.fft(self.data)/len(self.data)
+        spectrum = spectrum[range(int(len(self.data)/2))]
+        freq = np.fft.fftfreq(len(spectrum))
+
     def generate_analytics(self):
         analytics = {
             'first_derivative': self.get_derivative(),

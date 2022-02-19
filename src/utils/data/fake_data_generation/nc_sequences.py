@@ -11,10 +11,10 @@ from src.utils.misc.numerical import nPr, generate_mixed_binary
 
 
 RNA_POOL = {
-    'A': 0.1,
-    'C': 0.4,
-    'G': 0.4,
-    'U': 0.1
+    'A': 0.2,
+    'C': 0.3,
+    'G': 0.3,
+    'U': 0.2
 }
 DNA_POOL = {
     'A': 0.2,
@@ -39,35 +39,9 @@ def generate_mutated_template(template: str, mutate_prop, mutation_pool):
     return template
 
 
-# def rank_by_mixedness(inputs: List[str]):
-#     return inputs
-
-
-# def get_num_complementary_slots(length, num_combinations, prioritise_high_slot_num=True):
-#     max_slots = int(length / 2)
-#     slot_iteration = range(max_slots, 0, -1) if prioritise_high_slot_num \
-#         else range(max_slots)
-#     for slots in slot_iteration:
-#         possible_combos = nPr(length, slots)
-#         if possible_combos >= num_combinations:
-#             return slots
-#     raise ValueError(f'Template of size {length} only has a maximum of {max_slots} '
-#                      'complementary slots for permuting.')
-
-
 def convert_symbolic_complement(real_seq, symbolic_complement):
     comp_seq = str(Seq(real_seq).complement())
     return list_to_str(ordered_merge(real_seq, comp_seq, symbolic_complement))
-
-
-# def binary_arpeggiator(sequence, count):
-#     length = len(sequence)
-#     interval = int(length / count)
-#     arpeggiation = np.arange(0, length, interval)
-
-#     for c in range(count):
-#         seq = np.zeros(length)
-#         seq[arpeggiation] = 1
 
 
 def generate_mixed_template(template: str, count) -> list:
@@ -75,7 +49,7 @@ def generate_mixed_template(template: str, count) -> list:
     # rank by mixedness and similarity. Can use list(permutations())
     # and ranking function in future.
     
-    symbolic_complements = generate_mixed_binary(len(template), count)
+    symbolic_complements = generate_mixed_binary(len(template), count, zeros_to_ones=False)
     seq_permutations = [None] * count
     for i, symb in enumerate(symbolic_complements):
         seq_permutations[i] = convert_symbolic_complement(template, symb)
