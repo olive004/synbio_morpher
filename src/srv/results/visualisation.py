@@ -27,7 +27,6 @@ class NetworkCustom(Network):
         if np.all(edge_weights == 0) or edge_weights == []:
             edge_w_range = (0, 0)
         else:
-            logger.info(edge_weights)
             edge_w_range = (np.min(edge_weights), np.max(edge_weights))
         opacity_range = (0, 1)
         if invert_opacity:
