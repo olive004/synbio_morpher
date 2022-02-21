@@ -61,7 +61,7 @@ class RNASystem(BaseSystem):
         from src.utils.misc.numerical import zero_out_negs
         modeller = Deterministic()
 
-        max_time = 100
+        max_time = 1000
         self.species.all_copynumbers = np.zeros(
             (max_time, self.species.data.size))
         self.species.all_copynumbers[0] = deepcopy(self.species.copynumbers)

@@ -21,14 +21,13 @@ class Timeseries():
         return division_matrix
 
     def get_derivative(self):
-        # import logging
-        # logging.info(np.gradient(self.data))
-        return np.gradient(self.data)
+        return np.gradient(self.data)[0]  # get column derivative
 
     def frequency(self):
         spectrum = np.fft.fft(self.data)/len(self.data)
         spectrum = spectrum[range(int(len(self.data)/2))]
         freq = np.fft.fftfreq(len(spectrum))
+        return freq
 
     def generate_analytics(self):
         analytics = {

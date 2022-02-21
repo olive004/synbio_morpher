@@ -19,10 +19,11 @@ class Deterministic():
         logger = logging.getLogger(__name__)
         logger.setLevel(logging.INFO)
 
-        logger.info(xI * interactions)
-        logger.info(np.matmul(xI * interactions, x))
-        dxdt = np.matmul(x * interactions, x) - x * degradation_rates + creation_rates
-        logger.info(dxdt)
+        # logger.info(xI * interactions)
+        # logger.info(np.matmul(xI * interactions, x))
+        dxdt = np.matmul(xI * interactions, x) - x * degradation_rates + creation_rates
+        dxdt = - x * degradation_rates + creation_rates
+        # logger.info(dxdt)
         return dxdt
 
     def plot(self, data, legend_keys, new_vis=False):
