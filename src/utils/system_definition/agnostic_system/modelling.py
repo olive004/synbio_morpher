@@ -3,8 +3,9 @@ import numpy as np
 
 
 class Deterministic():
-    def __init__(self) -> None:
-        pass
+    def __init__(self, max_time=0, time_step=1) -> None:
+        self.max_time=max_time
+        self.time_step=time_step
 
     def dxdt_RNA(self, copynumbers, interactions, creation_rates, degradation_rates):
         # dx_dt = a + x * k * x.T - x * ∂   for x=[A, B] 
