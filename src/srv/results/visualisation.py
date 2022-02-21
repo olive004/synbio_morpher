@@ -1,6 +1,7 @@
 import networkx as nx
 import numpy as np
 import logging
+from src.utils.misc.string_handling import make_time_str
 from pyvis.network import Network
 
 
@@ -75,6 +76,8 @@ def visualise_graph_pyvis(graph: nx.DiGraph,
     import webbrowser
     import os
 
+    plot_name = f'{plot_name}_{make_time_str()}' if new_vis else plot_name
+
     interactive_graph = NetworkCustom(
         height=800, width=800, directed=True, notebook=True)
     interactive_graph.from_nx(graph, edge_weight_transf=lambda x: round(x, 4))
@@ -100,11 +103,11 @@ class VisODE():
     def __init__(self) -> None:
         pass
 
-    def plot(self, data, legend_keys=None, new_vis=False) -> None:
+    def plot(self, data, legend_keys=None, new_vis=False, save_name='test_plot') -> None:
         from src.utils.misc.string_handling import make_time_str
         from matplotlib import pyplot as plt
         timestamp = '' if not(new_vis) else '_' + make_time_str()
-        filename = f'test_plot{timestamp}.png'
+        filename = f'{save_name}{timestamp}.png'
         plt.figure()
         plt.plot(data)
         if legend_keys:

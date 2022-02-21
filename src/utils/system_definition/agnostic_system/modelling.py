@@ -23,7 +23,7 @@ class Deterministic():
         # logger.info(np.matmul(xI * interactions, x))
         dxdt = np.matmul(xI * interactions, x) - x * degradation_rates + creation_rates
         dxdt = - x * degradation_rates + creation_rates
-        # logger.info(dxdt)
+        # logger.info(x)
         return dxdt
 
     def plot(self, data, legend_keys, new_vis=False):

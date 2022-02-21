@@ -34,7 +34,8 @@ class ResultWriter():
         metrics = result.get('metrics', {})
         if 'first_derivative' in metrics.keys():
             result['vis_func'](metrics['first_derivative'],
-                               new_vis=new_report, **result['vis_kwargs'])
+                               new_vis=new_report, save_name='test_first_derivative',
+                               **result['vis_kwargs'])
         writeables = ['steady_state', 'fold_change']
         self.make_report(writeables, metrics, new_report)
 
