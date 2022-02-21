@@ -28,10 +28,10 @@ class ResultWriter():
         filename = 'report.txt'
         for writeable in keys:
             with open(filename, 'w') as fn:
-                fn.write(source.get(writeable, default=''))
-                
+                fn.write(source.get(writeable, ''))
+
     def write_metrics(self, result: dict, new_report):
-        metrics = result.get('metrics', default={})
+        metrics = result.get('metrics', {})
         if 'first_derivative' in metrics.keys():
             result['vis_func'](metrics['first_derivative'],
                                new_vis=new_report, **result['vis_kwargs'])
