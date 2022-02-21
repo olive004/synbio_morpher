@@ -26,6 +26,6 @@ class Deterministic():
         # logger.info(x)
         return dxdt
 
-    def plot(self, data, legend_keys, new_vis=False):
+    def plot(self, data, legend_keys, save_name='test_plot', new_vis=False):
         from src.srv.results.visualisation import VisODE
-        VisODE().plot(data, legend_keys, new_vis)
+        VisODE().plot(data, legend_keys, new_vis, save_name)
