@@ -9,17 +9,21 @@ class Deterministic():
     def dxdt_RNA(self, copynumbers, interactions, creation_rates, degradation_rates):
         # dx_dt = a + x * k * x.T - x * ∂   for x=[A, B] 
         
-        k = interactions
         x = copynumbers
-        alpha = creation_rates
+        xI = copynumbers * np.identity(len(copynumbers))
 
-        # Create middle term for each species
-        # TODO: THERE'S DEFINITELY A MORE EFFICIENT WAY TO DO THIS
-        coupling = np.zeros(copynumbers.shape)
-        for current_species in range(len(copynumbers)):
-            coupling[current_species] = np.average(x * k[current_species] * x.T)
+        import logging
+        FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
+        FORMAT = "%(filename)s:%(funcName)s():%(lineno)i: %(message)s %(levelname)s"
+        logging.basicConfig(level=logging.INFO, format=FORMAT)
+        logger = logging.getLogger(__name__)
+        logger.setLevel(logging.INFO)
 
-        return alpha - coupling - x * degradation_rates
+        logger.info(xI * interactions)
+        logger.info(np.matmul(xI * interactions, x))
+        dxdt = np.matmul(x * interactions, x) - x * degradation_rates + creation_rates
+        logger.info(dxdt)
+        return dxdt
 
     def plot(self, data, legend_keys, new_vis=False):
         from src.srv.results.visualisation import VisODE

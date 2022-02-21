@@ -137,8 +137,7 @@ class BaseSystem():
             from src.srv.results.visualisation import visualise_graph_pyplot
             visualise_graph_pyplot(self.graph, new_vis=new_vis)
 
-        for result in self.result_writer.results:
-            result['vis_func'](result['data'], new_vis=new_vis, **result['vis_kwargs'])
+        self.result_writer.write_all()
 
     @property
     def graph(self):
