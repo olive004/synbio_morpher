@@ -21,15 +21,17 @@ class RNASystem(BaseSystem):
         self.simulator_args = simulator_args
         self.simulator_choice = simulator
 
+        # Rates
         # 2 h^-1 or 30 mins or 1800s - Dilution rate
-        self.cell_dbl_growth_rate = 2 / 3600
-        self.avg_RNA_pcell = 100
+        cell_dbl_growth_rate = 2 / 3600
+        avg_RNA_pcell = 100
+        starting_copynumber = 90
+        self.transcription_rate = cell_dbl_growth_rate * avg_RNA_pcell
 
-        self.transcription_rate = self.cell_dbl_growth_rate * self.avg_RNA_pcell
         self.species.copynumbers = self.species.init_matrix(ndims=1, init_type="uniform",
-                                                            uniform_val=100)
+                                                            uniform_val=starting_copynumber)
         self.species.degradation_rates = self.species.init_matrix(ndims=1, init_type="uniform",
-                                                                  uniform_val=self.cell_dbl_growth_rate)
+                                                                  uniform_val=cell_dbl_growth_rate)
         self.species.creation_rates = self.species.init_matrix(ndims=1, init_type="uniform",
                                                                uniform_val=self.transcription_rate)
 

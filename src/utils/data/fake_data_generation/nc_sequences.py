@@ -96,7 +96,7 @@ def create_toy_circuit(stype='RNA', count=5, slength=20, protocol="random",
     else:
         raise NotImplementedError
     template = generate_str_from_dict(nucleotide_pool, slength)
-    # template = 'CGCGCGCGCGCGCGCGCGCGCGCCGCGCG'  # Very strong interactions
+    template = 'CGCGCGCGCGCGCGCGCGCGCGCCGCGCG'  # Very strong interactions
     # template = 'CUUCAAUUCCUGAAGAGGCGGUUGG'  # Very weak interactions
     if protocol == "template_mutate":
         seq_generator = partial(generate_mutated_template,
