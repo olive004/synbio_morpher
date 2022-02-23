@@ -71,11 +71,12 @@ class RNASystem(BaseSystem):
         self.species.all_copynumbers[:, 0] = deepcopy(self.species.copynumbers)
         current_copynumbers = deepcopy(self.species.copynumbers)
         for tstep in range(0, self.modeller.max_time-1):
-            current_copynumbers += self.modeller.dxdt_RNA(self.species.all_copynumbers[:, tstep],
-                                                     self.species.interactions,
-                                                     self.species.creation_rates,
-                                                     self.species.degradation_rates) * self.modeller.time_step
-            current_copynumbers = zero_out_negs(current_copynumbers)
+            dxdt = self.modeller.dxdt_RNA(self.species.all_copynumbers[:, tstep],
+                                          self.species.interactions,
+                                          self.species.creation_rates,
+                                          self.species.degradation_rates,
+                                          count_complexes=False) * self.modeller.time_step
+            current_copynumbers += zero_out_negs(dxdt)
             self.species.all_copynumbers[:, tstep+1] = current_copynumbers
 
         self.result_writer.add_result(self.species.all_copynumbers,
