@@ -16,17 +16,13 @@ class Deterministic():
         logger = logging.getLogger(__name__)
         logger.setLevel(logging.INFO)
 
-        logger.info(np.shape(copynumbers))
-        
         x = copynumbers
         xI = copynumbers * np.identity(np.shape(copynumbers)[0])
 
-        logger.info(xI * interactions)
-        logger.info(np.matmul(xI * interactions, x))
         dxdt = - np.matmul(xI * interactions, x) - x * degradation_rates + creation_rates
-        # dxdt = - x * degradation_rates + creation_rates
         return dxdt
 
-    def plot(self, data, legend_keys, save_name='test_plot', new_vis=False):
+    def plot(self, data, y=None, legend_keys=None, save_name='test_plot', new_vis=False):
         from src.srv.results.visualisation import VisODE
-        VisODE().plot(data, legend_keys, new_vis, save_name)
+        data = data.T if len(legend_keys) == np.shape(data)[0] else data
+        VisODE().plot(data, y, legend_keys, new_vis, save_name)
