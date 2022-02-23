@@ -11,7 +11,7 @@ class Deterministic():
         # dx_dt = a + x * k * x.T - x * ∂   for x=[A, B] 
         
         x = copynumbers
-        xI = copynumbers * np.identity(len(copynumbers))
+        xI = copynumbers * np.identity(np.shape(copynumbers)[0])
 
         import logging
         FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
@@ -22,11 +22,8 @@ class Deterministic():
 
         logger.info(xI * interactions)
         logger.info(np.matmul(xI * interactions, x))
-        dxdt = np.matmul(xI * interactions, x) - x * degradation_rates + creation_rates
+        dxdt = - np.matmul(xI * interactions, x) - x * degradation_rates + creation_rates
         # dxdt = - x * degradation_rates + creation_rates
-        # logger.info(x)
-        import sys
-        sys.exit()
         return dxdt
 
     def plot(self, data, legend_keys, save_name='test_plot', new_vis=False):

@@ -18,6 +18,8 @@ class Timeseries():
     def fold_change(self):
         division_vector = deepcopy(self.data[:, -1]).clip(1)
         division_matrix = np.divide(division_vector, division_vector.T)
+        import logging
+        logging.info(np.shape(self.data))
         return division_matrix
 
     def get_derivative(self):

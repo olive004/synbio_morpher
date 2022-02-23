@@ -17,6 +17,7 @@ class RNASystem(BaseSystem):
     def __init__(self, simulator_args, simulator="IntaRNA"):
         super(RNASystem, self).__init__(simulator_args)
 
+        self.species = self.init_species(simulator_args)
         self.process_species()
 
         self.simulator_args = simulator_args
@@ -53,6 +54,9 @@ class RNASystem(BaseSystem):
             self.simulator_args, self.simulator_choice)
         return self.simulator.run(data)
 
+    def init_species(self, args):
+        return RNASpecies(args)
+
     def process_species(self):
         self.node_labels = self.species.data.sample_names
 
@@ -64,8 +68,8 @@ class RNASystem(BaseSystem):
         from src.utils.misc.numerical import zero_out_negs
 
         self.species.all_copynumbers = np.zeros(
-            (self.modeller.max_time, self.species.data.size))
-        self.species.all_copynumbers[0] = deepcopy(self.species.copynumbers)
+            (self.species.data.size, self.modeller.max_time))
+        self.species.all_copynumbers[:, 0] = deepcopy(self.species.copynumbers)
         current_copynumbers = deepcopy(self.species.copynumbers)
         for tstep in range(0, self.modeller.max_time-1):
             current_copynumbers += self.modeller.dxdt_RNA(self.species.all_copynumbers[tstep],
@@ -73,7 +77,7 @@ class RNASystem(BaseSystem):
                                                      self.species.creation_rates,
                                                      self.species.degradation_rates) * self.modeller.time_step
             current_copynumbers = zero_out_negs(current_copynumbers)
-            self.species.all_copynumbers[tstep+1] = current_copynumbers
+            self.species.all_copynumbers[:, tstep+1] = current_copynumbers
 
         self.result_writer.add_result(self.species.all_copynumbers,
                                       category='time_series',
@@ -82,5 +86,23 @@ class RNASystem(BaseSystem):
 
 
 class RNASpecies(BaseSpecies):
-    def __init__(self, simulator_args, simulator="IntaRNA"):
+    def __init__(self, simulator_args):
         super().__init__(simulator_args)
+
+        self.interactions = self.init_matrix(ndims=2, init_type="randint")
+        self.complexes = self.init_matrix(ndims=2, init_type="zeros")
+        self.degradation_rates = self.init_matrix(ndims=1, init_type="uniform",
+                                                  uniform_val=20)
+        self.creation_rates = self.init_matrix(ndims=1, init_type="uniform",
+                                               uniform_val=50)
+        self.copynumbers = self.init_matrix(ndims=1, init_type="uniform",
+                                            uniform_val=5)
+        self.all_copynumbers = None  # For modelling
+
+        self.params = {
+            "creation_rates": self.creation_rates,
+            "copynumbers": self.copynumbers,
+            "complexes": self.complexes,
+            "degradation_rates": self.degradation_rates,
+            "interactions": self.interactions
+        }
