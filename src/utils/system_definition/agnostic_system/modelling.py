@@ -9,16 +9,17 @@ class Deterministic():
 
     def dxdt_RNA(self, copynumbers, interactions, creation_rates, degradation_rates):
         # dx_dt = a + x * k * x.T - x * ∂   for x=[A, B] 
-        
-        x = copynumbers
-        xI = copynumbers * np.identity(np.shape(copynumbers)[0])
-
         import logging
         FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
         FORMAT = "%(filename)s:%(funcName)s():%(lineno)i: %(message)s %(levelname)s"
         logging.basicConfig(level=logging.INFO, format=FORMAT)
         logger = logging.getLogger(__name__)
         logger.setLevel(logging.INFO)
+
+        logger.info(np.shape(copynumbers))
+        
+        x = copynumbers
+        xI = copynumbers * np.identity(np.shape(copynumbers)[0])
 
         logger.info(xI * interactions)
         logger.info(np.matmul(xI * interactions, x))

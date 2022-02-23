@@ -23,6 +23,7 @@ class BaseSpecies():
         self.data = config_args.get("data", None)
 
         self.interactions = self.init_matrix(ndims=2, init_type="randint")
+        self.complexes = self.init_matrix(ndims=2, init_type="zeros")
         self.degradation_rates = self.init_matrix(ndims=1, init_type="uniform",
                                                   uniform_val=20)
         self.creation_rates = self.init_matrix(ndims=1, init_type="uniform",

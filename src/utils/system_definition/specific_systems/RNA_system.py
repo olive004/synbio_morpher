@@ -64,7 +64,6 @@ class RNASystem(BaseSystem):
         self.species.interactions = self.get_part_to_part_intrs()
 
     def model_circuit(self):
-        logging.basicConfig(level=logging.INFO)
         from src.utils.misc.numerical import zero_out_negs
 
         self.species.all_copynumbers = np.zeros(
@@ -72,7 +71,7 @@ class RNASystem(BaseSystem):
         self.species.all_copynumbers[:, 0] = deepcopy(self.species.copynumbers)
         current_copynumbers = deepcopy(self.species.copynumbers)
         for tstep in range(0, self.modeller.max_time-1):
-            current_copynumbers += self.modeller.dxdt_RNA(self.species.all_copynumbers[tstep],
+            current_copynumbers += self.modeller.dxdt_RNA(self.species.all_copynumbers[:, tstep],
                                                      self.species.interactions,
                                                      self.species.creation_rates,
                                                      self.species.degradation_rates) * self.modeller.time_step
