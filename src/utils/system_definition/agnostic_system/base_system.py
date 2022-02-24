@@ -21,6 +21,10 @@ class BaseSpecies():
         # for each
 
         self.data = config_args.get("data", None)
+        self.designations = {
+            "input": self.data[0],
+            "output": self.data[1]
+        }
 
         self.interactions = self.init_matrix(ndims=2, init_type="randint")
         self.complexes = self.init_matrix(ndims=2, init_type="zeros")
@@ -127,6 +131,9 @@ class BaseSystem():
     def determine_input_type(self) -> str:
         raise NotImplementedError
 
+    def simulate_signal(self, signal):
+        pass
+
     def visualise(self, mode="pyvis", new_vis=False):
         self.refresh_graph()
 
@@ -155,6 +162,7 @@ class BaseSystem():
 
     @node_labels.setter
     def node_labels(self, labels: dict):
+
         current_nodes = self.get_graph_labels()
         if type(labels) == list:
             self._node_labels = dict(zip(current_nodes, labels))

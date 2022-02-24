@@ -44,6 +44,15 @@ class RNASystem(BaseSystem):
         self.simulate_interaction_strengths()
         self.find_steady_states()
 
+    def init_species(self, args):
+        return RNASpecies(args)
+
+    def process_species(self):
+        self.node_labels = self.species.data.sample_names
+
+    def simulate_interaction_strengths(self):
+        self.species.interactions = self.get_part_to_part_intrs()
+
     @time_it
     def get_part_to_part_intrs(self):
         interactions = self.run_simulator()
@@ -55,15 +64,6 @@ class RNASystem(BaseSystem):
             self.simulator_args, self.simulator_choice)
         return self.simulator.run(data)
 
-    def init_species(self, args):
-        return RNASpecies(args)
-
-    def process_species(self):
-        self.node_labels = self.species.data.sample_names
-
-    def simulate_interaction_strengths(self):
-        self.species.interactions = self.get_part_to_part_intrs()
-
     def find_steady_states(self):
         self.model_steady_state()
         steady_state_metrics = self.result_writer.get_result(key='steady_state')[
@@ -73,26 +73,38 @@ class RNASystem(BaseSystem):
         self.steady_state_copynums = steady_state_metrics['steady_state']['steady_states']
 
     def model_steady_state(self):
-        from src.utils.misc.numerical import zero_out_negs
 
         self.species.all_copynumbers = np.zeros(
             (self.species.data.size, self.modeller_steady_state.max_time))
         self.species.all_copynumbers[:, 0] = deepcopy(self.species.copynumbers)
         current_copynumbers = deepcopy(self.species.copynumbers)
-        for tstep in range(0, self.modeller_steady_state.max_time-1):
-            dxdt = self.modeller_steady_state.dxdt_RNA(self.species.all_copynumbers[:, tstep],
-                                                       self.species.interactions,
-                                                       self.species.creation_rates,
-                                                       self.species.degradation_rates,
-                                                       count_complexes=False) * self.modeller_steady_state.time_step
-            current_copynumbers += dxdt
-            self.species.all_copynumbers[:, tstep+1] = zero_out_negs(current_copynumbers)
+        self.species.all_copynumbers = self.model_circuit(self.modeller_steady_state,
+                                                          current_copynumbers, 
+                                                          self.species.all_copynumbers)
+        self.species.copynumbers
 
         self.result_writer.add_result(self.species.all_copynumbers,
                                       name='steady_state',
                                       category='time_series',
                                       vis_func=self.modeller_steady_state.plot,
                                       **{'legend_keys': list(self.species.data.sample_names)})
+
+    def model_circuit(self, modeller, current_copynumbers, all_copynumbers):
+        from src.utils.misc.numerical import zero_out_negs
+
+        for tstep in range(0, modeller.max_time-1):
+            dxdt = modeller.dxdt_RNA(all_copynumbers[:, tstep],
+                                     self.species.interactions,
+                                     self.species.creation_rates,
+                                     self.species.degradation_rates,
+                                     count_complexes=False) * modeller.time_step
+            current_copynumbers += dxdt
+            all_copynumbers[:, tstep +
+                            1] = zero_out_negs(current_copynumbers)
+        return all_copynumbers
+
+    def simulate_signal(self, signal):
+        pass
 
 
 class RNASpecies(BaseSpecies):
