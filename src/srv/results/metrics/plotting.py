@@ -4,22 +4,26 @@ import numpy as np
 
 class Timeseries():
     def __init__(self, data) -> None:
-        self.data = data
+        self.data = deepcopy(data)
 
         self.stability_threshold = 0.01
 
     def stability(self):
         """ Last 5% of data considered steady state """
+        steady_time = int(np.shape(self.data)[1]*0.05)
         final_deriv = np.average(
-            self.get_derivative()[:-int(len(self.data)*0.05)])
+            self.get_derivative()[:, :-steady_time])
         is_steady_state_reached = final_deriv < self.stability_threshold
-        return (is_steady_state_reached, final_deriv)
+        steady_states = np.average(self.data[:, :-steady_time], axis=1)
+        return {
+            "is_steady_state_reached": is_steady_state_reached,
+            "steady_states": steady_states,
+            "final_deriv": final_deriv
+        }
 
     def fold_change(self):
-        division_vector = deepcopy(self.data[:, -1]).clip(1)
+        division_vector = self.data[:, -1].clip(1)
         division_matrix = np.divide(division_vector, division_vector.T)
-        import logging
-        logging.info(np.shape(self.data))
         return division_matrix
 
     def get_derivative(self):

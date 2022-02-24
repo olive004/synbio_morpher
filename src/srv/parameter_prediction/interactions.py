@@ -1,4 +1,3 @@
-import errno
 import numpy as np
 import logging
 from functools import partial

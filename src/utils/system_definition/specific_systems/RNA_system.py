@@ -3,7 +3,7 @@ import numpy as np
 import logging
 from src.utils.misc.decorators import time_it
 from src.utils.system_definition.agnostic_system.base_system import BaseSystem, BaseSpecies
-from src.srv.parameter_prediction.simulators import InteractionSimulator
+from src.srv.parameter_prediction.simulator import InteractionSimulator
 from src.utils.system_definition.agnostic_system.modelling import Deterministic
 
 FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
@@ -22,9 +22,10 @@ class RNASystem(BaseSystem):
 
         self.simulator_args = simulator_args
         self.simulator_choice = simulator
-        max_time = 5000
+        steady_state_time = 5000
         time_step = 5
-        self.modeller = Deterministic(max_time=max_time, time_step=time_step)
+        self.modeller_steady_state = Deterministic(
+            max_time=steady_state_time, time_step=time_step)
 
         # Rates
         # 2 h^-1 or 30 mins or 1800s - Dilution rate
@@ -41,7 +42,7 @@ class RNASystem(BaseSystem):
                                                                uniform_val=self.transcription_rate)
 
         self.simulate_interaction_strengths()
-        self.model_circuit()
+        self.find_steady_states()
 
     @time_it
     def get_part_to_part_intrs(self):
@@ -63,25 +64,34 @@ class RNASystem(BaseSystem):
     def simulate_interaction_strengths(self):
         self.species.interactions = self.get_part_to_part_intrs()
 
-    def model_circuit(self):
+    def find_steady_states(self):
+        self.model_steady_state()
+        steady_state_metrics = self.result_writer.get_result(key='steady_state')[
+            'metrics']
+        if steady_state_metrics['steady_state']:
+            pass
+        self.steady_state_copynums = steady_state_metrics['steady_state']['steady_states']
+
+    def model_steady_state(self):
         from src.utils.misc.numerical import zero_out_negs
 
         self.species.all_copynumbers = np.zeros(
-            (self.species.data.size, self.modeller.max_time))
+            (self.species.data.size, self.modeller_steady_state.max_time))
         self.species.all_copynumbers[:, 0] = deepcopy(self.species.copynumbers)
         current_copynumbers = deepcopy(self.species.copynumbers)
-        for tstep in range(0, self.modeller.max_time-1):
-            dxdt = self.modeller.dxdt_RNA(self.species.all_copynumbers[:, tstep],
-                                          self.species.interactions,
-                                          self.species.creation_rates,
-                                          self.species.degradation_rates,
-                                          count_complexes=False) * self.modeller.time_step
-            current_copynumbers += zero_out_negs(dxdt)
-            self.species.all_copynumbers[:, tstep+1] = current_copynumbers
+        for tstep in range(0, self.modeller_steady_state.max_time-1):
+            dxdt = self.modeller_steady_state.dxdt_RNA(self.species.all_copynumbers[:, tstep],
+                                                       self.species.interactions,
+                                                       self.species.creation_rates,
+                                                       self.species.degradation_rates,
+                                                       count_complexes=False) * self.modeller_steady_state.time_step
+            current_copynumbers += dxdt
+            self.species.all_copynumbers[:, tstep+1] = zero_out_negs(current_copynumbers)
 
         self.result_writer.add_result(self.species.all_copynumbers,
+                                      name='steady_state',
                                       category='time_series',
-                                      vis_func=self.modeller.plot,
+                                      vis_func=self.modeller_steady_state.plot,
                                       **{'legend_keys': list(self.species.data.sample_names)})
 
 

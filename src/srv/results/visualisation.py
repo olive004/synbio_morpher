@@ -108,7 +108,10 @@ class VisODE():
         timestamp = '' if not(new_vis) else '_' + make_time_str()
         filename = f'{save_name}{timestamp}.png'
         plt.figure()
-        plt.plot(data, y)
+        if y is not None:
+            plt.plot(data, y)
+        else:
+            plt.plot(data)
         if legend_keys:
             plt.legend(legend_keys)
         plt.savefig(filename)
