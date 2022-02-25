@@ -90,7 +90,8 @@ class RNASystem(BaseSystem):
                                       vis_func=modeller_steady_state.plot,
                                       **{'legend_keys': list(self.species.data.sample_names)})
 
-    def model_circuit(self, modeller, current_copynumbers, all_copynumbers):
+    def model_circuit(self, modeller, current_copynumbers, all_copynumbers,
+    signal=None):
         from src.utils.misc.numerical import zero_out_negs
 
         for tstep in range(0, modeller.max_time-1):
@@ -99,7 +100,7 @@ class RNASystem(BaseSystem):
                                      self.species.creation_rates,
                                      self.species.degradation_rates,
                                      count_complexes=False) * modeller.time_step
-            current_copynumbers += dxdt
+            current_copynumbers = np.add(dxdt, current_copynumbers)
             all_copynumbers[:, tstep +
                             1] = zero_out_negs(current_copynumbers)
         return all_copynumbers
@@ -108,18 +109,25 @@ class RNASystem(BaseSystem):
         modeller_signal = Deterministic(
             max_time=signal.total_time, time_step=1
         )
-        all_copynums = np.zeros(np.shape(self.species.steady_state_copynums))
+        all_copynums = np.zeros(
+            (self.species.data.size, modeller_signal.max_time))
         all_copynums[:, 0] = self.species.steady_state_copynums
-        
-        all_copynums = self.model_circuit(modeller_signal, self.species.steady_state_copynums,
-                               all_copynums)
-        self.species.all_copynumbers.append(all_copynums[:, 1:])
-        self.result_writer.add_result(self.species.all_copynumbers,
+
+        all_copynums = self.model_circuit(modeller_signal,
+                                          self.species.steady_state_copynums,
+                                          all_copynums)
+        import logging
+        logging.info(np.shape(self.species.all_copynumbers))                                                                                            
+
+        self.species.all_copynumbers = np.concatenate(
+            (self.species.all_copynumbers, all_copynums[:, 1:]), axis=1)
+        logging.info(self.species.all_copynumbers)
+        self.result_writer.add_result(all_copynums,
                                       name='signal',
                                       category='time_series',
                                       vis_func=modeller_signal.plot,
                                       **{'legend_keys': list(self.species.data.sample_names),
-                                      'save_name': 'signal_plot'})
+                                         'save_name': 'signal_plot'})
 
 
 class RNASpecies(BaseSpecies):

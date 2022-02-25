@@ -33,13 +33,15 @@ class ResultWriter():
         filename = 'report.txt'
         with open(filename, 'w') as fn:
             for writeable in keys:
-                fn.write(f'{writeable}: \n' + str(source.get(writeable, '')) + '\n')
+                fn.write(f'{writeable}: \n' +
+                         str(source.get(writeable, '')) + '\n')
 
     def write_metrics(self, result: dict, new_report=False):
         metrics = result.get('metrics', {})
+        result['vis_kwargs']['save_name'] = f'{result["name"]}_first_derivative'
         if 'first_derivative' in metrics.keys():
             result['vis_func'](metrics['first_derivative'],
-                               new_vis=new_report, save_name=f'{result["name"]}_first_derivative',
+                               new_vis=new_report,
                                **result['vis_kwargs'])
         writeables = ['steady_state', 'fold_change']
         self.make_report(writeables, metrics, new_report)
