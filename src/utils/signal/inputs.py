@@ -4,6 +4,7 @@ import numpy as np
 
 class Signal():
     def __init__(self, in_magnitude, total_time, signal=None) -> None:
+        self.total_time = total_time
         self.abstract_signal = signal if signal is not None else [1, 0, 0, 1, 0]
         self.magnitude = in_magnitude
         time_steps = total_time / len(self.abstract_signal)

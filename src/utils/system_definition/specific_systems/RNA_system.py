@@ -2,6 +2,7 @@ from copy import deepcopy
 import numpy as np
 import logging
 from src.utils.misc.decorators import time_it
+from src.utils.signal.inputs import Signal
 from src.utils.system_definition.agnostic_system.base_system import BaseSystem, BaseSpecies
 from src.srv.parameter_prediction.simulator import InteractionSimulator
 from src.utils.system_definition.agnostic_system.modelling import Deterministic
@@ -22,10 +23,6 @@ class RNASystem(BaseSystem):
 
         self.simulator_args = simulator_args
         self.simulator_choice = simulator
-        steady_state_time = 5000
-        time_step = 5
-        self.modeller_steady_state = Deterministic(
-            max_time=steady_state_time, time_step=time_step)
 
         # Rates
         # 2 h^-1 or 30 mins or 1800s - Dilution rate
@@ -70,23 +67,27 @@ class RNASystem(BaseSystem):
             'metrics']
         if steady_state_metrics['steady_state']:
             pass
-        self.steady_state_copynums = steady_state_metrics['steady_state']['steady_states']
+        self.species.steady_state_copynums = steady_state_metrics['steady_state']['steady_states']
 
     def model_steady_state(self):
+        steady_state_time = 5000
+        time_step = 5
+        modeller_steady_state = Deterministic(
+            max_time=steady_state_time, time_step=time_step)
 
         self.species.all_copynumbers = np.zeros(
-            (self.species.data.size, self.modeller_steady_state.max_time))
+            (self.species.data.size, modeller_steady_state.max_time))
         self.species.all_copynumbers[:, 0] = deepcopy(self.species.copynumbers)
         current_copynumbers = deepcopy(self.species.copynumbers)
-        self.species.all_copynumbers = self.model_circuit(self.modeller_steady_state,
-                                                          current_copynumbers, 
+        self.species.all_copynumbers = self.model_circuit(modeller_steady_state,
+                                                          current_copynumbers,
                                                           self.species.all_copynumbers)
-        self.species.copynumbers
+        self.species.copynumbers = self.species.all_copynumbers[:, -1]
 
         self.result_writer.add_result(self.species.all_copynumbers,
                                       name='steady_state',
                                       category='time_series',
-                                      vis_func=self.modeller_steady_state.plot,
+                                      vis_func=modeller_steady_state.plot,
                                       **{'legend_keys': list(self.species.data.sample_names)})
 
     def model_circuit(self, modeller, current_copynumbers, all_copynumbers):
@@ -103,8 +104,22 @@ class RNASystem(BaseSystem):
                             1] = zero_out_negs(current_copynumbers)
         return all_copynumbers
 
-    def simulate_signal(self, signal):
-        pass
+    def simulate_signal(self, signal: Signal):
+        modeller_signal = Deterministic(
+            max_time=signal.total_time, time_step=1
+        )
+        all_copynums = np.zeros(np.shape(self.species.steady_state_copynums))
+        all_copynums[:, 0] = self.species.steady_state_copynums
+        
+        all_copynums = self.model_circuit(modeller_signal, self.species.steady_state_copynums,
+                               all_copynums)
+        self.species.all_copynumbers.append(all_copynums[:, 1:])
+        self.result_writer.add_result(self.species.all_copynumbers,
+                                      name='signal',
+                                      category='time_series',
+                                      vis_func=modeller_signal.plot,
+                                      **{'legend_keys': list(self.species.data.sample_names),
+                                      'save_name': 'signal_plot'})
 
 
 class RNASpecies(BaseSpecies):

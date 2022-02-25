@@ -34,6 +34,7 @@ class BaseSpecies():
                                                uniform_val=50)
         self.copynumbers = self.init_matrix(ndims=1, init_type="uniform",
                                             uniform_val=5)
+        self.steady_state_copynums = self.init_matrix(ndims=1, init_type="zeros")
         self.all_copynumbers = None  # For modelling
 
         self.params = {

@@ -47,8 +47,6 @@ class ResultWriter():
     def write_all(self, new_report=False):
 
         for name, result in self.results.items():
-            import logging
-            logging.info(result)
             result['vis_func'](
                 result['data'], new_vis=new_report, **result['vis_kwargs'])
             self.write_metrics(result, new_report=new_report)
