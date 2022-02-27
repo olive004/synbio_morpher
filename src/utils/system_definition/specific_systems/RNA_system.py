@@ -2,6 +2,7 @@ from copy import deepcopy
 import numpy as np
 import logging
 from src.utils.misc.decorators import time_it
+from src.utils.misc.numerical import zero_out_negs
 from src.utils.signal.inputs import Signal
 from src.utils.system_definition.agnostic_system.base_system import BaseSystem, BaseSpecies
 from src.srv.parameter_prediction.simulator import InteractionSimulator
@@ -28,7 +29,7 @@ class RNASystem(BaseSystem):
         # 2 h^-1 or 30 mins or 1800s - Dilution rate
         cell_dbl_growth_rate = 2 / 3600
         avg_RNA_pcell = 100
-        starting_copynumber = 90
+        starting_copynumber = 50
         self.transcription_rate = cell_dbl_growth_rate * avg_RNA_pcell
 
         self.species.copynumbers = self.species.init_matrix(ndims=1, init_type="uniform",
@@ -88,11 +89,11 @@ class RNASystem(BaseSystem):
                                       name='steady_state',
                                       category='time_series',
                                       vis_func=modeller_steady_state.plot,
-                                      **{'legend_keys': list(self.species.data.sample_names)})
+                                      **{'legend_keys': list(self.species.data.sample_names),
+                                         'save_name': 'steady_state_plot'})
 
     def model_circuit(self, modeller, current_copynumbers, all_copynumbers,
-    signal=None):
-        from src.utils.misc.numerical import zero_out_negs
+                      signal=None, signal_idx=None):
 
         for tstep in range(0, modeller.max_time-1):
             dxdt = modeller.dxdt_RNA(all_copynumbers[:, tstep],
@@ -100,7 +101,9 @@ class RNASystem(BaseSystem):
                                      self.species.creation_rates,
                                      self.species.degradation_rates,
                                      count_complexes=False) * modeller.time_step
-            current_copynumbers = np.add(dxdt, current_copynumbers)
+            current_copynumbers = np.add(dxdt, current_copynumbers).flatten()
+            if signal is not None:
+                current_copynumbers[signal_idx] = signal[tstep]
             all_copynumbers[:, tstep +
                             1] = zero_out_negs(current_copynumbers)
         return all_copynumbers
@@ -109,18 +112,20 @@ class RNASystem(BaseSystem):
         modeller_signal = Deterministic(
             max_time=signal.total_time, time_step=1
         )
-        all_copynums = np.zeros(
+        init_copynums = np.zeros(
             (self.species.data.size, modeller_signal.max_time))
-        all_copynums[:, 0] = self.species.steady_state_copynums
+        init_copynums[:, 0] = self.species.steady_state_copynums
 
         all_copynums = self.model_circuit(modeller_signal,
                                           self.species.steady_state_copynums,
-                                          all_copynums)
+                                          init_copynums,
+                                          signal=signal.real_signal,
+                                          signal_idx=signal.idx_identity)
         import logging
-        logging.info(np.shape(self.species.all_copynumbers))                                                                                            
 
         self.species.all_copynumbers = np.concatenate(
             (self.species.all_copynumbers, all_copynums[:, 1:]), axis=1)
+        logging.info(np.shape(self.species.all_copynumbers))
         logging.info(self.species.all_copynumbers)
         self.result_writer.add_result(all_copynums,
                                       name='signal',

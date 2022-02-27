@@ -21,9 +21,9 @@ class BaseSpecies():
         # for each
 
         self.data = config_args.get("data", None)
-        self.designations = {
-            "input": self.data.get_data(0),
-            "output": self.data.get_data(1)
+        self.identities = {
+            "input": 0,
+            "output": 1
         }
 
         self.interactions = self.init_matrix(ndims=2, init_type="randint")
