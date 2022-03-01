@@ -73,7 +73,7 @@ class RNASystem(BaseSystem):
         self.species.steady_state_copynums = steady_state_metrics['steady_state']['steady_states']
 
     def model_steady_state(self):
-        steady_state_time = 5000
+        steady_state_time = 500
         time_step = 5
         modeller_steady_state = Deterministic(
             max_time=steady_state_time, time_step=time_step)
@@ -85,8 +85,8 @@ class RNASystem(BaseSystem):
         self.species.all_copynumbers = self.model_circuit(modeller_steady_state,
                                                           current_copynumbers,
                                                           self.species.all_copynumbers,
-                                                          use_solver='naive')
-                                                        #   use_solver='ivp')
+                                                        #   use_solver='naive')
+                                                          use_solver='ivp')
         self.species.copynumbers = self.species.all_copynumbers[:, -1]
 
         self.result_writer.add_result(self.species.all_copynumbers,
@@ -100,11 +100,8 @@ class RNASystem(BaseSystem):
                       signal=None, signal_idx=None, use_solver='naive'):
         modelling_func = partial(modeller.dxdt_RNA, interactions=self.species.interactions,
                                  creation_rates=self.species.creation_rates,
-                                 degradation_rates=self.species.degradation_rates,
-                                 count_complexes=False
+                                 degradation_rates=self.species.degradation_rates
                                  )
-
-
 
         if use_solver == 'naive':
     
@@ -112,8 +109,7 @@ class RNASystem(BaseSystem):
                 dxdt = modeller.dxdt_RNA(all_copynumbers[:, tstep],
                                          self.species.interactions,
                                          self.species.creation_rates,
-                                         self.species.degradation_rates,
-                                         count_complexes=False) * modeller.time_step
+                                         self.species.degradation_rates) * modeller.time_step
                 current_copynumbers = np.add(
                     dxdt, current_copynumbers).flatten()
 
