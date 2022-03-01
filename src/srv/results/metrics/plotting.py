@@ -1,4 +1,5 @@
 from copy import deepcopy
+import logging
 import numpy as np
 
 
@@ -27,7 +28,8 @@ class Timeseries():
         return division_matrix
 
     def get_derivative(self):
-        return np.gradient(self.data)[0]  # get column derivative
+        deriv = np.gradient(self.data)[1]
+        return deriv  # get column derivative
 
     def frequency(self):
         spectrum = np.fft.fft(self.data)/len(self.data)

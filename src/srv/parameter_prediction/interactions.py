@@ -1,13 +1,8 @@
 import numpy as np
-import logging
 from functools import partial
 from src.utils.misc.decorators import time_it
 from src.utils.misc.numerical import SCIENTIFIC
 from src.utils.data.fake_data_generation.toy_graphs import square_matrix_rand
-
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 
 class RawSimulationHandling():
@@ -139,7 +134,6 @@ class InteractionData():
         for i, (sample_i, sample_interactions) in enumerate(data.items()):
             for j, (sample_j, raw_sample) in enumerate(sample_interactions.items()):
                 matrix[i, j] = self.get_interaction(raw_sample)
-        logger.info(matrix)
         matrix = self.simulation_postproc(matrix)
         return matrix
 

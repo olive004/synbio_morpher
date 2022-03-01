@@ -1,5 +1,7 @@
 from copy import deepcopy
+from functools import partial
 import numpy as np
+from scipy import integrate
 import logging
 from src.utils.misc.decorators import time_it
 from src.utils.misc.numerical import zero_out_negs
@@ -82,7 +84,9 @@ class RNASystem(BaseSystem):
         current_copynumbers = deepcopy(self.species.copynumbers)
         self.species.all_copynumbers = self.model_circuit(modeller_steady_state,
                                                           current_copynumbers,
-                                                          self.species.all_copynumbers)
+                                                          self.species.all_copynumbers,
+                                                          use_solver='naive')
+                                                        #   use_solver='ivp')
         self.species.copynumbers = self.species.all_copynumbers[:, -1]
 
         self.result_writer.add_result(self.species.all_copynumbers,
@@ -93,19 +97,35 @@ class RNASystem(BaseSystem):
                                          'save_name': 'steady_state_plot'})
 
     def model_circuit(self, modeller, current_copynumbers, all_copynumbers,
-                      signal=None, signal_idx=None):
+                      signal=None, signal_idx=None, use_solver='naive'):
+        modelling_func = partial(modeller.dxdt_RNA, interactions=self.species.interactions,
+                                 creation_rates=self.species.creation_rates,
+                                 degradation_rates=self.species.degradation_rates,
+                                 count_complexes=False
+                                 )
 
-        for tstep in range(0, modeller.max_time-1):
-            dxdt = modeller.dxdt_RNA(all_copynumbers[:, tstep],
-                                     self.species.interactions,
-                                     self.species.creation_rates,
-                                     self.species.degradation_rates,
-                                     count_complexes=False) * modeller.time_step
-            current_copynumbers = np.add(dxdt, current_copynumbers).flatten()
-            if signal is not None:
-                current_copynumbers[signal_idx] = signal[tstep]
-            all_copynumbers[:, tstep +
-                            1] = zero_out_negs(current_copynumbers)
+
+
+        if use_solver == 'naive':
+    
+            for tstep in range(0, modeller.max_time-1):
+                dxdt = modeller.dxdt_RNA(all_copynumbers[:, tstep],
+                                         self.species.interactions,
+                                         self.species.creation_rates,
+                                         self.species.degradation_rates,
+                                         count_complexes=False) * modeller.time_step
+                current_copynumbers = np.add(
+                    dxdt, current_copynumbers).flatten()
+
+                if signal is not None:
+                    current_copynumbers[signal_idx] = signal[tstep]
+                current_copynumbers = zero_out_negs(current_copynumbers)
+                all_copynumbers[:, tstep +
+                                1] = current_copynumbers
+        elif use_solver == 'ivp':
+            integrate.solve_ivp(modelling_func, (0, modeller.max_time),
+                                y0=current_copynumbers.flatten())
+
         return all_copynumbers
 
     def simulate_signal(self, signal: Signal):
@@ -121,12 +141,9 @@ class RNASystem(BaseSystem):
                                           init_copynums,
                                           signal=signal.real_signal,
                                           signal_idx=signal.idx_identity)
-        import logging
 
         self.species.all_copynumbers = np.concatenate(
             (self.species.all_copynumbers, all_copynums[:, 1:]), axis=1)
-        logging.info(np.shape(self.species.all_copynumbers))
-        logging.info(self.species.all_copynumbers)
         self.result_writer.add_result(all_copynums,
                                       name='signal',
                                       category='time_series',
