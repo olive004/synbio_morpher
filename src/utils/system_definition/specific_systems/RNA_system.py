@@ -85,8 +85,7 @@ class RNASystem(BaseSystem):
         self.species.all_copynumbers = self.model_circuit(modeller_steady_state,
                                                           current_copynumbers,
                                                           self.species.all_copynumbers,
-                                                          use_solver='naive')
-                                                        #   use_solver='ivp')
+                                                          use_solver='ivp')
         self.species.copynumbers = self.species.all_copynumbers[:, -1]
 
         self.result_writer.add_result(self.species.all_copynumbers,
@@ -121,9 +120,8 @@ class RNASystem(BaseSystem):
                 all_copynumbers[:, tstep +
                                 1] = current_copynumbers
         elif use_solver == 'ivp':
-            integrate.solve_ivp(modelling_func, (0, modeller.max_time),
-                                y0=current_copynumbers.flatten())
-
+            all_copynumbers = integrate.solve_ivp(modelling_func, (0, modeller.max_time),
+                                                  y0=current_copynumbers.flatten()).y
         return all_copynumbers
 
     def simulate_signal(self, signal: Signal):
