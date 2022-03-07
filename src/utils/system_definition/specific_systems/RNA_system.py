@@ -68,15 +68,11 @@ class RNASystem(BaseSystem):
         self.model_steady_state()
         steady_state_metrics = self.result_writer.get_result(key='steady_state')[
             'metrics']
-        if steady_state_metrics['steady_state']:
-            pass
         self.species.steady_state_copynums = steady_state_metrics['steady_state']['steady_states']
 
     def model_steady_state(self):
-        steady_state_time = 500
-        time_step = 5
         modeller_steady_state = Deterministic(
-            max_time=steady_state_time, time_step=time_step)
+            max_time=50, time_step=1)
 
         self.species.all_copynumbers = np.zeros(
             (self.species.data.size, modeller_steady_state.max_time))
@@ -123,7 +119,8 @@ class RNASystem(BaseSystem):
             steady_state_result = integrate.solve_ivp(modelling_func, (0, modeller.max_time),
                                                       y0=current_copynumbers.flatten())
             if not steady_state_result.success:
-                raise ValueError('Steady state could not be found through solve_ivp.')
+                raise ValueError(
+                    'Steady state could not be found through solve_ivp.')
             all_copynumbers = steady_state_result.y
         return all_copynumbers
 
