@@ -1,8 +1,7 @@
 import argparse
 import json
-import logging
 import os
-from typing import Dict, Iterable, List
+from typing import Dict, List
 
 from src.srv.parameter_prediction.simulator_loading import find_simulator_loader
 from src.utils.misc.string_handling import remove_special_py_functions

@@ -1,6 +1,6 @@
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.data.loaders.data_manager import DataManager
-from src.utils.system_definition.configurations import parse_cfg_args
+from src.utils.system_definition.config import parse_cfg_args
 from src.utils.system_definition.setup import get_system_type
 
 

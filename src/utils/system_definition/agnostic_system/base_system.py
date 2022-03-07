@@ -21,6 +21,10 @@ class BaseSpecies():
         # for each
 
         self.data = config_args.get("data", None)
+        self.identities = {
+            "input": 0,
+            "output": 1
+        }
 
         self.interactions = self.init_matrix(ndims=2, init_type="randint")
         self.complexes = self.init_matrix(ndims=2, init_type="zeros")
@@ -30,6 +34,7 @@ class BaseSpecies():
                                                uniform_val=50)
         self.copynumbers = self.init_matrix(ndims=1, init_type="uniform",
                                             uniform_val=5)
+        self.steady_state_copynums = self.init_matrix(ndims=1, init_type="zeros")
         self.all_copynumbers = None  # For modelling
 
         self.params = {
@@ -86,6 +91,7 @@ class BaseSpecies():
 
     @all_copynumbers.setter
     def all_copynumbers(self, value):
+        """ Careful: does not kick in for setting slices """
         # This may not be as fast as a[a < 0] = 0
         if value is not None:
             value[value < 0] = 0
@@ -127,6 +133,9 @@ class BaseSystem():
     def determine_input_type(self) -> str:
         raise NotImplementedError
 
+    def simulate_signal(self, signal):
+        pass
+
     def visualise(self, mode="pyvis", new_vis=False):
         self.refresh_graph()
 
@@ -137,8 +146,7 @@ class BaseSystem():
             from src.srv.results.visualisation import visualise_graph_pyplot
             visualise_graph_pyplot(self.graph, new_vis=new_vis)
 
-        for result in self.result_writer.results:
-            result['vis_func'](result['data'], new_vis=new_vis, **result['vis_kwargs'])
+        self.result_writer.write_all()
 
     @property
     def graph(self):
@@ -156,6 +164,7 @@ class BaseSystem():
 
     @node_labels.setter
     def node_labels(self, labels: dict):
+
         current_nodes = self.get_graph_labels()
         if type(labels) == list:
             self._node_labels = dict(zip(current_nodes, labels))
