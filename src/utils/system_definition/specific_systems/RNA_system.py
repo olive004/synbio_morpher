@@ -85,8 +85,8 @@ class RNASystem(BaseSystem):
         self.species.all_copynumbers = self.model_circuit(modeller_steady_state,
                                                           current_copynumbers,
                                                           self.species.all_copynumbers,
-                                                        #   use_solver='naive')
-                                                          use_solver='ivp')
+                                                          use_solver='naive')
+                                                        #   use_solver='ivp')
         self.species.copynumbers = self.species.all_copynumbers[:, -1]
 
         self.result_writer.add_result(self.species.all_copynumbers,
@@ -100,16 +100,18 @@ class RNASystem(BaseSystem):
                       signal=None, signal_idx=None, use_solver='naive'):
         modelling_func = partial(modeller.dxdt_RNA, interactions=self.species.interactions,
                                  creation_rates=self.species.creation_rates,
-                                 degradation_rates=self.species.degradation_rates
+                                 degradation_rates=self.species.degradation_rates,
+                                 num_samples=np.shape(
+                                     self.species.all_copynumbers)[0]
                                  )
 
         if use_solver == 'naive':
-    
+            modelling_func = partial(modelling_func, t=None)
+
             for tstep in range(0, modeller.max_time-1):
-                dxdt = modeller.dxdt_RNA(all_copynumbers[:, tstep],
-                                         self.species.interactions,
-                                         self.species.creation_rates,
-                                         self.species.degradation_rates) * modeller.time_step
+                dxdt = modelling_func(
+                    copynumbers=all_copynumbers[:, tstep]) * modeller.time_step
+
                 current_copynumbers = np.add(
                     dxdt, current_copynumbers).flatten()
 
