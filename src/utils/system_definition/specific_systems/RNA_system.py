@@ -80,8 +80,9 @@ class RNASystem(BaseSystem):
 
         self.species.all_copynumbers = np.zeros(
             (self.species.data.size, modeller_steady_state.max_time))
-        self.species.all_copynumbers[:, 0] = deepcopy(self.species.copynumbers)
+        self.species.all_copynumbers[:, 0] = self.species.copynumbers
         current_copynumbers = deepcopy(self.species.copynumbers)
+
         self.species.all_copynumbers = self.model_circuit(modeller_steady_state,
                                                           current_copynumbers,
                                                           self.species.all_copynumbers,
@@ -100,8 +101,7 @@ class RNASystem(BaseSystem):
         modelling_func = partial(modeller.dxdt_RNA, interactions=self.species.interactions,
                                  creation_rates=self.species.creation_rates,
                                  degradation_rates=self.species.degradation_rates,
-                                 num_samples=np.shape(
-                                     self.species.all_copynumbers)[0]
+                                 num_samples=self.species.data.size
                                  )
 
         if use_solver == 'naive':
@@ -120,8 +120,11 @@ class RNASystem(BaseSystem):
                 all_copynumbers[:, tstep +
                                 1] = current_copynumbers
         elif use_solver == 'ivp':
-            all_copynumbers = integrate.solve_ivp(modelling_func, (0, modeller.max_time),
-                                                  y0=current_copynumbers.flatten()).y
+            steady_state_result = integrate.solve_ivp(modelling_func, (0, modeller.max_time),
+                                                      y0=current_copynumbers.flatten())
+            if not steady_state_result.success:
+                raise ValueError('Steady state could not be found through solve_ivp.')
+            all_copynumbers = steady_state_result.y
         return all_copynumbers
 
     def simulate_signal(self, signal: Signal):
@@ -132,9 +135,10 @@ class RNASystem(BaseSystem):
             (self.species.data.size, modeller_signal.max_time))
         init_copynums[:, 0] = self.species.steady_state_copynums
 
+        logging.info(init_copynums)
         all_copynums = self.model_circuit(modeller_signal,
                                           self.species.steady_state_copynums,
-                                          init_copynums,
+                                          all_copynumbers=init_copynums,
                                           signal=signal.real_signal,
                                           signal_idx=signal.idx_identity)
 

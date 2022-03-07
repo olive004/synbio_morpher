@@ -91,6 +91,7 @@ class BaseSpecies():
 
     @all_copynumbers.setter
     def all_copynumbers(self, value):
+        """ Careful: does not kick in for setting slices """
         # This may not be as fast as a[a < 0] = 0
         if value is not None:
             value[value < 0] = 0

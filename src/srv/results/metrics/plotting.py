@@ -11,11 +11,10 @@ class Timeseries():
 
     def stability(self):
         """ Last 5% of data considered steady state """
-        steady_time = int(np.shape(self.data)[1]*0.05)
         final_deriv = np.average(
-            self.get_derivative()[:, :-steady_time])
+            self.get_derivative()[:, :-2])
         is_steady_state_reached = final_deriv < self.stability_threshold
-        steady_states = np.average(self.data[:, :-steady_time], axis=1)
+        steady_states = self.data[:, :-1]
         return {
             "is_steady_state_reached": is_steady_state_reached,
             "steady_states": steady_states,
