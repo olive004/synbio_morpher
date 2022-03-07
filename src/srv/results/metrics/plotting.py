@@ -14,7 +14,7 @@ class Timeseries():
         final_deriv = np.average(
             self.get_derivative()[:, :-2])
         is_steady_state_reached = final_deriv < self.stability_threshold
-        steady_states = self.data[:, :-1]
+        steady_states = self.data[:, -1]
         return {
             "is_steady_state_reached": is_steady_state_reached,
             "steady_states": steady_states,

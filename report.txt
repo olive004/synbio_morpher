@@ -1,4 +1,4 @@
 steady_state: 
-{'is_steady_state_reached': False, 'steady_states': array([nan, nan, nan]), 'final_deriv': nan}
+{'is_steady_state_reached': True, 'steady_states': array([10.        ,  4.70999757,  4.68701444]), 'final_deriv': -2.838264470358248e-05}
 fold_change: 
-[ 1. nan nan]
+[1. 1. 1.]
