@@ -6,6 +6,12 @@ class DataManager():
         self.data = self.load_data(source) if data is None else data
         self.sample_names = list(self.data.values())
 
+    def get_data(self, idx):
+        if idx not in self.sample_names:
+            return self.data[self.sample_names[idx]]
+        else:
+            return self.data[idx]
+
     def load_data(self, source):
         from src.utils.data.data_format_tools.common import determine_data_format
         filepath = source
