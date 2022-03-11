@@ -22,3 +22,6 @@ class Signal():
     @property
     def real_signal(self):
         return self.time_dilation_func(self.abstract_signal) * self.magnitude
+
+    def follow(self):
+        pass
