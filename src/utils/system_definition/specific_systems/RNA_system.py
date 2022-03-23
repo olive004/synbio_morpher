@@ -137,7 +137,7 @@ class RNASystem(BaseSystem):
                                           self.species.steady_state_copynums,
                                           all_copynumbers=init_copynums,
                                           signal=signal.real_signal,
-                                          signal_idx=signal.idx_identity)
+                                          signal_idx=signal.identities_idx)
 
         self.species.all_copynumbers = np.concatenate(
             (self.species.all_copynumbers, all_copynums[:, 1:]), axis=1)

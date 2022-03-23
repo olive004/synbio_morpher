@@ -3,7 +3,7 @@ import os
 
 from src.utils.misc.decorators import time_it
 from src.clients.common.setup import compose_kwargs, instantiate_system
-from src.utils.signal.inputs import Signal
+from src.utils.signal.inputs import Signal, AdaptationTarget
 
 
 @time_it
@@ -16,8 +16,11 @@ def main(config_file=None):
         "scripts", "RNA_circuit_simulation", "configs", "toy_RNA.json")
     kwargs = compose_kwargs(config_file)
     circuit = instantiate_system(kwargs)
-    signal = Signal(in_magnitude=10, total_time=10000,
-                    idx_identity=circuit.species.identities['input'])
+    # signal = Signal(magnitude=10, total_time=10000,
+    #                 identities_idx=circuit.species.identities['input'])
+    signal = AdaptationTarget(magnitude=10, total_time=1000,
+                              identities_idx=circuit.species.identities['input'])
+    signal.show()
     circuit.simulate_signal(signal)
     circuit.visualise(new_vis=False)
 

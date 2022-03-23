@@ -7,4 +7,4 @@ numba
 numpy
 pyvis
 python-libsbml # https://synonym.caltech.edu/software/libsbml/libsbml-docs/api/python/
-scipy==1.8.0
+scipy==1.7.3
