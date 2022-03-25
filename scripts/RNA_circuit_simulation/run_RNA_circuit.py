@@ -18,7 +18,7 @@ def main(config_file=None):
     circuit = instantiate_system(kwargs)
     # signal = Signal(magnitude=10, total_time=10000,
     #                 identities_idx=circuit.species.identities['input'])
-    signal = AdaptationTarget(magnitude=10, total_time=1000,
+    signal = AdaptationTarget(magnitude=1, total_time=1000,
                               identities_idx=circuit.species.identities['input'])
     signal.show()
     circuit.simulate_signal(signal)
