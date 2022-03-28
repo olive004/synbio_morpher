@@ -40,8 +40,6 @@ class RNASystem(BaseSystem):
                                                                      uniform_vals=[starting_copynumber,
                                                                                    cell_dbl_growth_rate,
                                                                                    self.transcription_rate])
-        logging.info(self.species.degradation_rates)
-        logging.info(self.species.creation_rates)
 
         self.simulate_interaction_strengths()
         self.find_steady_states()
@@ -74,11 +72,6 @@ class RNASystem(BaseSystem):
         modeller_steady_state = Deterministic(
             max_time=50, time_step=1)
 
-        self.species.all_copynumbers = np.concatenate((
-            self.species.all_copynumbers,
-            np.zeros(
-                (self.species.data.size, modeller_steady_state.max_time-1))
-        ), axis=1)
         self.species.all_copynumbers = self.compute_steady_state(modeller_steady_state,
                                                                  self.species.all_copynumbers,
                                                                  use_solver='ivp')
@@ -98,15 +91,10 @@ class RNASystem(BaseSystem):
         if use_solver == 'naive':
             self.model_circuit(modeller, all_copynumbers)
         elif use_solver == 'ivp':
-            logging.info(
-                all_copynumbers[:, -1].reshape(all_copynumbers.shape[0], 1))
             y0 = all_copynumbers[:, -1]
-            y0 = self.species.init_matrix(ndims=1, init_type="uniform",
-                                          uniform_val=10).flatten()
             steady_state_result = integrate.solve_ivp(self.get_modelling_func(modeller),
                                                       (0, modeller.max_time),
                                                       y0=y0)
-            logging.info(all_copynumbers[:, -1].flatten())
             if not steady_state_result.success:
                 raise ValueError(
                     'Steady state could not be found through solve_ivp.')
@@ -121,7 +109,9 @@ class RNASystem(BaseSystem):
         all_copynumbers = np.concatenate((all_copynumbers, np.zeros(
             (self.species.data.size, modeller.max_time-1))
         ), axis=1)
-
+        if signal is not None:
+            all_copynumbers[signal_idx, :] = signal
+        
         for tstep in range(0, modeller.max_time-1):
             dxdt = modelling_func(
                 copynumbers=all_copynumbers[:, tstep]) * modeller.time_step
@@ -139,13 +129,8 @@ class RNASystem(BaseSystem):
         modeller_signal = Deterministic(
             max_time=signal.total_time, time_step=1
         )
-        init_copynums = np.zeros(
-            (self.species.data.size, modeller_signal.max_time))
-        init_copynums[:, 0] = self.species.steady_state_copynums
-
         all_copynums = self.model_circuit(modeller_signal,
                                           self.species.steady_state_copynums,
-                                          all_copynumbers=init_copynums,
                                           signal=signal.real_signal,
                                           signal_idx=signal.identities_idx)
 
