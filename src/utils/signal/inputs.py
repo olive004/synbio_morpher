@@ -95,7 +95,7 @@ class OscillatingSignal(Signal):
         time_points = self.total_time
 
         num_peaks = positions.shape[0]
-        xs0 = self.time  # np.linspace(0.0,(time_points-1), time_points)
+        xs0 = self.time
         xs = np.tile(np.expand_dims(xs0, 0), [num_peaks, 1])
         y0 = np.expand_dims((positions/durations + 1)*2*heights, 1) - \
             2*np.expand_dims(heights/durations, 1)*xs

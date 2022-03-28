@@ -47,6 +47,13 @@ class RNASystem(BaseSystem):
     def init_species(self, args):
         return RNASpecies(args)
 
+    def get_modelling_func(self, modeller):
+        return partial(modeller.dxdt_RNA, interactions=self.species.interactions,
+                       creation_rates=self.species.creation_rates,
+                       degradation_rates=self.species.degradation_rates,
+                       num_samples=self.species.data.size
+                       )
+
     def process_species(self):
         self.node_labels = self.species.data.sample_names
 
@@ -79,10 +86,10 @@ class RNASystem(BaseSystem):
         self.species.all_copynumbers[:, 0] = self.species.copynumbers
         current_copynumbers = deepcopy(self.species.copynumbers)
 
-        self.species.all_copynumbers = self.model_circuit(modeller_steady_state,
-                                                          current_copynumbers,
-                                                          self.species.all_copynumbers,
-                                                          use_solver='ivp')
+        self.species.all_copynumbers = self.compute_steady_state(modeller_steady_state,
+                                                                 current_copynumbers,
+                                                                 self.species.all_copynumbers,
+                                                                 use_solver='ivp')
         self.species.copynumbers = self.species.all_copynumbers[:, -1]
 
         self.result_writer.add_result(self.species.all_copynumbers,
@@ -92,29 +99,12 @@ class RNASystem(BaseSystem):
                                       **{'legend_keys': list(self.species.data.sample_names),
                                          'save_name': 'steady_state_plot'})
 
-    def model_circuit(self, modeller, current_copynumbers, all_copynumbers,
-                      signal=None, signal_idx=None, use_solver='naive'):
-        modelling_func = partial(modeller.dxdt_RNA, interactions=self.species.interactions,
-                                 creation_rates=self.species.creation_rates,
-                                 degradation_rates=self.species.degradation_rates,
-                                 num_samples=self.species.data.size
-                                 )
+    def compute_steady_state(self, modeller, current_copynumbers, all_copynumbers,
+                             use_solver='naive'):
+        modelling_func = self.get_modelling_func(modeller)
 
         if use_solver == 'naive':
-            modelling_func = partial(modelling_func, t=None)
-
-            for tstep in range(0, modeller.max_time-1):
-                dxdt = modelling_func(
-                    copynumbers=all_copynumbers[:, tstep]) * modeller.time_step
-
-                current_copynumbers = np.add(
-                    dxdt, current_copynumbers).flatten()
-
-                if signal is not None:
-                    current_copynumbers[signal_idx] = signal[tstep]
-                current_copynumbers = zero_out_negs(current_copynumbers)
-                all_copynumbers[:, tstep +
-                                1] = current_copynumbers
+            self.model_circuit(modeller, current_copynumbers, all_copynumbers)
         elif use_solver == 'ivp':
             steady_state_result = integrate.solve_ivp(modelling_func, (0, modeller.max_time),
                                                       y0=current_copynumbers.flatten())
@@ -124,6 +114,25 @@ class RNASystem(BaseSystem):
             all_copynumbers = steady_state_result.y
         return all_copynumbers
 
+    def model_circuit(self, modeller, current_copynumbers, all_copynumbers,
+                      signal=None, signal_idx=None):
+        modelling_func = self.get_modelling_func(modeller)
+        modelling_func = partial(modelling_func, t=None)
+
+        for tstep in range(0, modeller.max_time-1):
+            dxdt = modelling_func(
+                copynumbers=all_copynumbers[:, tstep]) * modeller.time_step
+
+            current_copynumbers = np.add(
+                dxdt, current_copynumbers).flatten()
+
+            if signal is not None:
+                current_copynumbers[signal_idx] = signal[tstep]
+            current_copynumbers = zero_out_negs(current_copynumbers)
+            all_copynumbers[:, tstep +
+                            1] = current_copynumbers
+        return all_copynumbers
+        
     def simulate_signal(self, signal: Signal):
         modeller_signal = Deterministic(
             max_time=signal.total_time, time_step=1
