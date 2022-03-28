@@ -78,3 +78,35 @@ class AdaptationTarget(Signal):
 class OscillatingSignal(Signal):
     def __init__(self, identities_idx, signal=None, total_time=None, magnitude=1) -> None:
         super().__init__(identities_idx, signal, total_time, magnitude)
+
+    @property
+    def real_signal(self):
+        return self.spikes(time_points=self.time, position=np.array([1, 1, 1, 1, 1]),
+                           height=self.magnitude, duration=self.total_time)
+
+    def spikes(self, time_points, position, height, duration) -> np.array:
+        # inputs: np.array of position,height,duration for each triangular pulse
+        # arbitrary number of pulses
+        # pulse positions arranged in ascending order
+        import logging
+
+        num_peaks = position.shape[0]
+        logging.info(num_peaks)
+        xs0 = self.time
+        # [num_peaks, time_points]
+        xs = np.tile(np.expand_dims(xs0, 0), [num_peaks, 1])
+        logging.info(xs)
+        logging.info(xs0)
+        y0 = np.expand_dims((position/duration + 1)*2*height, 1) - \
+            2*np.expand_dims(height/duration, 1)*xs
+        logging.info(y0)
+        y0_ = np.expand_dims(height, 1)-np.abs(y0-np.expand_dims(height, 1))
+        logging.info(y0)
+        position_next = np.concatenate(
+            [position[1:], time_points+np.ones(1)], axis=0)  # [num_peaks]
+        mask = np.float32((xs >= np.expand_dims(position, 1)) *
+                          (xs < np.expand_dims(position_next, 1)) *
+                          (xs < np.expand_dims(position+duration, 1)))
+        y1 = y0_*mask  # [num_peaks, time_points]
+        y = np.float32(np.sum(y1, axis=0))
+        return y
