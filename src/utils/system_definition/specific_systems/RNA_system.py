@@ -51,7 +51,8 @@ class RNASystem(BaseSystem):
         return partial(modeller.dxdt_RNA, interactions=self.species.interactions,
                        creation_rates=self.species.creation_rates,
                        degradation_rates=self.species.degradation_rates,
-                       num_samples=self.species.data.size
+                       num_samples=self.species.data.size,
+                       t=None
                        )
 
     def process_species(self):
@@ -72,12 +73,6 @@ class RNASystem(BaseSystem):
         return self.simulator.run(data)
 
     def find_steady_states(self):
-        self.model_steady_state()
-        steady_state_metrics = self.result_writer.get_result(key='steady_state')[
-            'metrics']
-        self.species.steady_state_copynums = steady_state_metrics['steady_state']['steady_states']
-
-    def model_steady_state(self):
         modeller_steady_state = Deterministic(
             max_time=50, time_step=1)
 
@@ -98,15 +93,16 @@ class RNASystem(BaseSystem):
                                       vis_func=modeller_steady_state.plot,
                                       **{'legend_keys': list(self.species.data.sample_names),
                                          'save_name': 'steady_state_plot'})
+        steady_state_metrics = self.result_writer.get_result(key='steady_state')[
+            'metrics']
+        self.species.steady_state_copynums = steady_state_metrics['steady_state']['steady_states']
 
     def compute_steady_state(self, modeller, current_copynumbers, all_copynumbers,
                              use_solver='naive'):
-        modelling_func = self.get_modelling_func(modeller)
-
         if use_solver == 'naive':
             self.model_circuit(modeller, current_copynumbers, all_copynumbers)
         elif use_solver == 'ivp':
-            steady_state_result = integrate.solve_ivp(modelling_func, (0, modeller.max_time),
+            steady_state_result = integrate.solve_ivp(self.get_modelling_func(modeller), (0, modeller.max_time),
                                                       y0=current_copynumbers.flatten())
             if not steady_state_result.success:
                 raise ValueError(
@@ -117,8 +113,6 @@ class RNASystem(BaseSystem):
     def model_circuit(self, modeller, current_copynumbers, all_copynumbers,
                       signal=None, signal_idx=None):
         modelling_func = self.get_modelling_func(modeller)
-        modelling_func = partial(modelling_func, t=None)
-
         for tstep in range(0, modeller.max_time-1):
             dxdt = modelling_func(
                 copynumbers=all_copynumbers[:, tstep]) * modeller.time_step
@@ -132,7 +126,7 @@ class RNASystem(BaseSystem):
             all_copynumbers[:, tstep +
                             1] = current_copynumbers
         return all_copynumbers
-        
+
     def simulate_signal(self, signal: Signal):
         modeller_signal = Deterministic(
             max_time=signal.total_time, time_step=1

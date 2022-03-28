@@ -32,10 +32,9 @@ class BaseSpecies():
                                                   uniform_val=20)
         self.creation_rates = self.init_matrix(ndims=1, init_type="uniform",
                                                uniform_val=50)
-        self.copynumbers = self.init_matrix(ndims=1, init_type="uniform",
-                                            uniform_val=5)
+        self.all_copynumbers = None
+        self.copynumbers = None
         self.steady_state_copynums = self.init_matrix(ndims=1, init_type="zeros")
-        self.all_copynumbers = None  # For modelling
 
         self.params = {
             "creation_rates": self.creation_rates,
@@ -77,13 +76,18 @@ class BaseSpecies():
 
     @property
     def copynumbers(self):
+        if self.all_copynumbers is not None:
+            self._copynumbers = self.all_copynumbers[:, -1]
+        else:
+            self._copynumbers = None
         return self._copynumbers
 
     @copynumbers.setter
     def copynumbers(self, value):
         # This may not be as fast as a[a < 0] = 0
         if value is not None:
-            self._copynumbers = value.clip(min=0)
+            value[value < 0] = 0
+            self._copynumbers = value
 
     @property
     def all_copynumbers(self):
@@ -95,8 +99,7 @@ class BaseSpecies():
         # This may not be as fast as a[a < 0] = 0
         if value is not None:
             value[value < 0] = 0
-            # self._all_copynumbers = value.clip(min=0)
-            self._all_copynumbers = value
+        self._all_copynumbers = value
 
 
 class BaseSystem():
