@@ -90,18 +90,18 @@ class OscillatingSignal(Signal):
         # pulse positions arranged in ascending order
         import logging
 
+        # time_points = np.array([1,2,3,4,5,6])
+        time_points = self.total_time
+        position = np.array([1,2,3,4,5,6,900])
+        height = np.array([3,4,5,3,4,3,2])
+        duration = np.array([2,2,2,2,3,3, 50])
+
         num_peaks = position.shape[0]
-        logging.info(num_peaks)
-        xs0 = self.time
-        # [num_peaks, time_points]
+        xs0 = self.time #np.linspace(0.0,(time_points-1), time_points)
         xs = np.tile(np.expand_dims(xs0, 0), [num_peaks, 1])
-        logging.info(xs)
-        logging.info(xs0)
         y0 = np.expand_dims((position/duration + 1)*2*height, 1) - \
             2*np.expand_dims(height/duration, 1)*xs
-        logging.info(y0)
         y0_ = np.expand_dims(height, 1)-np.abs(y0-np.expand_dims(height, 1))
-        logging.info(y0)
         position_next = np.concatenate(
             [position[1:], time_points+np.ones(1)], axis=0)  # [num_peaks]
         mask = np.float32((xs >= np.expand_dims(position, 1)) *

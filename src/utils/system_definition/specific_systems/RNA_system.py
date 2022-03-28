@@ -132,7 +132,6 @@ class RNASystem(BaseSystem):
             (self.species.data.size, modeller_signal.max_time))
         init_copynums[:, 0] = self.species.steady_state_copynums
 
-        logging.info(init_copynums)
         all_copynums = self.model_circuit(modeller_signal,
                                           self.species.steady_state_copynums,
                                           all_copynumbers=init_copynums,
