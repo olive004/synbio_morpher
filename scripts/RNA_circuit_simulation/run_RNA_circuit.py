@@ -4,7 +4,7 @@ import os
 import numpy as np
 
 from src.utils.misc.decorators import time_it
-from src.clients.common.setup import compose_kwargs, instantiate_system
+from src.clients.common.setup import compose_kwargs, instantiate_system, construct_signal
 from src.utils.signal.inputs import Signal, AdaptationTarget, OscillatingSignal
 
 
@@ -18,19 +18,8 @@ def main(config_file=None):
         "scripts", "RNA_circuit_simulation", "configs", "toy_RNA.json")
     kwargs = compose_kwargs(config_file)
     circuit = instantiate_system(kwargs)
-    signal_type = 'abstract'
-    if signal_type == 'abstract':
-        signal = Signal(magnitude=10, total_time=10000, signal=[1, 0, 1, 0],
-                        identities_idx=circuit.species.identities['input'])
-    elif signal_type == 'adaptation':
-        signal = AdaptationTarget(magnitude=1, total_time=1000,
-                                  identities_idx=circuit.species.identities['input'])
-    elif signal_type == 'oscillation':
-        signal = OscillatingSignal(magnitude=1, total_time=1000,
-                                   positions=np.array([6, 500]),
-                                   heights=np.array([50, 80]),
-                                   durations=np.array([50, 400]),
-                                   identities_idx=circuit.species.identities['input'])
+    kwargs.get("signal")["identities_idx"] = circuit.species.identities['input']
+    signal = construct_signal(kwargs.get("signal"))
     signal.show()
     circuit.simulate_signal(signal)
     circuit.visualise(new_vis=False)
