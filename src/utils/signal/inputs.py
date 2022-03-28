@@ -81,32 +81,30 @@ class OscillatingSignal(Signal):
 
     @property
     def real_signal(self):
-        return self.spikes(time_points=self.time, position=np.array([1, 1, 1, 1, 1]),
-                           height=self.magnitude, duration=self.total_time)
+        positions = np.array([1, 2, 3, 4, 5, 6, 900])
+        heights = np.array([3, 4, 5, 3, 4, 3, 2])
+        durations = np.array([2, 2, 2, 2, 3, 3, 50])
+        return self.spikes(positions=positions,
+                           heights=heights, 
+                           durations=durations)
 
-    def spikes(self, time_points, position, height, duration) -> np.array:
+    def spikes(self, positions, heights, durations) -> np.array:
         # inputs: np.array of position,height,duration for each triangular pulse
-        # arbitrary number of pulses
         # pulse positions arranged in ascending order
-        import logging
 
-        # time_points = np.array([1,2,3,4,5,6])
         time_points = self.total_time
-        position = np.array([1,2,3,4,5,6,900])
-        height = np.array([3,4,5,3,4,3,2])
-        duration = np.array([2,2,2,2,3,3, 50])
 
-        num_peaks = position.shape[0]
-        xs0 = self.time #np.linspace(0.0,(time_points-1), time_points)
+        num_peaks = positions.shape[0]
+        xs0 = self.time  # np.linspace(0.0,(time_points-1), time_points)
         xs = np.tile(np.expand_dims(xs0, 0), [num_peaks, 1])
-        y0 = np.expand_dims((position/duration + 1)*2*height, 1) - \
-            2*np.expand_dims(height/duration, 1)*xs
-        y0_ = np.expand_dims(height, 1)-np.abs(y0-np.expand_dims(height, 1))
+        y0 = np.expand_dims((positions/durations + 1)*2*heights, 1) - \
+            2*np.expand_dims(heights/durations, 1)*xs
+        y0_ = np.expand_dims(heights, 1)-np.abs(y0-np.expand_dims(heights, 1))
         position_next = np.concatenate(
-            [position[1:], time_points+np.ones(1)], axis=0)  # [num_peaks]
-        mask = np.float32((xs >= np.expand_dims(position, 1)) *
+            [positions[1:], time_points+np.ones(1)], axis=0)  # [num_peaks]
+        mask = np.float32((xs >= np.expand_dims(positions, 1)) *
                           (xs < np.expand_dims(position_next, 1)) *
-                          (xs < np.expand_dims(position+duration, 1)))
+                          (xs < np.expand_dims(positions+durations, 1)))
         y1 = y0_*mask  # [num_peaks, time_points]
         y = np.float32(np.sum(y1, axis=0))
         return y

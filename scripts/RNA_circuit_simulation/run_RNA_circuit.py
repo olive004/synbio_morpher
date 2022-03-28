@@ -21,7 +21,7 @@ def main(config_file=None):
     # signal = AdaptationTarget(magnitude=1, total_time=1000,
     #                           identities_idx=circuit.species.identities['input'])
     signal = OscillatingSignal(magnitude=1, total_time=1000,
-                              identities_idx=circuit.species.identities['input'])
+                               identities_idx=circuit.species.identities['input'])
     signal.show()
     circuit.simulate_signal(signal)
     circuit.visualise(new_vis=False)
