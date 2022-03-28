@@ -1,3 +1,4 @@
+from typing import List, Tuple
 import numpy as np
 import networkx as nx
 import logging
@@ -44,6 +45,10 @@ class BaseSpecies():
             "interactions": self.interactions
         }
 
+    def init_matrices(self, uniform_vals, ndims=2, init_type="rand") -> List[np.array]:
+        matrices = (self.init_matrix(ndims, init_type, val) for val in uniform_vals)
+        return tuple(matrices)
+
     def init_matrix(self, ndims=2, init_type="rand", uniform_val=1) -> np.array:
         matrix_size = np.random.randint(5) if self.data is None \
             else self.data.size
@@ -79,7 +84,7 @@ class BaseSpecies():
         if self.all_copynumbers is not None:
             self._copynumbers = self.all_copynumbers[:, -1]
         else:
-            self._copynumbers = None
+            self._copynumbers = self._all_copynumbers
         return self._copynumbers
 
     @copynumbers.setter

@@ -21,11 +21,11 @@ class RNASystem(BaseSystem):
     def __init__(self, simulator_args, simulator="IntaRNA"):
         super(RNASystem, self).__init__(simulator_args)
 
-        self.species = self.init_species(simulator_args)
-        self.process_species()
-
         self.simulator_args = simulator_args
         self.simulator_choice = simulator
+
+        self.species = self.init_species(simulator_args)
+        self.process_species()
 
         # Rates
         # 2 h^-1 or 30 mins or 1800s - Dilution rate
@@ -34,12 +34,12 @@ class RNASystem(BaseSystem):
         starting_copynumber = 50
         self.transcription_rate = cell_dbl_growth_rate * avg_RNA_pcell
 
-        self.species.copynumbers = self.species.init_matrix(ndims=1, init_type="uniform",
-                                                            uniform_val=starting_copynumber)
-        self.species.degradation_rates = self.species.init_matrix(ndims=1, init_type="uniform",
-                                                                  uniform_val=cell_dbl_growth_rate)
-        self.species.creation_rates = self.species.init_matrix(ndims=1, init_type="uniform",
-                                                               uniform_val=self.transcription_rate)
+        self.species.all_copynumbers, \
+        self.species.degradation_rates, \
+        self.species.creation_rates = self.species.init_matrices(ndims=1, init_type="uniform",
+                                                                 uniform_vals=[starting_copynumber,
+                                                                               cell_dbl_growth_rate,
+                                                                               self.transcription_rate])
 
         self.simulate_interaction_strengths()
         self.find_steady_states()
@@ -47,16 +47,15 @@ class RNASystem(BaseSystem):
     def init_species(self, args):
         return RNASpecies(args)
 
+    def process_species(self):
+        self.node_labels = self.species.data.sample_names
+
     def get_modelling_func(self, modeller):
         return partial(modeller.dxdt_RNA, interactions=self.species.interactions,
                        creation_rates=self.species.creation_rates,
                        degradation_rates=self.species.degradation_rates,
-                       num_samples=self.species.data.size,
-                       t=None
+                       num_samples=self.species.data.size
                        )
-
-    def process_species(self):
-        self.node_labels = self.species.data.sample_names
 
     def simulate_interaction_strengths(self):
         self.species.interactions = self.get_part_to_part_intrs()
@@ -67,9 +66,9 @@ class RNASystem(BaseSystem):
         return interactions.matrix
 
     def run_simulator(self, data=None):
-        data = data if data is not None else self.species.data.data
         self.simulator = InteractionSimulator(
             self.simulator_args, self.simulator_choice)
+        data = data if data is not None else self.species.data.data
         return self.simulator.run(data)
 
     def find_steady_states(self):
@@ -113,6 +112,7 @@ class RNASystem(BaseSystem):
     def model_circuit(self, modeller, current_copynumbers, all_copynumbers,
                       signal=None, signal_idx=None):
         modelling_func = self.get_modelling_func(modeller)
+        modelling_func = partial(modelling_func, t=None)
         for tstep in range(0, modeller.max_time-1):
             dxdt = modelling_func(
                 copynumbers=all_copynumbers[:, tstep]) * modeller.time_step
