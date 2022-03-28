@@ -35,11 +35,13 @@ class RNASystem(BaseSystem):
         self.transcription_rate = cell_dbl_growth_rate * avg_RNA_pcell
 
         self.species.all_copynumbers, \
-        self.species.degradation_rates, \
-        self.species.creation_rates = self.species.init_matrices(ndims=1, init_type="uniform",
-                                                                 uniform_vals=[starting_copynumber,
-                                                                               cell_dbl_growth_rate,
-                                                                               self.transcription_rate])
+            self.species.degradation_rates, \
+            self.species.creation_rates = self.species.init_matrices(ndims=1, init_type="uniform",
+                                                                     uniform_vals=[starting_copynumber,
+                                                                                   cell_dbl_growth_rate,
+                                                                                   self.transcription_rate])
+        logging.info(self.species.degradation_rates)
+        logging.info(self.species.creation_rates)
 
         self.simulate_interaction_strengths()
         self.find_steady_states()
@@ -57,13 +59,10 @@ class RNASystem(BaseSystem):
                        num_samples=self.species.data.size
                        )
 
-    def simulate_interaction_strengths(self):
-        self.species.interactions = self.get_part_to_part_intrs()
-
     @time_it
-    def get_part_to_part_intrs(self):
+    def simulate_interaction_strengths(self):
         interactions = self.run_simulator()
-        return interactions.matrix
+        self.species.interactions = interactions.matrix
 
     def run_simulator(self, data=None):
         self.simulator = InteractionSimulator(
@@ -75,16 +74,14 @@ class RNASystem(BaseSystem):
         modeller_steady_state = Deterministic(
             max_time=50, time_step=1)
 
-        self.species.all_copynumbers = np.zeros(
-            (self.species.data.size, modeller_steady_state.max_time))
-        self.species.all_copynumbers[:, 0] = self.species.copynumbers
-        current_copynumbers = deepcopy(self.species.copynumbers)
-
+        self.species.all_copynumbers = np.concatenate((
+            self.species.all_copynumbers,
+            np.zeros(
+                (self.species.data.size, modeller_steady_state.max_time-1))
+        ), axis=1)
         self.species.all_copynumbers = self.compute_steady_state(modeller_steady_state,
-                                                                 current_copynumbers,
                                                                  self.species.all_copynumbers,
                                                                  use_solver='ivp')
-        self.species.copynumbers = self.species.all_copynumbers[:, -1]
 
         self.result_writer.add_result(self.species.all_copynumbers,
                                       name='steady_state',
@@ -96,29 +93,40 @@ class RNASystem(BaseSystem):
             'metrics']
         self.species.steady_state_copynums = steady_state_metrics['steady_state']['steady_states']
 
-    def compute_steady_state(self, modeller, current_copynumbers, all_copynumbers,
+    def compute_steady_state(self, modeller, all_copynumbers,
                              use_solver='naive'):
         if use_solver == 'naive':
-            self.model_circuit(modeller, current_copynumbers, all_copynumbers)
+            self.model_circuit(modeller, all_copynumbers)
         elif use_solver == 'ivp':
-            steady_state_result = integrate.solve_ivp(self.get_modelling_func(modeller), (0, modeller.max_time),
-                                                      y0=current_copynumbers.flatten())
+            logging.info(
+                all_copynumbers[:, -1].reshape(all_copynumbers.shape[0], 1))
+            y0 = all_copynumbers[:, -1]
+            y0 = self.species.init_matrix(ndims=1, init_type="uniform",
+                                          uniform_val=10).flatten()
+            steady_state_result = integrate.solve_ivp(self.get_modelling_func(modeller),
+                                                      (0, modeller.max_time),
+                                                      y0=y0)
+            logging.info(all_copynumbers[:, -1].flatten())
             if not steady_state_result.success:
                 raise ValueError(
                     'Steady state could not be found through solve_ivp.')
             all_copynumbers = steady_state_result.y
         return all_copynumbers
 
-    def model_circuit(self, modeller, current_copynumbers, all_copynumbers,
+    def model_circuit(self, modeller, all_copynumbers,
                       signal=None, signal_idx=None):
         modelling_func = self.get_modelling_func(modeller)
         modelling_func = partial(modelling_func, t=None)
+        current_copynumbers = all_copynumbers[:, -1].flatten()
+        all_copynumbers = np.concatenate((all_copynumbers, np.zeros(
+            (self.species.data.size, modeller.max_time-1))
+        ), axis=1)
+
         for tstep in range(0, modeller.max_time-1):
             dxdt = modelling_func(
                 copynumbers=all_copynumbers[:, tstep]) * modeller.time_step
 
-            current_copynumbers = np.add(
-                dxdt, current_copynumbers).flatten()
+            current_copynumbers = np.add(dxdt, current_copynumbers).flatten()
 
             if signal is not None:
                 current_copynumbers[signal_idx] = signal[tstep]

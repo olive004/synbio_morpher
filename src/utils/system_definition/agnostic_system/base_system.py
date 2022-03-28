@@ -55,7 +55,7 @@ class BaseSpecies():
         if ndims > 1:
             matrix_shape = tuple([matrix_size]*ndims)
         else:
-            matrix_shape = (1, matrix_size)
+            matrix_shape = (matrix_size, 1)
 
         if init_type == "rand":
             return InteractionMatrix(num_nodes=matrix_size).matrix
