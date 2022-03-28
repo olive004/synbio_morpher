@@ -10,6 +10,9 @@ def compose_kwargs(config_filename: str) -> dict:
     kwargs = {
         "system_type": config_file.get("system_type"),
         "data": data_manager,
+        "input_species": config_file.get("input_species"),
+        "output_species": config_file.get("output_species"),
+        "signal": load_json_as_dict(config_file.get("signal"))
     }
     return kwargs
 

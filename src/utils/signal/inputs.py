@@ -3,18 +3,17 @@ import numpy as np
 
 
 class Signal():
-    def __init__(self, identities_idx, signal=None,
-                 total_time=None,
+    def __init__(self, identities_idx, total_time,
+                 signal=None,
                  time_interval=1,
                  magnitude=1) -> None:
         self.identities_idx = identities_idx
         self.abstract_signal = signal if signal is not None else [0, 1]
-        self.total_time = total_time if total_time else len(
-            self.abstract_signal)
+        self.total_time = total_time
         self.magnitude = magnitude
         self.time_interval = time_interval
         self.time_steps = time_interval * total_time
-        self.time_dilation_func = partial(np.repeat, repeats=self.time_steps)
+        self.time_dilation_func = partial(np.repeat, repeats=total_time / len(self.abstract_signal))
 
     @property
     def abstract_signal(self):

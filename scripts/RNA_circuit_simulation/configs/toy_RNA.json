@@ -1,5 +1,8 @@
 {
     "system_type": "RNA",
     "data": "./src/utils/data/example_data/toy_mRNA_circuit.fasta",
-    "interaction_simulator": "IntaRNA"
+    "interaction_simulator": "IntaRNA",
+    "input_species": "RNA_0",
+    "output_species": "RNA_2"
+    "signal": "./scripts/RNA_circuit_simulation/configs/in_signal.json"
 }
