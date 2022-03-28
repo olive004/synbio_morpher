@@ -1,6 +1,8 @@
 from fire import Fire
 import os
 
+import numpy as np
+
 from src.utils.misc.decorators import time_it
 from src.clients.common.setup import compose_kwargs, instantiate_system
 from src.utils.signal.inputs import Signal, AdaptationTarget, OscillatingSignal
@@ -21,6 +23,9 @@ def main(config_file=None):
     # signal = AdaptationTarget(magnitude=1, total_time=1000,
     #                           identities_idx=circuit.species.identities['input'])
     signal = OscillatingSignal(magnitude=1, total_time=1000,
+                               positions=np.array([6, 500]),
+                               heights=np.array([50, 80]),
+                               durations=np.array([50, 400]),
                                identities_idx=circuit.species.identities['input'])
     signal.show()
     circuit.simulate_signal(signal)

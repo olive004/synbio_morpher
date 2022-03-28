@@ -76,17 +76,18 @@ class AdaptationTarget(Signal):
 
 
 class OscillatingSignal(Signal):
-    def __init__(self, identities_idx, signal=None, total_time=None, magnitude=1) -> None:
+    def __init__(self, identities_idx, positions, heights, durations,
+                 signal=None, total_time=None, magnitude=1) -> None:
         super().__init__(identities_idx, signal, total_time, magnitude)
+        self.positions = positions
+        self.heights = heights
+        self.durations = durations
 
     @property
     def real_signal(self):
-        positions = np.array([1, 2, 3, 4, 5, 6, 900])
-        heights = np.array([3, 4, 5, 3, 4, 3, 2])
-        durations = np.array([2, 2, 2, 2, 3, 3, 50])
-        return self.spikes(positions=positions,
-                           heights=heights, 
-                           durations=durations)
+        return self.spikes(positions=self.positions,
+                           heights=self.heights,
+                           durations=self.durations)
 
     def spikes(self, positions, heights, durations) -> np.array:
         # inputs: np.array of position,height,duration for each triangular pulse
