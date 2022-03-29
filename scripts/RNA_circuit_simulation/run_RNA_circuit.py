@@ -1,12 +1,9 @@
 from fire import Fire
 import os
 
-import numpy as np
-
 from src.utils.misc.decorators import time_it
 from src.clients.common.setup import compose_kwargs, instantiate_system, construct_signal
 from src.utils.signal.inputs import Signal, AdaptationTarget, OscillatingSignal
-
 
 @time_it
 def main(config_file=None):
@@ -18,9 +15,11 @@ def main(config_file=None):
         "scripts", "RNA_circuit_simulation", "configs", "toy_RNA.json")
     kwargs = compose_kwargs(config_file)
     circuit = instantiate_system(kwargs)
+
     kwargs.get("signal")["identities_idx"] = circuit.species.identities['input']
     signal = construct_signal(kwargs.get("signal"))
     signal.show()
+
     circuit.simulate_signal(signal)
     circuit.visualise(new_vis=False)
 
