@@ -11,12 +11,12 @@ class Deterministic():
                  num_samples):
         """ dx_dt = a - x * I * k * x' - x * ∂   for x=[A, B] 
         Data in format [sample, timestep] or [sample,]"""
-        copynumbers = copynumbers.flatten()
 
         xI = copynumbers * np.identity(num_samples)
         coupling = np.matmul(np.matmul(xI, interactions), copynumbers.T)
         
-        dxdt = creation_rates - coupling - copynumbers * degradation_rates
+        dxdt = creation_rates.flatten() - coupling.flatten() - \
+            copynumbers.flatten() * degradation_rates.flatten()
 
         return dxdt
 
