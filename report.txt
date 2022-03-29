@@ -1,4 +1,6 @@
 steady_state: 
-{'is_steady_state_reached': True, 'steady_states': array([10.        ,  4.70999757,  4.68701444]), 'final_deriv': -2.838264470358248e-05}
+{'is_steady_state_reached': True, 'steady_states': array([[ 0.        ],
+       [11.51361902],
+       [ 5.06363817]]), 'final_deriv': -0.0004967341891366286}
 fold_change: 
 [1. 1. 1.]

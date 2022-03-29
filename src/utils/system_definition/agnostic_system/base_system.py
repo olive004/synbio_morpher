@@ -1,3 +1,4 @@
+from typing import List, Tuple
 import numpy as np
 import networkx as nx
 import logging
@@ -32,10 +33,9 @@ class BaseSpecies():
                                                   uniform_val=20)
         self.creation_rates = self.init_matrix(ndims=1, init_type="uniform",
                                                uniform_val=50)
-        self.copynumbers = self.init_matrix(ndims=1, init_type="uniform",
-                                            uniform_val=5)
+        self.all_copynumbers = None
+        self.copynumbers = None
         self.steady_state_copynums = self.init_matrix(ndims=1, init_type="zeros")
-        self.all_copynumbers = None  # For modelling
 
         self.params = {
             "creation_rates": self.creation_rates,
@@ -45,13 +45,17 @@ class BaseSpecies():
             "interactions": self.interactions
         }
 
+    def init_matrices(self, uniform_vals, ndims=2, init_type="rand") -> List[np.array]:
+        matrices = (self.init_matrix(ndims, init_type, val) for val in uniform_vals)
+        return tuple(matrices)
+
     def init_matrix(self, ndims=2, init_type="rand", uniform_val=1) -> np.array:
         matrix_size = np.random.randint(5) if self.data is None \
             else self.data.size
         if ndims > 1:
             matrix_shape = tuple([matrix_size]*ndims)
         else:
-            matrix_shape = (1, matrix_size)
+            matrix_shape = (matrix_size, 1)
 
         if init_type == "rand":
             return InteractionMatrix(num_nodes=matrix_size).matrix
@@ -77,13 +81,18 @@ class BaseSpecies():
 
     @property
     def copynumbers(self):
+        if self.all_copynumbers is not None:
+            self._copynumbers = self.all_copynumbers[:, -1]
+        else:
+            self._copynumbers = self._all_copynumbers
         return self._copynumbers
 
     @copynumbers.setter
     def copynumbers(self, value):
         # This may not be as fast as a[a < 0] = 0
         if value is not None:
-            self._copynumbers = value.clip(min=0)
+            value[value < 0] = 0
+            self._copynumbers = value
 
     @property
     def all_copynumbers(self):
@@ -95,8 +104,7 @@ class BaseSpecies():
         # This may not be as fast as a[a < 0] = 0
         if value is not None:
             value[value < 0] = 0
-            # self._all_copynumbers = value.clip(min=0)
-            self._all_copynumbers = value
+        self._all_copynumbers = value
 
 
 class BaseSystem():
