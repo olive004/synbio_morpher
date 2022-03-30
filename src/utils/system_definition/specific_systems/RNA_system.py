@@ -73,8 +73,8 @@ class RNASystem(BaseSystem):
             max_time=50, time_step=1)
 
         self.species.copynumbers = self.compute_steady_states(modeller_steady_state,
-                                                                  self.species.copynumbers,
-                                                                  use_solver='ivp')
+                                                              self.species.copynumbers,
+                                                              use_solver='ivp')
 
         self.result_writer.add_result(self.species.copynumbers,
                                       name='steady_state',
@@ -112,9 +112,9 @@ class RNASystem(BaseSystem):
         if signal is not None:
             copynumbers[signal_idx, :] = signal
 
-        copynumbers = self.iterate_modeller(copynumbers, current_copynumbers, modelling_func,
-                                            max_time=modeller.max_time, time_step=modeller.time_step,
-                                            signal=signal, signal_idx=signal_idx)
+        copynumbers = self.iterate_modelling_func(copynumbers, current_copynumbers, modelling_func,
+                                                  max_time=modeller.max_time, time_step=modeller.time_step,
+                                                  signal=signal, signal_idx=signal_idx)
         return copynumbers
 
     def iterate_modelling_func(self, copynumbers, init_copynumbers,
@@ -139,9 +139,9 @@ class RNASystem(BaseSystem):
             max_time=signal.total_time, time_step=1
         )
         new_copynumbers = self.model_circuit(signal_modeller,
-                                          self.species.steady_state_copynums,
-                                          signal=signal.real_signal,
-                                          signal_idx=signal.identities_idx)
+                                             self.species.steady_state_copynums,
+                                             signal=signal.real_signal,
+                                             signal_idx=signal.identities_idx)
 
         self.species.copynumbers = np.concatenate(
             (self.species.copynumbers, new_copynumbers[:, 1:]), axis=1)

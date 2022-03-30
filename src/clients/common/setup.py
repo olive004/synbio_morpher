@@ -11,7 +11,7 @@ def compose_kwargs(config_filename: str) -> dict:
     kwargs = {
         "system_type": config_file.get("system_type"),
         "data": data_manager,
-        "identities": config_file.get("identities"),
+        "identities": data_manager.identities,
         "signal": load_json_as_dict(config_file.get("signal"))
     }
     return kwargs
