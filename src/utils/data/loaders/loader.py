@@ -4,7 +4,7 @@ from functools import partial
 class Data():
 
     def __init__(self, loaded_data, identities) -> None:
-        self.raw = loaded_data
+        self.data = loaded_data
         self.sample_names = self.make_sample_names()
 
         self.identities = self.convert_names_to_idxs(identities, self.sample_names)
@@ -18,9 +18,37 @@ class Data():
         return indexed_identities
 
     def make_sample_names(self):
-        if type(self.raw) == dict:
-            return list(self.raw.values())
-        raise ValueError(f'Unrecognised loaded data type {type(self.raw)}.')
+        if type(self.data) == dict:
+            return list(self.data.values())
+        raise ValueError(f'Unrecognised loaded data type {type(self.data)}.')
+
+    @property
+    def size(self):
+        return len(self.data)
+
+    @size.getter
+    def size(self):
+        return len(self.data)
+
+    @property
+    def sample_names(self):
+        return self._sample_names
+
+    @sample_names.getter
+    def sample_names(self):
+        if type(self.data) == dict:
+            return list(self.data.keys())
+        else:
+            import numpy as np
+            return list(np.range(len(self.data)))
+
+    @sample_names.setter
+    def sample_names(self, value):
+        if type(value) == list or type(value) == dict:
+            self._sample_names = value
+        else:
+            raise ValueError(f'Wrong type "{type(value)}" for ' +
+                             'setting data sample_names to {value}')
 
 
 class DataLoader():

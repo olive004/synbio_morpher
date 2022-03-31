@@ -10,8 +10,8 @@ def compose_kwargs(config_filename: str) -> dict:
     data_manager = DataManager(config_file.get("data"), config_file.get("identities"))
     kwargs = {
         "system_type": config_file.get("system_type"),
-        "data": data_manager,
-        "identities": data_manager.identities,
+        "data": data_manager.data,
+        "identities": data_manager.data.identities,
         "signal": load_json_as_dict(config_file.get("signal"))
     }
     return kwargs
