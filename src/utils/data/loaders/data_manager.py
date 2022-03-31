@@ -1,9 +1,14 @@
-from functools import partial
+
+
+from src.utils.data.loaders.loader import DataLoader
 
 
 class DataManager():
     def __init__(self, source=None, identities=None, data=None):
-        self.data = self.load_data(source) if data is None else data
+        self.loader = DataLoader()
+        self.data = data
+        if data is None:
+            self.data = self.loader.load_data(source) 
         self.sample_names = list(self.data.values())
 
         self.identities = self.convert_names_to_idxs(identities, self.sample_names)
@@ -21,22 +26,6 @@ class DataManager():
             return self.data[self.sample_names[idx]]
         else:
             return self.data[idx]
-
-    def load_data(self, source):
-        from src.utils.data.data_format_tools.common import determine_data_format
-        filepath = source
-        data_type = determine_data_format(filepath)
-        loader = self.get_loader(data_type)
-        return loader(filepath)
-
-    def get_loader(self, data_type):
-        if data_type == "fasta":
-            from src.utils.data.data_format_tools.manipulate_fasta \
-                import load_seq_from_FASTA
-            return partial(load_seq_from_FASTA, as_type='dict')
-        else:
-            raise NotImplementedError(
-                "Other filetypes than fasta not supported yet.")
 
     @property
     def size(self):
