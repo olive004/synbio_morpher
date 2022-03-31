@@ -15,7 +15,6 @@ class Data():
         else:
             return self.data[idx]
 
-
     @staticmethod
     def convert_names_to_idxs(names_table: dict, source: list) -> dict:
         indexed_identities = {}
