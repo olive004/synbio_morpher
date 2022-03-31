@@ -1,7 +1,8 @@
 import numpy as np
 from functools import partial
 from src.utils.misc.decorators import time_it
-from src.utils.misc.numerical import SCIENTIFIC, square_matrix_rand
+from src.utils.misc.numerical import SCIENTIFIC
+from src.utils.data.fake_data_generation.toy_graphs import square_matrix_rand
 
 
 class RawSimulationHandling():
