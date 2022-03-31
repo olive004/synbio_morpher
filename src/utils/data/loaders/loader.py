@@ -9,12 +9,6 @@ class Data():
 
         self.identities = self.convert_names_to_idxs(identities, self.sample_names)
 
-    def get_data(self, idx):
-        if idx not in self.sample_names:
-            return self.data[self.sample_names[idx]]
-        else:
-            return self.data[idx]
-
     @staticmethod
     def convert_names_to_idxs(names_table: dict, source: list) -> dict:
         indexed_identities = {}
