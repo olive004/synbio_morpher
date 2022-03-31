@@ -8,18 +8,7 @@ class DataManager():
         self.loader = DataLoader()
         self.data = data
         if data is None:
-            self.data = self.loader.load_data(source) 
-        self.sample_names = list(self.data.values())
-
-        self.identities = self.convert_names_to_idxs(identities, self.sample_names)
-
-    @staticmethod
-    def convert_names_to_idxs(names_table: dict, source: list) -> dict:
-        indexed_identities = {}
-        for name_type, name in names_table.items():
-            if name in source:
-                indexed_identities[name_type] = source.index(name)
-        return indexed_identities
+            self.data = self.loader.load_data(source, identities) 
 
     def get_data(self, idx):
         if idx not in self.sample_names:
