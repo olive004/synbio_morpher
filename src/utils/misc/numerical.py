@@ -1,5 +1,4 @@
 from math import factorial
-from copy import deepcopy
 import numpy as np
 
 
@@ -44,4 +43,9 @@ def generate_mixed_binary(length, count, zeros_to_ones=True):
         all_sequences[c, idxs] = 1 if zeros_to_ones else 0
 
     return all_sequences
+
+
+def square_matrix_rand(num_nodes=3):
+    dims = (num_nodes, num_nodes)
+    return np.random.rand(*dims)
 

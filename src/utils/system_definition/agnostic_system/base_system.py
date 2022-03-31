@@ -21,11 +21,8 @@ class BaseSpecies():
         # Can also use different types of moments of prob distribution
         # for each
 
-        self.data = config_args.get("data", None)
-        self.identities = {
-            "input": 0,
-            "output": 1
-        }
+        self.data = config_args.get("data")
+        self.identities = config_args.get("identities")
 
         self.interactions = self.init_matrix(ndims=2, init_type="randint")
         self.complexes = self.init_matrix(ndims=2, init_type="zeros")
@@ -33,13 +30,13 @@ class BaseSpecies():
                                                   uniform_val=20)
         self.creation_rates = self.init_matrix(ndims=1, init_type="uniform",
                                                uniform_val=50)
-        self.all_copynumbers = None
         self.copynumbers = None
+        self.current_copynumbers = None
         self.steady_state_copynums = self.init_matrix(ndims=1, init_type="zeros")
 
         self.params = {
             "creation_rates": self.creation_rates,
-            "copynumbers": self.copynumbers,
+            "copynumbers": self.current_copynumbers,
             "complexes": self.complexes,
             "degradation_rates": self.degradation_rates,
             "interactions": self.interactions
@@ -80,31 +77,32 @@ class BaseSpecies():
                              f' type {type(new_interactions)}.')
 
     @property
-    def copynumbers(self):
-        if self.all_copynumbers is not None:
-            self._copynumbers = self.all_copynumbers[:, -1]
+    def current_copynumbers(self):
+        if self.copynumbers is not None:
+            self._current_copynumbers = self.copynumbers[:, -1]
         else:
-            self._copynumbers = self._all_copynumbers
+            self._current_copynumbers = self._copynumbers
+        return self._current_copynumbers
+
+    @current_copynumbers.setter
+    def current_copynumbers(self, value):
+        # This may not be as fast as a[a < 0] = 0
+        if value is not None:
+            value[value < 0] = 0
+            self._current_copynumbers = value
+
+    @property
+    def copynumbers(self):
+        """ All copynumbers so far in [sample, t]"""
         return self._copynumbers
 
     @copynumbers.setter
     def copynumbers(self, value):
-        # This may not be as fast as a[a < 0] = 0
-        if value is not None:
-            value[value < 0] = 0
-            self._copynumbers = value
-
-    @property
-    def all_copynumbers(self):
-        return self._all_copynumbers
-
-    @all_copynumbers.setter
-    def all_copynumbers(self, value):
         """ Careful: does not kick in for setting slices """
         # This may not be as fast as a[a < 0] = 0
         if value is not None:
             value[value < 0] = 0
-        self._all_copynumbers = value
+        self._copynumbers = value
 
 
 class BaseSystem():
