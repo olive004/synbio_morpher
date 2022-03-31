@@ -7,12 +7,11 @@ from src.utils.system_definition.setup import get_system_type
 
 def compose_kwargs(config_filename: str) -> dict:
     config_file = load_json_as_dict(config_filename)
-    data_manager = DataManager(config_file.get("data"))
+    data_manager = DataManager(config_file.get("data"), config_file.get("identities"))
     kwargs = {
         "system_type": config_file.get("system_type"),
-        "data": data_manager,
-        "input_species": config_file.get("input_species"),
-        "output_species": config_file.get("output_species"),
+        "data": data_manager.data,
+        "identities": data_manager.data.identities,
         "signal": load_json_as_dict(config_file.get("signal"))
     }
     return kwargs
