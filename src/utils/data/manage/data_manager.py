@@ -1,6 +1,6 @@
 
 
-from src.utils.data.loaders.loader import DataLoader
+from src.utils.data.loaders.generic import DataLoader
 
 
 class DataManager():
@@ -9,12 +9,6 @@ class DataManager():
         self.data = data
         if data is None:
             self.data = self.loader.load_data(source, identities) 
-
-    def get_data(self, idx):
-        if idx not in self.sample_names:
-            return self.data[self.sample_names[idx]]
-        else:
-            return self.data[idx]
 
     def __repr__(self) -> str:
         return str(self.data)

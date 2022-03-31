@@ -3,7 +3,7 @@ import numpy as np
 import random
 from Bio.Seq import Seq
 
-from src.utils.data.data_format_tools.manipulate_fasta import write_fasta_file
+from src.utils.data.manage.writer import DataWriter
 from src.utils.misc.helper import next_wrapper
 from src.utils.misc.numerical import generate_mixed_binary
 from src.utils.misc.string_handling import ordered_merge, list_to_str
@@ -71,7 +71,7 @@ class NucleotideGenerator(SeqGenerator):
                 template, symb)
         return seq_permutations
 
-    def create_toy_circuit(self, count=5, slength=20, protocol="random",
+    def write_toy_circuit(self, count=5, slength=20, protocol="random",
                            proportion_to_mutate=0):
         """ Protocol can be 
         'random': Random sequence generated with weighted characters
@@ -102,7 +102,8 @@ class NucleotideGenerator(SeqGenerator):
             seq_generator = partial(self.generate_str_from_probdict,
                                     str_dict=self.SEQ_POOL, slength=slength)
             raise NotImplementedError
-        write_fasta_file(seq_generator, fname, self.stype, count)
+
+        DataWriter().output(seq_generator, fname, 'fasta', self.stype, count)
 
 
 class RNAGenerator(NucleotideGenerator):
