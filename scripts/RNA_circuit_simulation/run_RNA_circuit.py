@@ -8,7 +8,7 @@ from src.clients.common.setup import compose_kwargs, instantiate_system, constru
 def main(config_file=None):
 
     from src.utils.data.fake_data_generation.seq_generator import RNAGenerator
-    RNAGenerator().write_toy_circuit(count=3, slength=25, protocol="template_mix")
+    RNAGenerator().generate_circuit(count=3, slength=25, protocol="template_mix")
 
     config_file = os.path.join(
         "scripts", "RNA_circuit_simulation", "configs", "toy_RNA.json")

@@ -1,4 +1,5 @@
 from functools import partial
+import os
 import numpy as np
 import random
 from Bio.Seq import Seq
@@ -13,8 +14,9 @@ class SeqGenerator():
 
     SEQ_POOL = {}
 
-    def __init__(self) -> None:
+    def __init__(self, **data_writer_kwargs) -> None:
         self.stype = None
+        self.data_writer = DataWriter(**data_writer_kwargs)
 
     @staticmethod
     def generate_mutated_template(template: str, mutate_prop, mutation_pool):
@@ -71,18 +73,26 @@ class NucleotideGenerator(SeqGenerator):
                 template, symb)
         return seq_permutations
 
-    def write_toy_circuit(self, count=5, slength=20, protocol="random",
-                           proportion_to_mutate=0):
+    def generate_circuits(self, iter_count=1, **circuit_kwargs):
+        for i in range(iter_count):
+            circuit_kwargs['fname'] = circuit_kwargs['fname'] + str(i)
+            self.generate_circuit(**circuit_kwargs)
+
+    def generate_circuit(self, count=5, slength=20, protocol="random",
+                         fname=os.path.join('src', 'utils', 'data', 'example_data', 'toy_mRNA_circuit'),
+                         output_format='.fasta',
+                         proportion_to_mutate=0, template=None):
         """ Protocol can be 
         'random': Random sequence generated with weighted characters
         'template_mix': A template sequence is interleaved with complementary characters
         'template_mutate': A template sequence is mutated according to weighted characters
         'template_split': Parts of a template sequence are made complementary
         """
-
-        fname = './src/utils/data/example_data/toy_mRNA_circuit.fasta'
-        template = self.generate_str_from_probdict(self.SEQ_POOL, slength)
-        template = 'CGCGCGCGCGCGCGCGCGCGCGCCGCGCG'  # Very strong interactions
+        
+        fname = fname + output_format
+        if template is None:
+            template = self.generate_str_from_probdict(self.SEQ_POOL, slength)
+        # template = 'CGCGCGCGCGCGCGCGCGCGCGCCGCGCG'  # Very strong interactions
         # template = 'CUUCAAUUCCUGAAGAGGCGGUUGG'  # Very weak interactions
         if protocol == "template_mutate":
             seq_generator = partial(self.generate_mutated_template,
@@ -103,7 +113,7 @@ class NucleotideGenerator(SeqGenerator):
                                     str_dict=self.SEQ_POOL, slength=slength)
             raise NotImplementedError
 
-        DataWriter().output(seq_generator, fname, 'fasta', self.stype, count)
+        self.data_writer.output(seq_generator, fname, 'fasta', self.stype, count)
 
 
 class RNAGenerator(NucleotideGenerator):

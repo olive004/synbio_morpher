@@ -82,7 +82,8 @@ class RNASystem(BaseSystem):
                                       vis_func=modeller_steady_state.plot,
                                       **{'legend_keys': list(self.species.data.sample_names),
                                          'save_name': 'steady_state_plot'})
-        steady_state_metrics = self.result_writer.get_result(key='steady_state').metrics
+        steady_state_metrics = self.result_writer.get_result(
+            key='steady_state').metrics
         self.species.steady_state_copynums = steady_state_metrics['steady_state']['steady_states']
 
     def compute_steady_states(self, modeller, all_copynumbers,
@@ -133,7 +134,9 @@ class RNASystem(BaseSystem):
                         1] = current_copynumbers
         return copynumbers
 
-    def simulate_signal(self, signal: Signal):
+    def simulate_signal(self, signal: Signal = None):
+        if signal is None:
+            return
         signal_modeller = Deterministic(
             max_time=signal.total_time, time_step=1
         )
