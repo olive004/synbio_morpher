@@ -1,11 +1,9 @@
-from copy import deepcopy
-import logging
 import numpy as np
 
 
 class Timeseries():
     def __init__(self, data) -> None:
-        self.data = deepcopy(data)
+        self.data = data
 
         self.stability_threshold = 0.01
 

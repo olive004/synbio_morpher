@@ -1,5 +1,6 @@
 
 
+from src.srv.results.metrics.analytics import Analytics
 from src.utils.misc.string_handling import make_time_str
 
 
@@ -12,6 +13,7 @@ class Result():
         self.vis_kwargs = vis_kwargs
 
         self.metrics = []
+        self.analytics = Analytics(data, category)
         if category == 'time_series':
             from src.srv.results.metrics.plotting import Timeseries
             self.metrics = Timeseries(data).generate_analytics()
