@@ -1,3 +1,5 @@
+import logging
+from random import random
 import numpy as np
 
 
@@ -65,18 +67,25 @@ class Evolver():
 
     def get_mutator(self, algorithm):
 
-        def random_mutator(mut_count: int, species: BaseSpecies, species_idx: int):
-            positions = np.random.randint(0, species.data.get_data_by_idx(species_idx))
+        def random_mutator(species: BaseSpecies, species_idx: int):
+            sequence = species.data.get_data_by_idx(species_idx)
+            positions = np.random.randint(0, sequence, size=self.mutation_num)
             Mutations(
                 mutation_name=species.data.sample_names,
                 template_file=species.data.source,
-                template_species=species.data.get_data_by_idx(species_idx),
-                mutation_types=self.sample_mutations(mut_count)
+                template_species=sequence,
+                mutation_types=self.sample_mutations(sequence, positions),
+                positions=positions
             )
             self.mutation_num
         
         if algorithm == "random":
             return random_mutator()
 
-    def sample_mutations(self, count):
-        self.mapping
+    def sample_mutations(self, sequence, positions):
+        mutation_types = []
+        for p in positions:
+            possible_transitions = self.mapping[sequence[p]]
+            logging.info(possible_transitions)
+            mutation_types.append(random.choice(list(possible_transitions.keys())))
+        return mutation_types

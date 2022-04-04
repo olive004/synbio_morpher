@@ -12,17 +12,19 @@ def main():
     config_file = os.path.join(
         "scripts", "pair_species_mutation", "configs", "RNA_pair_species_mutation.json")
     # start_experiment
-    experiment = Experiment(config_file)
-    data_writer_kwargs = 'pair_species_mutation'
+    data_writer_kwargs = {'purpose': 'pair_species_mutation'}
     protocols = [
         # generate_sequences
-        partial(RNAGenerator(data_writer_kwargs).generate_circuit(), count=3, slength=25, protocol="template_mix"
+        partial(RNAGenerator(**data_writer_kwargs).generate_circuit(), count=3, slength=25, protocol="template_mix"
+        # partial(RNAGenerator(purpose= 'pair_species_mutation').generate_circuit(), count=3, slength=25, protocol="template_mix"
+        # partial(RNAGenerator().generate_circuit(), count=3, slength=25, protocol="template_mix"
                 ),
         # generate_mutations
         partial(),
         # simulate_interactions
         partial(construct_circuit_from_cfg, config_file)
     ]
+    experiment = Experiment(config_file, protocols)
 
     output_visualisations
     write_report
