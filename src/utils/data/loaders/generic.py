@@ -3,13 +3,14 @@ from functools import partial
 
 class Data():
 
-    def __init__(self, loaded_data, identities) -> None:
+    def __init__(self, loaded_data, identities, source_files=None) -> None:
         self.data = loaded_data
+        self.source = source_files
         self.sample_names = self.make_sample_names()
 
         self.identities = self.convert_names_to_idxs(identities, self.sample_names)
 
-    def get_data(self, idx):
+    def get_data_by_idx(self, idx):
         if idx not in self.sample_names:
             return self.data[self.sample_names[idx]]
         else:
@@ -80,4 +81,4 @@ class DataLoader():
 
     def load_data(self, source: str, identities):
         loader = self.get_loader(source)
-        return Data(loader(source), identities)
+        return Data(loader(source), identities, source_files=source)
