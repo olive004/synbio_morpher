@@ -1,6 +1,7 @@
 import os
 from src.utils.data.data_format_tools.manipulate_fasta import write_fasta_file
 from src.utils.misc.helper import get_subdirectories
+from src.utils.misc.string_handling import make_time_str
 
 
 class DataWriter():
@@ -9,9 +10,9 @@ class DataWriter():
         self.script_dir = os.path.join('script')
         self.root_output_dir = os.path.join('data')
         if out_location is None:
-            self.out_location = self.make_location(purpose)
+            self.write_dir = self.make_location(purpose)
         else:
-            self.out_location = out_location
+            self.write_dir = out_location
 
     def output(self, data_generator, out_location, out_type, gen_type, gen_run_count):
         writer = self.get_write_func(out_type)
@@ -20,14 +21,16 @@ class DataWriter():
     def get_write_func(self, out_type):
         if out_type == "fasta":
             return write_fasta_file
-        raise ValueError(f'No write function available for output of type {out_type}')
+        raise ValueError(
+            f'No write function available for output of type {out_type}')
 
     def make_location(self, purpose):
-         
+
         if purpose in get_subdirectories(self.script_dir):
-            dirname = os.path.join(self.root_output_dir, purpose)
+            return os.path.join(self.root_output_dir,
+                                   purpose,
+                                   self.generate_location_instance())
+        raise ValueError(f'Unrecognised purpose for writing data to {purpose}')
 
     def generate_location_instance(self):
-
-        return 
-
+        return make_time_str()

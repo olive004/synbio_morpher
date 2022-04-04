@@ -79,7 +79,7 @@ class NucleotideGenerator(SeqGenerator):
             self.generate_circuit(**circuit_kwargs)
 
     def generate_circuit(self, count=5, slength=20, protocol="random",
-                         fname=os.path.join('src', 'utils', 'data', 'example_data', 'toy_mRNA_circuit'),
+                         fname='toy_mRNA_circuit',
                          output_format='.fasta',
                          proportion_to_mutate=0, template=None):
         """ Protocol can be 
