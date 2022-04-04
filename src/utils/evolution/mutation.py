@@ -1,3 +1,4 @@
+from functools import partial
 import logging
 from random import random
 import numpy as np
@@ -19,11 +20,11 @@ class Mutations():
         self.algorithm = algorithm
 
 
-class Mutator():
+# class Mutator():
 
-    def __init__(self) -> None:
-        self.mutation_level = 0
-        self.curve
+#     def __init__(self) -> None:
+#         self.mutation_level = 0
+#         self.curve
 
 
 class Evolver():
@@ -57,19 +58,24 @@ class Evolver():
         }
     }
 
-    def __init__(self) -> None:
-        self.mutation_num = 0
+    def __init__(self, num_mutations) -> None:
+        self.num_mutations = num_mutations
         
-    def mutate(self, data, algorithm, **specs):
-        mutator = self.get_mutator()
+    def mutate(self, data, algorithm="random", **specs):
+        mutator = self.get_mutator(algorithm)
 
         return mutator(data)
 
     def get_mutator(self, algorithm):
 
         def random_mutator(species: BaseSpecies, species_idx: int):
+            positions = np.random.randint(0, species.data.get_data_by_idx(species_idx), size=self.num_mutations)
+            return positions
+
+        def base_mutator(species: BaseSpecies, species_idx: int, position_generator):
             sequence = species.data.get_data_by_idx(species_idx)
-            positions = np.random.randint(0, sequence, size=self.mutation_num)
+            positions = np.random.randint(0, sequence, size=self.num_mutations)
+            positions = position_generator(species, species_idx)
             Mutations(
                 mutation_name=species.data.sample_names,
                 template_file=species.data.source,
@@ -77,10 +83,10 @@ class Evolver():
                 mutation_types=self.sample_mutations(sequence, positions),
                 positions=positions
             )
-            self.mutation_num
+            self.num_mutations
         
         if algorithm == "random":
-            return random_mutator()
+            return partial(base_mutator, position_generator=random_mutator)
 
     def sample_mutations(self, sequence, positions):
         mutation_types = []

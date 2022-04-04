@@ -29,10 +29,10 @@ class SeqGenerator():
         return template
 
     @staticmethod
-    def generate_str_from_probdict(str_prob_dict: dict, length) -> str:
+    def generate_str_from_probdict(str_prob_dict: dict, slength) -> str:
         population = list(str_prob_dict.keys())
         probabilities = list(str_prob_dict.values())
-        return ''.join(random.choices(population, probabilities, k=length))
+        return ''.join(random.choices(population, probabilities, k=slength))
 
 
 class NucleotideGenerator(SeqGenerator):
@@ -106,10 +106,10 @@ class NucleotideGenerator(SeqGenerator):
             seq_generator = partial(next_wrapper, generator=iter(sequences))
         elif protocol == "random":
             seq_generator = partial(self.generate_str_from_probdict,
-                                    str_dict=self.SEQ_POOL, slength=slength)
+                                    str_prob_dict=self.SEQ_POOL, slength=slength)
         else:
             seq_generator = partial(self.generate_str_from_probdict,
-                                    str_dict=self.SEQ_POOL, slength=slength)
+                                    str_prob_dict=self.SEQ_POOL, slength=slength)
             raise NotImplementedError
 
         self.data_writer.output(seq_generator, fname, 'fasta', self.stype, count)
