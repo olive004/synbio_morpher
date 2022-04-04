@@ -7,8 +7,9 @@ from src.utils.misc.string_handling import make_time_str
 class DataWriter():
 
     def __init__(self, purpose, out_location=None) -> None:
-        self.script_dir = os.path.join('script')
+        self.script_dir = os.path.join('scripts')
         self.root_output_dir = os.path.join('data')
+        self.exception_dirs = os.path.join('example_data')
         if out_location is None:
             self.write_dir = self.make_location(purpose)
         else:
@@ -26,10 +27,10 @@ class DataWriter():
 
     def make_location(self, purpose):
 
-        if purpose in get_subdirectories(self.script_dir):
+        if purpose in get_subdirectories(self.script_dir) or purpose in self.exception_dirs:
             return os.path.join(self.root_output_dir,
-                                   purpose,
-                                   self.generate_location_instance())
+                                purpose,
+                                self.generate_location_instance())
         raise ValueError(f'Unrecognised purpose for writing data to {purpose}')
 
     def generate_location_instance(self):

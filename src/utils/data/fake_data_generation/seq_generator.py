@@ -1,5 +1,4 @@
 from functools import partial
-import os
 import numpy as np
 import random
 from Bio.Seq import Seq
@@ -33,13 +32,13 @@ class SeqGenerator():
     def generate_str_from_probdict(str_prob_dict: dict, length) -> str:
         population = list(str_prob_dict.keys())
         probabilities = list(str_prob_dict.values())
-        return random.choices(population, probabilities, k=length)
+        return ''.join(random.choices(population, probabilities, k=length))
 
 
 class NucleotideGenerator(SeqGenerator):
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, **data_writer_kwargs) -> None:
+        super().__init__(**data_writer_kwargs)
 
     @staticmethod
     def convert_symbolic_complement(real_seq, symbolic_complement):
@@ -125,8 +124,8 @@ class RNAGenerator(NucleotideGenerator):
         'U': 0.2
     }
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, **data_writer_kwargs) -> None:
+        super().__init__(**data_writer_kwargs)
         self.stype = "RNA"
 
 
@@ -139,8 +138,8 @@ class DNAGenerator(NucleotideGenerator):
         'T': 0.2
     }
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, **data_writer_kwargs) -> None:
+        super().__init__(**data_writer_kwargs)
         self.stype = "DNA"
 
 
