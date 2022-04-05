@@ -19,13 +19,6 @@ def determine_data_format(filepath):
     return None
 
 
-# def merge_json_into_dict(old_dict: Dict, json_files: Iterable):
-#     for jfile in json_files:
-#         json_dict = json.load(open(jfile))
-#         old_dict = merge_dicts(old_dict, json_dict)
-#     return old_dict
-
-
 def merge_dicts(*dict_objs):
     all_dicts = {}
     for dict_obj in dict_objs:
@@ -41,3 +34,7 @@ def load_json_as_dict(json_pathname):
         logging.error(f'JSON path {json_pathname} not found')
         SystemExit
     return jdict
+
+
+def write_csv():
+    

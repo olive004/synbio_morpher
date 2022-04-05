@@ -1,5 +1,8 @@
 from functools import partial
+from abc import ABC, abstractmethod
 import os
+import pandas as pd
+
 from src.utils.data.data_format_tools.manipulate_fasta import write_fasta_file
 from src.utils.misc.helper import get_subdirectories
 from src.utils.misc.string_handling import make_time_str
@@ -24,7 +27,7 @@ class DataWriter():
         if out_type == "fasta":
             return partial(write_fasta_file, fname=out_location)
         if out_type == "csv":
-            
+            pass
         raise ValueError(
             f'No write function available for output of type {out_type}')
 
@@ -38,3 +41,16 @@ class DataWriter():
 
     def generate_location_instance(self):
         return make_time_str()
+
+
+class Tabulated(ABC):
+
+    def __init__(self) -> None:
+        self.column_names = self.get_columns()
+
+    @abstractmethod
+    def get_columns(self):
+        pass
+
+    def as_table(self):
+        return pd.DataFrame(columns=self.column_names)

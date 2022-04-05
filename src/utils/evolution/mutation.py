@@ -2,13 +2,13 @@ from functools import partial
 import logging
 from random import random
 import numpy as np
-from src.utils.data.manage.writer import DataWriter
+from src.utils.data.manage.writer import DataWriter, Tabulated
 
 
 from src.utils.system_definition.agnostic_system.base_system import BaseSpecies, BaseSystem
 
 
-class Mutations():
+class Mutations(Tabulated):
 
     def __init__(self, mutation_name, template_file, template_species,
                  positions, mutation_types, algorithm='random') -> None:
@@ -20,12 +20,8 @@ class Mutations():
         self.count = len(positions)
         self.algorithm = algorithm
 
-
-# class Mutator():
-
-#     def __init__(self) -> None:
-#         self.mutation_level = 0
-#         self.curve
+    def get_columns(self):
+        return list(self.__dict__.keys())
 
 
 class Evolver():
