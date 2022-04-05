@@ -1,6 +1,6 @@
 from functools import partial
 import logging
-from random import random
+import random
 import numpy as np
 from src.utils.data.manage.writer import DataWriter, Tabulated
 
@@ -22,11 +22,14 @@ class Mutations(Tabulated):
 
         super().__init__()
 
-    def get_columns(self):
-        return list(self.__dict__.keys())
+    # def get_columns(self):
+    #     return list(self.__dict__.keys())
 
-    def get_table_data(self):
-        return list(self.__dict__.values())
+    # def get_table_data(self):
+    #     return list(self.__dict__.values())
+
+    def get_props_as_split_dict(self):
+        return list(self.__dict__.keys()), list(self.__dict__.values())
 
 
 class Evolver():
@@ -60,9 +63,9 @@ class Evolver():
         }
     }
 
-    def __init__(self, num_mutations, **data_writer_kwargs) -> None:
+    def __init__(self, num_mutations, data_writer: DataWriter) -> None:
         self.num_mutations = num_mutations
-        self.data_writer = DataWriter(**data_writer_kwargs)
+        self.data_writer = data_writer
 
     def mutate(self, system: BaseSystem, algorithm="random"):
         mutator = self.get_mutator(algorithm)
@@ -70,32 +73,30 @@ class Evolver():
 
     def get_mutator(self, algorithm):
 
-        def random_mutator(species: BaseSpecies, species_idx: int):
-            positions = np.random.randint(0, species.data.get_data_by_idx(
-                species_idx), size=self.num_mutations)
+        def random_mutator(sequence):
+            positions = np.random.randint(
+                0, len(sequence), size=self.num_mutations)
             return positions
 
-        def basic_mutator(species: BaseSpecies, position_generator, species_idx: int = None):
-            sequence = species.data.get_data_by_idx(species_idx)
-            positions = np.random.randint(0, sequence, size=self.num_mutations)
-            positions = position_generator(species, species_idx)
-            Mutations(
+        def basic_mutator(species: BaseSpecies, position_generator, sample_idx: int = None):
+            sequence = species.data.get_data_by_idx(sample_idx)
+            positions = position_generator(sequence)
+            mutations = Mutations(
                 mutation_name=species.data.sample_names,
                 template_file=species.data.source,
                 template_species=sequence,
                 mutation_types=self.sample_mutations(sequence, positions),
                 positions=positions
             )
-            self.write_mutations(Mutations)
+            self.write_mutations(mutations)
 
         def full_mutator(species: BaseSpecies, sample_mutator_func):
-            for sample in range(species.data.sample_names):
-                sample_mutator_func(species.data.get_data_by_idx(sample))
+            for sample_idx, sample in enumerate(species.data.sample_names):
+                sample_mutator_func(species, sample_idx=sample_idx)
 
         if algorithm == "random":
-            return partial(full_mutator, sample_mutator_func=
-                partial(basic_mutator, position_generator=random_mutator)
-            )
+            return partial(full_mutator, sample_mutator_func=partial(basic_mutator, position_generator=random_mutator)
+                           )
         else:
             return ValueError(f'Unrecognised mutation algorithm choice "{algorithm}"')
 
@@ -109,4 +110,5 @@ class Evolver():
         return mutation_types
 
     def write_mutations(self, mutations: Mutations):
-        self.data_writer.output(out_type='csv', out_name='mutations', data=mutations.as_table)
+        self.data_writer.output(
+            out_type='csv', out_name='mutations', data=mutations.as_table())

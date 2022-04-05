@@ -1,8 +1,9 @@
 from functools import partial
 from abc import ABC, abstractmethod
+import logging
 import os
 import pandas as pd
-from src.utils.data.data_format_tools.common import write_csv
+from src.utils.data.data_format_tools.common import find_list_max, write_csv
 
 from src.utils.data.data_format_tools.manipulate_fasta import write_fasta_file
 from src.utils.misc.helper import get_subdirectories
@@ -52,17 +53,15 @@ class DataWriter():
 class Tabulated(ABC):
 
     def __init__(self) -> None:
-        self.column_names = self.get_columns()
-        self.data = self.get_table_data()
+        self.column_names, self.data = self.get_props_as_split_dict()
+        self.max_table_length = find_list_max(self.data)
 
-    @abstractmethod
-    def get_columns(self):
-        pass
-
-    @abstractmethod
-    def get_table_data(self):
-        pass
-
-    @property
     def as_table(self):
+        for i, d in enumerate(self.data):
+            if not type(d) == list:
+                self.data[i] = [d] * self.max_table_length
         return pd.DataFrame(data=self.data, columns=self.column_names)
+
+    @abstractmethod
+    def get_props_as_split_dict(self):
+        pass

@@ -13,9 +13,9 @@ class SeqGenerator():
 
     SEQ_POOL = {}
 
-    def __init__(self, **data_writer_kwargs) -> None:
+    def __init__(self, data_writer: DataWriter) -> None:
         self.stype = None
-        self.data_writer = DataWriter(**data_writer_kwargs)
+        self.data_writer = data_writer
 
     @staticmethod
     def generate_mutated_template(template: str, mutate_prop, mutation_pool):
@@ -37,8 +37,8 @@ class SeqGenerator():
 
 class NucleotideGenerator(SeqGenerator):
 
-    def __init__(self, **data_writer_kwargs) -> None:
-        super().__init__(**data_writer_kwargs)
+    def __init__(self, data_writer) -> None:
+        super().__init__(data_writer)
 
     @staticmethod
     def convert_symbolic_complement(real_seq, symbolic_complement):
@@ -124,8 +124,8 @@ class RNAGenerator(NucleotideGenerator):
         'U': 0.2
     }
 
-    def __init__(self, **data_writer_kwargs) -> None:
-        super().__init__(**data_writer_kwargs)
+    def __init__(self, data_writer) -> None:
+        super().__init__(data_writer)
         self.stype = "RNA"
 
 
@@ -138,8 +138,8 @@ class DNAGenerator(NucleotideGenerator):
         'T': 0.2
     }
 
-    def __init__(self, **data_writer_kwargs) -> None:
-        super().__init__(**data_writer_kwargs)
+    def __init__(self, data_writer) -> None:
+        super().__init__(data_writer)
         self.stype = "DNA"
 
 

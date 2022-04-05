@@ -30,10 +30,25 @@ def merge_dicts(*dict_objs):
 def load_json_as_dict(json_pathname):
     try:
         jdict = json.load(open(json_pathname))
+        return jdict
     except FileNotFoundError:
         logging.error(f'JSON path {json_pathname} not found')
         SystemExit
-    return jdict
+
+
+def get_bulkiest_dict_key(dict_like):
+    k_bulkiest = list(dict_like.keys())[0]
+    prev_v = dict_like[k_bulkiest]
+    for k, v in dict_like.items():
+        if type(v) == list:
+            if len(v) > len(prev_v):
+                k_bulkiest = k
+    return k_bulkiest
+
+
+def find_list_max(list_like):
+    list_list_sizes = [len(l) for l in list_like if type(l) == list]
+    return max(list_list_sizes)
 
 
 def write_csv(data, path_name):
