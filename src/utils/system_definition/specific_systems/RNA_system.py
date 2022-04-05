@@ -19,12 +19,13 @@ logger.setLevel(logging.INFO)
 
 
 class RNASystem(BaseSystem):
-    def __init__(self, simulator_args, simulator="IntaRNA"):
+    def __init__(self, simulator_args, simulator="IntaRNA", mutation_args=None):
         super(RNASystem, self).__init__(simulator_args)
 
         self.simulator_args = simulator_args
         self.simulator_choice = simulator
 
+        self.generate_mutations(**mutation_args)
         self.species = self.init_species(simulator_args)
         self.process_species()
 
@@ -50,6 +51,9 @@ class RNASystem(BaseSystem):
 
     def process_species(self):
         self.node_labels = self.species.data.sample_names
+
+    def generate_mutations(self, num_mutations: int):
+        Evolver(num_mutations=num_mutations, data_writer=data_writer).mutate
 
     def get_modelling_func(self, modeller):
         return partial(modeller.dxdt_RNA, interactions=self.species.interactions,

@@ -19,19 +19,22 @@ def main():
     protocols = [
         # generate_sequences
         Protocol(
-            partial(RNAGenerator(data_writer=data_writer).generate_circuit, count=3, slength=25, protocol="template_mix")
+            partial(RNAGenerator(data_writer=data_writer).generate_circuit,
+                    count=3, slength=25, protocol="template_mix")
         ),
-        # make circuit
+        # make_circuit
         Protocol(
-            partial(construct_circuit_from_cfg, config_file), 
+            partial(construct_circuit_from_cfg, config_file),
             req_output=True
         ),
         # generate_mutations
         Protocol(
             partial(Evolver(num_mutations=1, data_writer=data_writer).mutate),
-        )
+        ),
         # simulate_interactions
-        partial(construct_circuit_from_cfg, config_file)
+        Protocol(
+            partial(construct_circuit_from_cfg, config_file)
+        )
     ]
     experiment = Experiment(config_file, protocols, data_writer=data_writer)
     experiment.run_experiment()
