@@ -3,6 +3,7 @@ from functools import partial
 import numpy as np
 from scipy import integrate
 import logging
+from src.utils.evolution.mutation import Evolver
 from src.utils.misc.decorators import time_it
 from src.utils.misc.numerical import zero_out_negs
 from src.utils.signal.inputs import Signal
@@ -153,6 +154,9 @@ class RNASystem(BaseSystem):
                                       vis_func=signal_modeller.plot,
                                       **{'legend_keys': list(self.species.data.sample_names),
                                          'save_name': 'signal_plot'})
+
+    def make_mutations(self):
+        Evolver(num_mutations=1, data_writer=self.data_writer).mutate
 
 
 class RNASpecies(BaseSpecies):

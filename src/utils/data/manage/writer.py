@@ -42,7 +42,8 @@ class DataWriter():
                                     purpose,
                                     self.generate_location_instance())
             if not os.path.isdir(location):
-                os.makedirs(location)
+                os.umask(0)
+                os.makedirs(location, mode=0o777)
             return location
         raise ValueError(f'Unrecognised purpose for writing data to {purpose}')
 
@@ -57,10 +58,7 @@ class Tabulated(ABC):
         self.max_table_length = find_list_max(self.data)
 
     def as_table(self):
-        for i, d in enumerate(self.data):
-            if not type(d) == list:
-                self.data[i] = [d] * self.max_table_length
-        return pd.DataFrame(data=self.data, columns=self.column_names)
+        return pd.DataFrame.from_dict(dict(zip(self.column_names, self.data)))
 
     @abstractmethod
     def get_props_as_split_dict(self):

@@ -22,12 +22,6 @@ class Mutations(Tabulated):
 
         super().__init__()
 
-    # def get_columns(self):
-    #     return list(self.__dict__.keys())
-
-    # def get_table_data(self):
-    #     return list(self.__dict__.values())
-
     def get_props_as_split_dict(self):
         return list(self.__dict__.keys()), list(self.__dict__.values())
 
@@ -74,15 +68,15 @@ class Evolver():
     def get_mutator(self, algorithm):
 
         def random_mutator(sequence):
-            positions = np.random.randint(
-                0, len(sequence), size=self.num_mutations)
+            positions = list(np.random.randint(
+                0, len(sequence), size=self.num_mutations))
             return positions
 
         def basic_mutator(species: BaseSpecies, position_generator, sample_idx: int = None):
             sequence = species.data.get_data_by_idx(sample_idx)
             positions = position_generator(sequence)
             mutations = Mutations(
-                mutation_name=species.data.sample_names,
+                mutation_name=species.data.sample_names[sample_idx],
                 template_file=species.data.source,
                 template_species=sequence,
                 mutation_types=self.sample_mutations(sequence, positions),
@@ -106,7 +100,7 @@ class Evolver():
             possible_transitions = self.mapping[sequence[p]]
             logging.info(possible_transitions)
             mutation_types.append(random.choice(
-                list(possible_transitions.keys())))
+                list(possible_transitions.values())))
         return mutation_types
 
     def write_mutations(self, mutations: Mutations):
