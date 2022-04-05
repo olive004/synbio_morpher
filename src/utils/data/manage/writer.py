@@ -20,7 +20,8 @@ class DataWriter():
         else:
             self.write_dir = out_location
 
-    def output(self, out_type, out_name=None, **writer_kwargs): # data_generator, out_type, gen_type, gen_run_count):
+    # data_generator, out_type, gen_type, gen_run_count):
+    def output(self, out_type, out_name=None, **writer_kwargs):
         out_path = os.path.join(self.write_dir, out_name + '.' + out_type)
         writer = self.get_write_func(out_type, out_path)
         writer(**writer_kwargs)
@@ -36,9 +37,12 @@ class DataWriter():
     def make_location(self, purpose):
 
         if purpose in get_subdirectories(self.script_dir) or purpose in self.exception_dirs:
-            return os.path.join(self.root_output_dir,
-                                purpose,
-                                self.generate_location_instance())
+            location = os.path.join(self.root_output_dir,
+                                    purpose,
+                                    self.generate_location_instance())
+            if not os.path.isdir(location):
+                os.makedirs(location)
+            return location
         raise ValueError(f'Unrecognised purpose for writing data to {purpose}')
 
     def generate_location_instance(self):

@@ -19,14 +19,15 @@ def main():
         partial(RNAGenerator(**data_writer_kwargs).generate_circuit, count=3, slength=25, protocol="template_mix"
                 ),
         # generate_mutations
-        partial(Evolver(num_mutations=1).mutate, data=None),
+        partial(Evolver(num_mutations=1, **data_writer_kwargs).mutate, data=None),
         # simulate_interactions
         partial(construct_circuit_from_cfg, config_file)
     ]
     experiment = Experiment(config_file, protocols)
+    experiment.run_experiment()
 
-    output_visualisations
-    write_report
+    # output_visualisations
+    # write_report
 
 
 if __name__ == "__main__":

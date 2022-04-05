@@ -87,8 +87,7 @@ class NucleotideGenerator(SeqGenerator):
         'template_mutate': A template sequence is mutated according to weighted characters
         'template_split': Parts of a template sequence are made complementary
         """
-        
-        fname = fname + output_format
+
         if template is None:
             template = self.generate_str_from_probdict(self.SEQ_POOL, slength)
         # template = 'CGCGCGCGCGCGCGCGCGCGCGCCGCGCG'  # Very strong interactions
@@ -112,7 +111,8 @@ class NucleotideGenerator(SeqGenerator):
                                     str_prob_dict=self.SEQ_POOL, slength=slength)
             raise NotImplementedError
 
-        self.data_writer.output(seq_generator, fname, 'fasta', self.stype, count)
+        self.data_writer.output(out_name=fname, out_type='fasta',
+                                seq_generator=seq_generator, stype=self.stype, count=count)
 
 
 class RNAGenerator(NucleotideGenerator):
