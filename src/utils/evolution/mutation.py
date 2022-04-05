@@ -2,6 +2,7 @@ from functools import partial
 import logging
 from random import random
 import numpy as np
+from src.utils.data.manage.writer import DataWriter
 
 
 from src.utils.system_definition.agnostic_system.base_system import BaseSpecies, BaseSystem
@@ -58,8 +59,9 @@ class Evolver():
         }
     }
 
-    def __init__(self, num_mutations) -> None:
+    def __init__(self, num_mutations, **data_writer_kwargs) -> None:
         self.num_mutations = num_mutations
+        self.data_writer = DataWriter(**data_writer_kwargs)
 
     def mutate(self, system: BaseSystem, algorithm="random"):
         mutator = self.get_mutator(algorithm)
@@ -83,7 +85,7 @@ class Evolver():
                 mutation_types=self.sample_mutations(sequence, positions),
                 positions=positions
             )
-            self.num_mutations
+            self.write_mutations(Mutations)
 
         def full_mutator(species: BaseSpecies, sample_mutator_func):
             for sample in range(species.data.sample_names):
@@ -93,6 +95,8 @@ class Evolver():
             return partial(full_mutator, sample_mutator_func=
                 partial(basic_mutator, position_generator=random_mutator)
             )
+        else:
+            return ValueError(f'Unrecognised mutation algorithm choice "{algorithm}"')
 
     def sample_mutations(self, sequence, positions):
         mutation_types = []
@@ -102,3 +106,6 @@ class Evolver():
             mutation_types.append(random.choice(
                 list(possible_transitions.keys())))
         return mutation_types
+
+    def write_mutations(self, mutations: Mutations):
+        self.data_writer.

@@ -1,3 +1,4 @@
+from functools import partial
 import os
 from src.utils.data.data_format_tools.manipulate_fasta import write_fasta_file
 from src.utils.misc.helper import get_subdirectories
@@ -15,13 +16,15 @@ class DataWriter():
         else:
             self.write_dir = out_location
 
-    def output(self, data_generator, out_location, out_type, gen_type, gen_run_count):
-        writer = self.get_write_func(out_type)
-        writer(data_generator, out_location, gen_type, gen_run_count)
+    def output(self, out_location, out_type, **writer_kwargs): # data_generator, out_type, gen_type, gen_run_count):
+        writer = self.get_write_func(out_type, out_location)
+        writer(**writer_kwargs)
 
-    def get_write_func(self, out_type):
+    def get_write_func(self, out_type, out_location):
         if out_type == "fasta":
-            return write_fasta_file
+            return partial(write_fasta_file, fname=out_location)
+        if out_type == "csv":
+            
         raise ValueError(
             f'No write function available for output of type {out_type}')
 
