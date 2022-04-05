@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Dict, Iterable
+import pandas as pd
 
 
 FORMAT_EXTS = {
@@ -36,5 +36,9 @@ def load_json_as_dict(json_pathname):
     return jdict
 
 
-def write_csv():
+def write_csv(data, path_name):
+    if type(data) == pd.DataFrame:
+        data.to_csv(path_name)
+    else:
+        raise TypeError(f'Unsupported: cannot output data of type {type(data)} to csv.')
     

@@ -2,6 +2,7 @@ from functools import partial
 from abc import ABC, abstractmethod
 import os
 import pandas as pd
+from src.utils.data.data_format_tools.common import write_csv
 
 from src.utils.data.data_format_tools.manipulate_fasta import write_fasta_file
 from src.utils.misc.helper import get_subdirectories
@@ -19,15 +20,16 @@ class DataWriter():
         else:
             self.write_dir = out_location
 
-    def output(self, out_location, out_type, **writer_kwargs): # data_generator, out_type, gen_type, gen_run_count):
-        writer = self.get_write_func(out_type, out_location)
+    def output(self, out_type, out_name=None, **writer_kwargs): # data_generator, out_type, gen_type, gen_run_count):
+        out_path = os.path.join(self.write_dir, out_name + '.' + out_type)
+        writer = self.get_write_func(out_type, out_path)
         writer(**writer_kwargs)
 
-    def get_write_func(self, out_type, out_location):
+    def get_write_func(self, out_type, out_path):
         if out_type == "fasta":
-            return partial(write_fasta_file, fname=out_location)
+            return partial(write_fasta_file, fname=out_path)
         if out_type == "csv":
-            pass
+            return partial(write_csv, path_name=out_path)
         raise ValueError(
             f'No write function available for output of type {out_type}')
 
@@ -47,10 +49,16 @@ class Tabulated(ABC):
 
     def __init__(self) -> None:
         self.column_names = self.get_columns()
+        self.data = self.get_table_data()
 
     @abstractmethod
     def get_columns(self):
         pass
 
+    @abstractmethod
+    def get_table_data(self):
+        pass
+
+    @property
     def as_table(self):
-        return pd.DataFrame(columns=self.column_names)
+        return pd.DataFrame(data=self.data, columns=self.column_names)

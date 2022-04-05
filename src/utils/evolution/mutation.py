@@ -20,8 +20,13 @@ class Mutations(Tabulated):
         self.count = len(positions)
         self.algorithm = algorithm
 
+        super().__init__()
+
     def get_columns(self):
         return list(self.__dict__.keys())
+
+    def get_table_data(self):
+        return list(self.__dict__.values())
 
 
 class Evolver():
@@ -104,4 +109,4 @@ class Evolver():
         return mutation_types
 
     def write_mutations(self, mutations: Mutations):
-        self.data_writer.
+        self.data_writer.output(out_type='csv', out_name='mutations', data=mutations.as_table)
