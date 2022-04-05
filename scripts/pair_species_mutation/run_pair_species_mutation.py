@@ -17,11 +17,9 @@ def main():
     protocols = [
         # generate_sequences
         partial(RNAGenerator(**data_writer_kwargs).generate_circuit, count=3, slength=25, protocol="template_mix"
-        # partial(RNAGenerator(purpose= 'pair_species_mutation').generate_circuit(), count=3, slength=25, protocol="template_mix"
-        # partial(RNAGenerator().generate_circuit(), count=3, slength=25, protocol="template_mix"
                 ),
         # generate_mutations
-        partial(Evolver),
+        partial(Evolver(num_mutations=1).mutate, data=None),
         # simulate_interactions
         partial(construct_circuit_from_cfg, config_file)
     ]

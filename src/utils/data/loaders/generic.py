@@ -19,6 +19,7 @@ class Data():
 
     @staticmethod
     def convert_names_to_idxs(names_table: dict, source: list) -> dict:
+        """ Output and input species definition """
         indexed_identities = {}
         for name_type, name in names_table.items():
             if name in source:

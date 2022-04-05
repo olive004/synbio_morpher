@@ -4,7 +4,7 @@ from random import random
 import numpy as np
 
 
-from src.utils.system_definition.agnostic_system.base_system import BaseSpecies
+from src.utils.system_definition.agnostic_system.base_system import BaseSpecies, BaseSystem
 
 
 class Mutations():
@@ -60,19 +60,19 @@ class Evolver():
 
     def __init__(self, num_mutations) -> None:
         self.num_mutations = num_mutations
-        
-    def mutate(self, data, algorithm="random", **specs):
-        mutator = self.get_mutator(algorithm)
 
-        return mutator(data)
+    def mutate(self, system: BaseSystem, algorithm="random"):
+        mutator = self.get_mutator(algorithm)
+        mutator(system.species)
 
     def get_mutator(self, algorithm):
 
         def random_mutator(species: BaseSpecies, species_idx: int):
-            positions = np.random.randint(0, species.data.get_data_by_idx(species_idx), size=self.num_mutations)
+            positions = np.random.randint(0, species.data.get_data_by_idx(
+                species_idx), size=self.num_mutations)
             return positions
 
-        def base_mutator(species: BaseSpecies, species_idx: int, position_generator):
+        def basic_mutator(species: BaseSpecies, position_generator, species_idx: int = None):
             sequence = species.data.get_data_by_idx(species_idx)
             positions = np.random.randint(0, sequence, size=self.num_mutations)
             positions = position_generator(species, species_idx)
@@ -84,14 +84,21 @@ class Evolver():
                 positions=positions
             )
             self.num_mutations
-        
+
+        def full_mutator(species: BaseSpecies, sample_mutator_func):
+            for sample in range(species.data.sample_names):
+                sample_mutator_func(species.data.get_data_by_idx(sample))
+
         if algorithm == "random":
-            return partial(base_mutator, position_generator=random_mutator)
+            return partial(full_mutator, sample_mutator_func=
+                partial(basic_mutator, position_generator=random_mutator)
+            )
 
     def sample_mutations(self, sequence, positions):
         mutation_types = []
         for p in positions:
             possible_transitions = self.mapping[sequence[p]]
             logging.info(possible_transitions)
-            mutation_types.append(random.choice(list(possible_transitions.keys())))
+            mutation_types.append(random.choice(
+                list(possible_transitions.keys())))
         return mutation_types
