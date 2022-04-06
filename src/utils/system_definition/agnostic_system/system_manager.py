@@ -30,17 +30,17 @@ class CircuitModeller():
         circuit = self.find_steady_states(circuit)
         return circuit
 
-    def get_modelling_func(self, modeller):
-        return partial(modeller.dxdt_RNA, interactions=self.species.interactions,
-                       creation_rates=self.species.creation_rates,
-                       degradation_rates=self.species.degradation_rates,
-                       num_samples=self.species.data.size
+    def get_modelling_func(self, modeller, circuit):
+        return partial(modeller.dxdt_RNA, interactions=circuit.species.interactions,
+                       creation_rates=circuit.species.creation_rates,
+                       degradation_rates=circuit.species.degradation_rates,
+                       num_samples=circuit.species.data.size
                        )
 
     @time_it
     def compute_interaction_strengths(self, circuit):
-        interactions = self.run_interaction_simulator(
-            circuit.species.data.data)
+        interactions = self.run_interaction_simulator(circuit,
+                                                      circuit.species.data.data)
         circuit.species.interactions = interactions.matrix
         return circuit
 
@@ -65,16 +65,17 @@ class CircuitModeller():
                                          'save_name': 'steady_state_plot'})
         steady_state_metrics = self.result_writer.get_result(
             key='steady_state').metrics
-        circuit.species.steady_state_copynums = steady_state_metrics['steady_state']['steady_states']
+        circuit.species.steady_state_copynums = steady_state_metrics[
+            'steady_state']['steady_states']
         return circuit
 
-    def compute_steady_states(self, modeller, all_copynumbers,
+    def compute_steady_states(self, modeller, all_copynumbers, circuit,
                               use_solver='naive'):
         if use_solver == 'naive':
             self.model_circuit(modeller, all_copynumbers)
         elif use_solver == 'ivp':
             y0 = all_copynumbers[:, -1]
-            steady_state_result = integrate.solve_ivp(self.get_modelling_func(modeller),
+            steady_state_result = integrate.solve_ivp(self.get_modelling_func(modeller, circuit),
                                                       (0, modeller.max_time),
                                                       y0=y0)
             if not steady_state_result.success:

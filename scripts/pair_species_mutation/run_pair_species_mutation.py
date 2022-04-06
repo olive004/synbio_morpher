@@ -36,7 +36,7 @@ def main():
             name="generate_mutations"
         ),
         Protocol(
-            CircuitModeller.init_circuit,
+            CircuitModeller(result_writer=data_writer).init_circuit,
             req_input=True,
             req_output=True,
             name="simulate_interactions"
