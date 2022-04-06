@@ -1,6 +1,8 @@
 from functools import partial
 import logging
+import os
 import random
+import pandas as pd
 import numpy as np
 from src.utils.data.manage.writer import DataWriter, Tabulated
 
@@ -59,6 +61,8 @@ class Evolver():
 
     def __init__(self, data_writer: DataWriter) -> None:
         self.data_writer = data_writer
+        self.out_name = 'mutations'
+        self.out_type = 'csv'
 
     def mutate(self, system: BaseSystem, algorithm="random"):
         mutator = self.get_mutator(algorithm)
@@ -73,7 +77,9 @@ class Evolver():
 
         def basic_mutator(species: BaseSpecies, position_generator, sample_idx: int = None):
             sequence = species.data.get_data_by_idx(sample_idx)
-            positions = position_generator(sequence, species.mutation_nums[sample_idx])
+            positions = position_generator(
+                sequence, species.mutation_nums[sample_idx])
+
             mutations = Mutations(
                 mutation_name=species.data.sample_names[sample_idx],
                 template_file=species.data.source,
@@ -105,4 +111,9 @@ class Evolver():
 
     def write_mutations(self, mutations: Mutations):
         self.data_writer.output(
-            out_type='csv', out_name='mutations', data=mutations.as_table())
+            out_type=self.out_type, out_name=self.out_name, data=mutations.as_table())
+
+    def load_mutations(self):
+        filename = os.path.join(self.data_writer.write_dir, self.out_name + '.' + self.out_type)
+        return pd.read_csv(filename).to_dict()
+        

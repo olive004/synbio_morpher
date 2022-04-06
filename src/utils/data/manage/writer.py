@@ -43,7 +43,7 @@ class DataWriter():
                 os.umask(0)
                 os.makedirs(location, mode=0o777)
             return location
-        raise ValueError(f'Unrecognised purpose for writing data to {purpose}')
+        raise ValueError(f'Unrecognised purpose {purpose} for writing data to.')
 
     def generate_location_instance(self):
         return make_time_str()

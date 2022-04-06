@@ -26,6 +26,7 @@ class RNASystem(BaseSystem):
         self.simulator_choice = simulator
 
         self.species = self.init_species(config_args)
+        self.evolver = None
         self.generate_mutations(**mutation_args)
         self.process_species()
 
@@ -51,9 +52,11 @@ class RNASystem(BaseSystem):
 
     def process_species(self):
         self.node_labels = self.species.data.sample_names
+        self.species.mutations = self.evolver.load_mutations()
 
-    def generate_mutations(self, num_per_specie: list, num_mutations: list, data_writer):
-        Evolver(data_writer=data_writer).mutate(self, num_per_specie)
+    def generate_mutations(self, data_writer):
+        self.evolver = Evolver(data_writer=data_writer)
+        self.evolver.mutate(self)
 
     def get_modelling_func(self, modeller):
         return partial(modeller.dxdt_RNA, interactions=self.species.interactions,

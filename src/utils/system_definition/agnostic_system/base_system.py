@@ -35,6 +35,7 @@ class BaseSpecies():
         self.current_copynumbers = None
         self.steady_state_copynums = self.init_matrix(ndims=1, init_type="zeros")
 
+        self.mutations = None
         # Nums: mutations within a sequence
         self.mutation_nums = config_args.get("mutations", {}).get("mutation_nums")
         # Counts: mutated iterations of a sequence
