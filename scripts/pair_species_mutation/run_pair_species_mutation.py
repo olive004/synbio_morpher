@@ -16,24 +16,26 @@ def main():
     # start_experiment
     data_writer_kwargs = {'purpose': 'pair_species_mutation'}
     data_writer = DataWriter(**data_writer_kwargs)
+    circuit_prot = Protocol(
+            partial(construct_circuit_from_cfg, config_file=config_file),
+            req_output=True,
+            name="making_circuit"
+        )
     protocols = [
         Protocol(
             partial(RNAGenerator(data_writer=data_writer).generate_circuit,
                     count=3, slength=25, protocol="template_mix"),
             name="generating_sequences"
         ),
-        Protocol(
-            partial(construct_circuit_from_cfg, config_file=config_file),
-            req_output=True,
-            name="making_circuit"
-        ),
+        circuit_prot,
         Protocol(
             Evolver(data_writer=data_writer).mutate,
             req_input=True,
+            req_output=True,
             name="generate_mutations"
         ),
         Protocol(
-            partial(construct_circuit_from_cfg, config_file),
+            circuit_prot.output,
             name="simulate_interactions"
         )
     ]

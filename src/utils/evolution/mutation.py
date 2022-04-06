@@ -66,7 +66,9 @@ class Evolver():
 
     def mutate(self, system: BaseSystem, algorithm="random"):
         mutator = self.get_mutator(algorithm)
-        mutator(system.species)
+        system.species = mutator(system.species)
+        return system
+
 
     def get_mutator(self, algorithm):
 
@@ -88,11 +90,13 @@ class Evolver():
                 positions=positions
             )
             self.write_mutations(mutations)
+            return mutations
 
         def full_mutator(species: BaseSpecies, sample_mutator_func):
             for sample_idx, sample in enumerate(species.data.sample_names):
                 for c in range(species.mutation_counts[sample_idx]):
-                    sample_mutator_func(species, sample_idx=sample_idx)
+                    species.mutations[sample] = sample_mutator_func(species, sample_idx=sample_idx)
+            return species
 
         if algorithm == "random":
             return partial(full_mutator, sample_mutator_func=partial(basic_mutator, position_generator=random_mutator)

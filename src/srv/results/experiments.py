@@ -12,6 +12,7 @@ class Protocol():
         self.req_input = req_input
         self.protocol = protocol
         self.name = name
+        self.output = None
 
     def __call__(self, *input_args):
         
@@ -20,6 +21,7 @@ class Protocol():
         else:
             output = self.protocol(*input_args)
         if self.req_output:
+            self.output = output
             return output
 
 
