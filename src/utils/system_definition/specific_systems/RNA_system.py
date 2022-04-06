@@ -19,15 +19,13 @@ logger.setLevel(logging.INFO)
 
 
 class RNASystem(BaseSystem):
-    def __init__(self, config_args, simulator="IntaRNA", mutation_args=None):
+    def __init__(self, config_args, simulator="IntaRNA"):
         super(RNASystem, self).__init__(config_args)
 
         self.simulator_args = config_args
         self.simulator_choice = simulator
 
         self.species = self.init_species(config_args)
-        self.evolver = None
-        self.generate_mutations(**mutation_args)
         self.process_species()
 
         # Rates
@@ -44,6 +42,7 @@ class RNASystem(BaseSystem):
                                                                                    cell_dbl_growth_rate,
                                                                                    self.transcription_rate])
 
+    def init_circuit(self):
         self.compute_interaction_strengths()
         self.find_steady_states()
 
@@ -52,11 +51,9 @@ class RNASystem(BaseSystem):
 
     def process_species(self):
         self.node_labels = self.species.data.sample_names
-        self.species.mutations = self.evolver.load_mutations()
 
-    def generate_mutations(self, data_writer):
-        self.evolver = Evolver(data_writer=data_writer)
-        self.evolver.mutate(self)
+    def load_mutations(self, mutations):
+        self.species.mutations = mutations
 
     def get_modelling_func(self, modeller):
         return partial(modeller.dxdt_RNA, interactions=self.species.interactions,

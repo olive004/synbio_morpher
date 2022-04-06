@@ -1,13 +1,17 @@
 from datetime import datetime
+import logging
+from typing import List
 
 from src.utils.data.manage.writer import DataWriter
 
 
 class Protocol():
 
-    def __init__(self, protocol, req_output=False) -> None:
+    def __init__(self, protocol, req_output=False, req_input=False, name='') -> None:
         self.req_output = req_output
+        self.req_input = req_input
         self.protocol = protocol
+        self.name = name
 
     def __call__(self, *input_args):
         
@@ -21,7 +25,7 @@ class Protocol():
 
 class Experiment():
 
-    def __init__(self, config: str, protocols: list, data_writer: DataWriter) -> None:
+    def __init__(self, config: str, protocols: List[Protocol], data_writer: DataWriter) -> None:
         
         self.start_time = datetime.now()
         self.protocols = protocols
@@ -31,7 +35,11 @@ class Experiment():
     def run_experiment(self):
         out = None
         for protocol in self.protocols:
-            out = protocol(out)
+            logging.info(protocol.name)
+            if protocol.req_input:
+                out = protocol(out)
+            else:
+                out = protocol()
         self.total_time = datetime.now() - self.start_time
         self.write_experiment()
 
