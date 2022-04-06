@@ -73,7 +73,7 @@ class BaseSpecies():
 
     def integrate_mutations(self):
         for sample, mut in self.mutations.items():
-            self.data.add_data(sample, self.mut.get_sequence())
+            self.data.add_data(sample, mut.get_sequence())
 
     @property
     def interactions(self):
