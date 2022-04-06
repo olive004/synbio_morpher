@@ -1,3 +1,4 @@
+from copy import deepcopy
 from functools import partial
 import logging
 import os
@@ -10,13 +11,43 @@ from src.utils.data.manage.writer import DataWriter, Tabulated
 from src.utils.system_definition.agnostic_system.base_system import BaseSpecies, BaseSystem
 
 
+mapping = {
+    # Mutation idx from parent key to child key
+    "A": {
+        "C": 0,
+        "G": 1,
+        "T": 2
+    },
+    "C": {
+        "A": 3,
+        "G": 4,
+        "T": 5
+    },
+    "G": {
+        "A": 6,
+        "C": 7,
+        "T": 8
+    },
+    "T": {
+        "A": 9,
+        "C": 10,
+        "G": 11
+    },
+    "U": {
+        "A": 12,
+        "C": 13,
+        "G": 14
+    }
+}
+
+
 class Mutations(Tabulated):
 
-    def __init__(self, mutation_name, template_file, template_species,
+    def __init__(self, mutation_name, template_file, template_seq,
                  positions, mutation_types, algorithm='random') -> None:
         self.mutation_name = mutation_name
         self.template_file = template_file
-        self.template_species = template_species
+        self.template_seq = template_seq
         self.mutation_types = mutation_types
         self.positions = positions
         self.count = len(positions)
@@ -27,37 +58,20 @@ class Mutations(Tabulated):
     def get_props_as_split_dict(self):
         return list(self.__dict__.keys()), list(self.__dict__.values())
 
+    def get_sequence(self):
+        seq = deepcopy(self.template_seq)
+        for i, p in enumerate(self.positions):
+            seq[p] = self.reverse_mut_mapping(mapping[i])
+        return self.template_seq
+
+    def reverse_mut_mapping(self, mut_encoding: int):
+        for k, v in mapping.items():
+            if mut_encoding in list(v.values()):
+                return k
+        raise ValueError(f'Could not find mutation mapping key {mut_encoding}.')
+
 
 class Evolver():
-
-    mapping = {
-        # Mutation idx from parent key to child key
-        "A": {
-            "C": 0,
-            "G": 1,
-            "T": 2
-        },
-        "C": {
-            "A": 3,
-            "G": 4,
-            "T": 5
-        },
-        "G": {
-            "A": 6,
-            "C": 7,
-            "T": 8
-        },
-        "T": {
-            "A": 9,
-            "C": 10,
-            "G": 11
-        },
-        "U": {
-            "A": 12,
-            "C": 13,
-            "G": 14
-        }
-    }
 
     def __init__(self, data_writer: DataWriter) -> None:
         self.data_writer = data_writer
@@ -68,7 +82,6 @@ class Evolver():
         mutator = self.get_mutator(algorithm)
         system.species = mutator(system.species)
         return system
-
 
     def get_mutator(self, algorithm):
 
@@ -85,7 +98,7 @@ class Evolver():
             mutations = Mutations(
                 mutation_name=species.data.sample_names[sample_idx],
                 template_file=species.data.source,
-                template_species=sequence,
+                template_seq=sequence,
                 mutation_types=self.sample_mutations(sequence, positions),
                 positions=positions
             )
@@ -95,7 +108,8 @@ class Evolver():
         def full_mutator(species: BaseSpecies, sample_mutator_func):
             for sample_idx, sample in enumerate(species.data.sample_names):
                 for c in range(species.mutation_counts[sample_idx]):
-                    species.mutations[sample] = sample_mutator_func(species, sample_idx=sample_idx)
+                    species.mutations[sample] = sample_mutator_func(
+                        species, sample_idx=sample_idx)
             return species
 
         if algorithm == "random":
@@ -107,7 +121,7 @@ class Evolver():
     def sample_mutations(self, sequence, positions):
         mutation_types = []
         for p in positions:
-            possible_transitions = self.mapping[sequence[p]]
+            possible_transitions = mapping[sequence[p]]
             logging.info(possible_transitions)
             mutation_types.append(random.choice(
                 list(possible_transitions.values())))
@@ -118,6 +132,6 @@ class Evolver():
             out_type=self.out_type, out_name=self.out_name, data=mutations.as_table())
 
     def load_mutations(self):
-        filename = os.path.join(self.data_writer.write_dir, self.out_name + '.' + self.out_type)
+        filename = os.path.join(
+            self.data_writer.write_dir, self.out_name + '.' + self.out_type)
         return pd.read_csv(filename).to_dict()
-        
