@@ -7,5 +7,5 @@ def construct_circuit_from_cfg(config_file):
 
     kwargs.get("signal")["identities_idx"] = circuit.species.identities['input']
     signal = construct_signal(kwargs.get("signal"))
-    circuit.simulate_signal(signal)
+    circuit.signal = signal
     return circuit

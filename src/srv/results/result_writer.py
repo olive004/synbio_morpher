@@ -1,6 +1,7 @@
 
 
 from src.srv.results.metrics.analytics import Analytics
+from src.utils.data.manage.writer import DataWriter
 from src.utils.misc.string_handling import make_time_str
 
 
@@ -19,8 +20,9 @@ class Result():
             self.metrics = Timeseries(data).generate_analytics()
 
 
-class ResultWriter():
-    def __init__(self) -> None:
+class ResultWriter(DataWriter):
+    def __init__(self, purpose, out_location=None) -> None:
+        super().__init__(purpose, out_location)
         self.results = {}
 
     def add_result(self, result_data, category, vis_func, name, **vis_kwargs):

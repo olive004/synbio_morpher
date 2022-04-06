@@ -1,11 +1,13 @@
 from functools import partial
 import numpy as np
 from scipy import integrate
+from src.srv.results.result_writer import ResultWriter
 
 from src.utils.misc.decorators import time_it
 from src.utils.misc.numerical import zero_out_negs
 from src.utils.signal.inputs import Signal
 from src.srv.parameter_prediction.simulator import InteractionSimulator
+from src.utils.system_definition.agnostic_system.base_system import BaseSystem
 from src.utils.system_definition.agnostic_system.modelling import Deterministic
 
 
@@ -17,12 +19,16 @@ class SystemManager():
 
 class CircuitModeller():
 
-    def __init__(self) -> None:
-        pass
+    def __init__(self, result_writer=None) -> None:
+        if result_writer is None:
+            self.result_writer = ResultWriter()
+        else:
+            self.result_writer = result_writer
 
-    def init_circuit(self):
-        self.compute_interaction_strengths()
-        self.find_steady_states()
+    def init_circuit(self, circuit: BaseSystem):
+        circuit = self.compute_interaction_strengths(circuit)
+        circuit = self.find_steady_states(circuit)
+        return circuit
 
     def get_modelling_func(self, modeller):
         return partial(modeller.dxdt_RNA, interactions=self.species.interactions,
@@ -32,32 +38,35 @@ class CircuitModeller():
                        )
 
     @time_it
-    def compute_interaction_strengths(self):
-        interactions = self.run_interaction_simulator(self.species.data.data)
-        self.species.interactions = interactions.matrix
+    def compute_interaction_strengths(self, circuit):
+        interactions = self.run_interaction_simulator(
+            circuit.species.data.data)
+        circuit.species.interactions = interactions.matrix
+        return circuit
 
-    def run_interaction_simulator(self, data):
+    def run_interaction_simulator(self, circuit, data):
         simulator = InteractionSimulator(
-            self.simulator_args, self.simulator_choice)
+            circuit.simulator_args, circuit.simulator_choice)
         return simulator.run(data)
 
-    def find_steady_states(self):
+    def find_steady_states(self, circuit):
         modeller_steady_state = Deterministic(
             max_time=50, time_step=1)
 
-        self.species.copynumbers = self.compute_steady_states(modeller_steady_state,
-                                                              self.species.copynumbers,
-                                                              use_solver='ivp')
+        circuit.species.copynumbers = self.compute_steady_states(modeller_steady_state,
+                                                                 circuit.species.copynumbers,
+                                                                 use_solver='ivp')
 
-        self.result_writer.add_result(self.species.copynumbers,
+        self.result_writer.add_result(circuit.species.copynumbers,
                                       name='steady_state',
                                       category='time_series',
                                       vis_func=modeller_steady_state.plot,
-                                      **{'legend_keys': list(self.species.data.sample_names),
+                                      **{'legend_keys': list(circuit.species.data.sample_names),
                                          'save_name': 'steady_state_plot'})
         steady_state_metrics = self.result_writer.get_result(
             key='steady_state').metrics
-        self.species.steady_state_copynums = steady_state_metrics['steady_state']['steady_states']
+        circuit.species.steady_state_copynums = steady_state_metrics['steady_state']['steady_states']
+        return circuit
 
     def compute_steady_states(self, modeller, all_copynumbers,
                               use_solver='naive'):
@@ -107,22 +116,35 @@ class CircuitModeller():
                         1] = current_copynumbers
         return copynumbers
 
-    def simulate_signal(self, signal: Signal = None):
+    def simulate_signal(self, circuit, signal: Signal = None):
         if signal is None:
             return
         signal_modeller = Deterministic(
             max_time=signal.total_time, time_step=1
         )
         new_copynumbers = self.model_circuit(signal_modeller,
-                                             self.species.steady_state_copynums,
+                                             circuit.species.steady_state_copynums,
                                              signal=signal.real_signal,
                                              signal_idx=signal.identities_idx)
 
         self.species.copynumbers = np.concatenate(
-            (self.species.copynumbers, new_copynumbers[:, 1:]), axis=1)
+            (circuit.species.copynumbers, new_copynumbers[:, 1:]), axis=1)
         self.result_writer.add_result(new_copynumbers,
                                       name='signal',
                                       category='time_series',
                                       vis_func=signal_modeller.plot,
-                                      **{'legend_keys': list(self.species.data.sample_names),
+                                      **{'legend_keys': list(circuit.species.data.sample_names),
                                          'save_name': 'signal_plot'})
+        return circuit
+
+    def visualise(self, circuit: BaseSystem, mode="pyvis", new_vis=False):
+        circuit.refresh_graph()
+
+        if mode == 'pyvis':
+            from src.srv.results.visualisation import visualise_graph_pyvis
+            visualise_graph_pyvis(circuit.graph, new_vis=new_vis)
+        else:
+            from src.srv.results.visualisation import visualise_graph_pyplot
+            visualise_graph_pyplot(circuit.graph, new_vis=new_vis)
+
+        self.result_writer.write_all()

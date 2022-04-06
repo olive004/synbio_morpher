@@ -1,15 +1,5 @@
-from copy import deepcopy
-from functools import partial
-import numpy as np
-from scipy import integrate
 import logging
-from src.utils.evolution.mutation import Evolver
-from src.utils.misc.decorators import time_it
-from src.utils.misc.numerical import zero_out_negs
-from src.utils.signal.inputs import Signal
 from src.utils.system_definition.agnostic_system.base_system import BaseSystem, BaseSpecies
-from src.srv.parameter_prediction.simulator import InteractionSimulator
-from src.utils.system_definition.agnostic_system.modelling import Deterministic
 
 FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
 FORMAT = "%(filename)s:%(funcName)s():%(lineno)i: %(message)s %(levelname)s"

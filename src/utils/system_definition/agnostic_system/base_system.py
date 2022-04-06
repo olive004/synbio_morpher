@@ -1,10 +1,9 @@
-from typing import List, Tuple
+from typing import List
 import numpy as np
 import networkx as nx
 import logging
 
 from src.srv.parameter_prediction.interactions import InteractionMatrix
-from src.srv.results.result_writer import ResultWriter
 
 
 FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
@@ -33,13 +32,16 @@ class BaseSpecies():
 
         self.copynumbers = None
         self.current_copynumbers = None
-        self.steady_state_copynums = self.init_matrix(ndims=1, init_type="zeros")
+        self.steady_state_copynums = self.init_matrix(
+            ndims=1, init_type="zeros")
 
         self.mutations = {}
         # Nums: mutations within a sequence
-        self.mutation_nums = config_args.get("mutations", {}).get("mutation_nums")
+        self.mutation_nums = config_args.get(
+            "mutations", {}).get("mutation_nums")
         # Counts: mutated iterations of a sequence
-        self.mutation_counts = config_args.get("mutations", {}).get("mutation_counts")
+        self.mutation_counts = config_args.get(
+            "mutations", {}).get("mutation_counts")
 
         # self.params = {
         #     "creation_rates": self.creation_rates,
@@ -50,7 +52,8 @@ class BaseSpecies():
         # }
 
     def init_matrices(self, uniform_vals, ndims=2, init_type="rand") -> List[np.array]:
-        matrices = (self.init_matrix(ndims, init_type, val) for val in uniform_vals)
+        matrices = (self.init_matrix(ndims, init_type, val)
+                    for val in uniform_vals)
         return tuple(matrices)
 
     def init_matrix(self, ndims=2, init_type="rand", uniform_val=1) -> np.array:
@@ -127,7 +130,7 @@ class BaseSystem():
             config_args = {}
 
         self.species = BaseSpecies(config_args)
-        self.result_writer = ResultWriter()
+        self.signal = None
 
         self.init_graph()
 
@@ -150,24 +153,6 @@ class BaseSystem():
 
     def get_graph_labels(self) -> dict:
         return sorted(self.graph)
-
-    def determine_input_type(self) -> str:
-        raise NotImplementedError
-
-    def simulate_signal(self, signal):
-        pass
-
-    def visualise(self, mode="pyvis", new_vis=False):
-        self.refresh_graph()
-
-        if mode == 'pyvis':
-            from src.srv.results.visualisation import visualise_graph_pyvis
-            visualise_graph_pyvis(self.graph, new_vis=new_vis)
-        else:
-            from src.srv.results.visualisation import visualise_graph_pyplot
-            visualise_graph_pyplot(self.graph, new_vis=new_vis)
-
-        self.result_writer.write_all()
 
     @property
     def graph(self):
