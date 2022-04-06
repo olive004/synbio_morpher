@@ -57,8 +57,7 @@ class Evolver():
         }
     }
 
-    def __init__(self, num_mutations, data_writer: DataWriter) -> None:
-        self.num_mutations = num_mutations
+    def __init__(self, data_writer: DataWriter) -> None:
         self.data_writer = data_writer
 
     def mutate(self, system: BaseSystem, algorithm="random"):
@@ -67,14 +66,14 @@ class Evolver():
 
     def get_mutator(self, algorithm):
 
-        def random_mutator(sequence):
+        def random_mutator(sequence, num_mutations):
             positions = list(np.random.randint(
-                0, len(sequence), size=self.num_mutations))
+                0, len(sequence), size=num_mutations))
             return positions
 
         def basic_mutator(species: BaseSpecies, position_generator, sample_idx: int = None):
             sequence = species.data.get_data_by_idx(sample_idx)
-            positions = position_generator(sequence)
+            positions = position_generator(sequence, species.num_mutations[sample_idx])
             mutations = Mutations(
                 mutation_name=species.data.sample_names[sample_idx],
                 template_file=species.data.source,
@@ -86,6 +85,7 @@ class Evolver():
 
         def full_mutator(species: BaseSpecies, sample_mutator_func):
             for sample_idx, sample in enumerate(species.data.sample_names):
+                for species.
                 sample_mutator_func(species, sample_idx=sample_idx)
 
         if algorithm == "random":

@@ -30,17 +30,23 @@ class BaseSpecies():
                                                   uniform_val=20)
         self.creation_rates = self.init_matrix(ndims=1, init_type="uniform",
                                                uniform_val=50)
+
         self.copynumbers = None
         self.current_copynumbers = None
         self.steady_state_copynums = self.init_matrix(ndims=1, init_type="zeros")
 
-        self.params = {
-            "creation_rates": self.creation_rates,
-            "copynumbers": self.current_copynumbers,
-            "complexes": self.complexes,
-            "degradation_rates": self.degradation_rates,
-            "interactions": self.interactions
-        }
+        # Nums: mutations within a sequence
+        self.mutation_nums = config_args.get("mutations", {}).get("mutation_nums")
+        # Counts: mutated iterations of a sequence
+        self.mutation_counts = config_args.get("mutations", {}).get("mutation_counts")
+
+        # self.params = {
+        #     "creation_rates": self.creation_rates,
+        #     "copynumbers": self.current_copynumbers,
+        #     "complexes": self.complexes,
+        #     "degradation_rates": self.degradation_rates,
+        #     "interactions": self.interactions
+        # }
 
     def init_matrices(self, uniform_vals, ndims=2, init_type="rand") -> List[np.array]:
         matrices = (self.init_matrix(ndims, init_type, val) for val in uniform_vals)
