@@ -52,8 +52,8 @@ class RNASystem(BaseSystem):
     def process_species(self):
         self.node_labels = self.species.data.sample_names
 
-    def load_mutations(self, mutations):
-        self.species.mutations = mutations
+    # def load_mutations(self, mutations):
+    #     self.species.mutations = mutations
 
     def get_modelling_func(self, modeller):
         return partial(modeller.dxdt_RNA, interactions=self.species.interactions,
@@ -64,13 +64,12 @@ class RNASystem(BaseSystem):
 
     @time_it
     def compute_interaction_strengths(self):
-        interactions = self.run_interaction_simulator()
+        interactions = self.run_interaction_simulator(self.species.data.data)
         self.species.interactions = interactions.matrix
 
-    def run_interaction_simulator(self, data=None):
+    def run_interaction_simulator(self, data):
         simulator = InteractionSimulator(
             self.simulator_args, self.simulator_choice)
-        data = data if data is not None else self.species.data.data
         return simulator.run(data)
 
     def find_steady_states(self):

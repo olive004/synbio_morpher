@@ -1,10 +1,9 @@
 from functools import partial
-import logging
 
 
 class Data():
 
-    def __init__(self, loaded_data, identities, source_files=None) -> None:
+    def __init__(self, loaded_data: dict, identities: dict, source_files=None) -> None:
         self.data = loaded_data
         self.source = source_files
         self.sample_names = self.make_sample_names()
@@ -16,6 +15,10 @@ class Data():
             return self.data[self.sample_names[idx]]
         else:
             return self.data[idx]
+
+    def add_data(self, name, data):
+        self.data[name] = data
+        self.sample_names.append(name)
 
     @staticmethod
     def convert_names_to_idxs(names_table: dict, source: list) -> dict:

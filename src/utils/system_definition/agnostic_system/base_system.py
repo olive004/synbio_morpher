@@ -71,6 +71,10 @@ class BaseSpecies():
             return np.zeros(matrix_shape)
         raise ValueError(f"Matrix init type {init_type} not recognised.")
 
+    def integrate_mutations(self):
+        for sample, mut in self.mutations.items():
+            self.data.add_data(sample, self.mut.get_sequence())
+
     @property
     def interactions(self):
         return self._interactions

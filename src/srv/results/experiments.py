@@ -21,7 +21,8 @@ class Protocol():
         else:
             output = self.protocol(*input_args)
         if self.req_output:
-            self.output = output
+            if output is not None:
+                self.output = output
             return output
 
 
