@@ -39,6 +39,7 @@ class Experiment():
         out = None
         for protocol in self.protocols:
             logging.info(protocol.name)
+            logging.info(out)
             if protocol.req_input:
                 out = protocol(out)
             else:

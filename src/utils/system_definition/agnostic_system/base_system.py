@@ -4,6 +4,7 @@ import networkx as nx
 import logging
 
 from src.srv.parameter_prediction.interactions import InteractionMatrix
+from src.utils.data.data_format_tools.common import extend_int_to_list
 
 
 FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
@@ -42,14 +43,9 @@ class BaseSpecies():
         # Counts: mutated iterations of a sequence
         self.mutation_counts = config_args.get(
             "mutations", {}).get("mutation_counts")
-
-        # self.params = {
-        #     "creation_rates": self.creation_rates,
-        #     "copynumbers": self.current_copynumbers,
-        #     "complexes": self.complexes,
-        #     "degradation_rates": self.degradation_rates,
-        #     "interactions": self.interactions
-        # }
+        
+        self.process_mutations()
+        logging.info(self.mutation_counts)
 
     def init_matrices(self, uniform_vals, ndims=2, init_type="rand") -> List[np.array]:
         matrices = (self.init_matrix(ndims, init_type, val)
@@ -73,6 +69,10 @@ class BaseSpecies():
         elif init_type == "zeros":
             return np.zeros(matrix_shape)
         raise ValueError(f"Matrix init type {init_type} not recognised.")
+
+    def process_mutations(self):
+        self.mutation_counts = extend_int_to_list(self.mutation_counts, self.count)
+        self.mutation_nums = extend_int_to_list(self.mutation_nums, self.count)
 
     def integrate_mutations(self):
         for sample, mut in self.mutations.items():

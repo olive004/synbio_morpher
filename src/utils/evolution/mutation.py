@@ -80,6 +80,7 @@ class Evolver():
 
     def mutate(self, system: BaseSystem, algorithm="random"):
         mutator = self.get_mutator(algorithm)
+        logging.info(system.species)
         system.species = mutator(system.species)
         return system
 
@@ -106,6 +107,8 @@ class Evolver():
             return mutations
 
         def full_mutator(species: BaseSpecies, sample_mutator_func):
+            logging.info(species)
+
             for sample_idx, sample in enumerate(species.data.sample_names):
                 for c in range(species.mutation_counts[sample_idx]):
                     species.mutations[sample] = sample_mutator_func(

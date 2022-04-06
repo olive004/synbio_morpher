@@ -118,7 +118,7 @@ class CircuitModeller():
 
     def simulate_signal(self, circuit, signal: Signal = None):
         if signal is None:
-            return
+            signal = circuit.signal
         signal_modeller = Deterministic(
             max_time=signal.total_time, time_step=1
         )

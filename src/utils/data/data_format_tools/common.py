@@ -7,6 +7,7 @@ FORMAT_EXTS = {
     ".fasta": "fasta"
 }
 
+
 def verify_file_type(filepath: str, file_type: str):
     NotImplemented
     pass
@@ -46,14 +47,26 @@ def get_bulkiest_dict_key(dict_like):
     return k_bulkiest
 
 
+def make_values_list(dict_like):
+    return {k: [v] for k, v in dict_like.items() if not type(v) == list}
+
+
 def find_sublist_max(list_like):
     list_list_sizes = [len(l) for l in list_like if type(l) == list]
     return max(list_list_sizes)
+
+
+def extend_int_to_list(int_like, target_num):
+    if type(int_like) == int:
+        int_like = [int_like] * target_num
+    elif type(int_like) == list and len(int_like) == 1:
+        int_like = int_like * target_num
+    return int_like
 
 
 def write_csv(data, path_name):
     if type(data) == pd.DataFrame:
         data.to_csv(path_name)
     else:
-        raise TypeError(f'Unsupported: cannot output data of type {type(data)} to csv.')
-    
+        raise TypeError(
+            f'Unsupported: cannot output data of type {type(data)} to csv.')

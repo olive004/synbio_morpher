@@ -1,2 +1,0 @@
-,mutation_name,template_file,template_species,mutation_types,positions,count,algorithm
-0,RNA_2,./data/example_data/toy_mRNA_circuit.fasta,GCCCGGGCCCGGGCCCGGGCCCGCCGGGC,7,26,1,random
