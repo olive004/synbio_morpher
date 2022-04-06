@@ -110,6 +110,10 @@ class BaseSpecies():
             value[value < 0] = 0
         self._copynumbers = value
 
+    @property
+    def count(self):
+        return self.data.size
+
 
 class BaseSystem():
     def __init__(self, config_args: dict = None):

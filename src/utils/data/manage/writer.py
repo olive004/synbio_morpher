@@ -1,9 +1,8 @@
 from functools import partial
 from abc import ABC, abstractmethod
-import logging
 import os
 import pandas as pd
-from src.utils.data.data_format_tools.common import find_list_max, write_csv
+from src.utils.data.data_format_tools.common import find_sublist_max, write_csv
 
 from src.utils.data.data_format_tools.manipulate_fasta import write_fasta_file
 from src.utils.misc.helper import get_subdirectories
@@ -21,7 +20,6 @@ class DataWriter():
         else:
             self.write_dir = out_location
 
-    # data_generator, out_type, gen_type, gen_run_count):
     def output(self, out_type, out_name=None, **writer_kwargs):
         out_path = os.path.join(self.write_dir, out_name + '.' + out_type)
         writer = self.get_write_func(out_type, out_path)
@@ -55,7 +53,7 @@ class Tabulated(ABC):
 
     def __init__(self) -> None:
         self.column_names, self.data = self.get_props_as_split_dict()
-        self.max_table_length = find_list_max(self.data)
+        self.max_table_length = find_sublist_max(self.data)
 
     def as_table(self):
         return pd.DataFrame.from_dict(dict(zip(self.column_names, self.data)))

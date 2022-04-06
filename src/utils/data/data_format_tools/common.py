@@ -46,7 +46,7 @@ def get_bulkiest_dict_key(dict_like):
     return k_bulkiest
 
 
-def find_list_max(list_like):
+def find_sublist_max(list_like):
     list_list_sizes = [len(l) for l in list_like if type(l) == list]
     return max(list_list_sizes)
 
