@@ -1,6 +1,7 @@
 
 
 from functools import partial
+import logging
 import os
 from src.srv.results.metrics.analytics import Analytics
 from src.utils.data.manage.writer import DataWriter
@@ -31,13 +32,24 @@ class ResultWriter(DataWriter):
         """ category: 'time_series', 'graph' """
         name = f'Result_{len(self.results.keys())}' if not name else name
         if 'out_path' in vis_kwargs.keys():
-            vis_kwargs['out_path'] = os.path.join(self.write_dir, vis_kwargs['out_path'])
+            vis_kwargs['out_path'] = os.path.join(
+                self.write_dir, vis_kwargs['out_path'])
         result_entry = Result(name, result_data, category,
                               vis_func, **vis_kwargs)
         self.results[name] = result_entry
 
     def get_result(self, key):
         return self.results.get(key, None)
+
+    def make_metric_visualisation(self, result, keys, source: dict, new_report: bool):
+        for plotable in keys:
+            if plotable in source.keys():
+                out_name = f'{result.name}_{plotable}'
+                result.vis_kwargs['out_path'] = os.path.join(
+                    self.write_dir, out_name)
+                result.vis_func(source.get(plotable),
+                                new_vis=new_report,
+                                **result.vis_kwargs)
 
     def make_report(self, keys, source: dict, new_report: bool):
         filename = 'report.txt'
@@ -51,12 +63,9 @@ class ResultWriter(DataWriter):
 
     def write_metrics(self, result: Result, new_report=False):
         metrics = result.metrics
-        result.vis_kwargs['out_path'] = f'{result.name}_first_derivative'
-        if 'first_derivative' in metrics.keys():
-            result.vis_func(metrics['first_derivative'],
-                            new_vis=new_report,
-                            **result.vis_kwargs)
+        plotables = ['first_derivative']
         writeables = ['steady_state', 'fold_change']
+        self.make_metric_visualisation(result, plotables, metrics, new_report)
         self.make_report(writeables, metrics, new_report)
 
     def write_all(self, new_report=False):

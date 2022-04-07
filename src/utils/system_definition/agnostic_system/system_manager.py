@@ -11,12 +11,6 @@ from src.utils.system_definition.agnostic_system.base_system import BaseSystem
 from src.utils.system_definition.agnostic_system.modelling import Deterministic
 
 
-class SystemManager():
-
-    def __init__(self, system=None) -> None:
-        self.system = system
-
-
 class CircuitModeller():
 
     def __init__(self, result_writer=None) -> None:

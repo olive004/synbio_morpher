@@ -1,6 +1,5 @@
 from copy import deepcopy
 from functools import partial
-import logging
 import os
 import random
 import pandas as pd
@@ -123,7 +122,6 @@ class Evolver():
         mutation_types = []
         for p in positions:
             possible_transitions = mapping[sequence[p]]
-            logging.info(possible_transitions)
             mutation_types.append(random.choice(
                 list(possible_transitions.values())))
         return mutation_types

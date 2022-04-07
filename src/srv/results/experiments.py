@@ -15,11 +15,9 @@ class Protocol():
         self.output = None
 
     def __call__(self, *input_args):
-        logging.info(input_args)
         if input_args is None:
             output = self.protocol()
         else:
-            logging.info(input_args)
             output = self.protocol(*input_args)
         if self.req_output:
             if output is not None:
@@ -40,7 +38,6 @@ class Experiment():
         out = None
         for protocol in self.protocols:
             logging.info(protocol.name)
-            logging.info(out)
             if protocol.req_input:
                 out = protocol(out)
             else:
