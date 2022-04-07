@@ -42,9 +42,10 @@ mapping = {
 
 class Mutations(Tabulated):
 
-    def __init__(self, mutation_name, template_file, template_seq,
+    def __init__(self, mutation_name, template_name, template_file, template_seq,
                  positions, mutation_types, algorithm='random') -> None:
         self.mutation_name = mutation_name
+        self.template_name = template_name
         self.template_file = template_file
         self.template_seq = template_seq
         self.mutation_types = mutation_types
@@ -67,7 +68,8 @@ class Mutations(Tabulated):
         for k, v in mapping.items():
             if mut_encoding in list(v.values()):
                 return k
-        raise ValueError(f'Could not find mutation mapping key {mut_encoding}.')
+        raise ValueError(
+            f'Could not find mutation mapping key {mut_encoding}.')
 
 
 class Evolver():
@@ -89,13 +91,15 @@ class Evolver():
                 0, len(sequence), size=num_mutations))
             return positions
 
-        def basic_mutator(species: BaseSpecies, position_generator, sample_idx: int = None):
+        def basic_mutator(species: BaseSpecies, position_generator, sample_idx: int = None,
+                          mutation_idx=None):
             sequence = species.data.get_data_by_idx(sample_idx)
             positions = position_generator(
                 sequence, species.mutation_nums[sample_idx])
 
             mutations = Mutations(
-                mutation_name=species.data.sample_names[sample_idx],
+                mutation_name=species.data.sample_names[sample_idx]+'_'+str(mutation_idx),
+                template_name=species.data.sample_names[sample_idx],
                 template_file=species.data.source,
                 template_seq=sequence,
                 mutation_types=self.sample_mutations(sequence, positions),
@@ -109,7 +113,7 @@ class Evolver():
                 species.mutations[sample] = {}
                 for c in range(species.mutation_counts[sample_idx]):
                     species.mutations[sample][c] = sample_mutator_func(
-                        species, sample_idx=sample_idx)
+                        species, sample_idx=sample_idx, mutation_idx=c)
             return species
 
         if algorithm == "random":

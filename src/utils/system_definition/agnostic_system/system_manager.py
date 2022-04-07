@@ -79,13 +79,13 @@ class CircuitModeller():
             all_copynumbers = steady_state_result.y
         return all_copynumbers
 
-    def model_circuit(self, modeller, copynumbers,
+    def model_circuit(self, modeller, copynumbers, circuit: BaseSystem,
                       signal=None, signal_idx=None):
-        modelling_func = self.get_modelling_func(modeller)
+        modelling_func = self.get_modelling_func(modeller, circuit=circuit)
         modelling_func = partial(modelling_func, t=None)
         current_copynumbers = copynumbers[:, -1].flatten()
         copynumbers = np.concatenate((copynumbers, np.zeros(
-            (self.species.data.size, modeller.max_time-1))
+            (circuit.species.data.size, modeller.max_time-1))
         ), axis=1)
         if signal is not None:
             copynumbers[signal_idx, :] = signal
@@ -120,10 +120,11 @@ class CircuitModeller():
         )
         new_copynumbers = self.model_circuit(signal_modeller,
                                              circuit.species.steady_state_copynums,
+                                             circuit=circuit,
                                              signal=signal.real_signal,
                                              signal_idx=signal.identities_idx)
 
-        self.species.copynumbers = np.concatenate(
+        circuit.species.copynumbers = np.concatenate(
             (circuit.species.copynumbers, new_copynumbers[:, 1:]), axis=1)
         self.result_writer.add_result(new_copynumbers,
                                       name='signal',

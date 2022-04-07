@@ -45,6 +45,12 @@ def main():
             name="simulate_interactions"
         ),
         Protocol(
+            CircuitModeller(result_writer=data_writer).simulate_signal,
+            req_input=True,
+            req_output=True,
+            name="simulate_signal"
+        ),
+        Protocol(
             CircuitModeller(result_writer=data_writer).visualise,
             req_input=True,
             name="writing_visualisations"
