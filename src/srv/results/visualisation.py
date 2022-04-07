@@ -70,15 +70,15 @@ class NetworkCustom(Network):
 
 
 def visualise_graph_pyvis(graph: nx.DiGraph,
-                          plot_name: str,
+                          out_path: str,
                           new_vis=False):
     import webbrowser
     import os
 
     out_type = 'html'
 
-    plot_name = f'{plot_name}_{make_time_str()}' if new_vis else plot_name
-    plot_name = plot_name + '.' + out_type
+    out_path = f'{out_path}_{make_time_str()}' if new_vis else out_path
+    out_path = out_path + '.' + out_type
 
     interactive_graph = NetworkCustom(
         height=800, width=800, directed=True, notebook=True)
@@ -86,12 +86,12 @@ def visualise_graph_pyvis(graph: nx.DiGraph,
     # interactive_graph.show_buttons(filter_=['edges'])
     interactive_graph.inherit_edge_colors(True)
     interactive_graph.set_edge_smooth('dynamic')
-    interactive_graph.show(plot_name)
+    interactive_graph.show(out_path)
 
     logging.info(graph)
 
     logger.info("Opening graph in browser...")
-    web_filename = 'file:///' + os.getcwd() + '/' + plot_name
+    web_filename = 'file:///' + os.getcwd() + '/' + out_path
     webbrowser.open(web_filename, new=1, autoraise=True)
 
 
@@ -107,11 +107,11 @@ class VisODE():
     def __init__(self) -> None:
         pass
 
-    def plot(self, data, y=None, legend_keys=None, new_vis=False, save_name='test_plot') -> None:
+    def plot(self, data, y=None, legend_keys=None, new_vis=False, out_path='test_plot') -> None:
         from src.utils.misc.string_handling import make_time_str
         from matplotlib import pyplot as plt
         timestamp = '' if not(new_vis) else '_' + make_time_str()
-        filename = f'{save_name}{timestamp}.png'
+        filename = f'{out_path}{timestamp}.png'
         plt.figure()
         if y is not None:
             plt.plot(data, y)

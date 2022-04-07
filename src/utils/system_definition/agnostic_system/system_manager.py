@@ -62,7 +62,7 @@ class CircuitModeller():
                                       category='time_series',
                                       vis_func=modeller_steady_state.plot,
                                       **{'legend_keys': list(circuit.species.data.sample_names),
-                                         'save_name': 'steady_state_plot'})
+                                         'out_path': 'steady_state_plot'})
         steady_state_metrics = self.result_writer.get_result(
             key='steady_state').metrics
         circuit.species.steady_state_copynums = steady_state_metrics[
@@ -136,7 +136,7 @@ class CircuitModeller():
                                       category='time_series',
                                       vis_func=signal_modeller.plot,
                                       **{'legend_keys': list(circuit.species.data.sample_names),
-                                         'save_name': 'signal_plot'})
+                                         'out_path': 'signal_plot'})
         return circuit
 
     def visualise(self, circuit: BaseSystem, mode="pyvis", new_vis=False):

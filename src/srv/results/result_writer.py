@@ -30,6 +30,8 @@ class ResultWriter(DataWriter):
     def add_result(self, result_data, category, vis_func, name, **vis_kwargs):
         """ category: 'time_series', 'graph' """
         name = f'Result_{len(self.results.keys())}' if not name else name
+        if 'out_path' in vis_kwargs.keys():
+            vis_kwargs['out_path'] = os.path.join(self.write_dir, vis_kwargs['out_path'])
         result_entry = Result(name, result_data, category,
                               vis_func, **vis_kwargs)
         self.results[name] = result_entry
@@ -49,7 +51,7 @@ class ResultWriter(DataWriter):
 
     def write_metrics(self, result: Result, new_report=False):
         metrics = result.metrics
-        result.vis_kwargs['save_name'] = f'{result.name}_first_derivative'
+        result.vis_kwargs['out_path'] = f'{result.name}_first_derivative'
         if 'first_derivative' in metrics.keys():
             result.vis_func(metrics['first_derivative'],
                             new_vis=new_report,
@@ -66,11 +68,11 @@ class ResultWriter(DataWriter):
 
     def visualise(self, circuit, mode="pyvis", new_vis=False):
 
-        plot_name = os.path.join(self.write_dir, 'graph')
+        out_path = os.path.join(self.write_dir, 'graph')
         if mode == 'pyvis':
             from src.srv.results.visualisation import visualise_graph_pyvis
             visualise_graph_pyvis(graph=circuit.graph,
-                                  plot_name=plot_name, new_vis=new_vis)
+                                  out_path=out_path, new_vis=new_vis)
         else:
             from src.srv.results.visualisation import visualise_graph_pyplot
             visualise_graph_pyplot(graph=circuit.graph, new_vis=new_vis)
