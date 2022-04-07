@@ -142,11 +142,5 @@ class CircuitModeller():
     def visualise(self, circuit: BaseSystem, mode="pyvis", new_vis=False):
         circuit.refresh_graph()
 
-        if mode == 'pyvis':
-            from src.srv.results.visualisation import visualise_graph_pyvis
-            visualise_graph_pyvis(circuit.graph, new_vis=new_vis)
-        else:
-            from src.srv.results.visualisation import visualise_graph_pyplot
-            visualise_graph_pyplot(circuit.graph, new_vis=new_vis)
-
+        self.result_writer.visualise(circuit, mode, new_vis)
         self.result_writer.write_all()

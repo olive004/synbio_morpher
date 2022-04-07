@@ -1,5 +1,7 @@
 
 
+from functools import partial
+import os
 from src.srv.results.metrics.analytics import Analytics
 from src.utils.data.manage.writer import DataWriter
 from src.utils.misc.string_handling import make_time_str
@@ -39,6 +41,7 @@ class ResultWriter(DataWriter):
         filename = 'report.txt'
         if new_report:
             filename = filename[:-4] + '_' + make_time_str() + '.txt'
+        filename = os.path.join(self.write_dir, filename)
         with open(filename, 'w') as fn:
             for writeable in keys:
                 fn.write(f'{writeable}: \n' +
@@ -60,3 +63,14 @@ class ResultWriter(DataWriter):
             result.vis_func(
                 result.data, new_vis=new_report, **result.vis_kwargs)
             self.write_metrics(result, new_report=new_report)
+
+    def visualise(self, circuit, mode="pyvis", new_vis=False):
+
+        plot_name = os.path.join(self.write_dir, 'graph')
+        if mode == 'pyvis':
+            from src.srv.results.visualisation import visualise_graph_pyvis
+            visualise_graph_pyvis(graph=circuit.graph,
+                                  plot_name=plot_name, new_vis=new_vis)
+        else:
+            from src.srv.results.visualisation import visualise_graph_pyplot
+            visualise_graph_pyplot(graph=circuit.graph, new_vis=new_vis)

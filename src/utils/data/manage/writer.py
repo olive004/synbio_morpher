@@ -20,16 +20,16 @@ class DataWriter():
         else:
             self.write_dir = out_location
 
-    def output(self, out_type, out_name=None, overwrite=True, **writer_kwargs):
+    def output(self, out_type, out_name=None, overwrite=False, **writer_kwargs):
         out_path = os.path.join(self.write_dir, out_name + '.' + out_type)
-        writer = self.get_write_func(out_type, out_path)
+        writer = self.get_write_func(out_type, out_path, overwrite=overwrite)
         writer(**writer_kwargs)
 
-    def get_write_func(self, out_type, out_path):
+    def get_write_func(self, out_type, out_path, overwrite):
         if out_type == "fasta":
             return partial(write_fasta_file, fname=out_path)
         if out_type == "csv":
-            return partial(write_csv, path_name=out_path)
+            return partial(write_csv, path_name=out_path, overwrite=overwrite)
         raise ValueError(
             f'No write function available for output of type {out_type}')
 

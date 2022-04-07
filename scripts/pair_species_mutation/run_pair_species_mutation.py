@@ -1,5 +1,8 @@
 from functools import partial
 import os
+from unittest import result
+
+from numpy import result_type
 from fire import Fire
 from scripts.common.circuit import construct_circuit_from_cfg
 
@@ -40,6 +43,11 @@ def main():
             req_input=True,
             req_output=True,
             name="simulate_interactions"
+        ),
+        Protocol(
+            CircuitModeller(result_writer=data_writer).visualise,
+            req_input=True,
+            name="writing_visualisations"
         )
     ]
     experiment = Experiment(config_file, protocols, data_writer=data_writer)

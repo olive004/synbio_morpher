@@ -70,12 +70,15 @@ class NetworkCustom(Network):
 
 
 def visualise_graph_pyvis(graph: nx.DiGraph,
-                          plot_name='test_graph.html',
+                          plot_name: str,
                           new_vis=False):
     import webbrowser
     import os
 
+    out_type = 'html'
+
     plot_name = f'{plot_name}_{make_time_str()}' if new_vis else plot_name
+    plot_name = plot_name + '.' + out_type
 
     interactive_graph = NetworkCustom(
         height=800, width=800, directed=True, notebook=True)
