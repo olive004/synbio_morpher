@@ -54,7 +54,7 @@ class CircuitModeller():
             max_time=50, time_step=1)
 
         circuit.species.copynumbers = self.compute_steady_states(modeller_steady_state,
-                                                                 circuit.species.copynumbers,
+                                                                 circuit=circuit,
                                                                  use_solver='ivp')
 
         self.result_writer.add_result(circuit.species.copynumbers,
@@ -69,8 +69,9 @@ class CircuitModeller():
             'steady_state']['steady_states']
         return circuit
 
-    def compute_steady_states(self, modeller, all_copynumbers, circuit,
+    def compute_steady_states(self, modeller, circuit: BaseSystem,
                               use_solver='naive'):
+        all_copynumbers = circuit.species.copynumbers
         if use_solver == 'naive':
             self.model_circuit(modeller, all_copynumbers)
         elif use_solver == 'ivp':

@@ -107,8 +107,9 @@ class Evolver():
 
         def full_mutator(species: BaseSpecies, sample_mutator_func):
             for sample_idx, sample in enumerate(species.data.sample_names):
+                species.mutations[sample] = {}
                 for c in range(species.mutation_counts[sample_idx]):
-                    species.mutations[sample] = sample_mutator_func(
+                    species.mutations[sample][c] = sample_mutator_func(
                         species, sample_idx=sample_idx)
             return species
 
@@ -127,9 +128,9 @@ class Evolver():
                 list(possible_transitions.values())))
         return mutation_types
 
-    def write_mutations(self, mutations: Mutations):
+    def write_mutations(self, mutations: Mutations, overwrite=False):
         self.data_writer.output(
-            out_type=self.out_type, out_name=self.out_name, data=mutations.as_table())
+            out_type=self.out_type, out_name=self.out_name, data=mutations.as_table(), overwrite=overwrite)
 
     def load_mutations(self):
         filename = os.path.join(

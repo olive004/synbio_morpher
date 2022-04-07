@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 import pandas as pd
 
 
@@ -64,9 +65,12 @@ def extend_int_to_list(int_like, target_num):
     return int_like
 
 
-def write_csv(data, path_name):
+def write_csv(data, path_name, overwrite=False):
     if type(data) == pd.DataFrame:
-        data.to_csv(path_name)
+        if overwrite or not os.path.exists(path_name):
+            data.to_csv(path_name, index=False)
+        else:
+            data.to_csv(path_name, mode='a', header=False, index=False)
     else:
         raise TypeError(
             f'Unsupported: cannot output data of type {type(data)} to csv.')

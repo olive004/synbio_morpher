@@ -20,7 +20,7 @@ class DataWriter():
         else:
             self.write_dir = out_location
 
-    def output(self, out_type, out_name=None, **writer_kwargs):
+    def output(self, out_type, out_name=None, overwrite=True, **writer_kwargs):
         out_path = os.path.join(self.write_dir, out_name + '.' + out_type)
         writer = self.get_write_func(out_type, out_path)
         writer(**writer_kwargs)
