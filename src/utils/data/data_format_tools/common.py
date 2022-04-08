@@ -3,6 +3,8 @@ import logging
 import os
 import pandas as pd
 
+from src.utils.misc.string_handling import make_time_str
+
 
 FORMAT_EXTS = {
     ".fasta": "fasta"
@@ -65,12 +67,14 @@ def extend_int_to_list(int_like, target_num):
     return int_like
 
 
-def write_csv(data, path_name, overwrite=False):
+def write_csv(data: pd.DataFrame, out_path, overwrite=False, new_vis=False):
+    if new_vis:
+        out_path = f'{out_path}_{make_time_str()}'
     if type(data) == pd.DataFrame:
-        if overwrite or not os.path.exists(path_name):
-            data.to_csv(path_name, index=False)
+        if overwrite or not os.path.exists(out_path):
+            data.to_csv(out_path, index=False)
         else:
-            data.to_csv(path_name, mode='a', header=False, index=False)
+            data.to_csv(out_path, mode='a', header=False, index=False)
     else:
         raise TypeError(
             f'Unsupported: cannot output data of type {type(data)} to csv.')

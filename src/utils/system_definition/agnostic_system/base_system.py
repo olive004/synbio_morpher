@@ -1,5 +1,6 @@
 from typing import List
 import numpy as np
+import pandas as pd
 import networkx as nx
 import logging
 
@@ -43,7 +44,7 @@ class BaseSpecies():
         # Counts: mutated iterations of a sequence
         self.mutation_counts = config_args.get(
             "mutations", {}).get("mutation_counts")
-        
+
         self.process_mutations()
         logging.info(self.mutation_counts)
 
@@ -71,7 +72,8 @@ class BaseSpecies():
         raise ValueError(f"Matrix init type {init_type} not recognised.")
 
     def process_mutations(self):
-        self.mutation_counts = extend_int_to_list(self.mutation_counts, self.count)
+        self.mutation_counts = extend_int_to_list(
+            self.mutation_counts, self.count)
         self.mutation_nums = extend_int_to_list(self.mutation_nums, self.count)
 
     def integrate_mutations(self):
@@ -89,6 +91,16 @@ class BaseSpecies():
         else:
             raise ValueError('Cannot set interactions to' +
                              f' type {type(new_interactions)}.')
+
+    def interactions_to_df(self):
+        interactions_df = pd.DataFrame.from_dict(self.interactions_to_dict())
+        return interactions_df
+
+    def interactions_to_dict(self):
+        interactions_dict = {}
+        for i, sample in enumerate(self.data.sample_names):
+            interactions_dict[sample] = {s: self.interactions[i, j] for j, s in enumerate(self.data.sample_names)}
+        return interactions_dict
 
     @property
     def current_copynumbers(self):

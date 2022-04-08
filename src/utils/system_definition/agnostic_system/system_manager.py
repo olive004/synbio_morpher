@@ -1,7 +1,9 @@
 from functools import partial
+import os
 import numpy as np
 from scipy import integrate
 from src.srv.results.result_writer import ResultWriter
+from src.utils.data.data_format_tools.common import write_csv
 
 from src.utils.misc.decorators import time_it
 from src.utils.misc.numerical import zero_out_negs
@@ -32,10 +34,17 @@ class CircuitModeller():
                        )
 
     @time_it
-    def compute_interaction_strengths(self, circuit):
+    def compute_interaction_strengths(self, circuit: BaseSystem):
         interactions = self.run_interaction_simulator(circuit,
                                                       circuit.species.data.data)
         circuit.species.interactions = interactions.matrix
+        self.result_writer.add_result(circuit.species.interactions,
+                                      name='interactions',
+                                      category='table',
+                                      vis_func=write_csv,
+                                      **{'data': circuit.species.interactions_to_df(),
+                                         'out_path': 'interactions'
+                                         })
         return circuit
 
     def run_interaction_simulator(self, circuit, data):

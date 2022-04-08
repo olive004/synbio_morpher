@@ -29,7 +29,7 @@ class DataWriter():
         if out_type == "fasta":
             return partial(write_fasta_file, fname=out_path)
         if out_type == "csv":
-            return partial(write_csv, path_name=out_path, overwrite=overwrite)
+            return partial(write_csv, out_path=out_path, overwrite=overwrite)
         raise ValueError(
             f'No write function available for output of type {out_type}')
 

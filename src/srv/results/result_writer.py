@@ -9,18 +9,18 @@ from src.utils.misc.string_handling import make_time_str
 
 
 class Result():
-    def __init__(self, name, data, category, vis_func, **vis_kwargs) -> None:
+    def __init__(self, name, result_data, category, vis_func, **vis_kwargs) -> None:
         self.name = name
-        self.data = data
+        self.data = result_data
         self.category = category
         self.vis_func = vis_func
         self.vis_kwargs = vis_kwargs
 
         self.metrics = []
-        self.analytics = Analytics(data, category)
+        self.analytics = Analytics(result_data, category)
         if category == 'time_series':
             from src.srv.results.metrics.plotting import Timeseries
-            self.metrics = Timeseries(data).generate_analytics()
+            self.metrics = Timeseries(result_data).generate_analytics()
 
 
 class ResultWriter(DataWriter):
@@ -51,12 +51,11 @@ class ResultWriter(DataWriter):
                                 new_vis=new_report,
                                 **result.vis_kwargs)
 
-    def make_report(self, keys, source: dict, new_report: bool):
-        filename = 'report.txt'
+    def make_report(self, keys, source: dict, new_report: bool, filename='report.txt'):
         if new_report:
             filename = filename[:-4] + '_' + make_time_str() + '.txt'
         filename = os.path.join(self.write_dir, filename)
-        with open(filename, 'w') as fn:
+        with open(filename, 'w+') as fn:
             for writeable in keys:
                 fn.write(f'{writeable}: \n' +
                          str(source.get(writeable, '')) + '\n')

@@ -77,7 +77,8 @@ def visualise_graph_pyvis(graph: nx.DiGraph,
 
     out_type = 'html'
 
-    out_path = f'{out_path}_{make_time_str()}' if new_vis else out_path
+    if new_vis:
+        out_path = f'{out_path}_{make_time_str()}'
     out_path = out_path + '.' + out_type
 
     interactive_graph = NetworkCustom(
