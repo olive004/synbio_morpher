@@ -2,7 +2,7 @@ from functools import partial
 from abc import ABC, abstractmethod
 import os
 import pandas as pd
-from src.utils.data.data_format_tools.common import find_sublist_max, write_csv
+from src.utils.data.data_format_tools.common import find_sublist_max, write_csv, write_json
 
 from src.utils.data.data_format_tools.manipulate_fasta import write_fasta_file
 from src.utils.misc.helper import get_subdirectories
@@ -30,6 +30,8 @@ class DataWriter():
             return partial(write_fasta_file, fname=out_path)
         if out_type == "csv":
             return partial(write_csv, out_path=out_path, overwrite=overwrite)
+        if out_type == "json":
+            return partial(write_json, out_path=out_path, overwrite=overwrite)
         raise ValueError(
             f'No write function available for output of type {out_type}')
 

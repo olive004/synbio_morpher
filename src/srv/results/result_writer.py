@@ -6,7 +6,7 @@ import logging
 import os
 from src.srv.results.metrics.analytics import Analytics
 from src.utils.data.manage.writer import DataWriter
-from src.utils.misc.string_handling import make_time_str
+from src.utils.misc.string_handling import add_outtype, make_time_str
 
 
 class Result():
@@ -52,15 +52,13 @@ class ResultWriter(DataWriter):
                                 new_vis=new_report,
                                 **result.vis_kwargs)
 
-    def make_report(self, keys, source: dict, new_report: bool, filename='report.txt'):
+    def make_report(self, keys, source: dict, new_report: bool, out_name='report', out_type='json'):
         if new_report:
-            filename = filename[:-4] + '_' + make_time_str() + '.json'
-        filename = os.path.join(self.write_dir, filename)
+            out_name = out_name + '_' + make_time_str()
         write_dict = {}
         for writeable in keys:
             write_dict[writeable] = source.get(writeable, '')
-        with open(filename, 'w+') as fn:
-            json.dump(write_dict, fp=fn)
+        self.output(out_type, out_name, overwrite=not(new_report), **{'data': write_dict})
 
     def write_metrics(self, result: Result, new_report=False):
         metrics = result.metrics

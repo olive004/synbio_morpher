@@ -14,7 +14,7 @@ def make_time_str():
 
 def add_outtype(filepath, out_type):
     if out_type in filepath:
-        f'Out type {out_type} already in filepath {filepath}.'
+        return filepath
     return filepath + '.' + out_type
 
 

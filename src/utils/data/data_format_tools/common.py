@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import numpy as np
 import pandas as pd
 
 from src.utils.misc.string_handling import add_outtype, make_time_str
@@ -40,6 +41,19 @@ def load_json_as_dict(json_pathname):
         SystemExit
 
 
+def process_dict_for_json(dict_like):
+    for k, v in dict_like.items():
+        logging.info(v)
+        logging.info(type(v))
+        if type(v) == dict:
+            v = process_dict_for_json(v)
+        if type(v) == np.bool_:
+            dict_like[k] = bool(v)
+        if type(v) == np.ndarray:
+            dict_like[k] = v.tolist()
+    return dict_like
+
+
 def get_bulkiest_dict_key(dict_like):
     k_bulkiest = list(dict_like.keys())[0]
     prev_v = dict_like[k_bulkiest]
@@ -67,7 +81,7 @@ def extend_int_to_list(int_like, target_num):
     return int_like
 
 
-def write_csv(data: pd.DataFrame, out_path, overwrite=False, new_vis=False, out_type='csv'):
+def write_csv(data: pd.DataFrame, out_path: str, overwrite=False, new_vis=False, out_type='csv'):
     if new_vis:
         out_path = f'{out_path}_{make_time_str()}'
     out_path = add_outtype(out_path, out_type)
@@ -79,3 +93,11 @@ def write_csv(data: pd.DataFrame, out_path, overwrite=False, new_vis=False, out_
     else:
         raise TypeError(
             f'Unsupported: cannot output data of type {type(data)} to csv.')
+
+
+def write_json(data: dict, out_path: str, overwrite=False, out_type='json'):
+    logging.info(data)
+    data = process_dict_for_json(data)
+    logging.info(data)
+    with open(out_path, 'w+') as fn:
+        json.dump(data, fp=fn)
