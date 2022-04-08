@@ -16,7 +16,7 @@ class Result():
         self.vis_func = vis_func
         self.vis_kwargs = vis_kwargs
 
-        self.metrics = []
+        self.metrics = {}
         self.analytics = Analytics(result_data, category)
         if category == 'time_series':
             from src.srv.results.metrics.plotting import Timeseries

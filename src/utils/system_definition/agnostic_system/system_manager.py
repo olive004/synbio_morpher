@@ -38,13 +38,8 @@ class CircuitModeller():
         interactions = self.run_interaction_simulator(circuit,
                                                       circuit.species.data.data)
         circuit.species.interactions = interactions.matrix
-        self.result_writer.add_result(circuit.species.interactions,
-                                      name='interactions',
-                                      category='table',
-                                      vis_func=write_csv,
-                                      **{'data': circuit.species.interactions_to_df(),
-                                         'out_path': 'interactions'
-                                         })
+        self.result_writer.output(
+            out_type='csv', out_name='interactions', data=circuit.species.interactions_to_df(), overwrite=False)
         return circuit
 
     def run_interaction_simulator(self, circuit, data):

@@ -1,7 +1,7 @@
 import networkx as nx
 import numpy as np
 import logging
-from src.utils.misc.string_handling import make_time_str
+from src.utils.misc.string_handling import add_outtype, make_time_str
 from pyvis.network import Network
 
 
@@ -79,7 +79,7 @@ def visualise_graph_pyvis(graph: nx.DiGraph,
 
     if new_vis:
         out_path = f'{out_path}_{make_time_str()}'
-    out_path = out_path + '.' + out_type
+    out_path = add_outtype(out_path, out_type)
 
     interactive_graph = NetworkCustom(
         height=800, width=800, directed=True, notebook=True)

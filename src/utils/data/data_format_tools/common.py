@@ -3,7 +3,7 @@ import logging
 import os
 import pandas as pd
 
-from src.utils.misc.string_handling import make_time_str
+from src.utils.misc.string_handling import add_outtype, make_time_str
 
 
 FORMAT_EXTS = {
@@ -67,9 +67,10 @@ def extend_int_to_list(int_like, target_num):
     return int_like
 
 
-def write_csv(data: pd.DataFrame, out_path, overwrite=False, new_vis=False):
+def write_csv(data: pd.DataFrame, out_path, overwrite=False, new_vis=False, out_type='csv'):
     if new_vis:
         out_path = f'{out_path}_{make_time_str()}'
+    out_path = add_outtype(out_path, out_type)
     if type(data) == pd.DataFrame:
         if overwrite or not os.path.exists(out_path):
             data.to_csv(out_path, index=False)

@@ -12,6 +12,12 @@ def make_time_str():
     return now.strftime("%Y_%m_%d_%H%M%S")
 
 
+def add_outtype(filepath, out_type):
+    if out_type in filepath:
+        f'Out type {out_type} already in filepath {filepath}.'
+    return filepath + '.' + out_type
+
+
 def ordered_merge(list1, list2, mask) -> list:
     # its = [iter(l) for l in lists]
     # for m in mask:

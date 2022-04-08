@@ -6,7 +6,7 @@ from src.utils.data.data_format_tools.common import find_sublist_max, write_csv
 
 from src.utils.data.data_format_tools.manipulate_fasta import write_fasta_file
 from src.utils.misc.helper import get_subdirectories
-from src.utils.misc.string_handling import make_time_str
+from src.utils.misc.string_handling import add_outtype, make_time_str
 
 
 class DataWriter():
@@ -21,7 +21,7 @@ class DataWriter():
             self.write_dir = out_location
 
     def output(self, out_type, out_name=None, overwrite=False, **writer_kwargs):
-        out_path = os.path.join(self.write_dir, out_name + '.' + out_type)
+        out_path = os.path.join(self.write_dir, add_outtype(out_name, out_type))
         writer = self.get_write_func(out_type, out_path, overwrite=overwrite)
         writer(**writer_kwargs)
 

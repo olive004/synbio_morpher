@@ -5,6 +5,7 @@ import random
 import pandas as pd
 import numpy as np
 from src.utils.data.manage.writer import DataWriter, Tabulated
+from src.utils.misc.string_handling import add_outtype
 
 
 from src.utils.system_definition.agnostic_system.base_system import BaseSpecies, BaseSystem
@@ -136,5 +137,5 @@ class Evolver():
 
     def load_mutations(self):
         filename = os.path.join(
-            self.data_writer.write_dir, self.out_name + '.' + self.out_type)
+            self.data_writer.write_dir, add_outtype(self.out_name, self.out_type))
         return pd.read_csv(filename).to_dict()
