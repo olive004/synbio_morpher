@@ -1,6 +1,7 @@
 
 
 from functools import partial
+import json
 import logging
 import os
 from src.srv.results.metrics.analytics import Analytics
@@ -53,12 +54,13 @@ class ResultWriter(DataWriter):
 
     def make_report(self, keys, source: dict, new_report: bool, filename='report.txt'):
         if new_report:
-            filename = filename[:-4] + '_' + make_time_str() + '.txt'
+            filename = filename[:-4] + '_' + make_time_str() + '.json'
         filename = os.path.join(self.write_dir, filename)
+        write_dict = {}
+        for writeable in keys:
+            write_dict[writeable] = source.get(writeable, '')
         with open(filename, 'w+') as fn:
-            for writeable in keys:
-                fn.write(f'{writeable}: \n' +
-                         str(source.get(writeable, '')) + '\n')
+            json.dump(write_dict, fp=fn)
 
     def write_metrics(self, result: Result, new_report=False):
         metrics = result.metrics
