@@ -89,9 +89,6 @@ def visualise_graph_pyvis(graph: nx.DiGraph,
     interactive_graph.set_edge_smooth('dynamic')
     interactive_graph.show(out_path)
 
-    logging.info(graph)
-
-    logger.info("Opening graph in browser...")
     web_filename = 'file:///' + os.getcwd() + '/' + out_path
     webbrowser.open(web_filename, new=1, autoraise=True)
 

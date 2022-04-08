@@ -43,8 +43,6 @@ def load_json_as_dict(json_pathname):
 
 def process_dict_for_json(dict_like):
     for k, v in dict_like.items():
-        logging.info(v)
-        logging.info(type(v))
         if type(v) == dict:
             v = process_dict_for_json(v)
         if type(v) == np.bool_:
@@ -96,8 +94,6 @@ def write_csv(data: pd.DataFrame, out_path: str, overwrite=False, new_vis=False,
 
 
 def write_json(data: dict, out_path: str, overwrite=False, out_type='json'):
-    logging.info(data)
     data = process_dict_for_json(data)
-    logging.info(data)
     with open(out_path, 'w+') as fn:
         json.dump(data, fp=fn)
