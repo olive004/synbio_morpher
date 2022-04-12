@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import List
 import numpy as np
 import pandas as pd
@@ -25,12 +26,10 @@ class BaseSpecies():
         self.data = config_args.get("data")
         self.identities = config_args.get("identities")
 
-        self.interactions = self.init_matrix(ndims=2, init_type="randint")
+        self.interactions = self.init_matrix(ndims=2, init_type="zeros")
         self.complexes = self.init_matrix(ndims=2, init_type="zeros")
-        self.degradation_rates = self.init_matrix(ndims=1, init_type="uniform",
-                                                  uniform_val=20)
-        self.creation_rates = self.init_matrix(ndims=1, init_type="uniform",
-                                               uniform_val=50)
+        self.degradation_rates = self.init_matrix(ndims=1, init_type="uniform")
+        self.creation_rates = self.init_matrix(ndims=1, init_type="uniform")
 
         self.copynumbers = None
         self.current_copynumbers = None
@@ -76,9 +75,9 @@ class BaseSpecies():
             self.mutation_counts, self.count)
         self.mutation_nums = extend_int_to_list(self.mutation_nums, self.count)
 
-    def integrate_mutations(self):
-        for sample, mut in self.mutations.items():
-            self.data.add_data(sample, mut.get_sequence())
+    # def integrate_mutations(self):
+    #     for sample, mut in self.mutations.items():
+    #         self.data.add_data(sample, mut.get_sequence())
 
     @property
     def interactions(self):
@@ -165,6 +164,11 @@ class BaseSystem():
 
     def get_graph_labels(self) -> dict:
         return sorted(self.graph)
+
+    def get_subsystem(self, key):
+        subsystem = deepcopy(self)
+        
+        self.species.mutations.get(key)
 
     @property
     def graph(self):

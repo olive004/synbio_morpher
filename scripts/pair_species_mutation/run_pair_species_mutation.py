@@ -2,14 +2,12 @@ from functools import partial
 import os
 from unittest import result
 
-from numpy import result_type
 from fire import Fire
 from scripts.common.circuit import construct_circuit_from_cfg
 
 from src.srv.results.experiments import Experiment, Protocol
 from src.srv.results.result_writer import ResultWriter
 from src.utils.data.fake_data_generation.seq_generator import RNAGenerator
-from src.utils.data.manage.writer import DataWriter
 from src.utils.evolution.mutation import Evolver
 from src.utils.system_definition.agnostic_system.system_manager import CircuitModeller
 
