@@ -79,7 +79,7 @@ class NucleotideGenerator(SeqGenerator):
 
     def generate_circuit(self, count=5, slength=20, protocol="random",
                          fname='toy_mRNA_circuit',
-                         output_format='.fasta',
+                         out_type='fasta',
                          proportion_to_mutate=0, template=None):
         """ Protocol can be 
         'random': Random sequence generated with weighted characters
@@ -111,7 +111,7 @@ class NucleotideGenerator(SeqGenerator):
                                     str_prob_dict=self.SEQ_POOL, slength=slength)
             raise NotImplementedError
 
-        out_path = self.data_writer.output(out_name=fname, out_type='fasta',
+        out_path = self.data_writer.output(out_name=fname, out_type=out_type,
                                            seq_generator=seq_generator, stype=self.stype, 
                                            count=count, return_path=True)
         return {'data': out_path}

@@ -6,6 +6,7 @@ from scripts.common.circuit import construct_circuit_from_cfg
 
 from src.srv.results.experiments import Experiment, Protocol
 from src.srv.results.result_writer import ResultWriter
+from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.data.fake_data_generation.seq_generator import RNAGenerator
 from src.utils.evolution.mutation import Evolver
 from src.utils.system_definition.agnostic_system.system_manager import CircuitModeller
@@ -15,13 +16,16 @@ def main():
     # set configs
     config_file = os.path.join(
         "scripts", "pair_species_mutation", "configs", "RNA_pair_species_mutation.json")
+    exp_configs = load_json_as_dict(config_file).get("experiment")
     # start_experiment
     data_writer_kwargs = {'purpose': 'pair_species_mutation'}
     data_writer = ResultWriter(**data_writer_kwargs)
     protocols = [
         Protocol(
-            partial(RNAGenerator(data_writer=data_writer).generate_circuit,
-                    count=3, slength=25, protocol="template_mix"),
+            partial(RNAGenerator(data_writer=data_writer).generate_circuits,
+                    iter_count=exp_configs.get("repetitions"),
+                    count=3, slength=exp_configs.get("sequence_length"), 
+                    protocol=exp_configs.get("generator_protocol")),
             name="generating_sequences",
             req_output=True
         ),

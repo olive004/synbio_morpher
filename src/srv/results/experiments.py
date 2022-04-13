@@ -53,5 +53,6 @@ class Experiment():
     def collect_experiment(self):
         return {
             "total_time": str(self.total_time),
-            "protocols": [p.name for p in self.protocols]
+            "protocols": [p.name for p in self.protocols],
+            "purpose": self.data_writer.purpose
         }
