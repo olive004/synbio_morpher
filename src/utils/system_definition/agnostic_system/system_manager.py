@@ -151,6 +151,7 @@ class CircuitModeller():
 
     def wrap_mutations(self, circuit: BaseSystem, methods: dict):
         mutation_dict = flatten_nested_dict(circuit.species.mutations.items())
+        logging.info(mutation_dict)
         for name, mutation in mutation_dict.items():
             logging.info(name)
             subcircuit = circuit.make_subsystem(name, mutation)

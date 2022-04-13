@@ -30,7 +30,8 @@ def load_json_as_dict(json_pathname):
         return jdict
     except FileNotFoundError:
         logging.error(f'JSON path {json_pathname} not found')
-        SystemExit
+        import sys
+        sys.exit()
 
 
 def process_dict_for_json(dict_like):

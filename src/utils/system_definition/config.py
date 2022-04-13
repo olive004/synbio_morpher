@@ -33,12 +33,12 @@ def handle_simulator_cfgs(simulator, simulator_cfg_path):
     return cfg_protocol(simulator_cfg)
 
 
-def parse_cfg_args(config_file: dict = None, dict_args: Dict = None) -> Dict:
+def parse_cfg_args(config_args: dict = None, dict_args: Dict = None) -> Dict:
 
     if dict_args is None:
         dict_args = retrieve_default_args()
     dict_args = load_simulator_cfgs(dict_args)
-    dict_args = merge_dicts(dict_args, config_file)
+    dict_args = merge_dicts(dict_args, config_args)
 
     return dict_args
 

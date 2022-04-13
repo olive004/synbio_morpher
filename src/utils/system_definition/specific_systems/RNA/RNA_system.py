@@ -43,20 +43,13 @@ class RNASpecies(BaseSpecies):
     def __init__(self, config_args):
         super().__init__(config_args)
 
-        self.interactions = self.init_matrix(ndims=2, init_type="randint")
-        self.complexes = self.init_matrix(ndims=2, init_type="zeros")
-        self.degradation_rates = self.init_matrix(ndims=1, init_type="uniform",
-                                                  uniform_val=20)
-        self.creation_rates = self.init_matrix(ndims=1, init_type="uniform",
-                                               uniform_val=50)
-        self.copynumbers = self.init_matrix(ndims=1, init_type="uniform",
-                                            uniform_val=5)
-        self.copynumbers = None  # For modelling
+        molecular_params = config_args.get("molecular_params")
 
-        self.params = {
-            "creation_rates": self.creation_rates,
-            "copynumbers": self.copynumbers,
-            "complexes": self.complexes,
-            "degradation_rates": self.degradation_rates,
-            "interactions": self.interactions
-        }
+        self.interactions = self.init_matrix(ndims=2, init_type="randint")
+        self.degradation_rates = self.init_matrix(ndims=1, init_type="uniform",
+                                                  uniform_val=molecular_params.get("degradation_rates"))
+        self.creation_rates = self.init_matrix(ndims=1, init_type="uniform",
+                                               uniform_val=molecular_params.get("creation_rates"))
+        # self.copynumbers = self.init_matrix(ndims=1, init_type="uniform",
+        #                                     uniform_val=5)
+        self.copynumbers = None  # For modelling

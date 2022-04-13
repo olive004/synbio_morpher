@@ -33,13 +33,25 @@ def main():
             req_output=True,
             name="making_circuit"
         ),
-        Protocol(sys.exit),
+        # Protocol(sys.exit),
         Protocol(
             Evolver(data_writer=data_writer).mutate,
             req_input=True,
             req_output=True,
             name="generate_mutations"
         ),
+        Protocol(
+            CircuitModeller(result_writer=data_writer).init_circuit,
+            req_input=True,
+            req_output=True,
+            name="test"
+        ),
+        Protocol(
+            CircuitModeller(result_writer=data_writer).simulate_signal,
+            req_input=True,
+            name="test"
+        ),
+        Protocol(sys.exit),
         Protocol(
             partial(CircuitModeller(result_writer=data_writer).wrap_mutations, methods={
                 "init_circuit": {},

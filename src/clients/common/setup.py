@@ -15,7 +15,8 @@ def compose_kwargs(config_filename: str) -> dict:
         "data": data_manager.data,
         "identities": data_manager.data.identities,
         "mutations": make_values_list(config_file.get("mutations")),
-        "signal": load_json_as_dict(config_file.get("signal"))
+        "signal": load_json_as_dict(config_file.get("signal")),
+        "molecular_params": load_json_as_dict(config_file.get("molecular_params"))
     }
     return kwargs
 
@@ -30,5 +31,4 @@ def instantiate_system(kwargs):
 
     system_cfg_args = parse_cfg_args(kwargs)
     SystemType = get_system_type(kwargs.get("system_type"))
-    initialised_sys = SystemType(system_cfg_args)
-    return initialised_sys
+    return SystemType(system_cfg_args)
