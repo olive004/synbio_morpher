@@ -2,11 +2,12 @@ from functools import partial
 from abc import ABC, abstractmethod
 import os
 import pandas as pd
-from src.utils.data.data_format_tools.common import find_sublist_max, write_csv, write_json
+from src.utils.data.data_format_tools.common import write_csv, write_json
 
 from src.utils.data.data_format_tools.manipulate_fasta import write_fasta_file
 from src.utils.misc.helper import get_subdirectories
 from src.utils.misc.string_handling import add_outtype, make_time_str
+from src.utils.misc.type_handling import find_sublist_max
 
 
 class DataWriter():

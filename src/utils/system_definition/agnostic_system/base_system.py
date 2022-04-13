@@ -6,7 +6,7 @@ import networkx as nx
 import logging
 
 from src.srv.parameter_prediction.interactions import InteractionMatrix
-from src.utils.data.data_format_tools.common import extend_int_to_list
+from src.utils.misc.type_handling import extend_int_to_list
 
 
 FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"

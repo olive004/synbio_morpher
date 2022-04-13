@@ -8,6 +8,7 @@ from src.utils.data.data_format_tools.common import write_csv
 
 from src.utils.misc.decorators import time_it
 from src.utils.misc.numerical import zero_out_negs
+from src.utils.misc.type_handling import flatten_nested_dict
 from src.utils.signal.inputs import Signal
 from src.srv.parameter_prediction.simulator import InteractionSimulator
 from src.utils.system_definition.agnostic_system.base_system import BaseSystem
@@ -147,7 +148,7 @@ class CircuitModeller():
 
     def wrap_mutations(self, circuit: BaseSystem, methods: dict):
         
-        for name, mutation in circuit.species.mutations.items():
+        for name, mutation in flatten_nested_dict(circuit.species.mutations.items()):
             logging.info(name)
             logging.info(mutation)
             subcircuit = circuit.make_subsystem(name, mutation)

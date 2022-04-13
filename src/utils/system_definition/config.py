@@ -5,7 +5,8 @@ from typing import Dict, List
 
 from src.srv.parameter_prediction.simulator_loading import find_simulator_loader
 from src.utils.misc.string_handling import remove_special_py_functions
-from src.utils.data.data_format_tools.common import merge_dicts, load_json_as_dict
+from src.utils.data.data_format_tools.common import load_json_as_dict
+from src.utils.misc.type_handling import merge_dicts
 
 
 # ROOT_DIR = os.environ['ROOT_DIR']
