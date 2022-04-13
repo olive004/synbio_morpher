@@ -1,0 +1,7 @@
+{
+    "interaction_simulator": "IntaRNA",
+    "molecular_params": "./src/utils/system_definition/specific_systems/RNA/configs/RNA_system.json",
+    "repetitions": 1000,
+    
+    "system_type": "RNA"
+}
