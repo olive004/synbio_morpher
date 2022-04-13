@@ -19,9 +19,9 @@ logger.setLevel(logging.INFO)
 class BaseSpecies():
     def __init__(self, config_args: dict) -> None:
 
-        # Probability distribution for each interaction component?
-        # Can also use different types of moments of prob distribution
-        # for each
+        ## Probability distribution for each interaction component?
+        ## Can also use different types of moments of prob distribution
+        ## for each
 
         self.data = config_args.get("data")  # Data common class
         self.identities = config_args.get("identities")
@@ -37,15 +37,14 @@ class BaseSpecies():
             ndims=1, init_type="zeros")
 
         self.mutations = {}
-        # Nums: mutations within a sequence
+        ## Nums: mutations within a sequence
         self.mutation_nums = config_args.get(
             "mutations", {}).get("mutation_nums")
-        # Counts: mutated iterations of a sequence
+        ## Counts: mutated iterations of a sequence
         self.mutation_counts = config_args.get(
             "mutations", {}).get("mutation_counts")
 
         self.process_mutations()
-        logging.info(self.mutation_counts)
 
     def init_matrices(self, uniform_vals, ndims=2, init_type="rand") -> List[np.array]:
         matrices = (self.init_matrix(ndims, init_type, val)

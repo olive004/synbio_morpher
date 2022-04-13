@@ -1,8 +1,5 @@
 
 
-import logging
-
-
 class Data():
 
     def __init__(self, loaded_data: dict, identities: dict, source_files=None) -> None:

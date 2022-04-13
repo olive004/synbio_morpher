@@ -38,9 +38,6 @@ class RNASystem(BaseSystem):
     def process_species(self):
         self.node_labels = self.species.data.sample_names
 
-    # def load_mutations(self, mutations):
-    #     self.species.mutations = mutations
-
 
 class RNASpecies(BaseSpecies):
     def __init__(self, config_args):

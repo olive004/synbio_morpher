@@ -68,7 +68,7 @@ class Mutations(Tabulated):
             logging.info(f'All mutation types: {self.mutation_types}')
             logging.info(f'Position: {p}')
             logging.info(f'Chosen mutation enc: {self.mutation_types[i]}')
-            logging.info(f'Chosen mutation nuc: {self.mutation_types[i]}')
+            logging.info(f'Chosen mutation nuc: {point_mutation}')
             logging.info(f'Sequence: {seq[:p]} {seq[p]} {seq[p+1:]}')
             logging.info(f'Targ seq: {seq[:p]} {point_mutation} {seq[p+1:]}')
             seq = list(seq)

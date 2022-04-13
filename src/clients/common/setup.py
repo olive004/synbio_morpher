@@ -1,3 +1,4 @@
+import logging
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.data.manage.data_manager import DataManager
 from src.utils.misc.type_handling import make_values_list
@@ -29,4 +30,5 @@ def instantiate_system(kwargs):
 
     system_cfg_args = parse_cfg_args(kwargs)
     SystemType = get_system_type(kwargs.get("system_type"))
-    return SystemType(system_cfg_args)
+    initialised_sys = SystemType(system_cfg_args)
+    return initialised_sys

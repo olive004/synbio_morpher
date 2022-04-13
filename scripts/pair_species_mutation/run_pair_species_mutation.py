@@ -1,5 +1,6 @@
 from functools import partial
 import os
+import sys
 from timeit import timeit
 from unittest import result
 
@@ -32,6 +33,7 @@ def main():
             req_output=True,
             name="making_circuit"
         ),
+        Protocol(sys.exit),
         Protocol(
             Evolver(data_writer=data_writer).mutate,
             req_input=True,
