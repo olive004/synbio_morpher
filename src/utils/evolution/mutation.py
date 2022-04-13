@@ -61,17 +61,17 @@ class Mutations(Tabulated):
         return list(self.__dict__.keys()), list(self.__dict__.values())
 
     def get_sequence(self):
-        # seq = list(deepcopy(self.template_seq))
-        seq = deepcopy(self.template_seq)
+        seq = list(deepcopy(self.template_seq))
+        # seq = deepcopy(self.template_seq)
         for i, p in enumerate(self.positions):
-            point_mutation = self.reverse_mut_mapping(self.mutation_types[i])
-            logging.info(f'All mutation types: {self.mutation_types}')
-            logging.info(f'Position: {p}')
-            logging.info(f'Chosen mutation enc: {self.mutation_types[i]}')
-            logging.info(f'Chosen mutation nuc: {point_mutation}')
-            logging.info(f'Sequence: {seq[:p]} {seq[p]} {seq[p+1:]}')
-            logging.info(f'Targ seq: {seq[:p]} {point_mutation} {seq[p+1:]}')
-            seq = list(seq)
+            # point_mutation = self.reverse_mut_mapping(self.mutation_types[i])
+            # logging.info(f'All mutation types: {self.mutation_types}')
+            # logging.info(f'Position: {p}')
+            # logging.info(f'Chosen mutation enc: {self.mutation_types[i]}')
+            # logging.info(f'Chosen mutation nuc: {point_mutation}')
+            # logging.info(f'Sequence: {seq[:p]} {seq[p]} {seq[p+1:]}')
+            # logging.info(f'Targ seq: {seq[:p]} {point_mutation} {seq[p+1:]}')
+            # seq = list(seq)
             seq[p] = self.reverse_mut_mapping(self.mutation_types[i])
         return ''.join(seq)
 
