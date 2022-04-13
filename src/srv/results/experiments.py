@@ -37,14 +37,26 @@ class Experiment():
 
     def run_experiment(self):
         out = None
-        for protocol in self.protocols:
-            logging.info(protocol.name)
-            if protocol.req_input:
-                out = protocol(out)
-            else:
-                out = protocol()
+        self.iterate_protocols(self.protocols, out)
+
         self.total_time = datetime.now() - self.start_time
         self.write_experiment()
+
+    def iterate_protocols(self, protocols, out):
+        for protocol in protocols:
+            if type(protocol) == Protocol:
+                logging.info(protocol.name)
+                out = self.call_protocol(protocol, out)
+            elif type(protocol) == list and type(out) == list:
+                for o in out:
+                    self.iterate_protocols(protocols=protocol, out=o)
+
+    def call_protocol(self, protocol, out=None):
+        if protocol.req_input:
+            out = protocol(out)
+        else:
+            out = protocol()
+        return out
 
     def write_experiment(self):
         experiment_data = self.collect_experiment()
