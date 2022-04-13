@@ -144,9 +144,13 @@ class CircuitModeller():
                                          'out_path': 'signal_plot'})
         return circuit
 
-    def simulate_signal_all(self, circuit: BaseSystem, signal: Signal = None):
+    def wrap_mutations(self, circuit: BaseSystem, methods: dict):
         
-        for mutation in circuit.
+        for name, mutation in circuit.species.mutations.items():
+            subcircuit = circuit.make_subsystem(name, mutation)
+            for method, kwargs in methods.items():
+                if hasattr(self, method):
+                    subcircuit = getattr(self, method)(subcircuit, **kwargs)
 
     def visualise(self, circuit: BaseSystem, mode="pyvis", new_vis=False):
         circuit.refresh_graph()

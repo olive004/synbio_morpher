@@ -7,6 +7,7 @@ import logging
 
 from src.srv.parameter_prediction.interactions import InteractionMatrix
 from src.utils.data.data_format_tools.common import extend_int_to_list
+from src.utils.evolution.mutation import Mutations
 
 
 FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
@@ -23,7 +24,7 @@ class BaseSpecies():
         # Can also use different types of moments of prob distribution
         # for each
 
-        self.data = config_args.get("data")
+        self.data = config_args.get("data")  # Data generic
         self.identities = config_args.get("identities")
 
         self.interactions = self.init_matrix(ndims=2, init_type="zeros")
@@ -75,9 +76,9 @@ class BaseSpecies():
             self.mutation_counts, self.count)
         self.mutation_nums = extend_int_to_list(self.mutation_nums, self.count)
 
-    # def integrate_mutations(self):
-    #     for sample, mut in self.mutations.items():
-    #         self.data.add_data(sample, mut.get_sequence())
+    def mutate(self, mutation: Mutations):
+
+        self.data
 
     @property
     def interactions(self):
@@ -98,7 +99,8 @@ class BaseSpecies():
     def interactions_to_dict(self):
         interactions_dict = {}
         for i, sample in enumerate(self.data.sample_names):
-            interactions_dict[sample] = {s: self.interactions[i, j] for j, s in enumerate(self.data.sample_names)}
+            interactions_dict[sample] = {s: self.interactions[i, j]
+                                         for j, s in enumerate(self.data.sample_names)}
         return interactions_dict
 
     @property
@@ -165,10 +167,15 @@ class BaseSystem():
     def get_graph_labels(self) -> dict:
         return sorted(self.graph)
 
-    def get_subsystem(self, key):
+    def make_subsystem(self, mutation_name: str, mutation: Mutations = None):
         subsystem = deepcopy(self)
-        
-        self.species.mutations.get(key)
+
+        if mutation is None:
+            mutation = self.species.mutations.get(mutation_name)
+
+        subsystem.species.mutate(mutation)
+
+        return subsystem
 
     @property
     def graph(self):

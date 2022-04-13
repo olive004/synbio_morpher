@@ -37,6 +37,17 @@ def main():
             name="generate_mutations"
         ),
         Protocol(
+            partial(CircuitModeller(result_writer=data_writer).wrap_mutations, methods={
+                "init_circuit": {},
+                "simulate_signal": {},
+                "visualise": {}
+            }
+            ),
+            req_input=True,
+            req_output=True,
+            name="simulate_interactions"
+        ),
+        Protocol(
             CircuitModeller(result_writer=data_writer).init_circuit,
             req_input=True,
             req_output=True,
