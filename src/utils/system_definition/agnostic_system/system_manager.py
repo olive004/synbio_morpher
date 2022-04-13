@@ -149,16 +149,21 @@ class CircuitModeller():
                                          'out_path': 'signal_plot'})
         return circuit
 
-    def wrap_mutations(self, circuit: BaseSystem, methods: dict):
+    def wrap_mutations(self, circuit: BaseSystem, methods: dict, include_normal_run=True):
         mutation_dict = flatten_nested_dict(circuit.species.mutations.items())
         logging.info(mutation_dict)
-        for name, mutation in mutation_dict.items():
+        for i, (name, mutation) in enumerate(mutation_dict.items()):
             logging.info(name)
+            if include_normal_run and i==0:
+                self.apply_to_circuit(circuit, methods)
             subcircuit = circuit.make_subsystem(name, mutation)
             self.subdivide_result_writing(name)
-            for method, kwargs in methods.items():
-                if hasattr(self, method):
-                    subcircuit = getattr(self, method)(subcircuit, **kwargs)
+            self.apply_to_circuit(subcircuit, methods)
+
+    def apply_to_circuit(self, circuit: BaseSystem, methods: dict):
+        for method, kwargs in methods.items():
+            if hasattr(self, method):
+                circuit = getattr(self, method)(circuit, **kwargs)
 
     def visualise(self, circuit: BaseSystem, mode="pyvis", new_vis=False):
         circuit.refresh_graph()
