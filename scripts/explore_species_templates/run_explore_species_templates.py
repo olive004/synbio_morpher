@@ -1,4 +1,5 @@
 from functools import partial
+import logging
 import os
 
 from fire import Fire
@@ -8,15 +9,16 @@ from src.srv.results.experiments import Experiment, Protocol
 from src.srv.results.result_writer import ResultWriter
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.data.fake_data_generation.seq_generator import RNAGenerator
-from src.utils.evolution.mutation import Evolver
 from src.utils.system_definition.agnostic_system.system_manager import CircuitModeller
 
 
 def main():
     # set configs
     config_file = os.path.join(
-        "scripts", "pair_species_mutation", "configs", "RNA_pair_species_mutation.json")
-    exp_configs = load_json_as_dict(config_file).get("experiment")
+        "scripts", "explore_species_templates", "configs", "explore_species_templates.json")
+    exp_configs = load_json_as_dict(config_file)
+    logging.info(exp_configs)
+    exp_configs = exp_configs.get("experiment")
     # start_experiment
     data_writer_kwargs = {'purpose': 'pair_species_mutation'}
     data_writer = ResultWriter(**data_writer_kwargs)
@@ -28,19 +30,25 @@ def main():
                     protocol=exp_configs.get("generator_protocol")),
             name="generating_sequences",
             req_output=True
-        ),
-        Protocol(
-            partial(construct_circuit_from_cfg, config_file=config_file),
-            req_input=True,
-            req_output=True,
-            name="making_circuit"
-        ),
-        Protocol(
-            partial(CircuitModeller(result_writer=data_writer).init_circuit
+        ), [
+            Protocol(
+                partial(construct_circuit_from_cfg, config_file=config_file),
+                req_input=True,
+                req_output=True,
+                name="making_circuit"
             ),
-            req_input=True,
-            name="visualise_signal"
-        )
+            Protocol(
+                CircuitModeller(result_writer=data_writer).init_circuit,
+                req_input=True,
+                req_output=True,
+                name="init_circuit"
+            ),
+            Protocol(
+                CircuitModeller(result_writer=data_writer).visualise,
+                req_input=True,
+                name="visualise_circuit"
+            )
+        ]
         # Protocol(sys.exit),
     ]
     experiment = Experiment(config_file, protocols, data_writer=data_writer)

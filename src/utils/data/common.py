@@ -2,7 +2,7 @@
 
 class Data():
 
-    def __init__(self, loaded_data: dict, identities: dict, source_files=None) -> None:
+    def __init__(self, loaded_data: dict, identities: dict = {}, source_files=None) -> None:
         self.data = loaded_data
         self.source = source_files
         self.sample_names = self.make_sample_names()

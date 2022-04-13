@@ -25,6 +25,8 @@ def determine_data_format(filepath):
 
 
 def load_json_as_dict(json_pathname):
+    if not json_pathname:
+        return {}
     try:
         jdict = json.load(open(json_pathname))
         return jdict

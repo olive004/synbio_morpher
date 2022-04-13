@@ -72,10 +72,10 @@ class NucleotideGenerator(SeqGenerator):
                 template, symb)
         return seq_permutations
 
-    def generate_circuits(self, iter_count=1, **circuit_kwargs):
+    def generate_circuits(self, iter_count=1, fname='toy_mRNA_circuit', **circuit_kwargs):
         circuit_paths = []
         for i in range(iter_count):
-            circuit_kwargs['fname'] = circuit_kwargs['fname'] + str(i)
+            circuit_kwargs['fname'] = fname + str(i)
             circuit_path = self.generate_circuit(**circuit_kwargs)
             circuit_paths.append(circuit_path)
         return circuit_paths

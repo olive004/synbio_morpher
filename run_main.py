@@ -3,7 +3,8 @@ from fire import Fire
 # from scripts.agnostic_simulation.run_agnostic_simulation import main
 # from scripts.RNA_circuit_simulation.run_RNA_circuit import main
 # from src.utils.data.fake_data_generation.nc_sequences import main
-from scripts.pair_species_mutation.run_pair_species_mutation import main
+# from scripts.pair_species_mutation.run_pair_species_mutation import main
+from scripts.explore_species_templates.run_explore_species_templates import main
 
 FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
 FORMAT = "%(filename)s:%(funcName)s():%(lineno)i: %(message)s %(levelname)s"

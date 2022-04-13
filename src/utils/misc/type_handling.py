@@ -26,7 +26,7 @@ def get_bulkiest_dict_key(dict_like):
     return k_bulkiest
 
 
-def make_values_list(dict_like):
+def cast_all_values_as_list(dict_like):
     return {k: [v] for k, v in dict_like.items() if not type(v) == list}
 
 
