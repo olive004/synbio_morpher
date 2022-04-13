@@ -1,10 +1,12 @@
-from typing import List, Tuple
+from copy import deepcopy
+from typing import List
 import numpy as np
+import pandas as pd
 import networkx as nx
 import logging
 
 from src.srv.parameter_prediction.interactions import InteractionMatrix
-from src.srv.results.result_writer import ResultWriter
+from src.utils.misc.type_handling import extend_int_to_list
 
 
 FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
@@ -17,33 +19,36 @@ logger.setLevel(logging.INFO)
 class BaseSpecies():
     def __init__(self, config_args: dict) -> None:
 
-        # Probability distribution for each interaction component?
-        # Can also use different types of moments of prob distribution
-        # for each
+        ## Probability distribution for each interaction component?
+        ## Can also use different types of moments of prob distribution
+        ## for each
 
-        self.data = config_args.get("data")
+        self.data = config_args.get("data")  # Data common class
         self.identities = config_args.get("identities")
 
-        self.interactions = self.init_matrix(ndims=2, init_type="randint")
+        self.interactions = self.init_matrix(ndims=2, init_type="zeros")
         self.complexes = self.init_matrix(ndims=2, init_type="zeros")
-        self.degradation_rates = self.init_matrix(ndims=1, init_type="uniform",
-                                                  uniform_val=20)
-        self.creation_rates = self.init_matrix(ndims=1, init_type="uniform",
-                                               uniform_val=50)
+        self.degradation_rates = self.init_matrix(ndims=1, init_type="uniform")
+        self.creation_rates = self.init_matrix(ndims=1, init_type="uniform")
+
         self.copynumbers = None
         self.current_copynumbers = None
-        self.steady_state_copynums = self.init_matrix(ndims=1, init_type="zeros")
+        self.steady_state_copynums = self.init_matrix(
+            ndims=1, init_type="zeros")
 
-        self.params = {
-            "creation_rates": self.creation_rates,
-            "copynumbers": self.current_copynumbers,
-            "complexes": self.complexes,
-            "degradation_rates": self.degradation_rates,
-            "interactions": self.interactions
-        }
+        self.mutations = {}
+        ## Nums: mutations within a sequence
+        self.mutation_nums = config_args.get(
+            "mutations", {}).get("mutation_nums")
+        ## Counts: mutated iterations of a sequence
+        self.mutation_counts = config_args.get(
+            "mutations", {}).get("mutation_counts")
+
+        self.process_mutations()
 
     def init_matrices(self, uniform_vals, ndims=2, init_type="rand") -> List[np.array]:
-        matrices = (self.init_matrix(ndims, init_type, val) for val in uniform_vals)
+        matrices = (self.init_matrix(ndims, init_type, val)
+                    for val in uniform_vals)
         return tuple(matrices)
 
     def init_matrix(self, ndims=2, init_type="rand", uniform_val=1) -> np.array:
@@ -64,6 +69,27 @@ class BaseSpecies():
             return np.zeros(matrix_shape)
         raise ValueError(f"Matrix init type {init_type} not recognised.")
 
+    def process_mutations(self):
+        self.mutation_counts = extend_int_to_list(
+            self.mutation_counts, self.count)
+        self.mutation_nums = extend_int_to_list(self.mutation_nums, self.count)
+
+    def mutate(self, mutation):
+
+        if mutation.template_name in self.data.data.keys():
+            self.data.data[mutation.mutation_name] = mutation.get_sequence()
+            del self.data.data[mutation.template_name]
+        else:
+            raise KeyError(
+                f'Could not find specie {mutation.template_name} in data for mutation {mutation.mutation_name}')
+
+        if mutation.template_name in self.data.identities.values():
+            for k, v in self.data.identities.items():
+                if v == mutation.template_name:
+                    self.data.identities[k] = mutation.mutation_name
+
+        self.data.sample_names = self.data.make_sample_names()
+
     @property
     def interactions(self):
         return self._interactions
@@ -75,6 +101,17 @@ class BaseSpecies():
         else:
             raise ValueError('Cannot set interactions to' +
                              f' type {type(new_interactions)}.')
+
+    def interactions_to_df(self):
+        interactions_df = pd.DataFrame.from_dict(self.interactions_to_dict())
+        return interactions_df
+
+    def interactions_to_dict(self):
+        interactions_dict = {}
+        for i, sample in enumerate(self.data.sample_names):
+            interactions_dict[sample] = {s: self.interactions[i, j]
+                                         for j, s in enumerate(self.data.sample_names)}
+        return interactions_dict
 
     @property
     def current_copynumbers(self):
@@ -104,6 +141,10 @@ class BaseSpecies():
             value[value < 0] = 0
         self._copynumbers = value
 
+    @property
+    def count(self):
+        return self.data.size
+
 
 class BaseSystem():
     def __init__(self, config_args: dict = None):
@@ -112,7 +153,7 @@ class BaseSystem():
             config_args = {}
 
         self.species = BaseSpecies(config_args)
-        self.result_writer = ResultWriter()
+        self.signal = None
 
         self.init_graph()
 
@@ -136,23 +177,15 @@ class BaseSystem():
     def get_graph_labels(self) -> dict:
         return sorted(self.graph)
 
-    def determine_input_type(self) -> str:
-        raise NotImplementedError
+    def make_subsystem(self, mutation_name: str, mutation=None):
+        subsystem = deepcopy(self)
 
-    def simulate_signal(self, signal):
-        pass
+        if mutation is None:
+            mutation = self.species.mutations.get(mutation_name)
 
-    def visualise(self, mode="pyvis", new_vis=False):
-        self.refresh_graph()
+        subsystem.species.mutate(mutation)
 
-        if mode == 'pyvis':
-            from src.srv.results.visualisation import visualise_graph_pyvis
-            visualise_graph_pyvis(self.graph, new_vis=new_vis)
-        else:
-            from src.srv.results.visualisation import visualise_graph_pyplot
-            visualise_graph_pyplot(self.graph, new_vis=new_vis)
-
-        self.result_writer.write_all()
+        return subsystem
 
     @property
     def graph(self):

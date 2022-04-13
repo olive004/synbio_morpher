@@ -1,5 +1,5 @@
-import numpy as np
 import logging
+import numpy as np
 
 
 class Deterministic():
@@ -20,7 +20,7 @@ class Deterministic():
 
         return dxdt
 
-    def plot(self, data, y=None, legend_keys=None, save_name='test_plot', new_vis=False):
+    def plot(self, data, y=None, legend_keys=None, out_path='test_plot', new_vis=False):
         from src.srv.results.visualisation import VisODE
         data = data.T if len(legend_keys) == np.shape(data)[0] else data
-        VisODE().plot(data, y, legend_keys, new_vis, save_name)
+        VisODE().plot(data, y, legend_keys, new_vis, out_path=out_path)

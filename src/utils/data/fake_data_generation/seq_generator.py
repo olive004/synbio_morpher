@@ -13,8 +13,9 @@ class SeqGenerator():
 
     SEQ_POOL = {}
 
-    def __init__(self) -> None:
+    def __init__(self, data_writer: DataWriter) -> None:
         self.stype = None
+        self.data_writer = data_writer
 
     @staticmethod
     def generate_mutated_template(template: str, mutate_prop, mutation_pool):
@@ -28,16 +29,16 @@ class SeqGenerator():
         return template
 
     @staticmethod
-    def generate_str_from_probdict(str_prob_dict: dict, length) -> str:
+    def generate_str_from_probdict(str_prob_dict: dict, slength) -> str:
         population = list(str_prob_dict.keys())
         probabilities = list(str_prob_dict.values())
-        return random.choices(population, probabilities, k=length)
+        return ''.join(random.choices(population, probabilities, k=slength))
 
 
 class NucleotideGenerator(SeqGenerator):
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, data_writer) -> None:
+        super().__init__(data_writer)
 
     @staticmethod
     def convert_symbolic_complement(real_seq, symbolic_complement):
@@ -71,8 +72,15 @@ class NucleotideGenerator(SeqGenerator):
                 template, symb)
         return seq_permutations
 
-    def write_toy_circuit(self, count=5, slength=20, protocol="random",
-                           proportion_to_mutate=0):
+    def generate_circuits(self, iter_count=1, **circuit_kwargs):
+        for i in range(iter_count):
+            circuit_kwargs['fname'] = circuit_kwargs['fname'] + str(i)
+            self.generate_circuit(**circuit_kwargs)
+
+    def generate_circuit(self, count=5, slength=20, protocol="random",
+                         fname='toy_mRNA_circuit',
+                         output_format='.fasta',
+                         proportion_to_mutate=0, template=None):
         """ Protocol can be 
         'random': Random sequence generated with weighted characters
         'template_mix': A template sequence is interleaved with complementary characters
@@ -80,9 +88,9 @@ class NucleotideGenerator(SeqGenerator):
         'template_split': Parts of a template sequence are made complementary
         """
 
-        fname = './src/utils/data/example_data/toy_mRNA_circuit.fasta'
-        template = self.generate_str_from_probdict(self.SEQ_POOL, slength)
-        template = 'CGCGCGCGCGCGCGCGCGCGCGCCGCGCG'  # Very strong interactions
+        if template is None:
+            template = self.generate_str_from_probdict(self.SEQ_POOL, slength)
+        # template = 'CGCGCGCGCGCGCGCGCGCGCGCCGCGCG'  # Very strong interactions
         # template = 'CUUCAAUUCCUGAAGAGGCGGUUGG'  # Very weak interactions
         if protocol == "template_mutate":
             seq_generator = partial(self.generate_mutated_template,
@@ -97,13 +105,16 @@ class NucleotideGenerator(SeqGenerator):
             seq_generator = partial(next_wrapper, generator=iter(sequences))
         elif protocol == "random":
             seq_generator = partial(self.generate_str_from_probdict,
-                                    str_dict=self.SEQ_POOL, slength=slength)
+                                    str_prob_dict=self.SEQ_POOL, slength=slength)
         else:
             seq_generator = partial(self.generate_str_from_probdict,
-                                    str_dict=self.SEQ_POOL, slength=slength)
+                                    str_prob_dict=self.SEQ_POOL, slength=slength)
             raise NotImplementedError
 
-        DataWriter().output(seq_generator, fname, 'fasta', self.stype, count)
+        out_path = self.data_writer.output(out_name=fname, out_type='fasta',
+                                           seq_generator=seq_generator, stype=self.stype, 
+                                           count=count, return_path=True)
+        return {'data': out_path}
 
 
 class RNAGenerator(NucleotideGenerator):
@@ -115,8 +126,8 @@ class RNAGenerator(NucleotideGenerator):
         'U': 0.2
     }
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, data_writer) -> None:
+        super().__init__(data_writer)
         self.stype = "RNA"
 
 
@@ -129,8 +140,8 @@ class DNAGenerator(NucleotideGenerator):
         'T': 0.2
     }
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, data_writer) -> None:
+        super().__init__(data_writer)
         self.stype = "DNA"
 
 

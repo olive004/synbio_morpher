@@ -5,7 +5,8 @@ from typing import Dict, List
 
 from src.srv.parameter_prediction.simulator_loading import find_simulator_loader
 from src.utils.misc.string_handling import remove_special_py_functions
-from src.utils.data.data_format_tools.common import merge_dicts, load_json_as_dict
+from src.utils.data.data_format_tools.common import load_json_as_dict
+from src.utils.misc.type_handling import merge_dicts
 
 
 # ROOT_DIR = os.environ['ROOT_DIR']
@@ -32,12 +33,12 @@ def handle_simulator_cfgs(simulator, simulator_cfg_path):
     return cfg_protocol(simulator_cfg)
 
 
-def parse_cfg_args(config_file: dict = None, dict_args: Dict = None) -> Dict:
+def parse_cfg_args(config_args: dict = None, dict_args: Dict = None) -> Dict:
 
     if dict_args is None:
         dict_args = retrieve_default_args()
     dict_args = load_simulator_cfgs(dict_args)
-    dict_args = merge_dicts(dict_args, config_file)
+    dict_args = merge_dicts(dict_args, config_args)
 
     return dict_args
 
