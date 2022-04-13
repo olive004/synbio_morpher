@@ -1,5 +1,6 @@
 from copy import deepcopy
 from functools import partial
+import logging
 import os
 import random
 import pandas as pd
@@ -60,17 +61,28 @@ class Mutations(Tabulated):
         return list(self.__dict__.keys()), list(self.__dict__.values())
 
     def get_sequence(self):
+        # seq = list(deepcopy(self.template_seq))
         seq = deepcopy(self.template_seq)
         for i, p in enumerate(self.positions):
-            seq[p] = self.reverse_mut_mapping(mapping[i])
-        return self.template_seq
+            point_mutation = self.reverse_mut_mapping(self.mutation_types[i])
+            logging.info(f'All mutation types: {self.mutation_types}')
+            logging.info(f'Position: {p}')
+            logging.info(f'Chosen mutation enc: {self.mutation_types[i]}')
+            logging.info(f'Chosen mutation nuc: {self.mutation_types[i]}')
+            logging.info(f'Sequence: {seq[:p]} {seq[p]} {seq[p+1:]}')
+            logging.info(f'Targ seq: {seq[:p]} {point_mutation} {seq[p+1:]}')
+            seq = list(seq)
+            seq[p] = self.reverse_mut_mapping(self.mutation_types[i])
+        return ''.join(seq)
 
     def reverse_mut_mapping(self, mut_encoding: int):
         for k, v in mapping.items():
             if mut_encoding in list(v.values()):
-                return k
+                for mut, enc in v.items():
+                    if enc == mut_encoding:
+                        return mut
         raise ValueError(
-            f'Could not find mutation mapping key {mut_encoding}.')
+            f'Could not find mutation for mapping key {mut_encoding}.')
 
 
 class Evolver():

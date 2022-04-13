@@ -7,6 +7,7 @@ import os
 from src.srv.results.metrics.analytics import Analytics
 from src.utils.data.manage.writer import DataWriter
 from src.utils.misc.string_handling import add_outtype, make_time_str
+from src.utils.misc.type_handling import assert_uniform_type
 
 
 class Result():
@@ -59,6 +60,10 @@ class ResultWriter(DataWriter):
         for writeable in keys:
             write_dict[writeable] = source.get(writeable, '')
         self.output(out_type, out_name, overwrite=not(new_report), **{'data': write_dict})
+
+    def pool_results(self, results: dict):
+        assert_uniform_type(results.values, Result)
+        self.results.update(results)
 
     def write_metrics(self, result: Result, new_report=False):
         metrics = result.metrics

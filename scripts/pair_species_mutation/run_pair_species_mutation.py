@@ -1,5 +1,6 @@
 from functools import partial
 import os
+from timeit import timeit
 from unittest import result
 
 from fire import Fire
@@ -12,6 +13,7 @@ from src.utils.evolution.mutation import Evolver
 from src.utils.system_definition.agnostic_system.system_manager import CircuitModeller
 
 
+@timeit
 def main():
     # set configs
     config_file = os.path.join(
@@ -44,25 +46,7 @@ def main():
             }
             ),
             req_input=True,
-            req_output=True,
-            name="simulate_interactions"
-        ),
-        Protocol(
-            CircuitModeller(result_writer=data_writer).init_circuit,
-            req_input=True,
-            req_output=True,
-            name="simulate_interactions"
-        ),
-        Protocol(
-            CircuitModeller(result_writer=data_writer).simulate_signal,
-            req_input=True,
-            req_output=True,
-            name="simulate_signal"
-        ),
-        Protocol(
-            CircuitModeller(result_writer=data_writer).visualise,
-            req_input=True,
-            name="writing_visualisations"
+            name="visualise_signal"
         )
     ]
     experiment = Experiment(config_file, protocols, data_writer=data_writer)

@@ -41,3 +41,7 @@ def extend_int_to_list(int_like, target_num):
     elif type(int_like) == list and len(int_like) == 1:
         int_like = int_like * target_num
     return int_like
+
+
+def assert_uniform_type(list_like, target_type):
+    assert all(type(list_like) == target_type)

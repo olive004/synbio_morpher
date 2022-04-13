@@ -34,6 +34,9 @@ class CircuitModeller():
         circuit = self.find_steady_states(circuit)
         return circuit
 
+    def subdivide_result_writing(self, subdivision_name: str):
+        self.result_writer.subdivide_writing(subdivision_name)
+
     def get_modelling_func(self, modeller, circuit):
         return partial(modeller.dxdt_RNA, interactions=circuit.species.interactions,
                        creation_rates=circuit.species.creation_rates,
@@ -147,11 +150,11 @@ class CircuitModeller():
         return circuit
 
     def wrap_mutations(self, circuit: BaseSystem, methods: dict):
-        
-        for name, mutation in flatten_nested_dict(circuit.species.mutations.items()):
+        mutation_dict = flatten_nested_dict(circuit.species.mutations.items())
+        for name, mutation in mutation_dict.items():
             logging.info(name)
-            logging.info(mutation)
             subcircuit = circuit.make_subsystem(name, mutation)
+            self.subdivide_result_writing(name)
             for method, kwargs in methods.items():
                 if hasattr(self, method):
                     subcircuit = getattr(self, method)(subcircuit, **kwargs)

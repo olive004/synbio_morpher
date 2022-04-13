@@ -1,3 +1,4 @@
+from copy import deepcopy
 from functools import partial
 from abc import ABC, abstractmethod
 import os
@@ -5,7 +6,7 @@ import pandas as pd
 from src.utils.data.data_format_tools.common import write_csv, write_json
 
 from src.utils.data.data_format_tools.manipulate_fasta import write_fasta_file
-from src.utils.misc.helper import get_subdirectories
+from src.utils.misc.helper import create_location, get_subdirectories
 from src.utils.misc.string_handling import add_outtype, make_time_str
 from src.utils.misc.type_handling import find_sublist_max
 
@@ -17,9 +18,10 @@ class DataWriter():
         self.root_output_dir = os.path.join('data')
         self.exception_dirs = os.path.join('example_data')
         if out_location is None:
-            self.write_dir = self.make_location(purpose)
+            self.original_write_dir = self.make_location(purpose)
         else:
-            self.write_dir = out_location
+            self.original_write_dir = out_location
+        self.write_dir = deepcopy(self.original_write_dir)
 
     def output(self, out_type, out_name=None, overwrite=False, **writer_kwargs):
         out_path = os.path.join(self.write_dir, add_outtype(out_name, out_type))
@@ -42,14 +44,17 @@ class DataWriter():
             location = os.path.join(self.root_output_dir,
                                     purpose,
                                     self.generate_location_instance())
-            if not os.path.isdir(location):
-                os.umask(0)
-                os.makedirs(location, mode=0o777)
+            create_location(location)
             return location
         raise ValueError(f'Unrecognised purpose {purpose} for writing data to.')
 
     def generate_location_instance(self):
         return make_time_str()
+
+    def subdivide_writing(self, name):
+        location = os.path.join(self.original_write_dir, name)
+        create_location(location)
+        self.write_dir = location
 
 
 class Tabulated(ABC):
