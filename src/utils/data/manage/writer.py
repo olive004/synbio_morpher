@@ -58,6 +58,9 @@ class DataWriter():
         create_location(location)
         self.write_dir = location
 
+    def unsubdivide(self):
+        self.write_dir = deepcopy(self.original_write_dir)
+
 
 class Tabulated(ABC):
 

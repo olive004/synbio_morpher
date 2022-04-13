@@ -29,6 +29,7 @@ class Experiment():
 
     def __init__(self, config: str, protocols: List[Protocol], data_writer: DataWriter) -> None:
         
+        self.name = 'experiment'
         self.start_time = datetime.now()
         self.protocols = protocols
         self.total_time = 0
@@ -46,5 +47,11 @@ class Experiment():
         self.write_experiment()
 
     def write_experiment(self):
-        # self.data_writer
-        pass
+        experiment_data = self.collect_experiment()
+        self.data_writer.output(out_type='json', out_name=self.name, data=experiment_data)
+        
+    def collect_experiment(self):
+        return {
+            "total_time": str(self.total_time),
+            "protocols": [p.name for p in self.protocols]
+        }

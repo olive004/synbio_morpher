@@ -1,4 +1,3 @@
-import logging
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.data.manage.data_manager import DataManager
 from src.utils.misc.type_handling import make_values_list

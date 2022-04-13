@@ -84,7 +84,6 @@ def visualise_graph_pyvis(graph: nx.DiGraph,
     interactive_graph = NetworkCustom(
         height=800, width=800, directed=True, notebook=True)
     interactive_graph.from_nx(graph, edge_weight_transf=lambda x: round(x, 4))
-    # interactive_graph.show_buttons(filter_=['edges'])
     interactive_graph.inherit_edge_colors(True)
     interactive_graph.set_edge_smooth('dynamic')
     interactive_graph.show(out_path)
@@ -118,3 +117,4 @@ class VisODE():
         if legend_keys:
             plt.legend(legend_keys)
         plt.savefig(filename)
+        plt.close()

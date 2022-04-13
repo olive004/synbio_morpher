@@ -1,8 +1,5 @@
 from functools import partial
 import os
-import sys
-from timeit import timeit
-from unittest import result
 
 from fire import Fire
 from scripts.common.circuit import construct_circuit_from_cfg
