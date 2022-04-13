@@ -7,7 +7,6 @@ import logging
 
 from src.srv.parameter_prediction.interactions import InteractionMatrix
 from src.utils.data.data_format_tools.common import extend_int_to_list
-from src.utils.evolution.mutation import Mutations
 
 
 FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
@@ -24,7 +23,7 @@ class BaseSpecies():
         # Can also use different types of moments of prob distribution
         # for each
 
-        self.data = config_args.get("data")  # Data generic
+        self.data = config_args.get("data")  # Data common class
         self.identities = config_args.get("identities")
 
         self.interactions = self.init_matrix(ndims=2, init_type="zeros")
@@ -76,9 +75,21 @@ class BaseSpecies():
             self.mutation_counts, self.count)
         self.mutation_nums = extend_int_to_list(self.mutation_nums, self.count)
 
-    def mutate(self, mutation: Mutations):
+    def mutate(self, mutation):
 
-        self.data
+        if mutation.template_name in self.data.data.keys():
+            self.data.data[mutation.mutation_name] = mutation.get_sequence()
+            del self.data.data[mutation.template_name]
+        else:
+            raise KeyError(
+                f'Could not find specie {mutation.template_name} in data for mutation {mutation.mutation_name}')
+
+        if mutation.template_name in self.data.identities.values():
+            for k, v in self.data.identities.items():
+                if v == mutation.template_name:
+                    self.data.identities[k] = mutation.mutation_name
+
+        self.data.sample_names = self.data.make_sample_names()
 
     @property
     def interactions(self):
@@ -167,7 +178,7 @@ class BaseSystem():
     def get_graph_labels(self) -> dict:
         return sorted(self.graph)
 
-    def make_subsystem(self, mutation_name: str, mutation: Mutations = None):
+    def make_subsystem(self, mutation_name: str, mutation=None):
         subsystem = deepcopy(self)
 
         if mutation is None:

@@ -1,4 +1,6 @@
-from functools import partial
+
+
+import logging
 
 
 class Data():
@@ -31,7 +33,7 @@ class Data():
 
     def make_sample_names(self):
         if type(self.data) == dict:
-            return list(self.data.values())
+            return list(self.data.keys())
         raise ValueError(f'Unrecognised loaded data type {type(self.data)}.')
 
     @property

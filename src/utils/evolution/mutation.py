@@ -93,7 +93,7 @@ class Evolver():
             return positions
 
         def basic_mutator(species: BaseSpecies, position_generator, sample_idx: int = None,
-                          mutation_idx=None):
+                          mutation_idx=None) -> Mutations:
             sequence = species.data.get_data_by_idx(sample_idx)
             positions = position_generator(
                 sequence, species.mutation_nums[sample_idx])
@@ -113,8 +113,9 @@ class Evolver():
             for sample_idx, sample in enumerate(species.data.sample_names):
                 species.mutations[sample] = {}
                 for c in range(species.mutation_counts[sample_idx]):
-                    species.mutations[sample][c] = sample_mutator_func(
+                    mutation = sample_mutator_func(
                         species, sample_idx=sample_idx, mutation_idx=c)
+                    species.mutations[sample][mutation.mutation_name] = mutation
             return species
 
         if algorithm == "random":

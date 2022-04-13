@@ -1,4 +1,5 @@
 from functools import partial
+import logging
 import os
 import numpy as np
 from scipy import integrate
@@ -147,6 +148,8 @@ class CircuitModeller():
     def wrap_mutations(self, circuit: BaseSystem, methods: dict):
         
         for name, mutation in circuit.species.mutations.items():
+            logging.info(name)
+            logging.info(mutation)
             subcircuit = circuit.make_subsystem(name, mutation)
             for method, kwargs in methods.items():
                 if hasattr(self, method):
