@@ -111,8 +111,10 @@ class NucleotideGenerator(SeqGenerator):
                                     str_prob_dict=self.SEQ_POOL, slength=slength)
             raise NotImplementedError
 
-        self.data_writer.output(out_name=fname, out_type='fasta',
-                                seq_generator=seq_generator, stype=self.stype, count=count)
+        out_path = self.data_writer.output(out_name=fname, out_type='fasta',
+                                           seq_generator=seq_generator, stype=self.stype, 
+                                           count=count, return_path=True)
+        return {'data': out_path}
 
 
 class RNAGenerator(NucleotideGenerator):

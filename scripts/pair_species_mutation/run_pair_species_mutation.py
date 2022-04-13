@@ -26,10 +26,12 @@ def main():
         Protocol(
             partial(RNAGenerator(data_writer=data_writer).generate_circuit,
                     count=3, slength=25, protocol="template_mix"),
-            name="generating_sequences"
+            name="generating_sequences",
+            req_output=True
         ),
         Protocol(
             partial(construct_circuit_from_cfg, config_file=config_file),
+            req_input=True,
             req_output=True,
             name="making_circuit"
         ),

@@ -7,8 +7,12 @@ from src.utils.system_definition.config import parse_cfg_args
 from src.utils.system_definition.setup import get_system_type
 
 
-def compose_kwargs(config_filename: str) -> dict:
+def compose_kwargs(config_filename: str, extra_configs) -> dict:
     config_file = load_json_as_dict(config_filename)
+    for kwarg, config in extra_configs.items():
+        if config_file.get(kwarg):
+            config_file[kwarg] = config
+    config_file.update(extra_configs)
     data_manager = DataManager(config_file.get("data"), config_file.get("identities"))
     kwargs = {
         "system_type": config_file.get("system_type"),
