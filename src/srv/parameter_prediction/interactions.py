@@ -1,5 +1,8 @@
+import logging
+import pandas as pd
 import numpy as np
 from functools import partial
+from src.utils.data.data_format_tools.common import determine_data_format
 from src.utils.misc.decorators import time_it
 from src.utils.misc.numerical import SCIENTIFIC, square_matrix_rand
 
@@ -91,17 +94,32 @@ class RawSimulationHandling():
 
 class InteractionMatrix():
     def __init__(self, config_args=None,
-                 num_nodes=None,
+                 matrix=None,
+                 matrix_path: str = None,
+                 num_nodes: int = None,
                  toy=False):
         super().__init__()
 
         self.toy = toy
         self.config_args = config_args
 
-        if toy:
+        if matrix is not None:
+            self.matrix = matrix
+        elif matrix_path is not None:
+            self.matrix = self.load(matrix_path)
+        elif toy:
             self.matrix = self.make_toy_matrix(num_nodes)
         else:
             self.matrix = self.make_rand_matrix(num_nodes)
+
+    def load(self, filepath):
+        filetype = determine_data_format(filepath)
+        if filetype == 'csv':
+            matrix = pd.read_csv(filepath, header=False).to_numpy
+        else:
+            raise TypeError(f'Unknown filetype {filetype} for loading {filepath}')
+        logging.info(matrix)
+        return matrix
 
     def make_rand_matrix(self, num_nodes):
         if num_nodes is None or num_nodes == 0:

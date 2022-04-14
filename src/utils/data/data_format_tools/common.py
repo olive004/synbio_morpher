@@ -4,8 +4,6 @@ import os
 import numpy as np
 import pandas as pd
 
-from src.utils.misc.string_handling import add_outtype, make_time_str
-
 
 FORMAT_EXTS = {
     ".fasta": "fasta"
@@ -18,10 +16,11 @@ def verify_file_type(filepath: str, file_type: str):
 
 
 def determine_data_format(filepath):
-    for extension, ftype in FORMAT_EXTS.items():
-        if extension in filepath:
-            return ftype
-    return None
+    return os.path.basename(filepath).split('.')[-1]
+    # for extension, ftype in FORMAT_EXTS.items():
+    #     if extension in filepath:
+    #         return ftype
+    # return None
 
 
 def load_json_as_dict(json_pathname):
