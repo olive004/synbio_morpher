@@ -15,7 +15,7 @@ from src.utils.system_definition.agnostic_system.system_manager import CircuitMo
 def main():
     # set configs
     config_file = os.path.join(
-        "scripts", "generate_species_templates", "configs", "generate_species_templates.json")
+        "scripts", "explore_species_templates", "configs", "explore_species_templates.json")
     exp_configs = load_json_as_dict(config_file).get("experiment")
 
     # start_experiment
@@ -23,7 +23,8 @@ def main():
     data_writer = DataWriter(**data_writer_kwargs)
     protocols = [
         Protocol(
-
+            # read in data one at a time
+            # if interaction 
         )
     ]
     protocols = [
