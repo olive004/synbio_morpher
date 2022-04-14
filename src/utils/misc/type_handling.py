@@ -45,3 +45,13 @@ def extend_int_to_list(int_like, target_num):
 
 def assert_uniform_type(list_like, target_type):
     assert all(type(list_like) == target_type)
+
+
+def make_attribute_list(typed_list, source_type, target_attribute):
+    tlist = []
+    for v in typed_list:
+        if type(v) == source_type:
+            tlist.append(getattr(v, target_attribute))
+        if type(v) == list:
+            tlist.append(make_attribute_list(v, source_type, target_attribute))
+    return tlist

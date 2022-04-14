@@ -14,6 +14,7 @@ from src.utils.misc.type_handling import find_sublist_max
 class DataWriter():
 
     def __init__(self, purpose, out_location=None) -> None:
+        self.purpose = purpose
         self.script_dir = os.path.join('scripts')
         self.root_output_dir = os.path.join('data')
         self.exception_dirs = os.path.join('example_data')
