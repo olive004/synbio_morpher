@@ -19,28 +19,21 @@ def main():
     exp_configs = load_json_as_dict(config_file).get("experiment")
 
     # start_experiment
-    data_writer_kwargs = {'purpose': exp_configs.get('purpose')}
+    data_writer_kwargs = {'purpose': exp_configs.get("purpose")}
     data_writer = DataWriter(**data_writer_kwargs)
     protocols = [
         Protocol(
+            # get list of all interaction paths
+            partial(get_path_names,
+            purpose = "generate_species_templates",
+            experiment_key = "2022_04_14_113148"
+            subfolder = "interactions"
+            )
             # read in data one at a time
-            # if interaction 
+            # sort circuit into category based on number of interacting species
+            # do some analytics
         )
-    ]
-    protocols = [
-        Protocol(
-            partial(construct_circuit_from_cfg, config_file=config_file),
-            req_input=True,
-            req_output=True,
-            name="making_circuit"
-        ),
         # Protocol(sys.exit),
-        Protocol(
-            CircuitModeller(
-                result_writer=data_writer).compute_interaction_strengths,
-            req_input=True,
-            name="compute_interaction_strengths"
-        )
     ]
     experiment = Experiment(config_file, protocols, data_writer=data_writer)
     experiment.run_experiment()

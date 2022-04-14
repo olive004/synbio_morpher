@@ -28,6 +28,7 @@ def main():
             partial(RNAGenerator(data_writer=data_writer).generate_circuits,
                     iter_count=exp_configs.get("repetitions"),
                     count=3, slength=exp_configs.get("sequence_length"), 
+                    proportion_to_mutate=exp_configs.get("proportion_to_mutate"),
                     protocol=exp_configs.get("generator_protocol")),
             name="generating_sequences",
             req_output=True
