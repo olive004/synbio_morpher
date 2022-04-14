@@ -38,26 +38,16 @@ def main():
                 req_output=True,
                 name="making_circuit"
             ),
-            Protocol(sys.exit),
+            # Protocol(sys.exit),
             Protocol(
                 CircuitModeller(result_writer=data_writer).compute_interaction_strengths,
                 req_input=True,
-                req_output=True,
                 name="compute_interaction_strengths"
-            ),
-            Protocol(
-                partial(CircuitModeller(result_writer=data_writer).write_results, new_report=True),
-                req_input=True,
-                name="write_results"
             )
         ]
-        # Protocol(sys.exit),
     ]
     experiment = Experiment(config_file, protocols, data_writer=data_writer)
     experiment.run_experiment()
-
-    # output_visualisations
-    # write_report
 
 
 if __name__ == "__main__":

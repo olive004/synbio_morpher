@@ -39,9 +39,7 @@ class ResultWriter(DataWriter):
 
     def write_all(self, results: dict, new_report=False):
 
-        logging.info(f'Writing results {results}')
         for name, result in results.items():
-            logging.info(f'Writing result {result}')
             result.vis_func(
                 result.data, new_vis=new_report, **result.vis_kwargs)
             self.write_metrics(result, new_report=new_report)

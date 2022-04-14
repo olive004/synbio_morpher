@@ -1,4 +1,5 @@
 from functools import partial
+import logging
 import numpy as np
 import random
 from Bio.Seq import Seq
@@ -75,7 +76,7 @@ class NucleotideGenerator(SeqGenerator):
     def generate_circuits(self, iter_count=1, fname='toy_mRNA_circuit', **circuit_kwargs):
         circuit_paths = []
         for i in range(iter_count):
-            circuit_kwargs['fname'] = fname + str(i)
+            circuit_kwargs['fname'] = fname + '_' + str(i)
             circuit_path = self.generate_circuit(**circuit_kwargs)
             circuit_paths.append(circuit_path)
         return circuit_paths

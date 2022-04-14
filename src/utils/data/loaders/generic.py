@@ -26,6 +26,6 @@ class DataLoader():
             raise NotImplementedError(
                 "Other filetypes than fasta not supported yet.")
 
-    def load_data(self, source: str, identities):
-        loader = self.get_loader(source)
-        return Data(loader(source), identities, source_files=source)
+    def load_data(self, filepath: str, identities):
+        loader = self.get_loader(filepath)
+        return Data(loader(filepath), identities, source_files=filepath)

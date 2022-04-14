@@ -47,13 +47,8 @@ def process_dict_for_json(dict_like):
     return dict_like
 
 
-def write_csv(data: pd.DataFrame, out_path: str, overwrite=False, new_vis=False,
-              new_vis_name=None, out_type='csv'):
-    if new_vis:
-        if new_vis_name is None:
-            new_vis_name = make_time_str()
-        out_path = f'{out_path}_{new_vis_name}'
-    out_path = add_outtype(out_path, out_type)
+def write_csv(data: pd.DataFrame, out_path: str, overwrite=False):
+    logging.info(f'Writing csv to {out_path}')
     if type(data) == pd.DataFrame:
         if overwrite or not os.path.exists(out_path):
             data.to_csv(out_path, index=False)

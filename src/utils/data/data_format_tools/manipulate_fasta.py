@@ -27,9 +27,3 @@ def write_fasta_file(seq_generator, fname, stype, count):
         f.write(seq_name)
         f.write(seq_generator() + '\n')
     f.close()
-    # with open(fname, 'w+') as f:
-
-    #     for i in range(count):
-    #         seq_name = '>' + stype + '_' + str(i) + '\n'
-    #         f.write(seq_name)
-    #         f.write(seq_generator() + '\n')

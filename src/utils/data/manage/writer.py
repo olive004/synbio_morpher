@@ -23,8 +23,19 @@ class DataWriter():
             self.original_write_dir = out_location
         self.write_dir = deepcopy(self.original_write_dir)
 
-    def output(self, out_type, out_name=None, overwrite=False, return_path=False, **writer_kwargs):
-        out_path = os.path.join(self.write_dir, add_outtype(out_name, out_type))
+    def output(self, out_type, out_name=None, overwrite=False, return_path=False, new_file=False,
+               filename_addon: str = None, subfolder: str = None, **writer_kwargs):
+        if new_file:
+            if filename_addon is None:
+                filename_addon = make_time_str()
+            out_name = f'{out_name}_{filename_addon}'
+        if subfolder:
+            out_subpath = os.path.join(self.write_dir, subfolder)
+            create_location(out_subpath)
+            out_path = os.path.join(out_subpath, add_outtype(out_name, out_type))
+        else:
+            out_path = os.path.join(
+                self.write_dir, add_outtype(out_name, out_type))
         writer = self.get_write_func(out_type, out_path, overwrite=overwrite)
         writer(**writer_kwargs)
         if return_path:
@@ -48,7 +59,8 @@ class DataWriter():
                                     self.generate_location_instance())
             create_location(location)
             return location
-        raise ValueError(f'Unrecognised purpose {purpose} for writing data to.')
+        raise ValueError(
+            f'Unrecognised purpose {purpose} for writing data to.')
 
     def generate_location_instance(self):
         return make_time_str()
