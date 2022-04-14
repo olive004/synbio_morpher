@@ -3,7 +3,7 @@ import logging
 import os
 import numpy as np
 from scipy import integrate
-from src.srv.results.result_writer import ResultWriter
+from src.srv.io.results.result_writer import ResultWriter
 from src.utils.data.data_format_tools.common import write_csv
 
 from src.utils.misc.decorators import time_it

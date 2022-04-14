@@ -4,7 +4,7 @@ import numpy as np
 import random
 from Bio.Seq import Seq
 
-from src.utils.data.manage.writer import DataWriter
+from src.srv.io.results.writer import DataWriter
 from src.utils.misc.helper import next_wrapper
 from src.utils.misc.numerical import generate_mixed_binary
 from src.utils.misc.string_handling import ordered_merge, list_to_str

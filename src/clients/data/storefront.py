@@ -1,6 +1,6 @@
 
 
-from src.utils.data.manage.data_manager import DataManager
+from srv.io.manage.data_manager import DataManager
 
 
 class DataFront():

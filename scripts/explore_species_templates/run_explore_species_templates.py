@@ -6,9 +6,9 @@ import sys
 from fire import Fire
 from scripts.common.circuit import construct_circuit_from_cfg
 
-from src.srv.results.experiments import Experiment, Protocol
+from src.srv.io.results.experiments import Experiment, Protocol
+from src.srv.io.results.writer import DataWriter
 from src.utils.data.data_format_tools.common import load_json_as_dict
-from src.utils.data.manage.writer import DataWriter
 from src.utils.system_definition.agnostic_system.system_manager import CircuitModeller
 
 
@@ -23,7 +23,7 @@ def main():
     data_writer = DataWriter(**data_writer_kwargs)
     protocols = [
         Protocol(
-            
+
         )
     ]
     protocols = [
