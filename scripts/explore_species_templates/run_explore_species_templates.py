@@ -1,6 +1,7 @@
 from functools import partial
 import logging
 import os
+import sys
 
 from fire import Fire
 from scripts.common.circuit import construct_circuit_from_cfg
@@ -13,14 +14,14 @@ from src.utils.system_definition.agnostic_system.system_manager import CircuitMo
 
 
 def main():
-    # set configs
+    ## set configs
     config_file = os.path.join(
         "scripts", "explore_species_templates", "configs", "explore_species_templates.json")
-    exp_configs = load_json_as_dict(config_file)
+    exp_configs = load_json_as_dict(config_file).get("experiment")
     logging.info(exp_configs)
-    exp_configs = exp_configs.get("experiment")
-    # start_experiment
-    data_writer_kwargs = {'purpose': 'pair_species_mutation'}
+
+    ## start_experiment
+    data_writer_kwargs = {'purpose': 'explore_species_templates'}
     data_writer = ResultWriter(**data_writer_kwargs)
     protocols = [
         Protocol(
@@ -37,16 +38,17 @@ def main():
                 req_output=True,
                 name="making_circuit"
             ),
+            Protocol(sys.exit),
             Protocol(
-                CircuitModeller(result_writer=data_writer).init_circuit,
+                CircuitModeller(result_writer=data_writer).compute_interaction_strengths,
                 req_input=True,
                 req_output=True,
-                name="init_circuit"
+                name="compute_interaction_strengths"
             ),
             Protocol(
-                CircuitModeller(result_writer=data_writer).visualise,
+                partial(CircuitModeller(result_writer=data_writer).write_results, new_report=True),
                 req_input=True,
-                name="visualise_circuit"
+                name="write_results"
             )
         ]
         # Protocol(sys.exit),

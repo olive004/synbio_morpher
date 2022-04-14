@@ -1,5 +1,10 @@
 from datetime import datetime
 from copy import deepcopy
+import os
+
+
+def isolate_filename(filepath: str):
+    return os.path.splitext(os.path.basename(filepath))[0]
 
 
 def list_to_str(input_listlike):
