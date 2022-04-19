@@ -1,3 +1,4 @@
+from copy import deepcopy
 import logging
 import pandas as pd
 import numpy as np
@@ -117,7 +118,7 @@ class InteractionMatrix():
         if filetype == 'csv':
             matrix = pd.read_csv(filepath, header=False).to_numpy
         else:
-            raise TypeError(f'Unknown filetype {filetype} for loading {filepath}')
+            raise TypeError(f'Unsupported filetype {filetype} for loading {filepath}')
         logging.info(matrix)
         return matrix
 
@@ -132,6 +133,19 @@ class InteractionMatrix():
             max_nodes = 15
             num_nodes = np.random.randint(min_nodes, max_nodes)
         return self.make_rand_matrix(num_nodes)
+
+    def count_interacting_species(self):
+
+        interacting_species = np.nonzero(self.matrix)
+
+        self_interacting = np.diagonal(self.matrix)
+
+        zero_diag = deepcopy(self.matrix)
+        np.fill_diagonal(zero_diag, 0)
+        num_interacting = zero_diag.count_nonzero() / 2
+
+        are_selfinteracting = [np.all(i == i[0]) for i in interacting_species]
+
 
 
 class InteractionData():

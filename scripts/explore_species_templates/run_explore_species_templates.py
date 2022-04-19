@@ -8,6 +8,7 @@ from scripts.common.circuit import construct_circuit_from_cfg
 
 from src.srv.io.results.experiments import Experiment, Protocol
 from src.srv.io.results.writer import DataWriter
+from src.srv.sequence_exploration.sequence_analysis import analyse_interactions, summarise_offline
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.misc.io import get_pathnames
 from src.utils.system_definition.agnostic_system.system_manager import CircuitModeller
@@ -38,6 +39,7 @@ def main():
         # read in data one at a time
         [
             Protocol(
+                summarise_offline(writer=data_writer)
             )
             # sort circuit into category based on number of interacting species
         ]
