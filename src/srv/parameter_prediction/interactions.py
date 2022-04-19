@@ -138,14 +138,11 @@ class InteractionMatrix():
 
         interacting_species = np.nonzero(self.matrix)
 
-        self_interacting = np.diagonal(self.matrix)
-
         zero_diag = deepcopy(self.matrix)
         np.fill_diagonal(zero_diag, 0)
-        num_interacting = zero_diag.count_nonzero() / 2
+        num_interacting = np.count_nonzero(zero_diag) / 2  # assuming symmetrical
 
         are_selfinteracting = [np.all(i == i[0]) for i in interacting_species]
-
 
 
 class InteractionData():
