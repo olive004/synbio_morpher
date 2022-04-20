@@ -8,11 +8,6 @@ def analyse_interactions(pathname):
 
     interactions = InteractionMatrix(matrix_path=pathname)
 
-    # categorise interactions
-
-
-def summarise_offline(analytics, out_name, writer: DataWriter):
-
-    writer.output(out_type='csv', out_name=out_name, data=analytics)
+    return interactions.get_stats()
 
     # note sequence mutation method

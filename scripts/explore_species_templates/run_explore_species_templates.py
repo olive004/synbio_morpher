@@ -39,7 +39,17 @@ def main():
         # read in data one at a time
         [
             Protocol(
-                summarise_offline(writer=data_writer)
+                analyse_interactions,
+                req_output=True,
+                req_input=True,
+                name='analyse_interactions'
+            ),
+            Protocol(
+                partial(data_writer.output, out_name='circuit_stats',
+                        out_type='csv'
+                        ),
+                req_input=True,
+                name='output'
             )
             # sort circuit into category based on number of interacting species
         ]
