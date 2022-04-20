@@ -134,15 +134,31 @@ class InteractionMatrix():
             num_nodes = np.random.randint(min_nodes, max_nodes)
         return self.make_rand_matrix(num_nodes)
 
+    def get_stats(self):
+        idxs_interacting = self.get_unique_interacting_idxs()
+        stats = {
+            "interacting": 
+        }
+
     def count_interacting_species(self):
-
-        interacting_species = np.nonzero(self.matrix)
-
         zero_diag = deepcopy(self.matrix)
         np.fill_diagonal(zero_diag, 0)
-        num_interacting = np.count_nonzero(zero_diag) / 2  # assuming symmetrical
+        return int(np.count_nonzero(zero_diag) / 2)
 
-        are_selfinteracting = [np.all(i == i[0]) for i in interacting_species]
+    def count_selfinteracting_species(self):
+        idxs_interacting = self.get_unique_interacting_idxs()
+        are_selfinteracting = [np.all(i == i[0]) for i in idxs_interacting]
+        return sum(are_selfinteracting)
+
+    def get_interacting_species(self, idxs_interacting):
+        idxs_interacting 
+        []
+
+    def get_unique_interacting_idxs(self):
+        idxs_interacting = np.nonzero(self.matrix)
+        idxs_interacting = tuple(zip(idxs_interacting[0], idxs_interacting[1]))
+        idxs_interacting = sorted([tuple(sorted(i)) for i in idxs_interacting])
+        return list(set(idxs_interacting))
 
 
 class InteractionData():

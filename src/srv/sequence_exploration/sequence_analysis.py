@@ -8,7 +8,6 @@ def analyse_interactions(pathname):
 
     interactions = InteractionMatrix(matrix_path=pathname)
 
-
     # categorise interactions
 
 
