@@ -8,6 +8,8 @@ def analyse_interactions(pathname):
 
     interactions = InteractionMatrix(matrix_path=pathname)
 
-    return interactions.get_stats()
+    stats = interactions.get_stats()
+
+    return stats
 
     # note sequence mutation method

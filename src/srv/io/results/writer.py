@@ -23,6 +23,7 @@ class DataWriter():
         else:
             self.original_write_dir = out_location
         self.write_dir = deepcopy(self.original_write_dir)
+        # self.out_paths = []
 
     def output(self, out_type, out_name=None, overwrite=False, return_path=False, new_file=False,
                filename_addon: str = None, subfolder: str = None, **writer_kwargs):
@@ -39,6 +40,7 @@ class DataWriter():
                 self.write_dir, add_outtype(out_name, out_type))
         writer = self.get_write_func(out_type, out_path, overwrite=overwrite)
         writer(**writer_kwargs)
+        # self.out_paths.append(out_path)
         if return_path:
             return out_path
 
