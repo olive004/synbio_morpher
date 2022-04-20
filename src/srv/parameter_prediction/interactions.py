@@ -138,22 +138,12 @@ class InteractionMatrix():
         idxs_interacting = self.get_unique_interacting_idxs()
         interacting = self.get_interacting_species(idxs_interacting)
         self_interacting = self.get_selfinteracting_species(idxs_interacting)
-        stats = {
+        return {
             "interacting": interacting,
             "self_interacting": self_interacting,
             "num_interacting": len(interacting),
             "num_self_interacting": len(self_interacting)
         }
-
-    # def count_interacting_species(self):
-    #     zero_diag = deepcopy(self.matrix)
-    #     np.fill_diagonal(zero_diag, 0)
-    #     return int(np.count_nonzero(zero_diag) / 2)
-
-    # def count_selfinteracting_species(self):
-    #     idxs_interacting = self.get_unique_interacting_idxs()
-    #     are_selfinteracting = [np.all(i == i[0]) for i in idxs_interacting]
-    #     return sum(are_selfinteracting)
 
     def get_interacting_species(self, idxs_interacting):
         return [list(set(idx)) for idx in idxs_interacting if set(idx) > 1]
