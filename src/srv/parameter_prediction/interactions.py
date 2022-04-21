@@ -1,11 +1,14 @@
 from copy import deepcopy
 import logging
+import os
+import sys
 import pandas as pd
 import numpy as np
 from functools import partial
 from src.utils.data.data_format_tools.common import determine_data_format
 from src.utils.misc.decorators import time_it
 from src.utils.misc.numerical import SCIENTIFIC, square_matrix_rand
+from src.utils.misc.type_handling import flatten_listlike
 
 
 class RawSimulationHandling():
@@ -116,12 +119,11 @@ class InteractionMatrix():
 
     def load(self, filepath):
         filetype = determine_data_format(filepath)
-        self.name = filepath.replace('.'+filetype, '').replace('interactions_', '')
+        self.name = os.path.basename(filepath).replace('.'+filetype, '').replace('interactions_', '')
         if filetype == 'csv':
-            matrix = pd.read_csv(filepath, header=None).to_numpy()
+            matrix = pd.read_csv(filepath).to_numpy()
         else:
             raise TypeError(f'Unsupported filetype {filetype} for loading {filepath}')
-        logging.info(matrix)
         return matrix
 
     def make_rand_matrix(self, num_nodes):
@@ -140,26 +142,26 @@ class InteractionMatrix():
         idxs_interacting = self.get_unique_interacting_idxs()
         interacting = self.get_interacting_species(idxs_interacting)
         self_interacting = self.get_selfinteracting_species(idxs_interacting)
+        
         stats = {
             "name": self.name,
             "interacting": interacting,
             "self_interacting": self_interacting,
-            "num_interacting": len(interacting),
-            "num_self_interacting": len(self_interacting)
+            "num_interacting": len(set(flatten_listlike(interacting))),
+            "num_self_interacting": len(set(self_interacting))
         }
         stats = {k: [v] for k, v in stats.items()}
         stats = pd.DataFrame.from_dict(stats)
         return stats
 
     def get_interacting_species(self, idxs_interacting):
-        return [list(set(idx)) for idx in idxs_interacting if len(set(idx)) > 1]
+        return [idx for idx in idxs_interacting if len(set(idx)) > 1]
 
     def get_selfinteracting_species(self, idxs_interacting):
-        return [list(set(idx)) for idx in idxs_interacting if len(set(idx)) == 1]
+        return [idx[0] for idx in idxs_interacting if len(set(idx)) == 1]
         
     def get_unique_interacting_idxs(self):
-        idxs_interacting = np.nonzero(self.matrix)
-        idxs_interacting = tuple(zip(idxs_interacting[0], idxs_interacting[1]))
+        idxs_interacting = np.argwhere(self.matrix > 0)
         idxs_interacting = sorted([tuple(sorted(i)) for i in idxs_interacting])
         return list(set(idxs_interacting))
 

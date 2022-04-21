@@ -16,6 +16,10 @@ def flatten_nested_dict(dict_obj):
     return flat_dict
 
 
+def flatten_listlike(t):
+    return [item for sublist in t for item in sublist]
+
+
 def get_bulkiest_dict_key(dict_like):
     k_bulkiest = list(dict_like.keys())[0]
     prev_v = dict_like[k_bulkiest]
