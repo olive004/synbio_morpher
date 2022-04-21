@@ -48,7 +48,6 @@ class Experiment():
     def iterate_protocols(self, protocols, out):
         for protocol in protocols:
             if type(protocol) == Protocol:
-                logging.info(protocol.name)
                 out = self.call_protocol(protocol, out)
             elif type(protocol) == list and type(out) == list:
                 for o in out:
