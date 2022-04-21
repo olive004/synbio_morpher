@@ -6,6 +6,7 @@ import networkx as nx
 import logging
 
 from src.srv.parameter_prediction.interactions import InteractionMatrix
+from src.srv.io.results.results import ResultCollector
 from src.utils.misc.type_handling import extend_int_to_list
 
 
@@ -149,11 +150,16 @@ class BaseSpecies():
 class BaseSystem():
     def __init__(self, config_args: dict = None):
 
+        self.name = config_args.get("name")
+        logging.info(self.name)
+
         if config_args is None:
             config_args = {}
 
         self.species = BaseSpecies(config_args)
         self.signal = None
+
+        self.result_collector = ResultCollector()
 
         self.init_graph()
 
@@ -211,3 +217,7 @@ class BaseSystem():
             labels = list(range(len(self.species.interactions)))
             self._node_labels = dict(zip(current_nodes, labels))
         self.graph = nx.relabel_nodes(self.graph, self.node_labels)
+
+    @property
+    def results(self):
+        return self.result_collector.results

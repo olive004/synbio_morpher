@@ -1,8 +1,10 @@
 from datetime import datetime
 import logging
 from typing import List
+from src.utils.data.data_format_tools.common import load_json_as_dict
 
-from src.utils.data.manage.writer import DataWriter
+from src.srv.io.results.writer import DataWriter
+from src.utils.misc.type_handling import make_attribute_list
 
 
 class Protocol():
@@ -27,9 +29,10 @@ class Protocol():
 
 class Experiment():
 
-    def __init__(self, config: str, protocols: List[Protocol], data_writer: DataWriter) -> None:
+    def __init__(self, config_file: str, protocols: List[Protocol], data_writer: DataWriter) -> None:
         
         self.name = 'experiment'
+        self.config_file = config_file
         self.start_time = datetime.now()
         self.protocols = protocols
         self.total_time = 0
@@ -37,14 +40,25 @@ class Experiment():
 
     def run_experiment(self):
         out = None
-        for protocol in self.protocols:
-            logging.info(protocol.name)
-            if protocol.req_input:
-                out = protocol(out)
-            else:
-                out = protocol()
+        self.iterate_protocols(self.protocols, out)
+
         self.total_time = datetime.now() - self.start_time
         self.write_experiment()
+
+    def iterate_protocols(self, protocols, out):
+        for protocol in protocols:
+            if type(protocol) == Protocol:
+                out = self.call_protocol(protocol, out)
+            elif type(protocol) == list and type(out) == list:
+                for o in out:
+                    self.iterate_protocols(protocols=protocol, out=o)
+
+    def call_protocol(self, protocol, out=None):
+        if protocol.req_input:
+            out = protocol(out)
+        else:
+            out = protocol()
+        return out
 
     def write_experiment(self):
         experiment_data = self.collect_experiment()
@@ -53,5 +67,8 @@ class Experiment():
     def collect_experiment(self):
         return {
             "total_time": str(self.total_time),
-            "protocols": [p.name for p in self.protocols]
+            "protocols": make_attribute_list(self.protocols, Protocol, 'name'),
+            "purpose": self.data_writer.purpose,
+            "config_file": self.config_file,
+            "config_params": load_json_as_dict(self.config_file)
         }

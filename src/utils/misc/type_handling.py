@@ -16,6 +16,18 @@ def flatten_nested_dict(dict_obj):
     return flat_dict
 
 
+def flatten_listlike(listlike, safe=False):
+    if safe:
+        flat_list = []
+        for l in listlike:
+            if type(l) == tuple or type(l) == list:
+                flat_list.extend(*l)
+            else:
+                flat_list.append(l)
+    else:
+        return [item for sublist in listlike for item in sublist]
+
+
 def get_bulkiest_dict_key(dict_like):
     k_bulkiest = list(dict_like.keys())[0]
     prev_v = dict_like[k_bulkiest]
@@ -26,7 +38,7 @@ def get_bulkiest_dict_key(dict_like):
     return k_bulkiest
 
 
-def make_values_list(dict_like):
+def cast_all_values_as_list(dict_like):
     return {k: [v] for k, v in dict_like.items() if not type(v) == list}
 
 
@@ -45,3 +57,13 @@ def extend_int_to_list(int_like, target_num):
 
 def assert_uniform_type(list_like, target_type):
     assert all(type(list_like) == target_type)
+
+
+def make_attribute_list(typed_list, source_type, target_attribute):
+    tlist = []
+    for v in typed_list:
+        if type(v) == source_type:
+            tlist.append(getattr(v, target_attribute))
+        if type(v) == list:
+            tlist.append(make_attribute_list(v, source_type, target_attribute))
+    return tlist

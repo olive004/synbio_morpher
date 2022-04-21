@@ -1,0 +1,11 @@
+{
+    "interaction_simulator": "IntaRNA",
+    "molecular_params": "./src/utils/system_definition/specific_systems/RNA/configs/RNA_system.json",
+    "experiment": {
+        "repetitions": 2000,
+        "sequence_length": 25,
+        "generator_protocol": "template_mutate",
+        "proportion_to_mutate": 0.35
+    },    
+    "system_type": "RNA"
+}

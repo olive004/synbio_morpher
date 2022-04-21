@@ -4,8 +4,6 @@ import os
 import numpy as np
 import pandas as pd
 
-from src.utils.misc.string_handling import add_outtype, make_time_str
-
 
 FORMAT_EXTS = {
     ".fasta": "fasta"
@@ -18,13 +16,16 @@ def verify_file_type(filepath: str, file_type: str):
 
 
 def determine_data_format(filepath):
-    for extension, ftype in FORMAT_EXTS.items():
-        if extension in filepath:
-            return ftype
-    return None
+    return os.path.basename(filepath).split('.')[-1]
+    # for extension, ftype in FORMAT_EXTS.items():
+    #     if extension in filepath:
+    #         return ftype
+    # return None
 
 
 def load_json_as_dict(json_pathname):
+    if not json_pathname:
+        return {}
     try:
         jdict = json.load(open(json_pathname))
         return jdict
@@ -45,10 +46,10 @@ def process_dict_for_json(dict_like):
     return dict_like
 
 
-def write_csv(data: pd.DataFrame, out_path: str, overwrite=False, new_vis=False, out_type='csv'):
-    if new_vis:
-        out_path = f'{out_path}_{make_time_str()}'
-    out_path = add_outtype(out_path, out_type)
+def write_csv(data: pd.DataFrame, out_path: str, overwrite=False):
+    if type(data) == dict:
+        data = {k: [v] for k, v in data.items()}
+        data = pd.DataFrame.from_dict(data)
     if type(data) == pd.DataFrame:
         if overwrite or not os.path.exists(out_path):
             data.to_csv(out_path, index=False)
@@ -62,4 +63,4 @@ def write_csv(data: pd.DataFrame, out_path: str, overwrite=False, new_vis=False,
 def write_json(data: dict, out_path: str, overwrite=False, out_type='json'):
     data = process_dict_for_json(data)
     with open(out_path, 'w+') as fn:
-        json.dump(data, fp=fn)
+        json.dump(data, fp=fn, indent=4)

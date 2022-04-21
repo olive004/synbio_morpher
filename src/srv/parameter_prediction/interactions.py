@@ -1,7 +1,14 @@
+from copy import deepcopy
+import logging
+import os
+import sys
+import pandas as pd
 import numpy as np
 from functools import partial
+from src.utils.data.data_format_tools.common import determine_data_format
 from src.utils.misc.decorators import time_it
 from src.utils.misc.numerical import SCIENTIFIC, square_matrix_rand
+from src.utils.misc.type_handling import flatten_listlike
 
 
 class RawSimulationHandling():
@@ -91,17 +98,33 @@ class RawSimulationHandling():
 
 class InteractionMatrix():
     def __init__(self, config_args=None,
-                 num_nodes=None,
+                 matrix=None,
+                 matrix_path: str = None,
+                 num_nodes: int = None,
                  toy=False):
         super().__init__()
 
+        self.name = None
         self.toy = toy
         self.config_args = config_args
 
-        if toy:
+        if matrix is not None:
+            self.matrix = matrix
+        elif matrix_path is not None:
+            self.matrix = self.load(matrix_path)
+        elif toy:
             self.matrix = self.make_toy_matrix(num_nodes)
         else:
             self.matrix = self.make_rand_matrix(num_nodes)
+
+    def load(self, filepath):
+        filetype = determine_data_format(filepath)
+        self.name = os.path.basename(filepath).replace('.'+filetype, '').replace('interactions_', '')
+        if filetype == 'csv':
+            matrix = pd.read_csv(filepath).to_numpy()
+        else:
+            raise TypeError(f'Unsupported filetype {filetype} for loading {filepath}')
+        return matrix
 
     def make_rand_matrix(self, num_nodes):
         if num_nodes is None or num_nodes == 0:
@@ -114,6 +137,33 @@ class InteractionMatrix():
             max_nodes = 15
             num_nodes = np.random.randint(min_nodes, max_nodes)
         return self.make_rand_matrix(num_nodes)
+
+    def get_stats(self):
+        idxs_interacting = self.get_unique_interacting_idxs()
+        interacting = self.get_interacting_species(idxs_interacting)
+        self_interacting = self.get_selfinteracting_species(idxs_interacting)
+        
+        stats = {
+            "name": self.name,
+            "interacting": interacting,
+            "self_interacting": self_interacting,
+            "num_interacting": len(set(flatten_listlike(interacting))),
+            "num_self_interacting": len(set(self_interacting))
+        }
+        stats = {k: [v] for k, v in stats.items()}
+        stats = pd.DataFrame.from_dict(stats)
+        return stats
+
+    def get_interacting_species(self, idxs_interacting):
+        return [idx for idx in idxs_interacting if len(set(idx)) > 1]
+
+    def get_selfinteracting_species(self, idxs_interacting):
+        return [idx[0] for idx in idxs_interacting if len(set(idx)) == 1]
+        
+    def get_unique_interacting_idxs(self):
+        idxs_interacting = np.argwhere(self.matrix > 0)
+        idxs_interacting = sorted([tuple(sorted(i)) for i in idxs_interacting])
+        return list(set(idxs_interacting))
 
 
 class InteractionData():

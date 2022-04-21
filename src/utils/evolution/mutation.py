@@ -1,11 +1,10 @@
 from copy import deepcopy
 from functools import partial
-import logging
 import os
 import random
 import pandas as pd
 import numpy as np
-from src.utils.data.manage.writer import DataWriter, Tabulated
+from src.srv.io.results.writer import DataWriter, Tabulated
 from src.utils.misc.string_handling import add_outtype
 
 

@@ -1,9 +1,10 @@
 from functools import partial
+import logging
 import numpy as np
 import random
 from Bio.Seq import Seq
 
-from src.utils.data.manage.writer import DataWriter
+from src.srv.io.results.writer import DataWriter
 from src.utils.misc.helper import next_wrapper
 from src.utils.misc.numerical import generate_mixed_binary
 from src.utils.misc.string_handling import ordered_merge, list_to_str
@@ -72,14 +73,17 @@ class NucleotideGenerator(SeqGenerator):
                 template, symb)
         return seq_permutations
 
-    def generate_circuits(self, iter_count=1, **circuit_kwargs):
+    def generate_circuits(self, iter_count=1, fname='toy_mRNA_circuit', **circuit_kwargs):
+        circuit_paths = []
         for i in range(iter_count):
-            circuit_kwargs['fname'] = circuit_kwargs['fname'] + str(i)
-            self.generate_circuit(**circuit_kwargs)
+            circuit_kwargs['fname'] = fname + '_' + str(i)
+            circuit_path = self.generate_circuit(**circuit_kwargs)
+            circuit_paths.append(circuit_path)
+        return circuit_paths
 
     def generate_circuit(self, count=5, slength=20, protocol="random",
                          fname='toy_mRNA_circuit',
-                         output_format='.fasta',
+                         out_type='fasta',
                          proportion_to_mutate=0, template=None):
         """ Protocol can be 
         'random': Random sequence generated with weighted characters
@@ -111,7 +115,7 @@ class NucleotideGenerator(SeqGenerator):
                                     str_prob_dict=self.SEQ_POOL, slength=slength)
             raise NotImplementedError
 
-        out_path = self.data_writer.output(out_name=fname, out_type='fasta',
+        out_path = self.data_writer.output(out_name=fname, out_type=out_type,
                                            seq_generator=seq_generator, stype=self.stype, 
                                            count=count, return_path=True)
         return {'data': out_path}
