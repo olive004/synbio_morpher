@@ -101,6 +101,7 @@ class InteractionMatrix():
                  toy=False):
         super().__init__()
 
+        self.name = None
         self.toy = toy
         self.config_args = config_args
 
@@ -115,6 +116,7 @@ class InteractionMatrix():
 
     def load(self, filepath):
         filetype = determine_data_format(filepath)
+        self.name = filepath.pop('.'+filetype).pop('interactions_')
         if filetype == 'csv':
             matrix = pd.read_csv(filepath, header=None).to_numpy()
         else:

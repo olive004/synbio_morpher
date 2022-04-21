@@ -48,6 +48,9 @@ def process_dict_for_json(dict_like):
 
 def write_csv(data: pd.DataFrame, out_path: str, overwrite=False):
     logging.info(f'Writing csv to {out_path}')
+    if type(data) == dict:
+        data = {k: [v] for k, v in data.items()}
+        data = pd.DataFrame.from_dict(data)
     if type(data) == pd.DataFrame:
         if overwrite or not os.path.exists(out_path):
             data.to_csv(out_path, index=False)
