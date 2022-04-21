@@ -1,17 +1,13 @@
 from functools import partial
-import logging
 import os
-import sys
 
 from fire import Fire
-from scripts.common.circuit import construct_circuit_from_cfg
 
 from src.srv.io.results.experiments import Experiment, Protocol
 from src.srv.io.results.writer import DataWriter
-from src.srv.sequence_exploration.sequence_analysis import analyse_interactions, summarise_offline
+from src.srv.sequence_exploration.sequence_analysis import analyse_interactions
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.misc.io import get_pathnames
-from src.utils.system_definition.agnostic_system.system_manager import CircuitModeller
 
 
 def main():
@@ -33,23 +29,17 @@ def main():
                     experiment_key="2022_04_14_113148",
                     subfolder="interactions"
                     ),
+            req_output=True,
             name='get_pathnames'
             # do some analytics
         ),
         # read in data one at a time
         [
             Protocol(
-                analyse_interactions,
+                partial(analyse_interactions, writer=data_writer),
                 req_output=True,
                 req_input=True,
                 name='analyse_interactions'
-            ),
-            Protocol(
-                partial(data_writer.output, out_name='circuit_stats',
-                        out_type='csv'
-                        ),
-                req_input=True,
-                name='output'
             )
             # sort circuit into category based on number of interacting species
         ]
