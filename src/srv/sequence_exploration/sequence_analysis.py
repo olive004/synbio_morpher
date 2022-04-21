@@ -1,5 +1,8 @@
 
 
+import pandas as pd
+
+
 from src.srv.io.results.writer import DataWriter
 from src.srv.parameter_prediction.interactions import InteractionMatrix
 

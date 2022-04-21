@@ -116,7 +116,7 @@ class InteractionMatrix():
 
     def load(self, filepath):
         filetype = determine_data_format(filepath)
-        self.name = filepath.pop('.'+filetype).pop('interactions_')
+        self.name = filepath.replace('.'+filetype, '').replace('interactions_', '')
         if filetype == 'csv':
             matrix = pd.read_csv(filepath, header=None).to_numpy()
         else:
@@ -140,12 +140,16 @@ class InteractionMatrix():
         idxs_interacting = self.get_unique_interacting_idxs()
         interacting = self.get_interacting_species(idxs_interacting)
         self_interacting = self.get_selfinteracting_species(idxs_interacting)
-        return {
+        stats = {
+            "name": self.name,
             "interacting": interacting,
             "self_interacting": self_interacting,
             "num_interacting": len(interacting),
             "num_self_interacting": len(self_interacting)
         }
+        stats = {k: [v] for k, v in stats.items()}
+        stats = pd.DataFrame.from_dict(stats)
+        return stats
 
     def get_interacting_species(self, idxs_interacting):
         return [list(set(idx)) for idx in idxs_interacting if len(set(idx)) > 1]
@@ -155,7 +159,6 @@ class InteractionMatrix():
         
     def get_unique_interacting_idxs(self):
         idxs_interacting = np.nonzero(self.matrix)
-        logging.info(self.matrix)
         idxs_interacting = tuple(zip(idxs_interacting[0], idxs_interacting[1]))
         idxs_interacting = sorted([tuple(sorted(i)) for i in idxs_interacting])
         return list(set(idxs_interacting))
