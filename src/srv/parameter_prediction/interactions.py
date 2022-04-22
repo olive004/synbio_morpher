@@ -143,12 +143,20 @@ class InteractionMatrix():
         interacting = self.get_interacting_species(idxs_interacting)
         self_interacting = self.get_selfinteracting_species(idxs_interacting)
         
+        nonzero_matrix = self.matrix[np.where(self.matrix > 0)]
+        if len(nonzero_matrix):
+            min_interaction = np.min(nonzero_matrix)
+        else:
+            min_interaction = np.min(self.matrix)
+
         stats = {
             "name": self.name,
             "interacting": interacting,
             "self_interacting": self_interacting,
             "num_interacting": len(set(flatten_listlike(interacting))),
-            "num_self_interacting": len(set(self_interacting))
+            "num_self_interacting": len(set(self_interacting)),
+            "max_interaction": np.max(self.matrix),
+            "min_interaction": min_interaction
         }
         stats = {k: [v] for k, v in stats.items()}
         stats = pd.DataFrame.from_dict(stats)

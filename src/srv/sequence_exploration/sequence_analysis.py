@@ -7,7 +7,7 @@ from src.srv.io.results.writer import DataWriter
 from src.srv.parameter_prediction.interactions import InteractionMatrix
 
 
-def analyse_interactions(pathname, writer: DataWriter):
+def generate_interaction_stats(pathname, writer: DataWriter):
 
     interactions = InteractionMatrix(matrix_path=pathname)
 
@@ -18,3 +18,6 @@ def analyse_interactions(pathname, writer: DataWriter):
     return stats
 
     # note sequence mutation method
+
+
+def 

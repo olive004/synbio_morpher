@@ -5,7 +5,7 @@ from fire import Fire
 
 from src.srv.io.results.experiments import Experiment, Protocol
 from src.srv.io.results.writer import DataWriter
-from src.srv.sequence_exploration.sequence_analysis import analyse_interactions
+from src.srv.sequence_exploration.sequence_analysis import generate_interaction_stats
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.misc.io import get_pathnames
 
@@ -36,7 +36,7 @@ def main():
         # read in data one at a time
         [
             Protocol(
-                partial(analyse_interactions, writer=data_writer),
+                partial(generate_interaction_stats, writer=data_writer),
                 req_output=True,
                 req_input=True,
                 name='analyse_interactions'
