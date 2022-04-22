@@ -20,4 +20,5 @@ def generate_interaction_stats(pathname, writer: DataWriter):
     # note sequence mutation method
 
 
-def 
+def pull_circuit_from_stats(stats_pathname):
+    pass
