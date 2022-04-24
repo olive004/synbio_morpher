@@ -5,6 +5,7 @@ import pandas as pd
 
 from src.srv.io.results.writer import DataWriter
 from src.srv.parameter_prediction.interactions import InteractionMatrix
+from src.utils.data.loaders.generic import DataLoader
 
 
 def generate_interaction_stats(pathname, writer: DataWriter):
@@ -21,4 +22,4 @@ def generate_interaction_stats(pathname, writer: DataWriter):
 
 
 def pull_circuit_from_stats(stats_pathname):
-    pass
+    stats = DataLoader.load_data(stats_pathname)
