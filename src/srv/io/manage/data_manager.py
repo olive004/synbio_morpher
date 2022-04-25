@@ -1,6 +1,6 @@
 
 
-from src.utils.data.loaders.generic import DataLoader
+from src.srv.io.loaders.data_loader import DataLoader
 
 
 class DataManager():

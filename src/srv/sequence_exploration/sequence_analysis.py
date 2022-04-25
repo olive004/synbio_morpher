@@ -22,11 +22,11 @@ def generate_interaction_stats(pathname, writer: DataWriter):
 
 
 def pull_circuit_from_stats(stats_pathname, filters: dict):
-    stats = DataLoader.load_data(stats_pathname)
+    stats = DataLoader().load_data(stats_pathname)
 
     filt_stats = stats[stats['num_interacting']
                        >= filters.get("min_num_interacting")]
-    filt_stats = filt_stats[filt_stats['num_interacting'] <= filters.get(
-        "max_num_interacting")]
+    # filt_stats = filt_stats[filt_stats['num_interacting'] <= filters.get(
+    #     "max_num_interacting")]
     filt_stats = filt_stats[filt_stats['num_self_interacting'] < filters.get(
-        "num_self_interacting")]
+        "max_self_interacting")]
