@@ -18,7 +18,7 @@ def compose_kwargs(config_filename: str, extra_configs) -> dict:
     kwargs = {
         "system_type": config_file.get("system_type"),
         "name": isolate_filename(data_manager.data.source),
-        "data": data_manager.data,
+        "data_path": data_manager.data,
         "identities": data_manager.data.identities,
         "mutations": cast_all_values_as_list(config_file.get("mutations", {})),
         "signal": load_json_as_dict(config_file.get("signal")),

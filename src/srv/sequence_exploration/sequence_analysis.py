@@ -21,7 +21,7 @@ def generate_interaction_stats(pathname, writer: DataWriter):
     # note sequence mutation method
 
 
-def pull_circuit_from_stats(stats_pathname, filters: dict):
+def pull_circuits_from_stats(stats_pathname, filters: dict, write_to: dict = None):
     stats = DataLoader().load_data(stats_pathname)
 
     filt_stats = stats[stats['num_interacting']
@@ -30,3 +30,6 @@ def pull_circuit_from_stats(stats_pathname, filters: dict):
     #     "max_num_interacting")]
     filt_stats = filt_stats[filt_stats['num_self_interacting'] < filters.get(
         "max_self_interacting")]
+
+    circuits = filt_stats["name"].tolist()
+    

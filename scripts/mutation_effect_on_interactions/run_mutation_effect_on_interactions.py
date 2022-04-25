@@ -6,7 +6,7 @@ from scripts.common.circuit import construct_circuit_from_cfg
 
 from src.srv.io.results.experiments import Experiment, Protocol
 from src.srv.io.results.result_writer import ResultWriter
-from src.srv.sequence_exploration.sequence_analysis import pull_circuit_from_stats
+from src.srv.sequence_exploration.sequence_analysis import pull_circuits_from_stats
 from src.utils.evolution.mutation import Evolver
 from src.utils.misc.io import get_pathnames
 from src.utils.system_definition.agnostic_system.system_manager import CircuitModeller
@@ -35,12 +35,14 @@ def main(config_file=None):
         ),
         # filter circuits
         Protocol(
-            partial(pull_circuit_from_stats,
+            partial(pull_circuits_from_stats,
                     filters={
                         "min_num_interacting": 3,
                         "max_self_interacting": 0
-                    }),
+                    },
+                    write_to=config_file),
             req_input=True,
+            req_output=True,
             name='pull_circuit_from_stats'
         ),
         # construct circuit
