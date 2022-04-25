@@ -1,4 +1,4 @@
-from src.utils.data.data_format_tools.common import load_json_as_dict
+from src.utils.data.data_format_tools.common import load_json_as_dict, process_json
 from src.srv.io.manage.data_manager import DataManager
 from src.utils.misc.io import isolate_filename
 from src.utils.misc.type_handling import cast_all_values_as_list
@@ -7,8 +7,12 @@ from src.utils.system_definition.config import parse_cfg_args
 from src.utils.system_definition.setup import get_system_type
 
 
-def compose_kwargs(config_filename: str, extra_configs) -> dict:
-    config_file = load_json_as_dict(config_filename)
+def manage_config(config_file):
+
+
+
+def compose_kwargs(config_filepath: str, extra_configs) -> dict:
+    config_file = process_json(load_json_as_dict(config_filepath))
     for kwarg, config in extra_configs.items():
         if config_file.get(kwarg):
             config_file[kwarg] = config

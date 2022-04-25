@@ -15,9 +15,9 @@ from src.utils.system_definition.agnostic_system.system_manager import CircuitMo
 
 def main():
     ## set configs
-    config_file = os.path.join(
+    config_filepath = os.path.join(
         "scripts", "generate_species_templates", "configs", "generate_species_templates.json")
-    exp_configs = load_json_as_dict(config_file).get("experiment")
+    exp_configs = load_json_as_dict(config_filepath).get("experiment")
     logging.info(exp_configs)
 
     ## start_experiment
@@ -34,7 +34,7 @@ def main():
             req_output=True
         ), [
             Protocol(
-                partial(construct_circuit_from_cfg, config_file=config_file),
+                partial(construct_circuit_from_cfg, config_filepath=config_filepath),
                 req_input=True,
                 req_output=True,
                 name="making_circuit"
@@ -47,7 +47,7 @@ def main():
             )
         ]
     ]
-    experiment = Experiment(config_file, protocols, data_writer=data_writer)
+    experiment = Experiment(config_filepath, protocols, data_writer=data_writer)
     experiment.run_experiment()
 
 

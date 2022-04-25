@@ -12,9 +12,9 @@ from src.utils.misc.io import get_pathnames
 
 def main():
     # set configs
-    config_file = os.path.join(
+    config_filepath = os.path.join(
         "scripts", "explore_species_templates", "configs", "explore_species_templates.json")
-    exp_configs = load_json_as_dict(config_file).get("experiment")
+    exp_configs = load_json_as_dict(config_filepath).get("experiment")
 
     # start_experiment
     data_writer_kwargs = {'purpose': exp_configs.get("purpose")}
@@ -45,7 +45,7 @@ def main():
         ]
         # Protocol(sys.exit),
     ]
-    experiment = Experiment(config_file, protocols, data_writer=data_writer)
+    experiment = Experiment(config_filepath, protocols, data_writer=data_writer)
     experiment.run_experiment()
 
 

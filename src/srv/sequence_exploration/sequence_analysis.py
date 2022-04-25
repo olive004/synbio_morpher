@@ -32,4 +32,6 @@ def pull_circuits_from_stats(stats_pathname, filters: dict, write_to: dict = Non
         "max_self_interacting")]
 
     circuits = filt_stats["name"].tolist()
+
+    write_to["data_path"] 
     

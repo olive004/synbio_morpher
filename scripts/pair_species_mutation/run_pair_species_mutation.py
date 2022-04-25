@@ -13,7 +13,7 @@ from src.utils.system_definition.agnostic_system.system_manager import CircuitMo
 
 def main():
     # set configs
-    config_file = os.path.join(
+    config_filepath = os.path.join(
         "scripts", "pair_species_mutation", "configs", "RNA_pair_species_mutation.json")
     # start_experiment
     data_writer_kwargs = {'purpose': 'pair_species_mutation'}
@@ -26,7 +26,7 @@ def main():
             req_output=True
         ),
         Protocol(
-            partial(construct_circuit_from_cfg, config_file=config_file),
+            partial(construct_circuit_from_cfg, config_filepath=config_filepath),
             req_input=True,
             req_output=True,
             name="making_circuit"
@@ -49,7 +49,7 @@ def main():
             name="visualise_signal"
         )
     ]
-    experiment = Experiment(config_file, protocols, data_writer=data_writer)
+    experiment = Experiment(config_filepath, protocols, data_writer=data_writer)
     experiment.run_experiment()
 
 

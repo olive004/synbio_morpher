@@ -12,10 +12,10 @@ from src.utils.misc.io import get_pathnames
 from src.utils.system_definition.agnostic_system.system_manager import CircuitModeller
 
 
-def main(config_file=None):
+def main(config_filepath=None):
     # set configs
-    if config_file is None:
-        config_file = os.path.join(
+    if config_filepath is None:
+        config_filepath = os.path.join(
             "scripts", "mutation_effect_on_interactions", "configs", "")
     # start_experiment
     data_writer_kwargs = {'purpose': 'mutation_effect_on_interactions'}
@@ -40,14 +40,14 @@ def main(config_file=None):
                         "min_num_interacting": 3,
                         "max_self_interacting": 0
                     },
-                    write_to=config_file),
+                    write_to=config_filepath),
             req_input=True,
             req_output=True,
             name='pull_circuit_from_stats'
         ),
         # construct circuit
         Protocol(
-            partial(construct_circuit_from_cfg, config_file=config_file),
+            partial(construct_circuit_from_cfg, config_filepath=config_filepath),
             req_input=True,
             req_output=True,
             name='construct_circuit'
@@ -80,7 +80,7 @@ def main(config_file=None):
             name="visualise_signal"
         )
     ]
-    experiment = Experiment(config_file, protocols, data_writer=data_writer)
+    experiment = Experiment(config_filepath, protocols, data_writer=data_writer)
     experiment.run_experiment()
 
 
