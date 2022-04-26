@@ -84,7 +84,7 @@ class DataWriter():
         master_summary = {str(k): str(v) for k, v in kwargs.items()}
         master_summary["name"] = name
         summary_pathname = os.path.join(self.write_dir, add_outtype('master_summary', 'csv'))
-        write_csv(summary_pathname, overwrite=False)
+        write_csv(master_summary, out_path=summary_pathname, overwrite=False)
 
 
 class Tabulated(ABC):

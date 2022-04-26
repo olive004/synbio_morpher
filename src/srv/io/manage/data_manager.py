@@ -9,7 +9,7 @@ class DataManager():
         self.source = filepath
         self.data = data
         if data is None:
-            self.data = self.loader.load_data(filepath, identities)
+            self.data = self.loader.load_data(filepath, identities=identities)
 
     def __repr__(self) -> str:
         return str(self.data)

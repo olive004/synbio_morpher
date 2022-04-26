@@ -18,7 +18,6 @@ def main():
     config_filepath = os.path.join(
         "scripts", "generate_species_templates", "configs", "generate_species_templates.json")
     exp_configs = load_json_as_dict(config_filepath).get("experiment")
-    logging.info(exp_configs)
 
     ## start_experiment
     data_writer_kwargs = {'purpose': 'generate_species_templates'}

@@ -76,7 +76,7 @@ class NucleotideGenerator(SeqGenerator):
     def generate_circuits(self, iter_count=1, name='toy_mRNA_circuit', **circuit_kwargs):
         circuit_paths = []
         for i in range(iter_count):
-            circuit_kwargs['fname'] = name + '_' + str(i)
+            circuit_kwargs['name'] = name + '_' + str(i)
             circuit_path = self.generate_circuit(**circuit_kwargs)
             circuit_paths.append(circuit_path)
         return circuit_paths
