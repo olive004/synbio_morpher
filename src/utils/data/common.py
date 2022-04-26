@@ -1,5 +1,8 @@
 
 
+import pandas as pd
+
+
 class Data():
 
     def __init__(self, loaded_data: dict, identities: dict = {}, source_files=None) -> None:
@@ -31,6 +34,8 @@ class Data():
     def make_sample_names(self):
         if type(self.data) == dict:
             return list(self.data.keys())
+        elif type(self.data) == pd.DataFrame:
+            return list(self.data.columns)
         raise ValueError(f'Unrecognised loaded data type {type(self.data)}.')
 
     @property
@@ -47,11 +52,12 @@ class Data():
 
     @sample_names.getter
     def sample_names(self):
-        if type(self.data) == dict:
-            return list(self.data.keys())
-        else:
-            import numpy as np
-            return list(np.range(len(self.data)))
+        return self.make_sample_names()
+        # if type(self.data) == dict:
+        #     return list(self.data.keys())
+        # else:
+        #     import numpy as np
+        #     return list(range(len(self.data)))
 
     @sample_names.setter
     def sample_names(self, value):

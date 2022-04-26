@@ -1,6 +1,7 @@
 
 
 
+import glob
 import logging
 import os
 
@@ -21,10 +22,14 @@ def create_location(pathname):
 
 
 def get_pathnames(file_key, first_only=False, **kwargs):
-    import glob
     search_folder = os.path.join(*[v for v in kwargs.values()])
     pathnames = glob.glob(os.path.join(search_folder, file_key + '*'))
     if first_only and pathnames:
         logging.info(pathnames)
         pathnames = pathnames[0]
     return pathnames
+
+
+def get_pathname_by_search_str(folder, search_key):
+    file_name = list(map(folder, glob.glob(search_key)))
+    return file_name

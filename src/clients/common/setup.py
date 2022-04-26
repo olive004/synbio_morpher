@@ -8,7 +8,7 @@ from src.utils.system_definition.setup import get_system_type
 
 
 def manage_config(config_file):
-
+    pass
 
 
 def compose_kwargs(config_filepath: str, extra_configs) -> dict:

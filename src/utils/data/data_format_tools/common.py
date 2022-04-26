@@ -50,6 +50,7 @@ def process_json(json_dict):
     for k, v in json_dict.items():
         if v == "None":
             json_dict[k] = None
+    return json_dict
 
 
 def write_csv(data: pd.DataFrame, out_path: str, overwrite=False):
