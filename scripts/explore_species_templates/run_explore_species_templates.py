@@ -26,24 +26,22 @@ def main():
                     file_key="interactions",
                     root_dir="data",
                     purpose="generate_species_templates",
-                    experiment_key="2022_04_14_113148",
+                    experiment_key="2022_04_26_180056",
                     subfolder="interactions"
                     ),
             req_output=True,
             name='get_pathnames'
-            # do some analytics
         ),
         # read in data one at a time
         [
+            # do some analytics
             Protocol(
                 partial(generate_interaction_stats, writer=data_writer),
                 req_output=True,
                 req_input=True,
                 name='analyse_interactions'
             )
-            # sort circuit into category based on number of interacting species
         ]
-        # Protocol(sys.exit),
     ]
     experiment = Experiment(config_filepath, protocols, data_writer=data_writer)
     experiment.run_experiment()

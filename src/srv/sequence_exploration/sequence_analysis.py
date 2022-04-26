@@ -14,6 +14,7 @@ from src.utils.misc.io import get_pathname_by_search_str
 
 def generate_interaction_stats(pathname, writer: DataWriter):
 
+    logging.info(pathname)
     interactions = InteractionMatrix(matrix_path=pathname)
 
     stats = interactions.get_stats()

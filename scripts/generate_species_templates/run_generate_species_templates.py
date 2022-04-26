@@ -31,14 +31,14 @@ def main():
                     protocol=exp_configs.get("generator_protocol")),
             req_output=True,
             name="generating_sequences"
-        ), [
+        ), 
+        [
             Protocol(
                 partial(construct_circuit_from_cfg, config_filepath=config_filepath),
                 req_input=True,
                 req_output=True,
                 name="making_circuit"
             ),
-            # Protocol(sys.exit),
             Protocol(
                 CircuitModeller(result_writer=data_writer).compute_interaction_strengths,
                 req_input=True,
