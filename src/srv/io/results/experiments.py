@@ -62,7 +62,7 @@ class Experiment():
 
     def write_experiment(self):
         experiment_data = self.collect_experiment()
-        self.data_writer.output(out_type='json', out_name=self.name, data=experiment_data)
+        self.data_writer.output(out_type='json', out_name=self.name, data=experiment_data, write_master=False)
         
     def collect_experiment(self):
         return {

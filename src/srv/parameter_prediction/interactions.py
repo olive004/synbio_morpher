@@ -120,7 +120,8 @@ class InteractionMatrix():
 
     def load(self, filepath):
         filetype = determine_data_format(filepath)
-        self.name = os.path.basename(filepath).replace('.'+filetype, '').replace('interactions_', '')
+        self.name = os.path.basename(filepath).replace('.'+filetype, '').replace(
+            'interactions_', '').replace('_interactions', '')
         if filetype == 'csv':
             matrix = load_csv(filepath, load_as='numpy')
         else:

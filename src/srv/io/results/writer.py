@@ -25,7 +25,8 @@ class DataWriter():
         self.write_dir = deepcopy(self.original_write_dir)
 
     def output(self, out_type: str, out_name: str = None, overwrite: bool = False, return_path: bool = False,
-               new_file: bool = False, filename_addon: str = None, subfolder: str = None, **writer_kwargs):
+               new_file: bool = False, filename_addon: str = None, subfolder: str = None, write_master: bool = True,
+               **writer_kwargs):
         if new_file:
             if filename_addon is None:
                 filename_addon = make_time_str()
@@ -42,9 +43,10 @@ class DataWriter():
                 self.write_dir, add_outtype(base_name, out_type))
         writer = self.get_write_func(out_type, out_path, overwrite=overwrite)
         writer(**writer_kwargs)
-        self.write_to_master_summary(
-            out_name, out_name=base_name, out_path=out_path, 
-            filename_addon=filename_addon, out_type=out_type)
+        if write_master:
+            self.write_to_master_summary(
+                out_name, out_name=base_name, out_path=out_path, 
+                filename_addon=filename_addon, out_type=out_type)
         if return_path:
             return out_path
 
