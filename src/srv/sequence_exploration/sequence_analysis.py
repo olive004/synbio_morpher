@@ -2,6 +2,7 @@
 
 from copy import deepcopy
 import logging
+import os
 import pandas as pd
 
 
@@ -32,16 +33,12 @@ def pull_circuits_from_stats(stats_pathname, filters: dict, write_to: dict = Non
     filt_stats = filt_stats[filt_stats['num_self_interacting'] < filters.get(
         "max_self_interacting")]
 
-    circuit_names = filt_stats["name"].tolist()
+    circuit_names = sorted(filt_stats["name"].tolist())
 
-    try:
-        base_folder = write_to["base_folder"]
-    except KeyError:
-        raise KeyError('Config file incomplete - missing "base_folder" to search through.\n'
-                       f'Keys: {write_to.keys()}')
+    base_folder = os.path.dirname(stats_pathname)
     circuits = []
     for name in circuit_names:
         circuit = deepcopy(write_to)
         circuit["data_path"] = get_pathname_by_search_str(base_folder, name)
-        logging.info(circuit["data_path"])
+        # logging.info(circuit["data_path"])
         circuits.append(circuit)

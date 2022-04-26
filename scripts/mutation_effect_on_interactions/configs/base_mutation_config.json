@@ -8,7 +8,7 @@
     },
     "filters": {
         "min_num_interacting": 3,
-        "max_self_interacting": 0
+        "max_self_interacting": 2
     },
     "signal": "./scripts/RNA_circuit_simulation/configs/in_signal.json"
 }
