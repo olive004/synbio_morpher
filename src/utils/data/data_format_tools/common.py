@@ -67,7 +67,7 @@ def write_csv(data: pd.DataFrame, out_path: str, overwrite=False):
             f'Unsupported: cannot output data of type {type(data)} to csv.')
 
 
-def write_json(data: dict, out_path: str, overwrite=False, out_type='json'):
+def write_json(data: dict, out_path: str, overwrite=False):
     data = process_dict_for_json(data)
     with open(out_path, 'w+') as fn:
         json.dump(data, fp=fn, indent=4)

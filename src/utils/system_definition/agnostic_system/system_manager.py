@@ -46,10 +46,10 @@ class CircuitModeller():
         interactions = self.run_interaction_simulator(circuit,
                                                       circuit.species.data.data)
         circuit.species.interactions = interactions.matrix
-        out_name = 'interactions'
+        filename_addon = 'interactions'
         self.result_writer.output(
-            out_type='csv', out_name=out_name, data=circuit.species.interactions_to_df(), overwrite=False,
-            new_file=True, filename_addon=circuit.name, subfolder=out_name)
+            out_type='csv', out_name=circuit.name, data=circuit.species.interactions_to_df(), overwrite=False,
+            new_file=True, filename_addon=filename_addon, subfolder=filename_addon)
         return circuit
 
     def run_interaction_simulator(self, circuit, data):

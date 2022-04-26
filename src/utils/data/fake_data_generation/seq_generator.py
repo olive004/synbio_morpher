@@ -73,16 +73,16 @@ class NucleotideGenerator(SeqGenerator):
                 template, symb)
         return seq_permutations
 
-    def generate_circuits(self, iter_count=1, fname='toy_mRNA_circuit', **circuit_kwargs):
+    def generate_circuits(self, iter_count=1, name='toy_mRNA_circuit', **circuit_kwargs):
         circuit_paths = []
         for i in range(iter_count):
-            circuit_kwargs['fname'] = fname + '_' + str(i)
+            circuit_kwargs['fname'] = name + '_' + str(i)
             circuit_path = self.generate_circuit(**circuit_kwargs)
             circuit_paths.append(circuit_path)
         return circuit_paths
 
     def generate_circuit(self, count=5, slength=20, protocol="random",
-                         fname='toy_mRNA_circuit',
+                         name='toy_mRNA_circuit',
                          out_type='fasta',
                          proportion_to_mutate=0, template=None):
         """ Protocol can be 
@@ -115,9 +115,10 @@ class NucleotideGenerator(SeqGenerator):
                                     str_prob_dict=self.SEQ_POOL, slength=slength)
             raise NotImplementedError
 
-        out_path = self.data_writer.output(out_name=fname, out_type=out_type,
+        out_path = self.data_writer.output(out_name=name, out_type=out_type,
                                            seq_generator=seq_generator, stype=self.stype, 
-                                           count=count, return_path=True)
+                                           count=count, return_path=True,
+                                           subfolder='circuits')
         return {'data': out_path}
 
 

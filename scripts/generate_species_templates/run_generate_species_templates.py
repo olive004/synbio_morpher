@@ -30,8 +30,8 @@ def main():
                     count=3, slength=exp_configs.get("sequence_length"), 
                     proportion_to_mutate=exp_configs.get("proportion_to_mutate"),
                     protocol=exp_configs.get("generator_protocol")),
-            name="generating_sequences",
-            req_output=True
+            req_output=True,
+            name="generating_sequences"
         ), [
             Protocol(
                 partial(construct_circuit_from_cfg, config_filepath=config_filepath),
