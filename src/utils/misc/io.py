@@ -21,9 +21,8 @@ def create_location(pathname):
         os.makedirs(pathname, mode=0o777)
 
 
-def get_pathnames(file_key, root_dir, purpose, experiment_key, subfolder, first_only=False):
-    search_folder = os.path.join(root_dir, purpose, experiment_key, subfolder)
-    pathnames = glob.glob(os.path.join(search_folder, '*' + file_key + '*'))
+def get_pathnames(file_key, search_dir, first_only=False):
+    pathnames = glob.glob(os.path.join(search_dir, '*' + file_key + '*'))
     if first_only and pathnames:
         pathnames = pathnames[0]
     return pathnames

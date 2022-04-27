@@ -12,11 +12,13 @@ from src.srv.parameter_prediction.interactions import InteractionMatrix
 from src.utils.misc.io import get_pathname_by_search_str
 
 
-def generate_interaction_stats(pathname, writer: DataWriter):
+def generate_interaction_stats(path_name, writer: DataWriter, **stat_addons):
 
-    interactions = InteractionMatrix(matrix_path=pathname)
+    interactions = InteractionMatrix(matrix_path=path_name)
 
     stats = interactions.get_stats()
+    add_stats = pd.DataFrame.from_dict({'path': [path_name]})
+    stats = pd.concat([stats, add_stats], axis=1)
 
     writer.output(out_type='csv', out_name='circuit_stats', data=stats, write_master=False)
 
