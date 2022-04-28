@@ -22,16 +22,9 @@ def create_location(pathname):
 
 
 def get_pathnames(file_key, search_dir, first_only=False):
-    pathnames = glob.glob(os.path.join(search_dir, '*' + file_key + '*'))
-    if first_only and pathnames:
-        pathnames = pathnames[0]
-    return pathnames
-
-
-def get_pathname_by_search_str(folder, search_key):
-    for root, dirs, files in os.walk(folder, topdown=False):
-        logging.info(dirs)
-        logging.info(files)
-    file_name = list(map(folder, glob.glob(search_key)))
-    # logging.info(file_name)
-    return file_name
+    path_names = glob.glob(os.path.join(search_dir, '*' + file_key + '*'))
+    if first_only and path_names:
+        path_names = path_names[0]
+    if not path_names:
+        raise ValueError(f'Could not find file matching "{file_key}" in {search_dir}.')
+    return path_names

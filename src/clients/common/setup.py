@@ -7,12 +7,13 @@ from src.utils.system_definition.config import parse_cfg_args
 from src.utils.system_definition.setup import get_system_type
 
 
-def manage_config(config_file):
-    pass
-
-
-def compose_kwargs(config_filepath: str, extra_configs) -> dict:
-    config_file = process_json(load_json_as_dict(config_filepath))
+def compose_kwargs(extra_configs, config_filepath: str = None, config: dict = None) -> dict:
+    if config:
+        config_file = config
+    elif config_filepath:
+        config_file = process_json(load_json_as_dict(config_filepath))
+    else:
+        raise ValueError('Config file or path needed as input to function.')
     for kwarg, config in extra_configs.items():
         if config_file.get(kwarg):
             config_file[kwarg] = config

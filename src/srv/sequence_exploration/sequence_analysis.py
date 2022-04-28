@@ -1,6 +1,5 @@
 
 
-from copy import deepcopy
 import logging
 import os
 import pandas as pd
@@ -9,7 +8,7 @@ import pandas as pd
 from src.srv.io.loaders.data_loader import DataLoader
 from src.srv.io.results.writer import DataWriter
 from src.srv.parameter_prediction.interactions import InteractionMatrix
-from src.utils.misc.io import get_pathname_by_search_str
+from src.utils.misc.io import get_pathnames
 
 
 def generate_interaction_stats(path_name, writer: DataWriter, **stat_addons):
@@ -27,7 +26,8 @@ def generate_interaction_stats(path_name, writer: DataWriter, **stat_addons):
     # note sequence mutation method
 
 
-def pull_circuits_from_stats(stats_pathname, filters: dict, write_to: dict = None) -> list:
+def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path') -> list:
+
     stats = DataLoader().load_data(stats_pathname).data
 
     filt_stats = stats[stats['num_interacting']
@@ -36,11 +36,10 @@ def pull_circuits_from_stats(stats_pathname, filters: dict, write_to: dict = Non
         "max_self_interacting")]
 
     circuit_names = sorted(filt_stats["name"].tolist())
+    circuit_folder = os.path.dirname(filt_stats['path'].to_list()[0])
 
-    base_folder = os.path.dirname(stats_pathname)
-    circuits = []
+    circuit_paths = []
     for name in circuit_names:
-        circuit = deepcopy(write_to)
-        circuit["data_path"] = get_pathname_by_search_str(base_folder, name)
-        # logging.info(circuit["data_path"])
-        circuits.append(circuit)
+        circuit = {"data_path": get_pathnames(circuit_folder, name, first_only=True)}
+        circuit_paths.append(circuit)
+    return circuit_paths

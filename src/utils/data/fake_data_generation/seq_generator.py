@@ -119,7 +119,7 @@ class NucleotideGenerator(SeqGenerator):
                                            seq_generator=seq_generator, stype=self.stype, 
                                            count=count, return_path=True,
                                            subfolder='circuits')
-        return {'data': out_path}
+        return {'data_path': out_path}
 
 
 class RNAGenerator(NucleotideGenerator):

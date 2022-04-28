@@ -23,15 +23,19 @@ def main(config_filepath=None):
     # start_experiment
     data_writer_kwargs = {'purpose': 'mutation_effect_on_interactions'}
     data_writer = ResultWriter(**data_writer_kwargs)
+
+    search_dir = os.path.join(*list({
+        'root_dir': "data",
+        'purpose': "explore_species_templates",
+        'experiment_key': "2022_04_27_154019",
+    }.values()))
     protocols = [
         # load in templates: pathname for circuit stats is in config
         Protocol(
             partial(get_pathnames,
                     first_only=True,
                     file_key="circuit_stats",
-                    root_dir="data",
-                    purpose="explore_species_templates",
-                    experiment_key="2022_04_21_115140"
+                    search_dir=search_dir
                     ),
             req_output=True,
             name='get_pathname'
@@ -39,13 +43,11 @@ def main(config_filepath=None):
         # filter circuits
         Protocol(
             partial(pull_circuits_from_stats,
-                    filters=config_file.get("filters"),
-                    write_to=config_file),
+                    filters=config_file.get("filters")),
             req_input=True,
             req_output=True,
             name='pull_circuit_from_stats'
         ),
-        Protocol(sys.exit),
         [
             # construct circuit
             Protocol(
@@ -55,7 +57,7 @@ def main(config_filepath=None):
                 req_output=True,
                 name='construct_circuit'
             ),
-
+            Protocol(sys.exit), 
             # run interaction simulator
             Protocol(
                 partial(CircuitModeller(result_writer=data_writer).wrap_mutations,
