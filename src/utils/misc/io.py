@@ -6,6 +6,7 @@ import os
 import pandas as pd
 
 from src.srv.io.loaders.misc import load_csv
+from src.utils.data.data_format_tools.common import load_json_as_dict
 
 
 def isolate_filename(filepath: str):
@@ -36,6 +37,11 @@ def get_pathnames(file_key, search_dir, first_only=False):
 def load_experiment_summary(experiment_folder) -> pd.DataFrame:
     summary_path = os.path.join(experiment_folder, 'master_summary.csv')
     return load_csv(summary_path)
+
+
+def load_experiment_report(experiment_folder):
+    report_path = os.path.join(experiment_folder, 'experiment.json')
+    return load_json_as_dict(report_path )
 
 
 def get_path_from_exp_summary(name, experiment_summary: pd.DataFrame = None, experiment_folder: str = None):

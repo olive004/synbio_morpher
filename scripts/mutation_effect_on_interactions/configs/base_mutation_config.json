@@ -10,5 +10,9 @@
         "min_num_interacting": 3,
         "max_self_interacting": 2
     },
+    "mutations": {
+        "mutation_counts": 10,
+        "mutation_nums": 1
+    },
     "signal": "./scripts/RNA_circuit_simulation/configs/in_signal.json"
 }

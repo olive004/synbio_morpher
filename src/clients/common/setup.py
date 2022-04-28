@@ -1,3 +1,4 @@
+import logging
 from src.utils.data.data_format_tools.common import load_json_as_dict, process_json
 from src.srv.io.manage.data_manager import DataManager
 from src.utils.misc.io import isolate_filename
@@ -7,10 +8,8 @@ from src.utils.system_definition.config import parse_cfg_args
 from src.utils.system_definition.setup import get_system_type
 
 
-def compose_kwargs(extra_configs, config_filepath: str = None, config: dict = None) -> dict:
-    if config:
-        config_file = config
-    elif config_filepath:
+def compose_kwargs(extra_configs, config_filepath: str = None, config_file: dict = None) -> dict:
+    if config_file is None and config_filepath:
         config_file = process_json(load_json_as_dict(config_filepath))
     else:
         raise ValueError('Config file or path needed as input to function.')
@@ -18,7 +17,7 @@ def compose_kwargs(extra_configs, config_filepath: str = None, config: dict = No
         if config_file.get(kwarg):
             config_file[kwarg] = config
     config_file.update(extra_configs)
-    data_manager = DataManager(filepath=config_file.get("data"),
+    data_manager = DataManager(filepath=config_file.get("data_path"),
                                identities=config_file.get("identities", {}))
     kwargs = {
         "system_type": config_file.get("system_type"),

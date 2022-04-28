@@ -24,7 +24,7 @@ def main(config_filepath=None):
     data_writer_kwargs = {'purpose': 'mutation_effect_on_interactions'}
     data_writer = ResultWriter(**data_writer_kwargs)
 
-    search_dir = os.path.join(*list({
+    source_experiment_dir = os.path.join(*list({
         'root_dir': "data",
         'purpose': "explore_species_templates",
         'experiment_key': "2022_04_27_154019",
@@ -35,7 +35,7 @@ def main(config_filepath=None):
             partial(get_pathnames,
                     first_only=True,
                     file_key="circuit_stats",
-                    search_dir=search_dir
+                    search_dir=source_experiment_dir
                     ),
             req_output=True,
             name='get_pathname'
@@ -57,23 +57,15 @@ def main(config_filepath=None):
                 req_output=True,
                 name='construct_circuit'
             ),
-            Protocol(sys.exit), 
-            # run interaction simulator
-            Protocol(
-                partial(CircuitModeller(result_writer=data_writer).wrap_mutations,
-                        methods={'init_circuit': None}
-                        )
-            ),
-
             # compile results and write to
-
-            # Protocol(sys.exit),
             Protocol(
                 Evolver(data_writer=data_writer).mutate,
                 req_input=True,
                 req_output=True,
                 name="generate_mutations"
             ),
+            Protocol(sys.exit), 
+            # run interaction simulator
             Protocol(
                 partial(CircuitModeller(result_writer=data_writer).wrap_mutations, methods={
                     "init_circuit": {},

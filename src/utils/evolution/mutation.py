@@ -1,5 +1,6 @@
 from copy import deepcopy
 from functools import partial
+import logging
 import os
 import random
 import pandas as pd
@@ -92,9 +93,17 @@ class Evolver():
         self.out_name = 'mutations'
         self.out_type = 'csv'
 
+    def is_mutation_possible(self, system: BaseSystem):
+        if system.species.mutation_counts is None or system.species.mutation_nums is None:
+            return False
+        return True
+
     def mutate(self, system: BaseSystem, algorithm="random"):
-        mutator = self.get_mutator(algorithm)
-        system.species = mutator(system.species)
+        if self.is_mutation_possible(system):
+            mutator = self.get_mutator(algorithm)
+            system.species = mutator(system.species)
+        else:
+            logging.info('No mutation settings found, did not mutate.')
         return system
 
     def get_mutator(self, algorithm):

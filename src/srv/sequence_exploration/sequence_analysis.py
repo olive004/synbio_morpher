@@ -8,7 +8,8 @@ import pandas as pd
 from src.srv.io.loaders.data_loader import DataLoader
 from src.srv.io.results.writer import DataWriter
 from src.srv.parameter_prediction.interactions import InteractionMatrix
-from src.utils.misc.io import get_path_from_exp_summary, load_experiment_summary
+from src.utils.data.data_format_tools.common import load_json_as_dict
+from src.utils.misc.io import get_path_from_exp_summary, load_experiment_report, load_experiment_summary
 
 
 def generate_interaction_stats(path_name, writer: DataWriter, **stat_addons):
@@ -38,8 +39,11 @@ def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path
     circuit_names = sorted(filt_stats["name"].tolist())
     base_folder = os.path.dirname(os.path.dirname(filt_stats['path'].to_list()[0]))
     experiment_summary = load_experiment_summary(base_folder)
-    circuit_paths = []
+    experiment_report = load_experiment_report(base_folder)
+
+    extra_configs = []
     for name in circuit_names:
-        circuit = {"data_path": get_path_from_exp_summary(name, experiment_summary)}
-        circuit_paths.append(circuit)
-    return circuit_paths
+        extra_config = {"data_path": get_path_from_exp_summary(name, experiment_summary)}
+        extra_config.update(load_json_as_dict(experiment_report['config_filepath']))
+        extra_configs.append(extra_config)
+    return extra_configs
