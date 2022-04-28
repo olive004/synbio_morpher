@@ -38,5 +38,9 @@ def load_experiment_summary(experiment_folder) -> pd.DataFrame:
     return load_csv(summary_path)
 
 
-def get_path_from_exp_summary(name, experiment_summary: pd.DataFrame = None):
-    return experiment_summary.loc[experiment_summary['out_name'] == name]['out_path']
+def get_path_from_exp_summary(name, experiment_summary: pd.DataFrame = None, experiment_folder: str = None):
+    if experiment_summary is None:
+        assert experiment_folder, f'No experiment path given, cannot find experiment summary.'
+        experiment_summary = load_experiment_summary(experiment_folder)
+    pathname = experiment_summary.loc[experiment_summary['out_name'] == name]['out_path'].values[0]
+    return pathname

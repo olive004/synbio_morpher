@@ -40,7 +40,6 @@ def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path
     experiment_summary = load_experiment_summary(base_folder)
     circuit_paths = []
     for name in circuit_names:
-        circuit = {"data_path": get_path_from_exp_summary(name, 'out_path')}
+        circuit = {"data_path": get_path_from_exp_summary(name, experiment_summary)}
         circuit_paths.append(circuit)
-    logging.info(circuit_paths)
     return circuit_paths
