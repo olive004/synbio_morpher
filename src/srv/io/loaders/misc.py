@@ -1,7 +1,7 @@
 import pandas as pd
 
 
-def load_csv(filepath, load_as=None):
+def load_csv(filepath, load_as=None) -> pd.DataFrame:
 
     csv_file = pd.read_csv(filepath)
     if load_as == 'numpy':
