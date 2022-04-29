@@ -1,5 +1,6 @@
 
 
+import os
 from src.srv.io.results.metrics.analytics import Analytics
 from src.utils.misc.type_handling import assert_uniform_type
 
@@ -28,9 +29,6 @@ class ResultCollector():
     def add_result(self, result_data, category, vis_func, name, **vis_kwargs):
         """ category: 'time_series', 'graph' """
         name = f'Result_{len(self.results.keys())}' if not name else name
-        if 'out_path' in vis_kwargs.keys():
-            vis_kwargs['out_path'] = os.path.join(
-                self.write_dir, vis_kwargs['out_path'])
         result_entry = Result(name, result_data, category,
                               vis_func, **vis_kwargs)
         self.results[name] = result_entry

@@ -25,6 +25,7 @@ def compose_kwargs(extra_configs, config_filepath: str = None, config_file: dict
         "data_path": data_manager.data.source,
         "data": data_manager.data,
         "identities": data_manager.data.identities,
+        "interactions_path": config_file.get("interactions_path"),
         "mutations": cast_all_values_as_list(config_file.get("mutations", {})),
         "signal": load_json_as_dict(config_file.get("signal")),
         "molecular_params": load_json_as_dict(config_file.get("molecular_params"))

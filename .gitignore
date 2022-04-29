@@ -6,6 +6,4 @@
 *.cpython-38.pyc
 __pycache__
 *.txt
-*data/explore_species_templates
-*data/generate_species_templates
-*data/pair_species_mutation
+*data

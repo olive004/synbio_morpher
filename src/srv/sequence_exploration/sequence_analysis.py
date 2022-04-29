@@ -36,14 +36,16 @@ def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path
     filt_stats = filt_stats[filt_stats['num_self_interacting'] < filters.get(
         "max_self_interacting")]
 
-    circuit_names = sorted(filt_stats["name"].tolist())
     base_folder = os.path.dirname(os.path.dirname(filt_stats['path'].to_list()[0]))
     experiment_summary = load_experiment_summary(base_folder)
     experiment_report = load_experiment_report(base_folder)
 
     extra_configs = []
-    for name in circuit_names:
-        extra_config = {"data_path": get_path_from_exp_summary(name, experiment_summary)}
+    for index, row in filt_stats.iterrows():
+        extra_config = {"data_path": get_path_from_exp_summary(row["name"], experiment_summary)}
+        extra_config.update(
+            {'interactions_path': row["path"]}
+        )
         extra_config.update(load_json_as_dict(experiment_report['config_filepath']))
         extra_configs.append(extra_config)
     return extra_configs

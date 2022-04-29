@@ -4,7 +4,6 @@ import os
 import numpy as np
 from scipy import integrate
 from src.srv.io.results.result_writer import ResultWriter
-from src.utils.data.data_format_tools.common import write_csv
 
 from src.utils.misc.decorators import time_it
 from src.utils.misc.numerical import zero_out_negs
@@ -65,13 +64,13 @@ class CircuitModeller():
                                                                  circuit=circuit,
                                                                  use_solver='ivp')
 
-        self.result_writer.add_result(circuit.species.copynumbers,
-                                      name='steady_state',
-                                      category='time_series',
-                                      vis_func=modeller_steady_state.plot,
-                                      **{'legend_keys': list(circuit.species.data.sample_names),
-                                         'out_path': 'steady_state_plot'})
-        steady_state_metrics = self.result_writer.get_result(
+        circuit.result_collector.add_result(circuit.species.copynumbers,
+                                            name='steady_state',
+                                            category='time_series',
+                                            vis_func=modeller_steady_state.plot,
+                                            **{'legend_keys': list(circuit.species.data.sample_names),
+                                               'out_path': 'steady_state_plot'})
+        steady_state_metrics = circuit.result_collector.get_result(
             key='steady_state').metrics
         circuit.species.steady_state_copynums = steady_state_metrics[
             'steady_state']['steady_states']
@@ -140,19 +139,19 @@ class CircuitModeller():
 
         circuit.species.copynumbers = np.concatenate(
             (circuit.species.copynumbers, new_copynumbers[:, 1:]), axis=1)
-        self.result_writer.add_result(new_copynumbers,
-                                      name='signal',
-                                      category='time_series',
-                                      vis_func=signal_modeller.plot,
-                                      **{'legend_keys': list(circuit.species.data.sample_names),
-                                         'out_path': 'signal_plot'})
+        circuit.result_collector.add_result(new_copynumbers,
+                                            name='signal',
+                                            category='time_series',
+                                            vis_func=signal_modeller.plot,
+                                            **{'legend_keys': list(circuit.species.data.sample_names),
+                                               'out_path': 'signal_plot'})
         return circuit
 
     def wrap_mutations(self, circuit: BaseSystem, methods: dict, include_normal_run=True):
         mutation_dict = flatten_nested_dict(circuit.species.mutations.items())
         for i, (name, mutation) in enumerate(mutation_dict.items()):
             logging.info(f'Running methods on mutation {name}')
-            if include_normal_run and i==0:
+            if include_normal_run and i == 0:
                 self.apply_to_circuit(circuit, methods)
             subcircuit = circuit.make_subsystem(name, mutation)
             self.result_writer.subdivide_writing(name)

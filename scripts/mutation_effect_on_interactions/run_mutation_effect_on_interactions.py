@@ -64,7 +64,6 @@ def main(config_filepath=None):
                 req_output=True,
                 name="generate_mutations"
             ),
-            Protocol(sys.exit), 
             # run interaction simulator
             Protocol(
                 partial(CircuitModeller(result_writer=data_writer).wrap_mutations, methods={
@@ -76,6 +75,7 @@ def main(config_filepath=None):
                 req_input=True,
                 name="visualise_signal"
             )
+            # Protocol(sys.exit), 
         ]
     ]
     experiment = Experiment(config_filepath, protocols,

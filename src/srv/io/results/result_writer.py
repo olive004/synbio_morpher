@@ -11,6 +11,9 @@ class ResultWriter(DataWriter):
     def __init__(self, purpose, out_location=None) -> None:
         super().__init__(purpose, out_location)
 
+    # def add_result():
+        # There's a ResultCollector class for this
+
     def make_metric_visualisation(self, result, keys, source: dict, new_report: bool):
         for plotable in keys:
             if plotable in source.keys():
@@ -27,7 +30,8 @@ class ResultWriter(DataWriter):
         write_dict = {}
         for writeable in keys:
             write_dict[writeable] = source.get(writeable, '')
-        self.output(out_type, out_name, overwrite=not(new_report), **{'data': write_dict})
+        self.output(out_type, out_name, overwrite=not(
+            new_report), **{'data': write_dict})
 
     def write_metrics(self, result: Result, new_report=False):
         metrics = result.metrics
@@ -41,6 +45,8 @@ class ResultWriter(DataWriter):
         for name, result in results.items():
             result.vis_func(
                 result.data, new_vis=new_report, **result.vis_kwargs)
+            result.vis_kwargs.update({'new_vis': new_report, 'data': result.data})
+            self.output( writer=result.vis_func, writer_kwargs=result.vis_kwargs)
             self.write_metrics(result, new_report=new_report)
 
     def visualise(self, circuit: BaseSystem, mode="pyvis", new_vis=False):
