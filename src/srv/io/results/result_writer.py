@@ -18,11 +18,11 @@ class ResultWriter(DataWriter):
         for plotable in keys:
             if plotable in source.keys():
                 out_name = f'{result.name}_{plotable}'
-                result.vis_kwargs['out_path'] = os.path.join(
-                    self.write_dir, out_name)
-                result.vis_func(source.get(plotable),
-                                new_vis=new_report,
-                                **result.vis_kwargs)
+                result.vis_kwargs.update({
+                    'data': source.get(plotable),
+                    'new_vis': new_report
+                })
+                self.output(out_name=out_name, writer=result.vis_func, **result.vis_kwargs)
 
     def make_report(self, keys, source: dict, new_report: bool, out_name='report', out_type='json'):
         if new_report:
@@ -46,7 +46,7 @@ class ResultWriter(DataWriter):
             result.vis_func(
                 result.data, new_vis=new_report, **result.vis_kwargs)
             result.vis_kwargs.update({'new_vis': new_report, 'data': result.data})
-            self.output( writer=result.vis_func, writer_kwargs=result.vis_kwargs)
+            self.output(out_name=result.name, writer=result.vis_func, **result.vis_kwargs)
             self.write_metrics(result, new_report=new_report)
 
     def visualise(self, circuit: BaseSystem, mode="pyvis", new_vis=False):

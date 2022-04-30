@@ -26,7 +26,7 @@ class DataWriter():
 
     def output(self, out_type: str = None, out_name: str = None, overwrite: bool = False, return_path: bool = False,
                new_file: bool = False, filename_addon: str = None, subfolder: str = None, write_master: bool = True,
-               writer: function = None, **writer_kwargs):
+               writer=None, **writer_kwargs):
         if self.write_dir in out_name:
             base_name = os.path.basename(out_name)
         if new_file:
@@ -40,16 +40,20 @@ class DataWriter():
             create_location(out_subpath)
             out_path = os.path.join(
                 out_subpath, add_outtype(base_name, out_type))
+        elif out_type is None:
+            out_path = os.path.join(
+                self.write_dir, base_name)
         else:
             out_path = os.path.join(
                 self.write_dir, add_outtype(base_name, out_type))
         if writer is None:
-            writer = self.get_write_func(out_type, out_path, overwrite=overwrite)
+            writer = self.get_write_func(
+                out_type, out_path, overwrite=overwrite)
             writer_kwargs['out_path'] = out_path
         writer(**writer_kwargs)
         if write_master:
             self.write_to_master_summary(
-                out_name, out_name=base_name, out_path=out_path, 
+                out_name, out_name=base_name, out_path=out_path,
                 filename_addon=filename_addon, out_type=out_type)
         if return_path:
             return out_path
@@ -89,8 +93,8 @@ class DataWriter():
     def write_to_master_summary(self, name: str, **kwargs):
         master_summary = {str(k): str(v) for k, v in kwargs.items()}
         master_summary["name"] = name
-        summary_pathname = os.path.join(self.write_dir, add_outtype('master_summary', 'csv'))
-        write_csv(master_summary, out_path=summary_pathname, overwrite=False)
+        self.output('csv', 'master_summary', write_master=False,
+                    **{'data': master_summary})
 
 
 class Tabulated(ABC):

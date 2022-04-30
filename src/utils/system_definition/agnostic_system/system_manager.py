@@ -42,13 +42,14 @@ class CircuitModeller():
 
     @time_it
     def compute_interaction_strengths(self, circuit: BaseSystem):
-        interactions = self.run_interaction_simulator(circuit,
-                                                      circuit.species.data.data)
-        circuit.species.interactions = interactions.matrix
-        filename_addon = 'interactions'
-        self.result_writer.output(
-            out_type='csv', out_name=circuit.name, data=circuit.species.interactions_to_df(), overwrite=False,
-            new_file=True, filename_addon=filename_addon, subfolder=filename_addon)
+        if not circuit.species.loaded_interactions:
+            interactions = self.run_interaction_simulator(circuit,
+                                                          circuit.species.data.data)
+            circuit.species.interactions = interactions.matrix
+            filename_addon = 'interactions'
+            self.result_writer.output(
+                out_type='csv', out_name=circuit.name, data=circuit.species.interactions_to_df(), overwrite=False,
+                new_file=True, filename_addon=filename_addon, subfolder=filename_addon)
         return circuit
 
     def run_interaction_simulator(self, circuit, data):
@@ -163,11 +164,10 @@ class CircuitModeller():
             if hasattr(self, method):
                 circuit = getattr(self, method)(circuit, **kwargs)
 
-    def visualise(self, circuit: BaseSystem, mode="pyvis", new_vis=False):
+    def visualise_graph(self, circuit: BaseSystem, mode="pyvis", new_vis=False):
         circuit.refresh_graph()
 
         self.result_writer.visualise(circuit, mode, new_vis)
-        self.write_results(circuit)
 
     def write_results(self, circuit, new_report=False):
         self.result_writer.write_all(circuit.results, new_report)
