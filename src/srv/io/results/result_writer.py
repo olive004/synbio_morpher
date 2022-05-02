@@ -1,5 +1,6 @@
 
 
+import logging
 import os
 from src.srv.io.results.results import Result
 from src.srv.io.results.writer import DataWriter
@@ -33,6 +34,9 @@ class ResultWriter(DataWriter):
         self.output(out_type, out_name, overwrite=not(
             new_report), **{'data': write_dict})
 
+    def save_numerical(self, data, out_name:str):
+        self.output(out_type='csv', out_name=out_name, **{'data': data})
+
     def write_metrics(self, result: Result, new_report=False):
         metrics = result.metrics
         plotables = ['first_derivative']
@@ -40,16 +44,24 @@ class ResultWriter(DataWriter):
         self.make_metric_visualisation(result, plotables, metrics, new_report)
         self.make_report(writeables, metrics, new_report)
 
-    def write_all(self, results: dict, new_report=False):
+    def write_results(self, results: dict, new_report=False):
 
         for name, result in results.items():
             result.vis_func(
                 result.data, new_vis=new_report, **result.vis_kwargs)
             result.vis_kwargs.update({'new_vis': new_report, 'data': result.data})
-            self.output(out_name=result.name, writer=result.vis_func, **result.vis_kwargs)
+            self.save_numerical(data=result.data, out_name=result.name + '_data')
+            self.visualise(out_name=result.name, writer=result.vis_func, **result.vis_kwargs)
             self.write_metrics(result, new_report=new_report)
 
-    def visualise(self, circuit: BaseSystem, mode="pyvis", new_vis=False):
+    def write_all(self, circuit: BaseSystem, new_report: bool):
+        self.visualise_graph(circuit)
+        self.write_results(circuit.result_collector.results, new_report=new_report)
+
+    def visualise(self, out_name, writer, **vis_kwargs):
+        self.output(out_name=out_name, writer=writer, **vis_kwargs)
+
+    def visualise_graph(self, circuit: BaseSystem, mode="pyvis", new_vis=False):
 
         out_path = os.path.join(self.write_dir, 'graph')
         if mode == 'pyvis':

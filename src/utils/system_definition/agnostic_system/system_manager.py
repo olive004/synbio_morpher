@@ -126,7 +126,7 @@ class CircuitModeller():
                         1] = current_copynumbers
         return copynumbers
 
-    def simulate_signal(self, circuit, signal: Signal = None):
+    def simulate_signal(self, circuit, signal: Signal = None, save_numerical_vis_data=False):
         if signal is None:
             signal = circuit.signal
         signal_modeller = Deterministic(
@@ -144,6 +144,7 @@ class CircuitModeller():
                                             name='signal',
                                             category='time_series',
                                             vis_func=signal_modeller.plot,
+                                            save_numerical_vis_data=save_numerical_vis_data,
                                             **{'legend_keys': list(circuit.species.data.sample_names),
                                                'out_path': 'signal_plot'})
         return circuit
@@ -163,11 +164,12 @@ class CircuitModeller():
         for method, kwargs in methods.items():
             if hasattr(self, method):
                 circuit = getattr(self, method)(circuit, **kwargs)
+            else:
+                logging.warning(f'Could not find method @{method} in class {self}')
 
     def visualise_graph(self, circuit: BaseSystem, mode="pyvis", new_vis=False):
         circuit.refresh_graph()
-
-        self.result_writer.visualise(circuit, mode, new_vis)
+        self.result_writer.visualise_graph(circuit, mode, new_vis)
 
     def write_results(self, circuit, new_report=False):
-        self.result_writer.write_all(circuit.results, new_report)
+        self.result_writer.write_all(circuit, new_report)

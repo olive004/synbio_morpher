@@ -68,8 +68,8 @@ def main(config_filepath=None):
             Protocol(
                 partial(CircuitModeller(result_writer=data_writer).wrap_mutations, methods={
                     "init_circuit": {},
-                    "simulate_signal": {},
-                    "visualise": {}
+                    "simulate_signal": {'save_numerical_vis_data': True},
+                    "write_results": {}
                 }
                 ),
                 req_input=True,

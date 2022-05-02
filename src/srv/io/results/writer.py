@@ -52,9 +52,10 @@ class DataWriter():
             writer_kwargs['out_path'] = out_path
         writer(**writer_kwargs)
         if write_master:
-            self.write_to_master_summary(
-                out_name, out_name=base_name, out_path=out_path,
-                filename_addon=filename_addon, out_type=out_type)
+            if overwrite and not os.path.exists(out_path):
+                self.write_to_master_summary(
+                    out_name, out_name=base_name, out_path=out_path,
+                    filename_addon=filename_addon, out_type=out_type)
         if return_path:
             return out_path
 
