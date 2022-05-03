@@ -15,22 +15,24 @@ from src.utils.system_definition.agnostic_system.system_manager import CircuitMo
 
 
 def main(config_filepath=None):
-    # set configs
+    # Set configs
     if config_filepath is None:
         config_filepath = os.path.join(
-            "scripts", "mutation_effect_on_interactions", "configs", "base_mutation_config.json")
+            "scripts", "mutation_effect_on_interactions", "configs", "fixed", "mutations_1_config.json")
     config_file = process_json(load_json_as_dict(config_filepath))
-    # start_experiment
+    # Start_experiment
     data_writer_kwargs = {'purpose': 'mutation_effect_on_interactions'}
     data_writer = ResultWriter(**data_writer_kwargs)
 
-    source_experiment_dir = os.path.join(*list({
-        'root_dir': "data",
-        'purpose': "explore_species_templates",
-        'experiment_key': "2022_04_27_154019",
-    }.values()))
+    # source_experiment_dir = os.path.join(*list({
+    #     'root_dir': "data",
+    #     'purpose': "explore_species_templates",
+    #     'experiment_key': "2022_04_27_154019",
+    # }.values()))
+    source_experiment_dir = config_file.get(
+        'source_species_templates_experiment_dir')
     protocols = [
-        # load in templates: pathname for circuit stats is in config
+        # Load in templates: pathname for circuit stats is in config
         Protocol(
             partial(get_pathnames,
                     first_only=True,
@@ -40,7 +42,7 @@ def main(config_filepath=None):
             req_output=True,
             name='get_pathname'
         ),
-        # filter circuits
+        # Filter circuits
         Protocol(
             partial(pull_circuits_from_stats,
                     filters=config_file.get("filters")),
@@ -49,7 +51,7 @@ def main(config_filepath=None):
             name='pull_circuit_from_stats'
         ),
         [
-            # construct circuit
+            # Construct circuit
             Protocol(
                 partial(construct_circuit_from_cfg,
                         config_filepath=config_filepath),
@@ -57,7 +59,7 @@ def main(config_filepath=None):
                 req_output=True,
                 name='construct_circuit'
             ),
-            # compile results and write to
+            # Mutate circuit
             Protocol(
                 partial(Evolver(data_writer=data_writer).mutate,
                         write_to_subsystem=True),
@@ -65,7 +67,7 @@ def main(config_filepath=None):
                 req_output=True,
                 name="generate_mutations"
             ),
-            # run interaction simulator
+            # Simulate signal and write results
             Protocol(
                 partial(CircuitModeller(result_writer=data_writer).wrap_mutations,
                         write_to_subsystem=True,
@@ -78,7 +80,6 @@ def main(config_filepath=None):
                 req_input=True,
                 name="simulate_visualisations"
             )
-            # Protocol(sys.exit),
         ]
     ]
     experiment = Experiment(config_filepath, protocols,

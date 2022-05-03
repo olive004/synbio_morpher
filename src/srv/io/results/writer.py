@@ -29,6 +29,10 @@ class DataWriter():
                new_file: bool = False, filename_addon: str = None, subfolder: str = None, write_master: bool = True,
                writer=None, **writer_kwargs):
 
+        if out_type is None:
+            raise ValueError(
+                f'The out_type for file "{out_name}" needs to be specified for writing with function "{writer}".')
+
         def make_base_name():
             if self.write_dir in out_name:
                 base_name = os.path.basename(out_name)
@@ -66,7 +70,7 @@ class DataWriter():
                 self.write_to_master_summary(
                     out_name, out_name=base_name, out_path=out_path,
                     filename_addon=filename_addon, out_type=out_type)
-                    
+
         writer(**writer_kwargs)
         if return_path:
             return out_path

@@ -107,8 +107,6 @@ class VisODE():
     def plot(self, data, y=None, legend_keys=None, new_vis=False, out_path='test_plot', out_type='png') -> None:
         from src.utils.misc.string_handling import make_time_str
         from matplotlib import pyplot as plt
-        timestamp = '' if not(new_vis) else '_' + make_time_str()
-        filename = f'{out_path}{timestamp}.{out_type}'
         plt.figure()
         if y is not None:
             plt.plot(data, y)
@@ -116,5 +114,5 @@ class VisODE():
             plt.plot(data)
         if legend_keys:
             plt.legend(legend_keys)
-        plt.savefig(filename)
+        plt.savefig(out_path)
         plt.close()
