@@ -45,7 +45,7 @@ class RNASpecies(BaseSpecies):
 
         molecular_params = config_args.get("molecular_params")
 
-        self.interactions = self.init_matrix(ndims=2, init_type="randint")
+        self.interactions = self.make_interactions(config_args)
         self.degradation_rates = self.init_matrix(ndims=1, init_type="uniform",
                                                   uniform_val=molecular_params.get("degradation_rates"))
         self.creation_rates = self.init_matrix(ndims=1, init_type="uniform",

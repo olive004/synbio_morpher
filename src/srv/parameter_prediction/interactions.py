@@ -5,6 +5,7 @@ import sys
 import pandas as pd
 import numpy as np
 from functools import partial
+from src.srv.io.loaders.misc import load_csv
 from src.utils.data.data_format_tools.common import determine_data_format
 from src.utils.misc.decorators import time_it
 from src.utils.misc.numerical import SCIENTIFIC, square_matrix_rand
@@ -119,9 +120,10 @@ class InteractionMatrix():
 
     def load(self, filepath):
         filetype = determine_data_format(filepath)
-        self.name = os.path.basename(filepath).replace('.'+filetype, '').replace('interactions_', '')
+        self.name = os.path.basename(filepath).replace('.'+filetype, '').replace(
+            'interactions_', '').replace('_interactions', '')
         if filetype == 'csv':
-            matrix = pd.read_csv(filepath).to_numpy()
+            matrix = load_csv(filepath, load_as='numpy')
         else:
             raise TypeError(f'Unsupported filetype {filetype} for loading {filepath}')
         return matrix

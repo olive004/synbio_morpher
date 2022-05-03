@@ -18,14 +18,17 @@ class DataLoader():
 
     @staticmethod
     def get_loader_by_dtype(data_type):
-        if data_type == "fasta":
+        if data_type == 'fasta':
             from src.utils.data.data_format_tools.manipulate_fasta \
                 import load_seq_from_FASTA
             return partial(load_seq_from_FASTA, as_type='dict')
+        elif data_type == 'csv':
+            from src.srv.io.loaders.misc import load_csv
+            return load_csv
         else:
             raise NotImplementedError(
                 "Other filetypes than fasta not supported yet.")
 
-    def load_data(self, filepath: str, identities):
+    def load_data(self, filepath: str, **kwargs):
         loader = self.get_loader(filepath)
-        return Data(loader(filepath), identities, source_files=filepath)
+        return Data(loader(filepath), source_files=filepath, **kwargs)

@@ -1,6 +1,6 @@
 
 
-from src.utils.data.loaders.generic import DataLoader
+from src.srv.io.loaders.data_loader import DataLoader
 
 
 class DataManager():
@@ -9,7 +9,7 @@ class DataManager():
         self.source = filepath
         self.data = data
         if data is None:
-            self.data = self.loader.load_data(filepath, identities)
+            self.data = self.loader.load_data(filepath, identities=identities)
 
     def __repr__(self) -> str:
         return str(self.data)

@@ -1,0 +1,20 @@
+{
+    "system_type": "RNA",
+    "data_path": "None",
+    "interaction_simulator": "IntaRNA",
+    "identities": {
+        "input": "RNA_0",
+        "output": "RNA_2"
+    },
+    "filters": {
+        "min_num_interacting": 3,
+        "max_self_interacting": 2
+    },
+    "mutations": {
+        "mutation_counts": 10,
+        "mutation_nums": 1,
+        "mutate_in_circuit": "single_species_at_a_time"
+    },
+    "signal": "./scripts/RNA_circuit_simulation/configs/in_signal.json", 
+    "source_species_templates_experiment_dir": "./data/explore_species_templates/2022_04_27_154019"
+}

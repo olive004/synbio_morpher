@@ -29,10 +29,10 @@ class Protocol():
 
 class Experiment():
 
-    def __init__(self, config_file: str, protocols: List[Protocol], data_writer: DataWriter) -> None:
+    def __init__(self, config_filepath: str, protocols: List[Protocol], data_writer: DataWriter) -> None:
         
         self.name = 'experiment'
-        self.config_file = config_file
+        self.config_filepath = config_filepath
         self.start_time = datetime.now()
         self.protocols = protocols
         self.total_time = 0
@@ -62,13 +62,13 @@ class Experiment():
 
     def write_experiment(self):
         experiment_data = self.collect_experiment()
-        self.data_writer.output(out_type='json', out_name=self.name, data=experiment_data)
+        self.data_writer.output(out_type='json', out_name=self.name, data=experiment_data, write_master=False)
         
     def collect_experiment(self):
         return {
             "total_time": str(self.total_time),
             "protocols": make_attribute_list(self.protocols, Protocol, 'name'),
             "purpose": self.data_writer.purpose,
-            "config_file": self.config_file,
-            "config_params": load_json_as_dict(self.config_file)
+            "config_filepath": self.config_filepath,
+            "config_params": load_json_as_dict(self.config_filepath)
         }

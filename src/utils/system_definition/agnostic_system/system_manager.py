@@ -4,7 +4,6 @@ import os
 import numpy as np
 from scipy import integrate
 from src.srv.io.results.result_writer import ResultWriter
-from src.utils.data.data_format_tools.common import write_csv
 
 from src.utils.misc.decorators import time_it
 from src.utils.misc.numerical import zero_out_negs
@@ -41,15 +40,15 @@ class CircuitModeller():
                        num_samples=circuit.species.data.size
                        )
 
-    @time_it
     def compute_interaction_strengths(self, circuit: BaseSystem):
-        interactions = self.run_interaction_simulator(circuit,
-                                                      circuit.species.data.data)
-        circuit.species.interactions = interactions.matrix
-        out_name = 'interactions'
-        self.result_writer.output(
-            out_type='csv', out_name=out_name, data=circuit.species.interactions_to_df(), overwrite=False,
-            new_file=True, filename_addon=circuit.name, subfolder=out_name)
+        if not circuit.species.loaded_interactions:
+            interactions = self.run_interaction_simulator(circuit,
+                                                          circuit.species.data.data)
+            circuit.species.interactions = interactions.matrix
+            filename_addon = 'interactions'
+            self.result_writer.output(
+                out_type='csv', out_name=circuit.name, data=circuit.species.interactions_to_df(), overwrite=False,
+                new_file=True, filename_addon=filename_addon, subfolder=filename_addon)
         return circuit
 
     def run_interaction_simulator(self, circuit, data):
@@ -65,13 +64,13 @@ class CircuitModeller():
                                                                  circuit=circuit,
                                                                  use_solver='ivp')
 
-        self.result_writer.add_result(circuit.species.copynumbers,
-                                      name='steady_state',
-                                      category='time_series',
-                                      vis_func=modeller_steady_state.plot,
-                                      **{'legend_keys': list(circuit.species.data.sample_names),
-                                         'out_path': 'steady_state_plot'})
-        steady_state_metrics = self.result_writer.get_result(
+        circuit.result_collector.add_result(circuit.species.copynumbers,
+                                            name='steady_state',
+                                            category='time_series',
+                                            vis_func=modeller_steady_state.plot,
+                                            **{'legend_keys': list(circuit.species.data.sample_names),
+                                            'out_type': 'png'})
+        steady_state_metrics = circuit.result_collector.get_result(
             key='steady_state').metrics
         circuit.species.steady_state_copynums = steady_state_metrics[
             'steady_state']['steady_states']
@@ -126,7 +125,7 @@ class CircuitModeller():
                         1] = current_copynumbers
         return copynumbers
 
-    def simulate_signal(self, circuit, signal: Signal = None):
+    def simulate_signal(self, circuit, signal: Signal = None, save_numerical_vis_data=False):
         if signal is None:
             signal = circuit.signal
         signal_modeller = Deterministic(
@@ -140,35 +139,41 @@ class CircuitModeller():
 
         circuit.species.copynumbers = np.concatenate(
             (circuit.species.copynumbers, new_copynumbers[:, 1:]), axis=1)
-        self.result_writer.add_result(new_copynumbers,
-                                      name='signal',
-                                      category='time_series',
-                                      vis_func=signal_modeller.plot,
-                                      **{'legend_keys': list(circuit.species.data.sample_names),
-                                         'out_path': 'signal_plot'})
+        circuit.result_collector.add_result(new_copynumbers,
+                                            name='signal',
+                                            category='time_series',
+                                            vis_func=signal_modeller.plot,
+                                            save_numerical_vis_data=save_numerical_vis_data,
+                                            **{'legend_keys': list(circuit.species.data.sample_names),
+                                            'out_type': 'png'})
         return circuit
 
-    def wrap_mutations(self, circuit: BaseSystem, methods: dict, include_normal_run=True):
+    @time_it
+    def wrap_mutations(self, circuit: BaseSystem, methods: dict, include_normal_run=True,
+                       write_to_subsystem=False):
+        if write_to_subsystem:
+            self.result_writer.subdivide_writing(circuit.name)
         mutation_dict = flatten_nested_dict(circuit.species.mutations.items())
         for i, (name, mutation) in enumerate(mutation_dict.items()):
             logging.info(f'Running methods on mutation {name}')
-            if include_normal_run and i==0:
+            if include_normal_run and i == 0:
                 self.apply_to_circuit(circuit, methods)
             subcircuit = circuit.make_subsystem(name, mutation)
-            self.result_writer.subdivide_writing(name)
+            self.result_writer.subdivide_writing(name, safe_dir_change=False)
             self.apply_to_circuit(subcircuit, methods)
+            self.result_writer.unsubdivide_last_dir()
         self.result_writer.unsubdivide()
 
     def apply_to_circuit(self, circuit: BaseSystem, methods: dict):
         for method, kwargs in methods.items():
             if hasattr(self, method):
                 circuit = getattr(self, method)(circuit, **kwargs)
+            else:
+                logging.warning(
+                    f'Could not find method @{method} in class {self}')
 
-    def visualise(self, circuit: BaseSystem, mode="pyvis", new_vis=False):
-        circuit.refresh_graph()
-
-        self.result_writer.visualise(circuit, mode, new_vis)
-        self.write_results(circuit)
+    def visualise_graph(self, circuit: BaseSystem, mode="pyvis", new_vis=False):
+        self.result_writer.visualise_graph(circuit, mode, new_vis)
 
     def write_results(self, circuit, new_report=False):
-        self.result_writer.write_all(circuit.results, new_report)
+        self.result_writer.write_all(circuit, new_report)

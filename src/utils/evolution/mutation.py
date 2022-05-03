@@ -1,9 +1,11 @@
 from copy import deepcopy
 from functools import partial
+import logging
 import os
 import random
 import pandas as pd
 import numpy as np
+from src.srv.io.loaders.misc import load_csv
 from src.srv.io.results.writer import DataWriter, Tabulated
 from src.utils.misc.string_handling import add_outtype
 
@@ -91,9 +93,19 @@ class Evolver():
         self.out_name = 'mutations'
         self.out_type = 'csv'
 
-    def mutate(self, system: BaseSystem, algorithm="random"):
-        mutator = self.get_mutator(algorithm)
-        system.species = mutator(system.species)
+    def is_mutation_possible(self, system: BaseSystem):
+        if system.species.mutation_counts is None or system.species.mutation_nums is None:
+            return False
+        return True
+
+    def mutate(self, system: BaseSystem, algorithm="random", write_to_subsystem=False):
+        if write_to_subsystem:
+            self.data_writer.subdivide_writing(system.name)
+        if self.is_mutation_possible(system):
+            mutator = self.get_mutator(algorithm)
+            system.species = mutator(system.species)
+        else:
+            logging.info('No mutation settings found, did not mutate.')
         return system
 
     def get_mutator(self, algorithm):
@@ -150,4 +162,4 @@ class Evolver():
     def load_mutations(self):
         filename = os.path.join(
             self.data_writer.write_dir, add_outtype(self.out_name, self.out_type))
-        return pd.read_csv(filename).to_dict()
+        return load_csv(filename, load_as='dict')

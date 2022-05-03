@@ -27,7 +27,8 @@ class BaseSpecies():
         self.data = config_args.get("data")  # Data common class
         self.identities = config_args.get("identities")
 
-        self.interactions = self.init_matrix(ndims=2, init_type="zeros")
+        self.loaded_interactions = False
+        self.interactions = self.make_interactions(config_args)
         self.complexes = self.init_matrix(ndims=2, init_type="zeros")
         self.degradation_rates = self.init_matrix(ndims=1, init_type="uniform")
         self.creation_rates = self.init_matrix(ndims=1, init_type="uniform")
@@ -46,6 +47,13 @@ class BaseSpecies():
             "mutations", {}).get("mutation_counts")
 
         self.process_mutations()
+
+    def make_interactions(self, config_args):
+        if config_args.get("interactions_path"):
+            self.loaded_interactions = True
+            return InteractionMatrix().load(config_args.get("interactions_path"))
+        else:
+            return self.init_matrix(ndims=2, init_type="zeros")
 
     def init_matrices(self, uniform_vals, ndims=2, init_type="rand") -> List[np.array]:
         matrices = (self.init_matrix(ndims, init_type, val)
