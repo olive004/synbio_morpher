@@ -5,3 +5,5 @@
 *.pysave
 *.cpython-38.pyc
 __pycache__
+*.txt
+*data

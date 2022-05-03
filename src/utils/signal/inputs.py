@@ -31,9 +31,9 @@ class Signal():
     def time(self):
         return np.arange(0, self.total_time, self.time_interval)
 
-    def show(self, signal_name='input_signal_plot'):
-        from src.srv.results.visualisation import VisODE
-        VisODE().plot(data=self.time, y=self.real_signal, save_name=signal_name)
+    def show(self, out_path='input_signal_plot'):
+        from src.srv.io.results.visualisation import VisODE
+        VisODE().plot(data=self.time, y=self.real_signal, out_path=out_path)
 
 
 class AdaptationTarget(Signal):

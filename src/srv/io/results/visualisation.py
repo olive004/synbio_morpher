@@ -1,7 +1,7 @@
 import networkx as nx
 import numpy as np
 import logging
-from src.utils.misc.string_handling import make_time_str
+from src.utils.misc.string_handling import add_outtype, make_time_str
 from pyvis.network import Network
 
 
@@ -70,25 +70,25 @@ class NetworkCustom(Network):
 
 
 def visualise_graph_pyvis(graph: nx.DiGraph,
-                          plot_name='test_graph.html',
+                          out_path: str,
                           new_vis=False):
     import webbrowser
     import os
 
-    plot_name = f'{plot_name}_{make_time_str()}' if new_vis else plot_name
+    out_type = 'html'
+
+    if new_vis:
+        out_path = f'{out_path}_{make_time_str()}'
+    out_path = add_outtype(out_path, out_type)
 
     interactive_graph = NetworkCustom(
         height=800, width=800, directed=True, notebook=True)
     interactive_graph.from_nx(graph, edge_weight_transf=lambda x: round(x, 4))
-    # interactive_graph.show_buttons(filter_=['edges'])
     interactive_graph.inherit_edge_colors(True)
     interactive_graph.set_edge_smooth('dynamic')
-    interactive_graph.show(plot_name)
+    interactive_graph.show(out_path)
 
-    logging.info(graph)
-
-    logger.info("Opening graph in browser...")
-    web_filename = 'file:///' + os.getcwd() + '/' + plot_name
+    web_filename = 'file:///' + os.getcwd() + '/' + out_path
     webbrowser.open(web_filename, new=1, autoraise=True)
 
 
@@ -104,11 +104,9 @@ class VisODE():
     def __init__(self) -> None:
         pass
 
-    def plot(self, data, y=None, legend_keys=None, new_vis=False, save_name='test_plot') -> None:
+    def plot(self, data, y=None, legend_keys=None, new_vis=False, out_path='test_plot', out_type='png') -> None:
         from src.utils.misc.string_handling import make_time_str
         from matplotlib import pyplot as plt
-        timestamp = '' if not(new_vis) else '_' + make_time_str()
-        filename = f'{save_name}{timestamp}.png'
         plt.figure()
         if y is not None:
             plt.plot(data, y)
@@ -116,4 +114,5 @@ class VisODE():
             plt.plot(data)
         if legend_keys:
             plt.legend(legend_keys)
-        plt.savefig(filename)
+        plt.savefig(out_path)
+        plt.close()

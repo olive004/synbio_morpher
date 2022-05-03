@@ -1,5 +1,6 @@
 from datetime import datetime
 from copy import deepcopy
+import os
 
 
 def list_to_str(input_listlike):
@@ -10,6 +11,12 @@ def make_time_str():
     """Output as 'YEAR_MONTH_DAY_TIME'."""
     now = datetime.now() 
     return now.strftime("%Y_%m_%d_%H%M%S")
+
+
+def add_outtype(filepath, out_type):
+    if out_type in filepath:
+        return filepath
+    return filepath + '.' + out_type
 
 
 def ordered_merge(list1, list2, mask) -> list:
