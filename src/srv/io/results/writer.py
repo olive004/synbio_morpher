@@ -1,6 +1,7 @@
 from copy import deepcopy
 from functools import partial
 from abc import ABC, abstractmethod
+import logging
 import os
 import pandas as pd
 from src.utils.data.data_format_tools.common import write_csv, write_json
@@ -27,7 +28,7 @@ class DataWriter():
     def output(self, out_type: str = None, out_name: str = None, overwrite: bool = False, return_path: bool = False,
                new_file: bool = False, filename_addon: str = None, subfolder: str = None, write_master: bool = True,
                writer=None, **writer_kwargs):
-               
+
         def make_base_name():
             if self.write_dir in out_name:
                 base_name = os.path.basename(out_name)
@@ -38,7 +39,7 @@ class DataWriter():
             else:
                 base_name = f'{out_name}'
             return base_name
-        
+
         def make_out_path(base_name):
             if subfolder:
                 out_subpath = os.path.join(self.write_dir, subfolder)
@@ -55,17 +56,18 @@ class DataWriter():
 
         base_name = make_base_name()
         out_path = make_out_path(base_name)
-        
+
         if writer is None:
             writer = self.get_write_func(
                 out_type, out_path, overwrite=overwrite)
         writer_kwargs['out_path'] = out_path
-        writer(**writer_kwargs)
         if write_master:
-            if overwrite and not os.path.exists(out_path):
+            if not os.path.exists(out_path):
                 self.write_to_master_summary(
                     out_name, out_name=base_name, out_path=out_path,
                     filename_addon=filename_addon, out_type=out_type)
+                    
+        writer(**writer_kwargs)
         if return_path:
             return out_path
 
