@@ -57,11 +57,13 @@ def write_csv(data: pd.DataFrame, out_path: str, overwrite=False):
     if type(data) == dict:
         data = {k: [v] for k, v in data.items()}
         data = pd.DataFrame.from_dict(data)
-    if type(data) == pd.DataFrame:
+    elif type(data) == pd.DataFrame:
         if overwrite or not os.path.exists(out_path):
-            data.to_csv(out_path, index=False)
+            data.to_csv(out_path, index=None)
         else:
-            data.to_csv(out_path, mode='a', header=False, index=False)
+            data.to_csv(out_path, mode='a', index=None)
+    elif type(data) == np.ndarray:
+        pd.DataFrame(data).to_csv(out_path, header=None, index=None)
     else:
         raise TypeError(
             f'Unsupported: cannot output data of type {type(data)} to csv.')
