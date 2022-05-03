@@ -98,7 +98,9 @@ class Evolver():
             return False
         return True
 
-    def mutate(self, system: BaseSystem, algorithm="random"):
+    def mutate(self, system: BaseSystem, algorithm="random", write_to_subsystem=False):
+        if write_to_subsystem:
+            self.data_writer.subdivide_writing(system.name)
         if self.is_mutation_possible(system):
             mutator = self.get_mutator(algorithm)
             system.species = mutator(system.species)

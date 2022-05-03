@@ -59,23 +59,26 @@ def main(config_filepath=None):
             ),
             # compile results and write to
             Protocol(
-                Evolver(data_writer=data_writer).mutate,
+                partial(Evolver(data_writer=data_writer).mutate,
+                        write_to_subsystem=True),
                 req_input=True,
                 req_output=True,
                 name="generate_mutations"
             ),
             # run interaction simulator
             Protocol(
-                partial(CircuitModeller(result_writer=data_writer).wrap_mutations, methods={
+                partial(CircuitModeller(result_writer=data_writer).wrap_mutations,
+                        write_to_subsystem=True,
+                        methods={
                     "init_circuit": {},
                     "simulate_signal": {'save_numerical_vis_data': True},
                     "write_results": {}
                 }
                 ),
                 req_input=True,
-                name="visualise_signal"
+                name="simulate_visualisations"
             )
-            # Protocol(sys.exit), 
+            # Protocol(sys.exit),
         ]
     ]
     experiment = Experiment(config_filepath, protocols,

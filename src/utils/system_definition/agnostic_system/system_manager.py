@@ -149,7 +149,10 @@ class CircuitModeller():
                                                'out_path': 'signal_plot'})
         return circuit
 
-    def wrap_mutations(self, circuit: BaseSystem, methods: dict, include_normal_run=True):
+    def wrap_mutations(self, circuit: BaseSystem, methods: dict, include_normal_run=True,
+                       write_to_subsystem=False):
+        if write_to_subsystem:
+            self.result_writer.subdivide_writing(circuit.name)
         mutation_dict = flatten_nested_dict(circuit.species.mutations.items())
         for i, (name, mutation) in enumerate(mutation_dict.items()):
             logging.info(f'Running methods on mutation {name}')
@@ -165,7 +168,8 @@ class CircuitModeller():
             if hasattr(self, method):
                 circuit = getattr(self, method)(circuit, **kwargs)
             else:
-                logging.warning(f'Could not find method @{method} in class {self}')
+                logging.warning(
+                    f'Could not find method @{method} in class {self}')
 
     def visualise_graph(self, circuit: BaseSystem, mode="pyvis", new_vis=False):
         circuit.refresh_graph()
