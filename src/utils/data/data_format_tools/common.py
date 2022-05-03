@@ -54,14 +54,16 @@ def process_json(json_dict):
 
 
 def write_csv(data: pd.DataFrame, out_path: str, overwrite=False):
-    mode_csv = 'a' if (overwrite or not os.path.exists(out_path)) else 'w'
     if type(data) == dict:
         data = {k: [v] for k, v in data.items()}
         data = pd.DataFrame.from_dict(data)
     if type(data) == pd.DataFrame:
-        data.to_csv(out_path, mode=mode_csv, index=None)
+        if overwrite or not os.path.exists(out_path):
+            data.to_csv(out_path, index=None)
+        else:
+            data.to_csv(out_path, mode='a', header=None, index=None)
     elif type(data) == np.ndarray:
-        pd.DataFrame(data).to_csv(out_path, mode=mode_csv, header=None, index=None)
+        pd.DataFrame(data).to_csv(out_path, mode='a', header=None, index=None)
     else:
         raise TypeError(
             f'Unsupported: cannot output data of type {type(data)} to csv.')

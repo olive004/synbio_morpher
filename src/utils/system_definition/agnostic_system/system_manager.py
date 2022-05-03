@@ -40,7 +40,6 @@ class CircuitModeller():
                        num_samples=circuit.species.data.size
                        )
 
-    @time_it
     def compute_interaction_strengths(self, circuit: BaseSystem):
         if not circuit.species.loaded_interactions:
             interactions = self.run_interaction_simulator(circuit,
@@ -159,8 +158,9 @@ class CircuitModeller():
             if include_normal_run and i == 0:
                 self.apply_to_circuit(circuit, methods)
             subcircuit = circuit.make_subsystem(name, mutation)
-            self.result_writer.subdivide_writing(name)
+            self.result_writer.subdivide_writing(name, safe_dir_change=False)
             self.apply_to_circuit(subcircuit, methods)
+            self.result_writer.unsubdivide_last_dir()
         self.result_writer.unsubdivide()
 
     def apply_to_circuit(self, circuit: BaseSystem, methods: dict):

@@ -83,10 +83,16 @@ class DataWriter():
     def generate_location_instance(self):
         return make_time_str()
 
-    def subdivide_writing(self, name: str):
-        location = os.path.join(self.original_write_dir, name)
+    def subdivide_writing(self, name: str, safe_dir_change=True):
+        base_dir = self.original_write_dir if safe_dir_change else self.write_dir
+        location = os.path.join(base_dir, name)
         create_location(location)
         self.write_dir = location
+
+    def unsubdivide_last_dir(self):
+        self.write_dir = os.path.dirname(self.write_dir)
+        if self.original_write_dir not in self.write_dir:
+            self.unsubdivide()
 
     def unsubdivide(self):
         self.write_dir = deepcopy(self.original_write_dir)
