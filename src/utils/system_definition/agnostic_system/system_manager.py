@@ -148,6 +148,7 @@ class CircuitModeller():
                                                'out_path': 'signal_plot'})
         return circuit
 
+    @time_it
     def wrap_mutations(self, circuit: BaseSystem, methods: dict, include_normal_run=True,
                        write_to_subsystem=False):
         if write_to_subsystem:

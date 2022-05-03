@@ -34,7 +34,7 @@ class ResultWriter(DataWriter):
         self.output(out_type, out_name, overwrite=not(
             new_report), **{'data': write_dict})
 
-    def save_numerical(self, data, out_name:str):
+    def write_numerical(self, data, out_name:str):
         self.output(out_type='csv', out_name=out_name, **{'data': data})
 
     def write_metrics(self, result: Result, new_report=False):
@@ -47,10 +47,9 @@ class ResultWriter(DataWriter):
     def write_results(self, results: dict, new_report=False):
 
         for name, result in results.items():
-            result.vis_func(
-                result.data, new_vis=new_report, **result.vis_kwargs)
             result.vis_kwargs.update({'new_vis': new_report, 'data': result.data})
-            self.save_numerical(data=result.data, out_name=result.name + '_data')
+
+            self.write_numerical(data=result.data, out_name=result.name + '_data')
             self.visualise(out_name=result.name, writer=result.vis_func, **result.vis_kwargs)
             self.write_metrics(result, new_report=new_report)
 
@@ -59,8 +58,6 @@ class ResultWriter(DataWriter):
         self.write_results(circuit.result_collector.results, new_report=new_report)
 
     def visualise(self, out_name, writer, **vis_kwargs):
-        logging.info(writer)
-        logging.info(out_name)
         self.output(out_name=out_name, writer=writer, **vis_kwargs)
 
     def visualise_graph(self, circuit: BaseSystem, mode="pyvis", new_vis=False):

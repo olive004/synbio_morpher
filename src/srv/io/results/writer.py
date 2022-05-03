@@ -55,11 +55,11 @@ class DataWriter():
 
         base_name = make_base_name()
         out_path = make_out_path(base_name)
-
+        
         if writer is None:
             writer = self.get_write_func(
                 out_type, out_path, overwrite=overwrite)
-            writer_kwargs['out_path'] = out_path
+        writer_kwargs['out_path'] = out_path
         writer(**writer_kwargs)
         if write_master:
             if overwrite and not os.path.exists(out_path):

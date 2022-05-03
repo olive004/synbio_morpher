@@ -24,8 +24,6 @@ def generate_interaction_stats(path_name, writer: DataWriter, **stat_addons):
 
     return stats
 
-    # note sequence mutation method
-
 
 def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path') -> list:
 
