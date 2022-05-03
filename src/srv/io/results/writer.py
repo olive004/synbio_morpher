@@ -27,25 +27,35 @@ class DataWriter():
     def output(self, out_type: str = None, out_name: str = None, overwrite: bool = False, return_path: bool = False,
                new_file: bool = False, filename_addon: str = None, subfolder: str = None, write_master: bool = True,
                writer=None, **writer_kwargs):
-        if self.write_dir in out_name:
-            base_name = os.path.basename(out_name)
-        if new_file:
-            if filename_addon is None:
-                filename_addon = make_time_str()
-            base_name = f'{out_name}_{filename_addon}'
-        else:
-            base_name = f'{out_name}'
-        if subfolder:
-            out_subpath = os.path.join(self.write_dir, subfolder)
-            create_location(out_subpath)
-            out_path = os.path.join(
-                out_subpath, add_outtype(base_name, out_type))
-        elif out_type is None:
-            out_path = os.path.join(
-                self.write_dir, base_name)
-        else:
-            out_path = os.path.join(
-                self.write_dir, add_outtype(base_name, out_type))
+               
+        def make_base_name():
+            if self.write_dir in out_name:
+                base_name = os.path.basename(out_name)
+            if new_file:
+                if filename_addon is None:
+                    filename_addon = make_time_str()
+                base_name = f'{out_name}_{filename_addon}'
+            else:
+                base_name = f'{out_name}'
+            return base_name
+        
+        def make_out_path(base_name):
+            if subfolder:
+                out_subpath = os.path.join(self.write_dir, subfolder)
+                create_location(out_subpath)
+                out_path = os.path.join(
+                    out_subpath, add_outtype(base_name, out_type))
+            elif out_type is None:
+                out_path = os.path.join(
+                    self.write_dir, base_name)
+            else:
+                out_path = os.path.join(
+                    self.write_dir, add_outtype(base_name, out_type))
+            return out_path
+
+        base_name = make_base_name()
+        out_path = make_out_path(base_name)
+
         if writer is None:
             writer = self.get_write_func(
                 out_type, out_path, overwrite=overwrite)

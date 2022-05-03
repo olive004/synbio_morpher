@@ -172,7 +172,6 @@ class CircuitModeller():
                     f'Could not find method @{method} in class {self}')
 
     def visualise_graph(self, circuit: BaseSystem, mode="pyvis", new_vis=False):
-        circuit.refresh_graph()
         self.result_writer.visualise_graph(circuit, mode, new_vis)
 
     def write_results(self, circuit, new_report=False):

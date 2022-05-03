@@ -59,9 +59,12 @@ class ResultWriter(DataWriter):
         self.write_results(circuit.result_collector.results, new_report=new_report)
 
     def visualise(self, out_name, writer, **vis_kwargs):
+        logging.info(writer)
+        logging.info(out_name)
         self.output(out_name=out_name, writer=writer, **vis_kwargs)
 
     def visualise_graph(self, circuit: BaseSystem, mode="pyvis", new_vis=False):
+        circuit.refresh_graph()
 
         out_path = os.path.join(self.write_dir, 'graph')
         if mode == 'pyvis':
