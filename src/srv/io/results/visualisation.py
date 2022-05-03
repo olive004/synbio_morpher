@@ -104,11 +104,11 @@ class VisODE():
     def __init__(self) -> None:
         pass
 
-    def plot(self, data, y=None, legend_keys=None, new_vis=False, out_path='test_plot') -> None:
+    def plot(self, data, y=None, legend_keys=None, new_vis=False, out_path='test_plot', out_type='png') -> None:
         from src.utils.misc.string_handling import make_time_str
         from matplotlib import pyplot as plt
         timestamp = '' if not(new_vis) else '_' + make_time_str()
-        filename = f'{out_path}{timestamp}.png'
+        filename = f'{out_path}{timestamp}.{out_type}'
         plt.figure()
         if y is not None:
             plt.plot(data, y)

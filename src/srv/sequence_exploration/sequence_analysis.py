@@ -39,7 +39,6 @@ def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path
     experiment_report = load_experiment_report(base_folder)
 
     extra_configs = []
-    test_only_num = 3
     for index, row in filt_stats.iterrows():
         extra_config = {"data_path": get_path_from_exp_summary(row["name"], experiment_summary)}
         extra_config.update(
@@ -47,6 +46,4 @@ def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path
         )
         extra_config.update(load_json_as_dict(experiment_report['config_filepath']))
         extra_configs.append(extra_config)
-        if index > test_only_num:
-            break
     return extra_configs
