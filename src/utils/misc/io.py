@@ -14,8 +14,10 @@ def isolate_filename(filepath: str):
 
 
 def get_subdirectories(parent_dir):
-    return [name for name in os.listdir(parent_dir)
-            if os.path.isdir(os.path.join(parent_dir, name))]
+    # return [name for name in os.listdir(parent_dir)
+    #         if os.path.isdir(os.path.join(parent_dir, name))]
+    return [f.path for f in os.scandir(parent_dir) if f.is_dir()]
+
 
 
 def create_location(pathname):
