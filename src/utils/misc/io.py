@@ -13,11 +13,13 @@ def isolate_filename(filepath: str):
     return os.path.splitext(os.path.basename(filepath))[0]
 
 
-def get_subdirectories(parent_dir):
+def get_subdirectories(parent_dir, only_basedir=False):
     # return [name for name in os.listdir(parent_dir)
     #         if os.path.isdir(os.path.join(parent_dir, name))]
-    return [f.path for f in os.scandir(parent_dir) if f.is_dir()]
-
+    subdirectories = [f.path for f in os.scandir(parent_dir) if f.is_dir()]
+    if only_basedir:
+        return [os.path.basename(s) for s in subdirectories]
+    return subdirectories
 
 
 def create_location(pathname):

@@ -7,7 +7,7 @@ from scripts.common.circuit import construct_circuit_from_cfg
 
 from src.srv.io.results.experiments import Experiment, Protocol
 from src.srv.io.results.result_writer import ResultWriter
-from src.srv.sequence_exploration.sequence_analysis import pull_circuits_from_stats
+from src.srv.sequence_exploration.sequence_analysis import pull_circuits_from_stats, tabulate_mutation_info
 from src.utils.data.data_format_tools.common import load_json_as_dict, process_json
 from src.utils.evolution.mutation import Evolver
 from src.utils.misc.io import get_pathnames
@@ -28,19 +28,13 @@ def main(config_filepath=None):
         'data', 'mutation_effect_on_interactions', '2022_05_03_171722'
     )
     protocols = [
-        # Load table of 
-        # - path to steady state data
-        # - path to signal data
-        # - path to template sequence
-        # - circuit stats
-        # - mutation number
-        # - mutation type
-        # - interaction strength
-        # - interaction count
 
         Protocol(
-            tabulate_mutation_info(source_dir)
+            tabulate_mutation_info(source_dir),
+            req_output=True,
+            name='tabulate_mutation_info'
         ),
+        Protocol(sys.exit),
 
 
 

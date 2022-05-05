@@ -87,7 +87,7 @@ class DataWriter():
 
     def make_location(self, purpose: str):
 
-        if purpose in get_subdirectories(self.script_dir) or purpose in self.exception_dirs:
+        if purpose in get_subdirectories(self.script_dir, only_basedir=True) or purpose in self.exception_dirs:
             location = os.path.join(self.root_output_dir,
                                     purpose,
                                     self.generate_location_instance())
