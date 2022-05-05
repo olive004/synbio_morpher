@@ -68,6 +68,14 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
         'path_to_template_circuit'
     ])
 
+    def check_coherency(table):
+        assert table['circuit_name'].values[0] in table['path_to_template_circuit'].values[0], \
+            f'Circuit name {table["circuit_name"].values[0]} does not math path to template {table["path_to_template_circuit"].values[0]}.'
+        assert table['mutation_name'].values[0] in table['path_to_steady_state_data'].values[0], \
+            f'Mutation name {table["mutation_name"].values[0]} should be in path {table["path_to_steady_state_data"].values[0]}'
+        assert table['mutation_name'].values[0] in table['path_to_signal_data'].values[0], \
+            f'Mutation name {table["mutation_name"].values[0]} should be in path {table["path_to_signal_data"].values[0]}'
+
     experiment_summary = load_experiment_report(source_dir)
     source_config = load_json_as_dict(experiment_summary['config_filepath'])
     circuit_stats_pathname = get_pathnames(first_only=True, file_key="circuit_stats",
@@ -89,7 +97,7 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
             'interaction_count': [circuit_stats[circuit_stats['name']
                                                 == circuit_name]['num_interacting'].values[0]] * len(mutation_dirs),
             'interaction_strength': [circuit_stats[circuit_stats['name']
-                                                  == circuit_name]['max_interaction'].values[0]] * len(mutation_dirs),
+                                                   == circuit_name]['max_interaction'].values[0]] * len(mutation_dirs),
             'mutation_num': [source_config['mutations']['mutation_nums']] * len(mutation_dirs),
             'mutation_type': mutations['mutation_types'],
             'path_to_steady_state_data': [get_pathnames(first_only=True,
@@ -100,6 +108,7 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
                                                   search_dir=m) for m in mutation_dirs],
             'path_to_template_circuit': mutations['template_file']
         })
+        check_coherency(current_table)
         info_table = pd.concat([info_table, current_table])
     data_writer.output(
         out_type='csv', out_name='tabulated_mutation_info', **{'data': info_table})
