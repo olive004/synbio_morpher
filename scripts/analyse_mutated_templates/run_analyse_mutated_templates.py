@@ -7,6 +7,7 @@ from scripts.common.circuit import construct_circuit_from_cfg
 
 from src.srv.io.results.experiments import Experiment, Protocol
 from src.srv.io.results.result_writer import ResultWriter
+from src.srv.io.results.visualisation import visualise_data
 from src.srv.sequence_exploration.sequence_analysis import pull_circuits_from_stats, tabulate_mutation_info
 from src.utils.data.data_format_tools.common import load_json_as_dict, process_json
 from src.utils.evolution.mutation import Evolver
@@ -35,10 +36,15 @@ def main(config_filepath=None):
             req_output=True,
             name='tabulate_mutation_info'
         ),
+        Protocol(
+            partial(visualise_data, cols=[
+                'interaction_strength'
+            ]),
+            req_input=True,
+            req_output=True,
+            name='visualise_interactions'
+        ),
         Protocol(sys.exit),
-
-
-
 
         # Load in templates: pathname for circuit stats is in config
         Protocol(

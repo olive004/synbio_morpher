@@ -113,5 +113,3 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
     data_writer.output(
         out_type='csv', out_name='tabulated_mutation_info', **{'data': info_table})
     return info_table
-
-    # for (root, dirs, files) in os.walk(source_dir):
