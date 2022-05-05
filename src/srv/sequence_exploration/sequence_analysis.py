@@ -53,26 +53,18 @@ def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path
     return extra_configs
 
 
-def tabulate_mutation_info(source_dir):
-    # Load table of
-    # - path to steady state data
-    # - path to signal data
-    # - path to template sequence
-    # - circuit stats
-    # - mutation number
-    # - mutation type
-    # - interaction strength
-    # - interaction count
+def tabulate_mutation_info(source_dir, data_writer: DataWriter):
+
     info_table = pd.DataFrame(columns=[
         'circuit_name',
         'mutation_name',
-        'source_species'
+        'source_species',
         'interaction_count',
-        'interaction_strength'
+        'interaction_strength',
         'mutation_num',
         'mutation_type',
         'path_to_steady_state_data',
-        'path_to_steady_signal_data',
+        'path_to_signal_data',
         'path_to_template_circuit'
     ])
 
@@ -87,17 +79,18 @@ def tabulate_mutation_info(source_dir):
         mutations_pathname = get_pathnames(
             first_only=True, file_key='mutations', search_dir=circuit_dir)
         mutations = DataLoader().load_data(mutations_pathname).data
-        mutation_dirs = get_subdirectories(circuit_dir)
+        mutation_dirs = sorted(get_subdirectories(circuit_dir))
 
-        info_table.append({
-            'circuit_name': circuit_dir * len(mutation_dirs),
+        circuit_name = os.path.basename(circuit_dir)
+        current_table = pd.DataFrame.from_dict({
+            'circuit_name': [circuit_name] * len(mutation_dirs),
             'mutation_name': mutations['mutation_name'],
             'source_species': mutations['template_name'],
-            'interaction_count': circuit_stats[circuit_stats['name']
-                                               == circuit_dir]['num_interacting'] * len(mutation_dirs),
-            'interaction_strength': circuit_stats[circuit_stats['name']
-                                                  == circuit_dir]['max_interaction'] * len(mutation_dirs),
-            'mutation_num': source_config['mutations']['mutation_nums'] * len(mutation_dirs),
+            'interaction_count': [circuit_stats[circuit_stats['name']
+                                                == circuit_name]['num_interacting'].values[0]] * len(mutation_dirs),
+            'interaction_strength': [circuit_stats[circuit_stats['name']
+                                                  == circuit_name]['max_interaction'].values[0]] * len(mutation_dirs),
+            'mutation_num': [source_config['mutations']['mutation_nums']] * len(mutation_dirs),
             'mutation_type': mutations['mutation_types'],
             'path_to_steady_state_data': [get_pathnames(first_only=True,
                                                         file_key='steady_state_data',
@@ -107,25 +100,9 @@ def tabulate_mutation_info(source_dir):
                                                   search_dir=m) for m in mutation_dirs],
             'path_to_template_circuit': mutations['template_file']
         })
-        # for mutation_dir in mutation_dirs:
-        #     current_mutation_info = mutations[mutations['mutation_name']
-        #                                       == mutation_dir]
-        #     info_table['circuit_name'] = circuit_dir
-        #     info_table['mutation_name'] = current_mutation_info['mutation_name']
-        #     info_table['source_species'] = current_mutation_info['template_name']
-        #     info_table['interaction_count'] = circuit_stats[circuit_stats['name']
-        #                                                     == circuit_dir]['num_interacting']
-        #     info_table['interaction_strength'] = circuit_stats[circuit_stats['name']
-        #                                                        == circuit_dir]['max_interaction']
-        #     info_table['mutation_num'] = source_config['mutations']['mutation_nums']
-        #     info_table['mutation_type'] = current_mutation_info['mutation_type']
-        #     info_table['path_to_steady_state_data'] = get_pathnames(first_only=True, file_key='steady_state_data',
-        #                                                             search_dir=mutation_dir)
-        #     info_table['path_to_steady_state_data'] = get_pathnames(first_only=True, file_key='steady_state_data',
-        #                                                             search_dir=mutation_dir)
-        #     info_table['path_to_template_circuit'] = current_mutation_info['template_file']
-
-    logging.info(info_table)
+        info_table = pd.concat([info_table, current_table])
+    data_writer.output(
+        out_type='csv', out_name='tabulated_mutation_info', **{'data': info_table})
     return info_table
 
     # for (root, dirs, files) in os.walk(source_dir):

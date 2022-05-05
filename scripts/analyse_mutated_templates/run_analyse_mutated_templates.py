@@ -30,7 +30,8 @@ def main(config_filepath=None):
     protocols = [
 
         Protocol(
-            tabulate_mutation_info(source_dir),
+            partial(tabulate_mutation_info, source_dir=source_dir,
+                    data_writer=data_writer),
             req_output=True,
             name='tabulate_mutation_info'
         ),
@@ -44,7 +45,7 @@ def main(config_filepath=None):
             partial(get_pathnames,
                     first_only=True,
                     file_key="circuit_stats",
-                    search_dir=source_experiment_dir
+                    search_dir='source_experiment_dir'
                     ),
             req_output=True,
             name='get_pathname'
