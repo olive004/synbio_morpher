@@ -70,18 +70,25 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
     ])
 
     def check_coherency(table):
-        assert table['circuit_name'].values[0] in table['path_to_template_circuit'].values[0], \
-            f'Circuit name {table["circuit_name"].values[0]} does not math path to template {table["path_to_template_circuit"].values[0]}.'
-        assert table['mutation_name'].values[0] in table['path_to_steady_state_data'].values[0], \
-            f'Mutation name {table["mutation_name"].values[0]} should be in path {table["path_to_steady_state_data"].values[0]}'
-        assert table['mutation_name'].values[0] in table['path_to_signal_data'].values[0], \
-            f'Mutation name {table["mutation_name"].values[0]} should be in path {table["path_to_signal_data"].values[0]}'
+        for (target, pathname) in [('circuit_name', 'path_to_template_circuit'),
+                                    ('mutation_name', 'path_to_steady_state_data'), ('mutation_name', 'path_to_signal_data')]:
+            if type(table) == pd.DataFrame:
+                # logging.info(type(table))
+                # logging.info(table)
+                # logging.info(target)
+                # logging.info(table[target])
+                # logging.info(table[pathname])
+                assert table[target].values[0] in table[pathname].values[0], \
+                    f'Name {table[target].values[0]} should be in path {table[pathname].values[0]}.'
+            else:
+                assert table[target] in table[pathname], \
+                    f'Name {table[target]} should be in path {table[pathname]}.'
 
     experiment_summary = load_experiment_report(source_dir)
     source_config = load_json_as_dict(experiment_summary['config_filepath'])
-    circuit_stats_pathname = get_pathnames(first_only=True, file_key="circuit_stats",
-                                           search_dir=source_config['source_species_templates_experiment_dir'])
-    circuit_stats = DataLoader().load_data(circuit_stats_pathname).data
+    # circuit_stats_pathname = get_pathnames(first_only=True, file_key="circuit_stats",
+    #                                        search_dir=source_config['source_species_templates_experiment_dir'])
+    # circuit_stats = DataLoader().load_data(circuit_stats_pathname).data
 
     circuit_dirs = get_subdirectories(source_dir)
     for circuit_dir in circuit_dirs:
@@ -92,41 +99,32 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
 
         circuit_name = os.path.basename(circuit_dir)
 
-        interactions_paths = [get_pathnames(first_only=True,
-                                           file_key="interactions",
-                                           search_dir=os.path.join(
-                                               circuit_dir, m, 'interactions')
-                                           ) for m in mutations['mutation_name']]
-        interactions = InteractionMatrix(matrix_path=interactions_path)
-
-        stats = interactions.get_stats()
-
         for mutation_dir in mutation_dirs:
-            curr_mutation = mutations[mutations['mutation_name'] == os.path.basename(mutation_dir)]
+            curr_mutation = mutations[mutations['mutation_name'] == os.path.basename(
+                mutation_dir)]
             mutation_name = curr_mutation['mutation_name'].values[0]
+            interaction_stats = InteractionMatrix(matrix_path=get_pathnames(first_only=True,
+                                                                            file_key="interactions",
+                                                                            search_dir=os.path.join(
+                                                                                mutation_dir, 'interactions'))).get_stats()
             current_table = pd.DataFrame.from_dict({
                 'circuit_name': circuit_name,
                 'mutation_name': mutation_name,
-                'source_species': curr_mutation['template_name'],
-                'interaction_count': get_pathnames(first_only=True,
-                                           file_key="interactions",
-                                           search_dir=os.path.join(
-                                               circuit_dir, m, 'interactions')
-                                           ),
-                'interaction_strength': [circuit_stats[circuit_stats['name']
-                                                    == circuit_name]['max_interaction'].values[0]] * len(mutation_dirs),
-                'mutation_num': [source_config['mutations']['mutation_nums']] * len(mutation_dirs),
-                'mutation_type': mutations['mutation_types'],
-                'path_to_steady_state_data': [get_pathnames(first_only=True,
-                                                            file_key='steady_state_data',
-                                                            search_dir=m) for m in mutation_dirs],
-                'path_to_signal_data': [get_pathnames(first_only=True,
-                                                    file_key='signal_data',
-                                                    search_dir=m) for m in mutation_dirs],
-                'path_to_template_circuit': mutations['template_file']
+                'source_species': curr_mutation['template_name'].values[0],
+                'interaction_count': interaction_stats['num_interacting'],
+                'interaction_strength': interaction_stats['max_interaction'],
+                'mutation_num': source_config['mutations']['mutation_nums'],
+                'mutation_type': curr_mutation['mutation_types'].values[0],
+                'path_to_steady_state_data': get_pathnames(first_only=True,
+                                                           file_key='steady_state_data',
+                                                           search_dir=mutation_dir),
+                'path_to_signal_data': get_pathnames(first_only=True,
+                                                     file_key='signal_data',
+                                                     search_dir=mutation_dir),
+                'path_to_template_circuit': curr_mutation['template_file'].values[0]
             })
             check_coherency(current_table)
-        info_table = pd.concat([info_table, current_table])
+            info_table = pd.concat([info_table, current_table])
     data_writer.output(
         out_type='csv', out_name='tabulated_mutation_info', **{'data': info_table})
     return info_table

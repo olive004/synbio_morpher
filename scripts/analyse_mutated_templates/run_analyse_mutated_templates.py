@@ -26,7 +26,7 @@ def main(config_filepath=None):
     data_writer = ResultWriter(**data_writer_kwargs)
 
     source_dir = os.path.join(
-        'data', 'mutation_effect_on_interactions', '2022_05_03_171722'
+        'data', 'mutation_effect_on_interactions', '2022_05_06_011502'
     )
     protocols = [
         Protocol(
@@ -37,12 +37,11 @@ def main(config_filepath=None):
         ),
         Protocol(
             partial(visualise_data, data_writer=data_writer, cols=[
-                'interaction_strength' #, 'interaction_count'
-            ], plot_type='histplot'),
+                'interaction_strength'
+            ], plot_type='histplot', title=''),
             req_input=True,
             name='visualise_interactions'
         ),
-        Protocol(sys.exit),
     ]
     experiment = Experiment(config_filepath, protocols,
                             data_writer=data_writer)

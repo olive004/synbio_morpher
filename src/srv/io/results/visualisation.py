@@ -73,18 +73,19 @@ class NetworkCustom(Network):
 
 
 def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
-                   cols: list = None, plot_type='', out_name='test_plot'):
+                   cols: list = None, plot_type='', out_name='test_plot',
+                   **plot_kwrgs):
     """ Plot type can be any attributes of VisODE() """
     visualiser = VisODE()
     if plot_type == 'histplot':
         for col in cols:
             data_writer.output(out_type='png', out_name=out_name,
-                               writer=visualiser.histplot, **{'data': data[col]})
+                               writer=visualiser.histplot, **{'data': data[col]}.update(plot_kwrgs))
     elif plot_type == 'plot':
         try:
             x, y = cols[0], cols[-1]
             data_writer.output(out_type='png', out_name=out_name,
-                               writer=visualiser.plot, **{'data': x, 'y': y})
+                               writer=visualiser.plot, **{'data': x, 'y': y}.update(plot_kwrgs))
         except IndexError:
             assert len(
                 cols) == 2, 'For visualising a plot from a table, please only provide 2 columns as variables.'
@@ -151,7 +152,6 @@ class VisODE():
 
     def histplot(self, data, out_path, **plot_kwrgs):
         from matplotlib import pyplot as plt
-        logging.info(data)
         plt.figure()
         plt.hist(data, range=(0, max(data)), bins=50)
         self.add_kwrgs(plt, **plot_kwrgs)
