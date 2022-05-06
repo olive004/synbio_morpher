@@ -139,7 +139,7 @@ class VisODE():
         plt.savefig(out_path)
         plt.close()
 
-    def add_kwrgs(plt, **plot_kwrgs):
+    def add_kwrgs(self, plt, **plot_kwrgs):
         def dummy_call(object, function, dummy_value):
             logging.warn(
                 f'Could not call function {function} in object {object}.')
@@ -154,6 +154,6 @@ class VisODE():
         logging.info(data)
         plt.figure()
         plt.hist(data, range=(0, max(data)), bins=50)
-        self.add_kwrgs(**plot_kwrgs)
+        self.add_kwrgs(plt, **plot_kwrgs)
         plt.savefig(out_path)
         plt.close()

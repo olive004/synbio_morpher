@@ -33,7 +33,7 @@ class DataWriter():
             raise ValueError(
                 f'The out_type for file "{out_name}" needs to be specified for writing with function "{writer}".')
 
-        def make_base_name():
+        def make_base_name(filename_addon):
             if self.write_dir in out_name:
                 base_name = os.path.basename(out_name)
             if new_file:
@@ -58,7 +58,7 @@ class DataWriter():
                     self.write_dir, add_outtype(base_name, out_type))
             return out_path
 
-        base_name = make_base_name()
+        base_name = make_base_name(filename_addon)
         out_path = make_out_path(base_name)
 
         if writer is None:

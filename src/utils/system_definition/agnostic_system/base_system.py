@@ -123,14 +123,14 @@ class BaseSpecies():
         return interactions_dict
 
     def save_initial_values(self):
-        return {prop: val for prop, val in self.__dict__.items()}
+        return {prop: deepcopy(val) for prop, val in self.__dict__.items()}
 
     def reset_to_initial_state(self):
         resetable_attrs = ['interactions', 'copynumbers', 'loaded_interactions',
                            'current_copynumbers', 'steady_state_copynums']
         for k, v in self.initial_values.items():
             if k in resetable_attrs:
-                self.__setattr__(k, v)
+                self.__setattr__(k, deepcopy(v))
 
     @property
     def current_copynumbers(self):
@@ -208,6 +208,7 @@ class BaseSystem():
     def make_subsystem(self, mutation_name: str, mutation=None):
         subsystem = deepcopy(self)
         subsystem.reset_to_initial_state()
+        subsystem.species.loaded_interactions = False
 
         if mutation is None:
             mutation = self.species.mutations.get(mutation_name)
