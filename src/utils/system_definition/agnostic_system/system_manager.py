@@ -80,7 +80,7 @@ class CircuitModeller():
                               use_solver='naive'):
         all_copynumbers = circuit.species.copynumbers
         if use_solver == 'naive':
-            self.model_circuit(modeller, all_copynumbers)
+            all_copynumbers = self.model_circuit(modeller, all_copynumbers)
         elif use_solver == 'ivp':
             y0 = all_copynumbers[:, -1]
             steady_state_result = integrate.solve_ivp(self.get_modelling_func(modeller, circuit),

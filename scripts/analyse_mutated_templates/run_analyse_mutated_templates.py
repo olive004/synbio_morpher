@@ -37,7 +37,7 @@ def main(config_filepath=None):
         ),
         Protocol(
             partial(visualise_data, data_writer=data_writer, cols=[
-                'interaction_strength', 'interaction_count'
+                'interaction_strength' #, 'interaction_count'
             ], plot_type='histplot'),
             req_input=True,
             name='visualise_interactions'

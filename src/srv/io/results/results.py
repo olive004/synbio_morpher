@@ -41,3 +41,6 @@ class ResultCollector():
     def pool_results(self, results: dict):
         assert_uniform_type(results.values, Result)
         self.results.update(results)
+
+    def reset(self):
+        self.results = {}
