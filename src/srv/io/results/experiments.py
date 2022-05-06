@@ -30,7 +30,7 @@ class Protocol():
 class Experiment():
 
     def __init__(self, config_filepath: str, protocols: List[Protocol], data_writer: DataWriter) -> None:
-        
+
         self.name = 'experiment'
         self.config_filepath = config_filepath
         self.start_time = datetime.now()
@@ -54,16 +54,19 @@ class Experiment():
                     self.iterate_protocols(protocols=protocol, out=o)
 
     def call_protocol(self, protocol, out=None):
-        if protocol.req_input:
+        if protocol.req_input and protocol.req_output:
             out = protocol(out)
-        else:
+        elif protocol.req_input:
+            protocol(out)
+        elif protocol.req_output:
             out = protocol()
         return out
 
     def write_experiment(self):
         experiment_data = self.collect_experiment()
-        self.data_writer.output(out_type='json', out_name=self.name, data=experiment_data, write_master=False)
-        
+        self.data_writer.output(
+            out_type='json', out_name=self.name, data=experiment_data, write_master=False)
+
     def collect_experiment(self):
         return {
             "total_time": str(self.total_time),

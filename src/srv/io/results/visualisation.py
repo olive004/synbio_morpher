@@ -6,6 +6,7 @@ import logging
 from src.srv.io.results.writer import DataWriter
 from src.utils.misc.string_handling import add_outtype, make_time_str
 from pyvis.network import Network
+from src.utils.misc.type_handling import merge_dicts
 
 
 logger = logging.getLogger(__name__)
@@ -80,12 +81,12 @@ def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
     if plot_type == 'histplot':
         for col in cols:
             data_writer.output(out_type='png', out_name=out_name,
-                               writer=visualiser.histplot, **{'data': data[col]}.update(plot_kwrgs))
+                               writer=visualiser.histplot, **merge_dicts({'data': data[col]}, plot_kwrgs))
     elif plot_type == 'plot':
         try:
             x, y = cols[0], cols[-1]
             data_writer.output(out_type='png', out_name=out_name,
-                               writer=visualiser.plot, **{'data': x, 'y': y}.update(plot_kwrgs))
+                               writer=visualiser.plot, **merge_dicts({'data': x, 'y': y}, plot_kwrgs))
         except IndexError:
             assert len(
                 cols) == 2, 'For visualising a plot from a table, please only provide 2 columns as variables.'

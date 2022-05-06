@@ -36,11 +36,18 @@ def main(config_filepath=None):
             name='tabulate_mutation_info'
         ),
         Protocol(
-            partial(visualise_data, data_writer=data_writer, cols=[
-                'interaction_strength'
-            ], plot_type='histplot', title=''),
+            partial(visualise_data, data_writer=data_writer, cols=['interaction_strength'],
+                    plot_type='histplot', title='Maximum interaction strength, 1 mutation',
+                    xlabel='Interaction strength', ylabel='Frequency count'),
             req_input=True,
             name='visualise_interactions'
+        ),
+        Protocol(
+            partial(visualise_data, data_writer=data_writer, cols=['interaction_strength'],
+                    plot_type='histplot', title='Maximum interaction strength, 1 mutation',
+                    xlabel='Interaction strength', ylabel='Frequency count'),
+            req_input=True,
+            name='visualise_interactions_difference'
         ),
     ]
     experiment = Experiment(config_filepath, protocols,
