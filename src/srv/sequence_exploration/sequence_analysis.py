@@ -9,7 +9,8 @@ from src.srv.io.loaders.data_loader import DataLoader
 from src.srv.io.results.writer import DataWriter
 from src.srv.parameter_prediction.interactions import InteractionMatrix
 from src.utils.data.data_format_tools.common import load_json_as_dict
-from src.utils.misc.io import get_path_from_exp_summary, get_pathnames, get_subdirectories, load_experiment_report, load_experiment_output_summary
+from src.utils.misc.io import get_path_from_exp_summary, get_pathnames, \
+    get_subdirectories, load_experiment_report, load_experiment_output_summary
 
 
 def generate_interaction_stats(path_name, writer: DataWriter = None, **stat_addons):
@@ -62,6 +63,7 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
         'source_species',
         'interaction_count',
         'interaction_strength',
+        'interaction_strength_diff_to_base_circuit',
         'mutation_num',
         'mutation_type',
         'path_to_steady_state_data',
@@ -73,11 +75,6 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
         for (target, pathname) in [('circuit_name', 'path_to_template_circuit'),
                                    ('mutation_name', 'path_to_steady_state_data'), ('mutation_name', 'path_to_signal_data')]:
             if type(table) == pd.DataFrame:
-                # logging.info(type(table))
-                # logging.info(table)
-                # logging.info(target)
-                # logging.info(table[target])
-                # logging.info(table[pathname])
                 assert table[target].values[0] in table[pathname].values[0], \
                     f'Name {table[target].values[0]} should be in path {table[pathname].values[0]}.'
             else:
@@ -98,7 +95,6 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
         mutation_dirs = sorted(get_subdirectories(circuit_dir))
 
         circuit_name = os.path.basename(circuit_dir)
-        logging.info(circuit_name)
 
         # Unmutated circuit
         interaction_dir = os.path.join(
@@ -106,12 +102,14 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
         interaction_stats = InteractionMatrix(matrix_path=get_pathnames(first_only=True,
                                                                         file_key="interactions",
                                                                         search_dir=interaction_dir)).get_stats()
+        circuit_interaction_max = interaction_stats['max_interaction']
         current_table = pd.DataFrame.from_dict({
             'circuit_name': circuit_name,
             'mutation_name': '',
             'source_species': '',
             'interaction_count': interaction_stats['num_interacting'],
-            'interaction_strength': interaction_stats['max_interaction'],
+            'interaction_strength': circuit_interaction_max,
+            'interaction_strength_diff_to_base_circuit': 0,
             'mutation_num': 0,
             'mutation_type': '',
             'path_to_steady_state_data': get_pathnames(first_only=True,
@@ -124,6 +122,7 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
         })
         info_table = pd.concat([info_table, current_table])
 
+        # Mutated circuits
         for mutation_dir in mutation_dirs:
             curr_mutation = mutations[mutations['mutation_name'] == os.path.basename(
                 mutation_dir)]
@@ -138,6 +137,7 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
                 'source_species': curr_mutation['template_name'].values[0],
                 'interaction_count': interaction_stats['num_interacting'],
                 'interaction_strength': interaction_stats['max_interaction'],
+                'interaction_strength_diff_to_base_circuit': circuit_interaction_max - interaction_stats['max_interaction'],
                 'mutation_num': source_config['mutations']['mutation_nums'],
                 'mutation_type': curr_mutation['mutation_types'].values[0],
                 'path_to_steady_state_data': get_pathnames(first_only=True,
