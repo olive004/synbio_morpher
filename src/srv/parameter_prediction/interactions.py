@@ -58,7 +58,7 @@ class RawSimulationHandling():
         def simulate_vanilla(batch):
             return None
 
-        @time_it
+        # @time_it
         def simulate_intaRNA_data(batch, allow_self_interaction, sim_kwargs):
             from src.srv.parameter_prediction.IntaRNA.bin.copomus.IntaRNA import IntaRNA
             simulator = IntaRNA()

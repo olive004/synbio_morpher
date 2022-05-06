@@ -155,7 +155,7 @@ class CircuitModeller():
             self.result_writer.subdivide_writing(circuit.name)
         mutation_dict = flatten_nested_dict(circuit.species.mutations.items())
         for i, (name, mutation) in enumerate(mutation_dict.items()):
-            logging.info(f'Running methods on mutation {name}')
+            # logging.info(f'Running methods on mutation {name}')
             if include_normal_run and i == 0:
                 self.apply_to_circuit(circuit, methods)
             subcircuit = circuit.make_subsystem(name, mutation)

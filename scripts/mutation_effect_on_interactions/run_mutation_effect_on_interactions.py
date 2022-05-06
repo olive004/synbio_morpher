@@ -18,17 +18,13 @@ def main(config_filepath=None):
     # Set configs
     if config_filepath is None:
         config_filepath = os.path.join(
-            "scripts", "mutation_effect_on_interactions", "configs", "fixed", "mutations_1_config.json")
+            "scripts", "mutation_effect_on_interactions", "configs", "fixed", "mutations_2_expanded.json")
     config_file = process_json(load_json_as_dict(config_filepath))
+
     # Start_experiment
     data_writer_kwargs = {'purpose': 'mutation_effect_on_interactions'}
     data_writer = ResultWriter(**data_writer_kwargs)
 
-    # source_experiment_dir = os.path.join(*list({
-    #     'root_dir': "data",
-    #     'purpose': "explore_species_templates",
-    #     'experiment_key': "2022_04_27_154019",
-    # }.values()))
     source_experiment_dir = config_file.get(
         'source_species_templates_experiment_dir')
     protocols = [
