@@ -76,18 +76,20 @@ def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
                    cols: list = None, plot_type='', out_name='test_plot'):
     """ Plot type can be any attributes of VisODE() """
     visualiser = VisODE()
-    if plot_type == 'barplot':
+    if plot_type == 'histplot':
         for col in cols:
-            data_writer.output(
-                out_name=out_name, writer=visualiser.barplot, **{'data': data[col]})
-    if plot_type == 'plot':
+            data_writer.output(out_type='png', out_name=out_name,
+                               writer=visualiser.histplot, **{'data': data[col]})
+    elif plot_type == 'plot':
         try:
             x, y = cols[0], cols[-1]
-            data_writer.output(out_name=out_name,
+            data_writer.output(out_type='png', out_name=out_name,
                                writer=visualiser.plot, **{'data': x, 'y': y})
         except IndexError:
             assert len(
                 cols) == 2, 'For visualising a plot from a table, please only provide 2 columns as variables.'
+    else:
+        logging.warn(f'Could not find visualiser function {plot_type}')
 
 
 def visualise_graph_pyvis(graph: nx.DiGraph,
@@ -147,10 +149,11 @@ class VisODE():
                 getattr(plt, plot_kwrg, partial(
                     dummy_call, object=plt, function=plot_kwrg))(value)
 
-    def barplot(self, data, out_path, **plot_kwrgs):
+    def histplot(self, data, out_path, **plot_kwrgs):
         from matplotlib import pyplot as plt
+        logging.info(data)
         plt.figure()
-        plt.bar(data)
+        plt.hist(data, range=(0, max(data)), bins=50)
         self.add_kwrgs(**plot_kwrgs)
         plt.savefig(out_path)
         plt.close()

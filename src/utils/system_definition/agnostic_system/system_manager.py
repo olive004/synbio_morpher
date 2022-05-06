@@ -68,7 +68,7 @@ class CircuitModeller():
                                             name='steady_state',
                                             category='time_series',
                                             vis_func=modeller_steady_state.plot,
-                                            **{'legend_keys': list(circuit.species.data.sample_names),
+                                            **{'legend': list(circuit.species.data.sample_names),
                                             'out_type': 'png'})
         steady_state_metrics = circuit.result_collector.get_result(
             key='steady_state').metrics
@@ -144,7 +144,7 @@ class CircuitModeller():
                                             category='time_series',
                                             vis_func=signal_modeller.plot,
                                             save_numerical_vis_data=save_numerical_vis_data,
-                                            **{'legend_keys': list(circuit.species.data.sample_names),
+                                            **{'legend': list(circuit.species.data.sample_names),
                                             'out_type': 'png'})
         return circuit
 
