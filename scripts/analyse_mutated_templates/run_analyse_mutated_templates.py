@@ -28,13 +28,12 @@ def main(config_filepath=None):
     data_writer = ResultWriter(purpose='analyse_mutated_templates')
     source_dir = config_file.get('source_dir')
     if config_file.get('preprocessing_func') == 'rate_to_energy':
-        logging.info(config_file.get('preprocessing_func'))
         preprocessing_func = RawSimulationHandling().rate_to_energy,
     else:
         preprocessing_func = None
     
     protocols = [
-        Protocol(sys.exit),
+        # Protocol(sys.exit),
         Protocol(
             partial(tabulate_mutation_info, source_dir=source_dir,
                     data_writer=data_writer),

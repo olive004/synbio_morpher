@@ -38,11 +38,16 @@ class RawSimulationHandling():
         logging.info(np.log(rate.astype('float64')))
         logging.info(max(rate))
         logging.info(min(rate))
+        logging.info(np.log(max(rate)))
+        logging.info(np.log(min(rate)))
         energy = np.multiply(SCIENTIFIC['RT'], np.log(rate.astype('float64')))
         energy = energy / 1000
         return energy
 
     def get_postprocessing(self):
+
+        def vanilla(data):
+            return data
 
         def energy_to_rate(energies):
             """ Translate interaction binding energy to binding rate:
@@ -66,9 +71,12 @@ class RawSimulationHandling():
             return input
 
         if self.simulator == "IntaRNA":
-            return partial(processor, funcs=[
-                energy_to_rate,
-                zero_false_rates])
+            if self.sim_kwargs.get('postprocess', False):
+                return partial(processor, funcs=[
+                    energy_to_rate,
+                    zero_false_rates])
+            else:
+                return vanilla
 
     def get_simulation(self, allow_self_interaction=True):
 
