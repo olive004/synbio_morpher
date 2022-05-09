@@ -3,7 +3,7 @@
     "data_path": "./data/example_data/toy_mRNA_circuit.fasta",
     "interaction_simulator": {
         "name": "IntaRNA",
-        "postprocess": "True"
+        "postprocess": "False"
     },
     "identities": {
         "input": "RNA_0",

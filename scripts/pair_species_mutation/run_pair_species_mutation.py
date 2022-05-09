@@ -6,6 +6,7 @@ from scripts.common.circuit import construct_circuit_from_cfg
 
 from src.srv.io.results.experiments import Experiment, Protocol
 from src.srv.io.results.result_writer import ResultWriter
+from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.data.fake_data_generation.seq_generator import RNAGenerator
 from src.utils.evolution.mutation import Evolver
 from src.utils.system_definition.agnostic_system.system_manager import CircuitModeller
@@ -15,23 +16,27 @@ def main():
     # set configs
     config_filepath = os.path.join(
         "scripts", "pair_species_mutation", "configs", "RNA_pair_species_mutation.json")
-    # start_experiment
+    config_file = load_json_as_dict(config_filepath)
+
+    # Start_experiment
     data_writer_kwargs = {'purpose': 'pair_species_mutation'}
     data_writer = ResultWriter(**data_writer_kwargs)
+    default_generator_params = {
+        "count": 3, "slength": 25, "protocol": "template_mix"}
     protocols = [
         Protocol(
             partial(RNAGenerator(data_writer=data_writer).generate_circuit,
-                    count=3, slength=25, protocol="template_mix"),
+                    **config_file.get('circuit_generator_params', default_generator_params)),
             name="generating_sequences",
             req_output=True
         ),
         Protocol(
-            partial(construct_circuit_from_cfg, config_filepath=config_filepath),
+            partial(construct_circuit_from_cfg,
+                    config_filepath=config_filepath),
             req_input=True,
             req_output=True,
             name="making_circuit"
         ),
-        # Protocol(sys.exit),
         Protocol(
             Evolver(data_writer=data_writer).mutate,
             req_input=True,
@@ -49,7 +54,8 @@ def main():
             name="visualise_signal"
         )
     ]
-    experiment = Experiment(config_filepath, protocols, data_writer=data_writer)
+    experiment = Experiment(config_filepath, protocols,
+                            data_writer=data_writer)
     experiment.run_experiment()
 
 

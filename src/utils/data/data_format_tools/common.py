@@ -23,11 +23,13 @@ def determine_data_format(filepath):
     # return None
 
 
-def load_json_as_dict(json_pathname):
+def load_json_as_dict(json_pathname, process=True):
     if not json_pathname:
         return {}
     try:
         jdict = json.load(open(json_pathname))
+        if process:
+            return process_json(jdict)
         return jdict
     except FileNotFoundError:
         logging.error(f'JSON path {json_pathname} not found')

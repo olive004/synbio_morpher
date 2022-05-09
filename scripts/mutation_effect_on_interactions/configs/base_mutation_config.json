@@ -1,7 +1,10 @@
 {
     "system_type": "RNA",
     "data_path": "None",
-    "interaction_simulator": "IntaRNA",
+    "interaction_simulator": {
+        "name": "IntaRNA",
+        "postprocess": "False"
+    },
     "identities": {
         "input": "RNA_0",
         "output": "RNA_2"
