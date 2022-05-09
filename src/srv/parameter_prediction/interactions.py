@@ -7,16 +7,15 @@ import numpy as np
 from functools import partial
 from src.srv.io.loaders.misc import load_csv
 from src.utils.data.data_format_tools.common import determine_data_format
-from src.utils.misc.decorators import time_it
 from src.utils.misc.numerical import SCIENTIFIC, square_matrix_rand
 from src.utils.misc.type_handling import flatten_listlike
 
 
 class RawSimulationHandling():
 
-    def __init__(self, simulator, config_args) -> None:
+    def __init__(self, config_args: dict = None, simulator: str = 'IntaRNA') -> None:
         self.simulator = simulator
-        self.sim_kwargs = config_args[simulator]
+        self.sim_kwargs = config_args[simulator] if config_args is not None else {}
 
     def get_protocol(self):
 
@@ -26,6 +25,26 @@ class RawSimulationHandling():
 
         if self.simulator == "IntaRNA":
             return intaRNA_calculator
+
+    @staticmethod
+    def rate_to_energy(rate):
+        """ Reverse translation of interaction binding energy to binding rate:
+        AG = RT ln(K)
+        AG = RT ln(kb/kd)
+        K = e^(G / RT)
+        """
+        rate[rate == 0] = 1
+        logging.info(rate)
+        logging.info(type(rate))
+        logging.info(np)
+        logging.info(type(np))
+        logging.info(np.log)
+        logging.info(np.log(rate.astype('float64')))
+        logging.info(max(rate))
+        logging.info(min(rate))
+        energy = np.multiply(SCIENTIFIC['RT'], np.log(rate.astype('float64')))
+        energy = energy / 1000
+        return energy
 
     def get_postprocessing(self):
 
@@ -40,6 +59,8 @@ class RawSimulationHandling():
             return K
 
         def zero_false_rates(rates):
+            """ Exponential of e^0 is equal to 1, but IntaRNA sets energies 
+            equal to 0 for non-interactions. """
             rates[rates == 1] = 0
             return rates
 
@@ -56,6 +77,7 @@ class RawSimulationHandling():
     def get_simulation(self, allow_self_interaction=True):
 
         def simulate_vanilla(batch):
+            raise NotImplementedError
             return None
 
         # @time_it

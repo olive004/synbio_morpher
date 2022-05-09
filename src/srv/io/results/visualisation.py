@@ -75,16 +75,21 @@ class NetworkCustom(Network):
 
 def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
                    cols: list = None, plot_type='', out_name='test_plot',
+                   preprocessor_func=None,
                    **plot_kwrgs):
     """ Plot type can be any attributes of VisODE() """
     visualiser = VisODE()
     if plot_type == 'histplot':
         for col in cols:
+            if preprocessor_func:
+                data[col] = preprocessor_func(data[col].values)
             data_writer.output(out_type='png', out_name=out_name,
                                writer=visualiser.histplot, **merge_dicts({'data': data[col]}, plot_kwrgs))
     elif plot_type == 'plot':
         try:
             x, y = cols[0], cols[-1]
+            if preprocessor_func:
+                x, y = preprocessor_func(x.values), preprocessor_func(y.values)
             data_writer.output(out_type='png', out_name=out_name,
                                writer=visualiser.plot, **merge_dicts({'data': x, 'y': y}, plot_kwrgs))
         except IndexError:
@@ -154,7 +159,7 @@ class VisODE():
     def histplot(self, data, out_path, **plot_kwrgs):
         from matplotlib import pyplot as plt
         plt.figure()
-        plt.hist(data, range=(0, max(data)), bins=50)
+        plt.hist(data, range=(min(data), max(data)), bins=50)
         self.add_kwrgs(plt, **plot_kwrgs)
         plt.savefig(out_path)
         plt.close()
