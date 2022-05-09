@@ -14,7 +14,7 @@ from src.utils.misc.type_handling import flatten_listlike
 class RawSimulationHandling():
 
     def __init__(self, config_args: dict = None, simulator: str = 'IntaRNA') -> None:
-        self.simulator = simulator
+        self.simulator = simulator if config_args is None else config_args.get('name', simulator)
         self.sim_kwargs = config_args[simulator] if config_args is not None else {}
 
     def get_protocol(self):

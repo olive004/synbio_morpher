@@ -51,12 +51,12 @@ class CircuitModeller():
                 new_file=True, filename_addon=filename_addon, subfolder=filename_addon)
         return circuit
 
-    def run_interaction_simulator(self, circuit, data):
+    def run_interaction_simulator(self, circuit: BaseSystem, data):
         simulator = InteractionSimulator(
-            circuit.simulator_args, circuit.simulator_choice)
+            circuit.simulator_args)
         return simulator.run(data)
 
-    def find_steady_states(self, circuit):
+    def find_steady_states(self, circuit: BaseSystem):
         modeller_steady_state = Deterministic(
             max_time=50, time_step=1)
 
