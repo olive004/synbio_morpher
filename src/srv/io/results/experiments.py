@@ -60,6 +60,8 @@ class Experiment():
             protocol(out)
         elif protocol.req_output:
             out = protocol()
+        else:
+            protocol()
         return out
 
     def write_experiment(self):

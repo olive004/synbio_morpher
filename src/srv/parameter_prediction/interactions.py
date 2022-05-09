@@ -34,11 +34,7 @@ class RawSimulationHandling():
         K = e^(G / RT)
         """
         rate[rate == 0] = 1
-        logging.info(rate)
-        logging.info(type(rate))
-        logging.info(np)
-        logging.info(type(np))
-        logging.info(np.log)
+        logging.info(np.log(1))
         logging.info(np.log(rate.astype('float64')))
         logging.info(max(rate))
         logging.info(min(rate))
