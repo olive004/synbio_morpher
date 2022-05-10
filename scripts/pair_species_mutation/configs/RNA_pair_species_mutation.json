@@ -1,7 +1,10 @@
 {
-    "circuit_generator_params": {
+    "circuit_generation": {
+        "repetitions": 2000,
         "species_count": 3,
-        "sequence_length": 25
+        "sequence_length": 25,
+        "generator_protocol": "template_mutate",
+        "proportion_to_mutate": 0.35
     },
     "data": "./data/example_data/toy_mRNA_circuit.fasta",
     "interaction_simulator": {

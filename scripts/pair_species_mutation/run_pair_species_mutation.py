@@ -17,16 +17,17 @@ def main():
     config_filepath = os.path.join(
         "scripts", "pair_species_mutation", "configs", "RNA_pair_species_mutation.json")
     config_file = load_json_as_dict(config_filepath)
+    exp_configs = config_file.get("circuit_generation", {})
 
     # Start_experiment
     data_writer_kwargs = {'purpose': 'pair_species_mutation'}
     data_writer = ResultWriter(**data_writer_kwargs)
-    default_generator_params = {
-        "count": 3, "slength": 25, "protocol": "template_mix"}
     protocols = [
         Protocol(
             partial(RNAGenerator(data_writer=data_writer).generate_circuit,
-                    **config_file.get('circuit_generator_params', default_generator_params)),
+                    count=exp_configs.get("species_count"), slength=exp_configs.get("sequence_length"), 
+                    proportion_to_mutate=exp_configs.get("proportion_to_mutate"),
+                    protocol=exp_configs.get("generator_protocol")),
             name="generating_sequences",
             req_output=True
         ),

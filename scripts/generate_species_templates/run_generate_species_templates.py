@@ -22,6 +22,7 @@ def main():
     ## start_experiment
     data_writer_kwargs = {'purpose': 'generate_species_templates'}
     data_writer = ResultWriter(**data_writer_kwargs)
+
     protocols = [
         Protocol(
             partial(RNAGenerator(data_writer=data_writer).generate_circuits,
