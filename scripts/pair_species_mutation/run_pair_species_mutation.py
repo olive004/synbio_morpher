@@ -38,7 +38,8 @@ def main():
             name="making_circuit"
         ),
         Protocol(
-            Evolver(data_writer=data_writer).mutate,
+            partial(Evolver(data_writer=data_writer).mutate,
+            algorithm=config_file.get('mutations', {}).get('algorithm', "random")),
             req_input=True,
             req_output=True,
             name="generate_mutations"
