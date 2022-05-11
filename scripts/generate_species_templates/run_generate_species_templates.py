@@ -16,7 +16,7 @@ from src.utils.system_definition.agnostic_system.system_manager import CircuitMo
 def main():
     ## set configs
     config_filepath = os.path.join(
-        "scripts", "generate_species_templates", "configs", "generate_species_templates.json")
+        "scripts", "generate_species_templates", "configs", "generate_species_templates_2.json")
     exp_configs = load_json_as_dict(config_filepath).get("circuit_generation")
 
     ## start_experiment

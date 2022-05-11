@@ -7,6 +7,7 @@ import numpy as np
 from functools import partial
 from src.srv.io.loaders.misc import load_csv
 from src.utils.data.data_format_tools.common import determine_data_format
+from src.utils.misc.io import load_experiment_report
 from src.utils.misc.numerical import SCIENTIFIC, square_matrix_rand
 from src.utils.misc.type_handling import flatten_listlike
 
@@ -14,8 +15,9 @@ from src.utils.misc.type_handling import flatten_listlike
 class RawSimulationHandling():
 
     def __init__(self, config_args: dict = None, simulator: str = 'IntaRNA') -> None:
-        self.simulator = simulator if config_args is None else config_args.get('name', simulator)
-        self.sim_kwargs = config_args[simulator] if config_args is not None else {}
+        self.simulator = simulator if config_args is None else config_args.get(
+            'name', simulator)
+        self.sim_kwargs = config_args if config_args is not None else {}
 
     def get_protocol(self):
 
@@ -128,12 +130,14 @@ class InteractionMatrix():
                  matrix=None,
                  matrix_path: str = None,
                  num_nodes: int = None,
-                 toy=False):
+                 toy=False,
+                 units='kJ'):
         super().__init__()
 
         self.name = None
         self.toy = toy
         self.config_args = config_args
+        self.units = units
 
         if matrix is not None:
             self.matrix = matrix
@@ -151,8 +155,14 @@ class InteractionMatrix():
         if filetype == 'csv':
             matrix = load_csv(filepath, load_as='numpy')
         else:
-            raise TypeError(f'Unsupported filetype {filetype} for loading {filepath}')
+            raise TypeError(
+                f'Unsupported filetype {filetype} for loading {filepath}')
+        self.units = self.load_units(filepath)
         return matrix
+
+    def load_units(self, interactions_filepath):
+        load_experiment_report(experiment_folder=os.path.dirname(
+            os.path.dirname(interactions_filepath)))
 
     def make_rand_matrix(self, num_nodes):
         if num_nodes is None or num_nodes == 0:
@@ -170,7 +180,7 @@ class InteractionMatrix():
         idxs_interacting = self.get_unique_interacting_idxs()
         interacting = self.get_interacting_species(idxs_interacting)
         self_interacting = self.get_selfinteracting_species(idxs_interacting)
-        
+
         nonzero_matrix = self.matrix[np.where(self.matrix > 0)]
         if len(nonzero_matrix):
             min_interaction = np.min(nonzero_matrix)
@@ -195,7 +205,7 @@ class InteractionMatrix():
 
     def get_selfinteracting_species(self, idxs_interacting):
         return [idx[0] for idx in idxs_interacting if len(set(idx)) == 1]
-        
+
     def get_unique_interacting_idxs(self):
         idxs_interacting = np.argwhere(self.matrix > 0)
         idxs_interacting = sorted([tuple(sorted(i)) for i in idxs_interacting])

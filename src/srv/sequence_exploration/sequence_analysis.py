@@ -18,7 +18,7 @@ def generate_interaction_stats(path_name, writer: DataWriter = None, **stat_addo
     interactions = InteractionMatrix(matrix_path=path_name)
 
     stats = interactions.get_stats()
-    add_stats = pd.DataFrame.from_dict({'path': [path_name]})
+    add_stats = pd.DataFrame.from_dict({'interactions_path': [path_name]})
     stats = pd.concat([stats, add_stats], axis=1)
 
     if writer:
@@ -28,26 +28,36 @@ def generate_interaction_stats(path_name, writer: DataWriter = None, **stat_addo
     return stats
 
 
+def filter_data(data: pd.DataFrame, filters: dict = {}):
+    if not filters:
+        return data
+    filt_stats = data[data['num_interacting']
+                      >= filters.get("min_num_interacting")]
+    filt_stats = filt_stats[filt_stats['num_self_interacting'] < filters.get(
+        "max_self_interacting")]
+    return filt_stats
+
+
 def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path') -> list:
 
     stats = DataLoader().load_data(stats_pathname).data
+    filt_stats = filter_data(stats, filters)
 
-    filt_stats = stats[stats['num_interacting']
-                       >= filters.get("min_num_interacting")]
-    filt_stats = filt_stats[filt_stats['num_self_interacting'] < filters.get(
-        "max_self_interacting")]
-
+    if filt_stats.empty:
+        logging.warning('No circuits were found matching the selected filters')
+        return []
+        
     base_folder = os.path.dirname(
-        os.path.dirname(filt_stats['path'].to_list()[0]))
+        os.path.dirname(filt_stats['interactions_path'].to_list()[0]))
     experiment_summary = load_experiment_output_summary(base_folder)
     experiment_report = load_experiment_report(base_folder)
 
     extra_configs = []
     for index, row in filt_stats.iterrows():
-        extra_config = {"data_path": get_path_from_exp_summary(
+        extra_config = {write_key: get_path_from_exp_summary(
             row["name"], experiment_summary)}
         extra_config.update(
-            {'interactions_path': row["path"]}
+            {'interactions_path': row["interactions_path"]}
         )
         extra_config.update(load_json_as_dict(
             experiment_report['config_filepath']))

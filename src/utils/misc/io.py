@@ -29,7 +29,7 @@ def create_location(pathname):
 
 
 def get_pathnames(file_key, search_dir, first_only=False):
-    path_names = glob.glob(os.path.join(search_dir, '*' + file_key + '*'))
+    path_names = sorted(glob.glob(os.path.join(search_dir, '*' + file_key + '*')))
     if first_only and path_names:
         path_names = path_names[0]
     if not path_names:
@@ -43,14 +43,19 @@ def load_experiment_output_summary(experiment_folder) -> pd.DataFrame:
     return load_csv(summary_path)
 
 
-def load_experiment_report(experiment_folder):
+def load_experiment_report(experiment_folder: str) -> dict:
     report_path = os.path.join(experiment_folder, 'experiment.json')
-    return load_json_as_dict(report_path )
+    return load_json_as_dict(report_path)
 
 
-def get_path_from_exp_summary(name, experiment_summary: pd.DataFrame = None, experiment_folder: str = None):
-    if experiment_summary is None:
+def load_experiment_config(experiment_folder: str) -> dict:
+    experiment_report = load_experiment_report(experiment_folder)
+    return load_json_as_dict(experiment_report.get('config_filepath'))
+
+
+def get_path_from_output_summary(name, output_summary: pd.DataFrame = None, experiment_folder: str = None):
+    if output_summary is None:
         assert experiment_folder, f'No experiment path given, cannot find experiment summary.'
-        experiment_summary = load_experiment_output_summary(experiment_folder)
-    pathname = experiment_summary.loc[experiment_summary['out_name'] == name]['out_path'].values[0]
+        output_summary = load_experiment_output_summary(experiment_folder)
+    pathname = output_summary.loc[output_summary['out_name'] == name]['out_path'].values[0]
     return pathname

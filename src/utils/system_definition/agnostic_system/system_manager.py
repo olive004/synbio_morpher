@@ -33,7 +33,7 @@ class CircuitModeller():
         circuit = self.find_steady_states(circuit)
         return circuit
 
-    def get_modelling_func(self, modeller, circuit):
+    def get_modelling_func(self, modeller, circuit: BaseSystem):
         return partial(modeller.dxdt_RNA, interactions=circuit.species.interactions,
                        creation_rates=circuit.species.creation_rates,
                        degradation_rates=circuit.species.degradation_rates,
