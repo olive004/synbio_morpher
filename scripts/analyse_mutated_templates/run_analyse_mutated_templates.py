@@ -1,20 +1,15 @@
 from functools import partial
 import logging
 import os
-import sys
 
 from fire import Fire
-from scripts.common.circuit import construct_circuit_from_cfg
 
 from src.srv.io.results.experiments import Experiment, Protocol
 from src.srv.io.results.result_writer import ResultWriter
 from src.srv.io.results.visualisation import visualise_data
 from src.srv.parameter_prediction.interactions import RawSimulationHandling
-from src.srv.sequence_exploration.sequence_analysis import pull_circuits_from_stats, tabulate_mutation_info
+from src.srv.sequence_exploration.sequence_analysis import tabulate_mutation_info
 from src.utils.data.data_format_tools.common import load_json_as_dict, process_json
-from src.utils.evolution.mutation import Evolver
-from src.utils.misc.io import get_pathnames
-from src.utils.system_definition.agnostic_system.system_manager import CircuitModeller
 
 
 def main(config_filepath=None):
@@ -52,7 +47,7 @@ def main(config_filepath=None):
         Protocol(
             partial(visualise_data, data_writer=data_writer, cols=['interaction_strength_diff_to_base_circuit'],
                     plot_type='histplot', out_name='interaction_strength_diffs',
-                    preprocessor_func=RawSimulationHandling().rate_to_energy,
+                    preprocessor_func=preprocessing_func,
                     title='Difference btwn circuit and mutated interaction strengths, 1 mutation',
                     xlabel='Interaction strength difference', ylabel='Frequency count'),
             req_input=True,

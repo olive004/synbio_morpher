@@ -7,13 +7,13 @@ import numpy as np
 from functools import partial
 from src.srv.io.loaders.misc import load_csv
 from src.utils.data.data_format_tools.common import determine_data_format
-from src.utils.misc.io import load_experiment_report
+from src.utils.misc.io import load_experiment_config, load_experiment_report
 from src.utils.misc.numerical import SCIENTIFIC, square_matrix_rand
 from src.utils.misc.type_handling import flatten_listlike
 
 SIMULATOR_UNITS = {
     'IntaRNA': {
-        'energy': 'kJ',
+        'energy': 'kJ/mol',
         'rate': 'rate'
     }
 }
@@ -25,6 +25,7 @@ class RawSimulationHandling():
         self.simulator = simulator if config_args is None else config_args.get(
             'name', simulator)
         self.sim_kwargs = config_args if config_args is not None else {}
+        self.units = ''
 
     def get_protocol(self):
 
@@ -64,7 +65,7 @@ class RawSimulationHandling():
             AG = RT ln(kb/kd)
             K = e^(G / RT)
             """
-            energies = energies * 1000  # convert kJ to J
+            energies = energies * 1000  # convert kJ/mol to J/mol
             K = np.exp(np.divide(energies, SCIENTIFIC['RT']))
             return K
 
@@ -80,7 +81,8 @@ class RawSimulationHandling():
             return input
 
         if self.simulator == "IntaRNA":
-            if self.sim_kwargs.get('postprocess', False):
+            if self.sim_kwargs.get('postprocess', None):
+                self.units = SIMULATOR_UNITS[self.simulator]['rate']
                 return partial(processor, funcs=[
                     energy_to_rate,
                     zero_false_rates])
@@ -118,6 +120,7 @@ class RawSimulationHandling():
             return data
 
         if self.simulator == "IntaRNA":
+            self.units = SIMULATOR_UNITS[self.simulator]['energy']
             return partial(simulate_intaRNA_data,
                            allow_self_interaction=allow_self_interaction,
                            sim_kwargs=self.sim_kwargs)
@@ -144,19 +147,18 @@ class InteractionMatrix():
 
         self.name = None
         self.toy = toy
-        # self.config_args = config_args
         self.units = units
 
         if matrix is not None:
             self.matrix = matrix
         elif matrix_path is not None:
-            self.matrix = self.load(matrix_path)
+            self.matrix, self.units = self.load(matrix_path)
         elif toy:
             self.matrix = self.make_toy_matrix(num_nodes)
         else:
             self.matrix = self.make_rand_matrix(num_nodes)
 
-    def load(self, filepath, return_units=False):
+    def load(self, filepath):
         filetype = determine_data_format(filepath)
         self.name = os.path.basename(filepath).replace('.'+filetype, '').replace(
             'interactions_', '').replace('_interactions', '')
@@ -169,14 +171,15 @@ class InteractionMatrix():
         return matrix, self.units
 
     def load_units(self, interactions_filepath):
-        experiment_report = load_experiment_report(experiment_folder=os.path.dirname(
-            os.path.dirname(interactions_filepath)))
-        simulator_cfgs = experiment_report.get('interaction_simulator')
+        experiment_config = load_experiment_config(experiment_folder=os.path.dirname(interactions_filepath))
+        simulator_cfgs = experiment_config.get('interaction_simulator')
         if simulator_cfgs.get('name') == 'IntaRNA':
             if simulator_cfgs.get('postprocess'):
                 return SIMULATOR_UNITS['IntaRNA']['rate']
             else:
                 return SIMULATOR_UNITS['IntaRNA']['energy']
+        else:
+            return SIMULATOR_UNITS['IntaRNA']['rate'] 
 
     def make_rand_matrix(self, num_nodes):
         if num_nodes is None or num_nodes == 0:
@@ -233,6 +236,7 @@ class InteractionData():
         self.simulation_protocol = self.simulation_handling.get_protocol()
         self.simulation_postproc = self.simulation_handling.get_postprocessing()
         self.data, self.matrix = self.parse(data)
+        self.units = self.simulation_handling.units
 
     def parse(self, data):
         matrix = self.make_matrix(data)

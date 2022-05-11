@@ -47,6 +47,8 @@ class CircuitModeller():
             interactions = self.run_interaction_simulator(circuit,
                                                           circuit.species.data.data)
             circuit.species.interactions = interactions.matrix
+            circuit.species.interaction_units = interactions.units
+
             filename_addon = 'interactions'
             self.result_writer.output(
                 out_type='csv', out_name=circuit.name, data=circuit.species.interactions_to_df(), overwrite=False,
@@ -90,7 +92,8 @@ class CircuitModeller():
                                                       y0=y0)
             if not steady_state_result.success:
                 raise ValueError(
-                    'Steady state could not be found through solve_ivp.')
+                    'Steady state could not be found through solve_ivp - possibly because units ' \
+                    f'are in {circuit.species.interaction_units}.')
             all_copynumbers = steady_state_result.y
         return all_copynumbers
 

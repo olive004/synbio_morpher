@@ -38,12 +38,25 @@ def get_pathnames(file_key, search_dir, first_only=False):
     return path_names
 
 
+def get_purposes(script_dir=None):
+    script_dir = 'scripts' if script_dir is None else script_dir
+    return get_subdirectories(script_dir, only_basedir=True)
+
+
+def get_root_experiment_folder(miscpath):
+    if os.path.basename(os.path.dirname(miscpath)) in get_purposes():
+        return miscpath
+    else:
+        return get_root_experiment_folder(os.path.dirname(miscpath))
+
+
 def load_experiment_output_summary(experiment_folder) -> pd.DataFrame:
     summary_path = os.path.join(experiment_folder, 'output_summary.csv')
     return load_csv(summary_path)
 
 
 def load_experiment_report(experiment_folder: str) -> dict:
+    experiment_folder = 
     report_path = os.path.join(experiment_folder, 'experiment.json')
     return load_json_as_dict(report_path)
 
