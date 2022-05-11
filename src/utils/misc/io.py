@@ -47,6 +47,8 @@ def get_root_experiment_folder(miscpath):
     if os.path.basename(os.path.dirname(miscpath)) in get_purposes():
         return miscpath
     else:
+        if len(os.path.split(miscpath)) == 1:
+            raise ValueError(f'Root experiment folder not found recursively in base {miscpath}')
         return get_root_experiment_folder(os.path.dirname(miscpath))
 
 
@@ -56,7 +58,7 @@ def load_experiment_output_summary(experiment_folder) -> pd.DataFrame:
 
 
 def load_experiment_report(experiment_folder: str) -> dict:
-    experiment_folder = 
+    experiment_folder = get_root_experiment_folder(experiment_folder)
     report_path = os.path.join(experiment_folder, 'experiment.json')
     return load_json_as_dict(report_path)
 
