@@ -9,8 +9,8 @@ from src.srv.io.loaders.data_loader import DataLoader
 from src.srv.io.results.writer import DataWriter
 from src.srv.parameter_prediction.interactions import InteractionMatrix
 from src.utils.data.data_format_tools.common import load_json_as_dict
-from src.utils.misc.io import get_path_from_exp_summary, get_pathnames, \
-    get_subdirectories, load_experiment_report, load_experiment_output_summary
+from src.utils.misc.io import get_path_from_output_summary, get_pathnames, \
+    get_subdirectories, load_experiment_config, load_experiment_report, load_experiment_output_summary
 
 
 def generate_interaction_stats(path_name, writer: DataWriter = None, **stat_addons):
@@ -50,17 +50,15 @@ def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path
     base_folder = os.path.dirname(
         os.path.dirname(filt_stats['interactions_path'].to_list()[0]))
     experiment_summary = load_experiment_output_summary(base_folder)
-    experiment_report = load_experiment_report(base_folder)
 
     extra_configs = []
     for index, row in filt_stats.iterrows():
-        extra_config = {write_key: get_path_from_exp_summary(
+        extra_config = {write_key: get_path_from_output_summary(
             row["name"], experiment_summary)}
         extra_config.update(
             {'interactions_path': row["interactions_path"]}
         )
-        extra_config.update(load_json_as_dict(
-            experiment_report['config_filepath']))
+        extra_config.update(load_experiment_config(base_folder))
         extra_configs.append(extra_config)
     return extra_configs
 
@@ -91,8 +89,7 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
                 assert table[target] in table[pathname], \
                     f'Name {table[target]} should be in path {table[pathname]}.'
 
-    experiment_summary = load_experiment_report(source_dir)
-    source_config = load_json_as_dict(experiment_summary['config_filepath'])
+    source_config = load_experiment_config(source_dir)
     # circuit_stats_pathname = get_pathnames(first_only=True, file_key="circuit_stats",
     #                                        search_dir=source_config['source_species_templates_experiment_dir'])
     # circuit_stats = DataLoader().load_data(circuit_stats_pathname).data

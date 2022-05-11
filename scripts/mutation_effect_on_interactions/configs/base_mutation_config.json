@@ -21,6 +21,6 @@
         "mutation_nums": 1,
         "mutate_in_circuit": "single_species_at_a_time"
     },
-    "signal": "./scripts/RNA_circuit_simulation/configs/in_signal.json", 
+    "signal": "./scripts/mutation_effect_on_interactions/configs/in_signal.json", 
     "source_dir_species_templates_exploration": "./data/explore_species_templates/2022_05_10_232313"
 }

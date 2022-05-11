@@ -4,6 +4,7 @@ import os
 import numpy as np
 from scipy import integrate
 from src.srv.io.results.result_writer import ResultWriter
+from src.srv.parameter_prediction.interactions import RawSimulationHandling
 
 from src.utils.misc.decorators import time_it
 from src.utils.misc.numerical import zero_out_negs
@@ -34,6 +35,7 @@ class CircuitModeller():
         return circuit
 
     def get_modelling_func(self, modeller, circuit: BaseSystem):
+        
         return partial(modeller.dxdt_RNA, interactions=circuit.species.interactions,
                        creation_rates=circuit.species.creation_rates,
                        degradation_rates=circuit.species.degradation_rates,

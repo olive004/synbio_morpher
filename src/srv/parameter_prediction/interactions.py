@@ -11,6 +11,13 @@ from src.utils.misc.io import load_experiment_report
 from src.utils.misc.numerical import SCIENTIFIC, square_matrix_rand
 from src.utils.misc.type_handling import flatten_listlike
 
+SIMULATOR_UNITS = {
+    'IntaRNA': {
+        'energy': 'kJ',
+        'rate': 'rate'
+    }
+}
+
 
 class RawSimulationHandling():
 
@@ -126,17 +133,18 @@ class RawSimulationHandling():
 
 
 class InteractionMatrix():
-    def __init__(self, config_args=None,
+
+    def __init__(self, #config_args=None,
                  matrix=None,
                  matrix_path: str = None,
                  num_nodes: int = None,
                  toy=False,
-                 units='kJ'):
+                 units=''):
         super().__init__()
 
         self.name = None
         self.toy = toy
-        self.config_args = config_args
+        # self.config_args = config_args
         self.units = units
 
         if matrix is not None:
@@ -148,7 +156,7 @@ class InteractionMatrix():
         else:
             self.matrix = self.make_rand_matrix(num_nodes)
 
-    def load(self, filepath):
+    def load(self, filepath, return_units=False):
         filetype = determine_data_format(filepath)
         self.name = os.path.basename(filepath).replace('.'+filetype, '').replace(
             'interactions_', '').replace('_interactions', '')
@@ -158,11 +166,17 @@ class InteractionMatrix():
             raise TypeError(
                 f'Unsupported filetype {filetype} for loading {filepath}')
         self.units = self.load_units(filepath)
-        return matrix
+        return matrix, self.units
 
     def load_units(self, interactions_filepath):
-        load_experiment_report(experiment_folder=os.path.dirname(
+        experiment_report = load_experiment_report(experiment_folder=os.path.dirname(
             os.path.dirname(interactions_filepath)))
+        simulator_cfgs = experiment_report.get('interaction_simulator')
+        if simulator_cfgs.get('name') == 'IntaRNA':
+            if simulator_cfgs.get('postprocess'):
+                return SIMULATOR_UNITS['IntaRNA']['rate']
+            else:
+                return SIMULATOR_UNITS['IntaRNA']['energy']
 
     def make_rand_matrix(self, num_nodes):
         if num_nodes is None or num_nodes == 0:
