@@ -107,7 +107,7 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
         interaction_dir = os.path.join(
             os.path.dirname(os.path.dirname(mutations['template_file'].values[0])), 'interactions')
         interaction_stats = InteractionMatrix(matrix_path=get_pathnames(first_only=True,
-                                                                        file_key="interactions",
+                                                                        file_key=["interactions", circuit_name],
                                                                         search_dir=interaction_dir)).get_stats()
         circuit_interaction_max = interaction_stats['max_interaction']
         current_table = pd.DataFrame.from_dict({

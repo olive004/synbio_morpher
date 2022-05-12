@@ -29,7 +29,15 @@ def create_location(pathname):
 
 
 def get_pathnames(file_key, search_dir, first_only=False):
-    path_names = sorted(glob.glob(os.path.join(search_dir, '*' + file_key + '*')))
+    if type(file_key) == list:
+        all_path_names = []
+        for fk in file_key:
+            all_path_names.append(
+                set(sorted(glob.glob(os.path.join(search_dir, '*' + fk + '*'))))
+            )
+        path_names = list(all_path_names[0].intersection(*all_path_names[1:]))
+    else:
+        path_names = sorted(glob.glob(os.path.join(search_dir, '*' + file_key + '*')))
     if first_only and path_names:
         path_names = path_names[0]
     if not path_names:
