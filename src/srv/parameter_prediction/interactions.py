@@ -7,16 +7,25 @@ import numpy as np
 from functools import partial
 from src.srv.io.loaders.misc import load_csv
 from src.utils.data.data_format_tools.common import determine_data_format
-from src.utils.misc.decorators import time_it
+from src.utils.misc.io import load_experiment_config, load_experiment_report
 from src.utils.misc.numerical import SCIENTIFIC, square_matrix_rand
 from src.utils.misc.type_handling import flatten_listlike
+
+SIMULATOR_UNITS = {
+    'IntaRNA': {
+        'energy': 'kJ/mol',
+        'rate': 'rate'
+    }
+}
 
 
 class RawSimulationHandling():
 
-    def __init__(self, simulator, config_args) -> None:
-        self.simulator = simulator
-        self.sim_kwargs = config_args[simulator]
+    def __init__(self, config_args: dict = None, simulator: str = 'IntaRNA') -> None:
+        self.simulator = simulator if config_args is None else config_args.get(
+            'name', simulator)
+        self.sim_kwargs = config_args if config_args is not None else {}
+        self.units = ''
 
     def get_protocol(self):
 
@@ -27,7 +36,28 @@ class RawSimulationHandling():
         if self.simulator == "IntaRNA":
             return intaRNA_calculator
 
+    @staticmethod
+    def rate_to_energy(rate):
+        """ Reverse translation of interaction binding energy to binding rate:
+        AG = RT ln(K)
+        AG = RT ln(kb/kd)
+        K = e^(G / RT)
+        """
+        rate[rate == 0] = 1
+        logging.info(np.log(1))
+        logging.info(np.log(rate.astype('float64')))
+        logging.info(max(rate))
+        logging.info(min(rate))
+        logging.info(np.log(max(rate)))
+        logging.info(np.log(min(rate)))
+        energy = np.multiply(SCIENTIFIC['RT'], np.log(rate.astype('float64')))
+        energy = energy / 1000
+        return energy
+
     def get_postprocessing(self):
+
+        def vanilla(data):
+            return data
 
         def energy_to_rate(energies):
             """ Translate interaction binding energy to binding rate:
@@ -35,11 +65,13 @@ class RawSimulationHandling():
             AG = RT ln(kb/kd)
             K = e^(G / RT)
             """
-            energies = energies * 1000  # convert kJ to J
+            energies = energies * 1000  # convert kJ/mol to J/mol
             K = np.exp(np.divide(energies, SCIENTIFIC['RT']))
             return K
 
         def zero_false_rates(rates):
+            """ Exponential of e^0 is equal to 1, but IntaRNA sets energies 
+            equal to 0 for non-interactions. """
             rates[rates == 1] = 0
             return rates
 
@@ -49,16 +81,21 @@ class RawSimulationHandling():
             return input
 
         if self.simulator == "IntaRNA":
-            return partial(processor, funcs=[
-                energy_to_rate,
-                zero_false_rates])
+            if self.sim_kwargs.get('postprocess', None):
+                self.units = SIMULATOR_UNITS[self.simulator]['rate']
+                return partial(processor, funcs=[
+                    energy_to_rate,
+                    zero_false_rates])
+            else:
+                return vanilla
 
     def get_simulation(self, allow_self_interaction=True):
 
         def simulate_vanilla(batch):
+            raise NotImplementedError
             return None
 
-        @time_it
+        # @time_it
         def simulate_intaRNA_data(batch, allow_self_interaction, sim_kwargs):
             from src.srv.parameter_prediction.IntaRNA.bin.copomus.IntaRNA import IntaRNA
             simulator = IntaRNA()
@@ -83,6 +120,7 @@ class RawSimulationHandling():
             return data
 
         if self.simulator == "IntaRNA":
+            self.units = SIMULATOR_UNITS[self.simulator]['energy']
             return partial(simulate_intaRNA_data,
                            allow_self_interaction=allow_self_interaction,
                            sim_kwargs=self.sim_kwargs)
@@ -98,21 +136,23 @@ class RawSimulationHandling():
 
 
 class InteractionMatrix():
-    def __init__(self, config_args=None,
+
+    def __init__(self, #config_args=None,
                  matrix=None,
                  matrix_path: str = None,
                  num_nodes: int = None,
-                 toy=False):
+                 toy=False,
+                 units=''):
         super().__init__()
 
         self.name = None
         self.toy = toy
-        self.config_args = config_args
+        self.units = units
 
         if matrix is not None:
             self.matrix = matrix
         elif matrix_path is not None:
-            self.matrix = self.load(matrix_path)
+            self.matrix, self.units = self.load(matrix_path)
         elif toy:
             self.matrix = self.make_toy_matrix(num_nodes)
         else:
@@ -125,8 +165,21 @@ class InteractionMatrix():
         if filetype == 'csv':
             matrix = load_csv(filepath, load_as='numpy')
         else:
-            raise TypeError(f'Unsupported filetype {filetype} for loading {filepath}')
-        return matrix
+            raise TypeError(
+                f'Unsupported filetype {filetype} for loading {filepath}')
+        self.units = self.load_units(filepath)
+        return matrix, self.units
+
+    def load_units(self, interactions_filepath):
+        experiment_config = load_experiment_config(experiment_folder=os.path.dirname(interactions_filepath))
+        simulator_cfgs = experiment_config.get('interaction_simulator')
+        if simulator_cfgs.get('name') == 'IntaRNA':
+            if simulator_cfgs.get('postprocess'):
+                return SIMULATOR_UNITS['IntaRNA']['rate']
+            else:
+                return SIMULATOR_UNITS['IntaRNA']['energy']
+        else:
+            return SIMULATOR_UNITS['IntaRNA']['rate'] 
 
     def make_rand_matrix(self, num_nodes):
         if num_nodes is None or num_nodes == 0:
@@ -144,7 +197,7 @@ class InteractionMatrix():
         idxs_interacting = self.get_unique_interacting_idxs()
         interacting = self.get_interacting_species(idxs_interacting)
         self_interacting = self.get_selfinteracting_species(idxs_interacting)
-        
+
         nonzero_matrix = self.matrix[np.where(self.matrix > 0)]
         if len(nonzero_matrix):
             min_interaction = np.min(nonzero_matrix)
@@ -169,7 +222,7 @@ class InteractionMatrix():
 
     def get_selfinteracting_species(self, idxs_interacting):
         return [idx[0] for idx in idxs_interacting if len(set(idx)) == 1]
-        
+
     def get_unique_interacting_idxs(self):
         idxs_interacting = np.argwhere(self.matrix > 0)
         idxs_interacting = sorted([tuple(sorted(i)) for i in idxs_interacting])
@@ -183,6 +236,7 @@ class InteractionData():
         self.simulation_protocol = self.simulation_handling.get_protocol()
         self.simulation_postproc = self.simulation_handling.get_postprocessing()
         self.data, self.matrix = self.parse(data)
+        self.units = self.simulation_handling.units
 
     def parse(self, data):
         matrix = self.make_matrix(data)

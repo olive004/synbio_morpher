@@ -125,10 +125,10 @@ class NucleotideGenerator(SeqGenerator):
 class RNAGenerator(NucleotideGenerator):
 
     SEQ_POOL = {
-        'A': 0.2,
-        'C': 0.3,
-        'G': 0.3,
-        'U': 0.2
+        'A': 0.254,
+        'C': 0.254,
+        'G': 0.246,
+        'U': 0.246
     }
 
     def __init__(self, data_writer) -> None:
@@ -139,10 +139,10 @@ class RNAGenerator(NucleotideGenerator):
 class DNAGenerator(NucleotideGenerator):
 
     SEQ_POOL = {
-        'A': 0.2,
-        'C': 0.3,
-        'G': 0.3,
-        'T': 0.2
+        'A': 0.254,
+        'C': 0.254,
+        'G': 0.246,
+        'T': 0.246
     }
 
     def __init__(self, data_writer) -> None:

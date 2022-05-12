@@ -1,6 +1,5 @@
 from functools import partial
 import os
-import sys
 
 from fire import Fire
 from scripts.common.circuit import construct_circuit_from_cfg
@@ -8,7 +7,7 @@ from scripts.common.circuit import construct_circuit_from_cfg
 from src.srv.io.results.experiments import Experiment, Protocol
 from src.srv.io.results.result_writer import ResultWriter
 from src.srv.sequence_exploration.sequence_analysis import pull_circuits_from_stats
-from src.utils.data.data_format_tools.common import load_json_as_dict, process_json
+from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.evolution.mutation import Evolver
 from src.utils.misc.io import get_pathnames
 from src.utils.system_definition.agnostic_system.system_manager import CircuitModeller
@@ -19,18 +18,14 @@ def main(config_filepath=None):
     if config_filepath is None:
         config_filepath = os.path.join(
             "scripts", "mutation_effect_on_interactions", "configs", "fixed", "mutations_1_config.json")
-    config_file = process_json(load_json_as_dict(config_filepath))
+    config_file = load_json_as_dict(config_filepath)
+
     # Start_experiment
-    data_writer_kwargs = {'purpose': 'mutation_effect_on_interactions'}
+    data_writer_kwargs = {'purpose': config_file.get('purpose', 'mutation_effect_on_interactions')}
     data_writer = ResultWriter(**data_writer_kwargs)
 
-    # source_experiment_dir = os.path.join(*list({
-    #     'root_dir': "data",
-    #     'purpose': "explore_species_templates",
-    #     'experiment_key': "2022_04_27_154019",
-    # }.values()))
     source_experiment_dir = config_file.get(
-        'source_species_templates_experiment_dir')
+        'source_dir_species_templates_exploration')
     protocols = [
         # Load in templates: pathname for circuit stats is in config
         Protocol(
@@ -45,7 +40,7 @@ def main(config_filepath=None):
         # Filter circuits
         Protocol(
             partial(pull_circuits_from_stats,
-                    filters=config_file.get("filters")),
+                    filters=config_file.get("filters", {})),
             req_input=True,
             req_output=True,
             name='pull_circuit_from_stats'

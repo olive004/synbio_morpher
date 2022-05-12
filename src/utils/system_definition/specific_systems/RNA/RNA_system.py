@@ -12,8 +12,7 @@ class RNASystem(BaseSystem):
     def __init__(self, config_args, simulator="IntaRNA"):
         super(RNASystem, self).__init__(config_args)
 
-        self.simulator_args = config_args
-        self.simulator_choice = simulator
+        self.simulator_args = config_args.get("interaction_simulator", {})
 
         self.species = self.init_species(config_args)
         self.process_species()
@@ -45,7 +44,6 @@ class RNASpecies(BaseSpecies):
 
         molecular_params = config_args.get("molecular_params")
 
-        self.interactions = self.make_interactions(config_args)
         self.degradation_rates = self.init_matrix(ndims=1, init_type="uniform",
                                                   uniform_val=molecular_params.get("degradation_rates"))
         self.creation_rates = self.init_matrix(ndims=1, init_type="uniform",

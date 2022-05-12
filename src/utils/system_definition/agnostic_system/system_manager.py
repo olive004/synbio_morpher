@@ -4,6 +4,7 @@ import os
 import numpy as np
 from scipy import integrate
 from src.srv.io.results.result_writer import ResultWriter
+from src.srv.parameter_prediction.interactions import RawSimulationHandling
 
 from src.utils.misc.decorators import time_it
 from src.utils.misc.numerical import zero_out_negs
@@ -33,7 +34,8 @@ class CircuitModeller():
         circuit = self.find_steady_states(circuit)
         return circuit
 
-    def get_modelling_func(self, modeller, circuit):
+    def get_modelling_func(self, modeller, circuit: BaseSystem):
+        
         return partial(modeller.dxdt_RNA, interactions=circuit.species.interactions,
                        creation_rates=circuit.species.creation_rates,
                        degradation_rates=circuit.species.degradation_rates,
@@ -45,18 +47,20 @@ class CircuitModeller():
             interactions = self.run_interaction_simulator(circuit,
                                                           circuit.species.data.data)
             circuit.species.interactions = interactions.matrix
+            circuit.species.interaction_units = interactions.units
+
             filename_addon = 'interactions'
             self.result_writer.output(
                 out_type='csv', out_name=circuit.name, data=circuit.species.interactions_to_df(), overwrite=False,
                 new_file=True, filename_addon=filename_addon, subfolder=filename_addon)
         return circuit
 
-    def run_interaction_simulator(self, circuit, data):
+    def run_interaction_simulator(self, circuit: BaseSystem, data):
         simulator = InteractionSimulator(
-            circuit.simulator_args, circuit.simulator_choice)
+            circuit.simulator_args)
         return simulator.run(data)
 
-    def find_steady_states(self, circuit):
+    def find_steady_states(self, circuit: BaseSystem):
         modeller_steady_state = Deterministic(
             max_time=50, time_step=1)
 
@@ -68,7 +72,7 @@ class CircuitModeller():
                                             name='steady_state',
                                             category='time_series',
                                             vis_func=modeller_steady_state.plot,
-                                            **{'legend_keys': list(circuit.species.data.sample_names),
+                                            **{'legend': list(circuit.species.data.sample_names),
                                             'out_type': 'png'})
         steady_state_metrics = circuit.result_collector.get_result(
             key='steady_state').metrics
@@ -80,7 +84,7 @@ class CircuitModeller():
                               use_solver='naive'):
         all_copynumbers = circuit.species.copynumbers
         if use_solver == 'naive':
-            self.model_circuit(modeller, all_copynumbers)
+            all_copynumbers = self.model_circuit(modeller, all_copynumbers)
         elif use_solver == 'ivp':
             y0 = all_copynumbers[:, -1]
             steady_state_result = integrate.solve_ivp(self.get_modelling_func(modeller, circuit),
@@ -88,7 +92,8 @@ class CircuitModeller():
                                                       y0=y0)
             if not steady_state_result.success:
                 raise ValueError(
-                    'Steady state could not be found through solve_ivp.')
+                    'Steady state could not be found through solve_ivp - possibly because units ' \
+                    f'are in {circuit.species.interaction_units}.')
             all_copynumbers = steady_state_result.y
         return all_copynumbers
 
@@ -144,7 +149,7 @@ class CircuitModeller():
                                             category='time_series',
                                             vis_func=signal_modeller.plot,
                                             save_numerical_vis_data=save_numerical_vis_data,
-                                            **{'legend_keys': list(circuit.species.data.sample_names),
+                                            **{'legend': list(circuit.species.data.sample_names),
                                             'out_type': 'png'})
         return circuit
 
@@ -155,7 +160,7 @@ class CircuitModeller():
             self.result_writer.subdivide_writing(circuit.name)
         mutation_dict = flatten_nested_dict(circuit.species.mutations.items())
         for i, (name, mutation) in enumerate(mutation_dict.items()):
-            logging.info(f'Running methods on mutation {name}')
+            # logging.info(f'Running methods on mutation {name}')
             if include_normal_run and i == 0:
                 self.apply_to_circuit(circuit, methods)
             subcircuit = circuit.make_subsystem(name, mutation)

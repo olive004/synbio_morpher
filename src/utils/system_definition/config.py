@@ -4,6 +4,7 @@ import os
 from typing import Dict, List
 
 from src.srv.parameter_prediction.simulator_loading import find_simulator_loader
+from src.utils.misc.io import get_pathnames
 from src.utils.misc.string_handling import remove_special_py_functions
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.misc.type_handling import merge_dicts
@@ -48,12 +49,13 @@ def load_simulator_cfgs(dict_args) -> Dict:
         if simulator_name in dict_args:
             simulator_cfg = handle_simulator_cfgs(
                 simulator_name, dict_args[simulator_name])
-            dict_args[simulator_name] = simulator_cfg
+            dict_args['interaction_simulator'] = simulator_cfg
     return dict_args
 
 
 def retrieve_default_args() -> Dict:
-    fn = os.path.join('scripts', 'common', 'default_args.json')
+    fn = get_pathnames(file_key='default_args', search_dir=os.path.join(
+        'scripts', 'common'), first_only=True)
     default_args = json.load(open(fn))
     return default_args
 

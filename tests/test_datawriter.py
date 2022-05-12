@@ -6,7 +6,7 @@
 
 Output:
 - Root experiment run dir
-    - master_summary.csv file tracking all output files
+    - output_summary.csv file tracking all output files
     - experiment.json
         - config file used
 

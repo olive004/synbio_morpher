@@ -88,8 +88,9 @@ class Mutations(Tabulated):
 
 class Evolver():
 
-    def __init__(self, data_writer: DataWriter) -> None:
+    def __init__(self, data_writer: DataWriter, mutation_type: str = 'random') -> None:
         self.data_writer = data_writer
+        self.mutation_type = mutation_type  # Not implemented
         self.out_name = 'mutations'
         self.out_type = 'csv'
 
