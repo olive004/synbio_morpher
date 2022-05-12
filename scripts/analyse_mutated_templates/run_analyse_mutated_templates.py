@@ -16,7 +16,7 @@ def main(config_filepath=None):
     # Set configs
     if config_filepath is None:
         config_filepath = os.path.join(
-            "scripts", "analyse_mutated_templates", "configs", "analyse_mutated_templates_tester.json")
+            "scripts", "analyse_mutated_templates", "configs", "analyse_mutated_templates_2.json")
     config_file = process_json(load_json_as_dict(config_filepath))
 
     # Start_experiment
@@ -28,7 +28,6 @@ def main(config_filepath=None):
         preprocessing_func = None
     
     protocols = [
-        # Protocol(sys.exit),
         Protocol(
             partial(tabulate_mutation_info, source_dir=source_dir,
                     data_writer=data_writer),
@@ -39,7 +38,7 @@ def main(config_filepath=None):
             partial(visualise_data, data_writer=data_writer, cols=['interaction_strength'],
                     plot_type='histplot', out_name='interaction_strength_freqs',
                     preprocessor_func=preprocessing_func,
-                    title='Maximum interaction strength, 1 mutation',
+                    title='Maximum interaction strength, 2 mutation',
                     xlabel='Interaction strength', ylabel='Frequency count'),
             req_input=True,
             name='visualise_interactions'
@@ -48,7 +47,7 @@ def main(config_filepath=None):
             partial(visualise_data, data_writer=data_writer, cols=['interaction_strength_diff_to_base_circuit'],
                     plot_type='histplot', out_name='interaction_strength_diffs',
                     preprocessor_func=preprocessing_func,
-                    title='Difference btwn circuit and mutated interaction strengths, 1 mutation',
+                    title='Difference btwn circuit and mutated interaction strengths, 2 mutations',
                     xlabel='Interaction strength difference', ylabel='Frequency count'),
             req_input=True,
             name='visualise_interactions_difference'
