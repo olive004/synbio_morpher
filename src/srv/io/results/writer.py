@@ -33,7 +33,7 @@ class DataWriter():
             raise ValueError(
                 f'The out_type for file "{out_name}" needs to be specified for writing with function "{writer}".')
 
-        def make_base_name():
+        def make_base_name(filename_addon):
             if self.write_dir in out_name:
                 base_name = os.path.basename(out_name)
             if new_file:
@@ -58,7 +58,7 @@ class DataWriter():
                     self.write_dir, add_outtype(base_name, out_type))
             return out_path
 
-        base_name = make_base_name()
+        base_name = make_base_name(filename_addon)
         out_path = make_out_path(base_name)
 
         if writer is None:
@@ -67,7 +67,7 @@ class DataWriter():
         writer_kwargs['out_path'] = out_path
         if write_master:
             if not os.path.exists(out_path):
-                self.write_to_master_summary(
+                self.write_to_output_summary(
                     out_name, out_name=base_name, out_path=out_path,
                     filename_addon=filename_addon, out_type=out_type)
 
@@ -77,7 +77,7 @@ class DataWriter():
 
     def get_write_func(self, out_type: str, out_path: str, overwrite: bool):
         if out_type == "fasta":
-            return partial(write_fasta_file, fname=out_path)
+            return partial(write_fasta_file, out_path=out_path)
         if out_type == "csv":
             return partial(write_csv, out_path=out_path, overwrite=overwrite)
         if out_type == "json":
@@ -87,7 +87,7 @@ class DataWriter():
 
     def make_location(self, purpose: str):
 
-        if purpose in get_subdirectories(self.script_dir) or purpose in self.exception_dirs:
+        if purpose in get_subdirectories(self.script_dir, only_basedir=True) or purpose in self.exception_dirs:
             location = os.path.join(self.root_output_dir,
                                     purpose,
                                     self.generate_location_instance())
@@ -113,11 +113,11 @@ class DataWriter():
     def unsubdivide(self):
         self.write_dir = deepcopy(self.original_write_dir)
 
-    def write_to_master_summary(self, name: str, **kwargs):
-        master_summary = {str(k): str(v) for k, v in kwargs.items()}
-        master_summary["name"] = name
-        self.output('csv', 'master_summary', write_master=False,
-                    **{'data': master_summary})
+    def write_to_output_summary(self, name: str, **kwargs):
+        output_summary = {str(k): str(v) for k, v in kwargs.items()}
+        output_summary["name"] = name
+        self.output('csv', 'output_summary', write_master=False,
+                    **{'data': output_summary})
 
 
 class Tabulated(ABC):

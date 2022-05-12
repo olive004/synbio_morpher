@@ -2,9 +2,9 @@ from src.srv.parameter_prediction.interactions import InteractionData, RawSimula
 
 
 class InteractionSimulator():
-    def __init__(self, config_args, simulator_choice: str):
+    def __init__(self, config_args):
 
-        self.simulation_handler = RawSimulationHandling(simulator_choice, config_args)
+        self.simulation_handler = RawSimulationHandling(config_args)
 
     def run(self, batch=None, allow_self_interaction=True):
         """ Makes nested dictionary for querying interactions as 

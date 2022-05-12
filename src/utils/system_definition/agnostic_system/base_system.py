@@ -20,16 +20,15 @@ logger.setLevel(logging.INFO)
 class BaseSpecies():
     def __init__(self, config_args: dict) -> None:
 
-        ## Probability distribution for each interaction component?
-        ## Can also use different types of moments of prob distribution
-        ## for each
+        # Probability distribution for each interaction component?
+        # Can also use different types of moments of prob distribution
+        # for each
 
         self.data = config_args.get("data")  # Data common class
         self.identities = config_args.get("identities")
 
         self.loaded_interactions = False
-        self.interactions = self.make_interactions(config_args)
-        self.complexes = self.init_matrix(ndims=2, init_type="zeros")
+        self.interactions, self.interaction_units = self.make_interactions(config_args)
         self.degradation_rates = self.init_matrix(ndims=1, init_type="uniform")
         self.creation_rates = self.init_matrix(ndims=1, init_type="uniform")
 
@@ -39,21 +38,23 @@ class BaseSpecies():
             ndims=1, init_type="zeros")
 
         self.mutations = {}
-        ## Nums: mutations within a sequence
+        # Nums: mutations within a sequence
         self.mutation_nums = config_args.get(
             "mutations", {}).get("mutation_nums")
-        ## Counts: mutated iterations of a sequence
+        # Counts: mutated iterations of a sequence
         self.mutation_counts = config_args.get(
             "mutations", {}).get("mutation_counts")
 
         self.process_mutations()
+        self.initial_values = self.save_initial_values()
 
     def make_interactions(self, config_args):
-        if config_args.get("interactions_path"):
+        if config_args.get("interactions_path", None):
             self.loaded_interactions = True
-            return InteractionMatrix().load(config_args.get("interactions_path"))
+            matrix, interaction_units = InteractionMatrix().load(config_args.get("interactions_path"))
         else:
-            return self.init_matrix(ndims=2, init_type="zeros")
+            matrix, interaction_units = self.init_matrix(ndims=2, init_type="zeros"), ''
+        return (matrix, interaction_units)
 
     def init_matrices(self, uniform_vals, ndims=2, init_type="rand") -> List[np.array]:
         matrices = (self.init_matrix(ndims, init_type, val)
@@ -121,6 +122,16 @@ class BaseSpecies():
             interactions_dict[sample] = {s: self.interactions[i, j]
                                          for j, s in enumerate(self.data.sample_names)}
         return interactions_dict
+
+    def save_initial_values(self):
+        return {prop: deepcopy(val) for prop, val in self.__dict__.items()}
+
+    def reset_to_initial_state(self):
+        resetable_attrs = ['interactions', 'copynumbers', 'loaded_interactions',
+                           'current_copynumbers', 'steady_state_copynums']
+        for k, v in self.initial_values.items():
+            if k in resetable_attrs:
+                self.__setattr__(k, deepcopy(v))
 
     @property
     def current_copynumbers(self):
@@ -191,8 +202,14 @@ class BaseSystem():
     def get_graph_labels(self) -> dict:
         return sorted(self.graph)
 
+    def reset_to_initial_state(self):
+        self.species.reset_to_initial_state()
+        self.result_collector.reset()
+
     def make_subsystem(self, mutation_name: str, mutation=None):
         subsystem = deepcopy(self)
+        subsystem.reset_to_initial_state()
+        subsystem.species.loaded_interactions = False
 
         if mutation is None:
             mutation = self.species.mutations.get(mutation_name)
