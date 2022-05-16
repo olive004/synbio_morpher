@@ -1,0 +1,21 @@
+{
+    "circuit_generation": {
+        "repetitions": 2000,
+        "species_count": 3,
+        "sequence_length": 25,
+        "generator_protocol": "template_mutate",
+        "proportion_to_mutate": 0.35
+    },
+    "data": "./data/sandbox_simulators/configs/no_binding.fasta",
+    "interaction_simulator": {
+        "name": "IntaRNA",
+        "postprocess": "True"
+    },
+    "molecular_params": "./src/utils/system_definition/specific_systems/RNA/configs/RNA_system.json",
+    "mutations": {
+        "mutation_counts": 10,
+        "mutation_nums": 1,
+        "algorithm": "random"
+    },
+    "system_type": "RNA"
+}

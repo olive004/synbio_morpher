@@ -8,7 +8,7 @@ from src.utils.system_definition.config import parse_cfg_args
 from src.utils.system_definition.setup import get_system_type
 
 
-def compose_kwargs(extra_configs, config_filepath: str = None, config_file: dict = None) -> dict:
+def compose_kwargs(extra_configs: dict = None, config_filepath: str = None, config_file: dict = None) -> dict:
     if config_file is None and config_filepath:
         config_file = process_json(load_json_as_dict(config_filepath))
     else:
@@ -16,7 +16,8 @@ def compose_kwargs(extra_configs, config_filepath: str = None, config_file: dict
     for kwarg, config in extra_configs.items():
         if config_file.get(kwarg):
             config_file[kwarg] = config
-    config_file.update(extra_configs)
+    if extra_configs is not None:
+        config_file.update(extra_configs)
     data_manager = DataManager(filepath=config_file.get("data_path"),
                                identities=config_file.get("identities", {}))
     kwargs = {

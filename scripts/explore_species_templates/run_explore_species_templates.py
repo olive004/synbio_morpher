@@ -15,16 +15,18 @@ def main():
     # set configs
     config_filepath = os.path.join(
         "scripts", "explore_species_templates", "configs", "explore_species_templates.json")
+    config_file = load_json_as_dict(config_filepath)
 
     # start_experiment
     data_writer_kwargs = {'purpose': load_json_as_dict(config_filepath).get("experiment").get("purpose")}
     data_writer = DataWriter(**data_writer_kwargs)
-    search_dir = os.path.join(*list({
-        'root_dir': "data",
-        'purpose': "generate_species_templates",
-        'experiment_key': "2022_05_10_155621",
-        'subfolder': "interactions"
-    }.values()))
+    # search_dir = os.path.join(*list({
+    #     'root_dir': "data",
+    #     'purpose': "generate_species_templates",
+    #     'experiment_key': "2022_05_10_155621",
+    #     'subfolder': "interactions"
+    # }.values()))
+    search_dir = config_file.get('source_dir')
     protocols = [
         Protocol(
             # get list of all interaction paths
