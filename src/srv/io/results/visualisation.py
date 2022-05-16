@@ -74,10 +74,14 @@ class NetworkCustom(Network):
 
 
 def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
-                   cols: list = None, plot_type='', out_name='test_plot',
-                   preprocessor_func=None,
+                   cols: list = None, plot_type='histplot', out_name='test_plot',
+                   preprocessor_func=None, exclude_rows_nonempty_in_cols: list = None,
                    **plot_kwrgs):
     """ Plot type can be any attributes of VisODE() """
+    if exclude_rows_nonempty_in_cols is not None:
+        for exc_col in exclude_rows_nonempty_in_cols:
+            data = data[data[exc_col] == '']
+
     visualiser = VisODE()
     if plot_type == 'histplot':
         for col in cols:
