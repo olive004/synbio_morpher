@@ -1,6 +1,5 @@
 
 
-import logging
 import os
 from src.srv.io.results.results import Result
 from src.srv.io.results.writer import DataWriter
@@ -46,7 +45,7 @@ class ResultWriter(DataWriter):
 
     def write_results(self, results: dict, new_report=False):
 
-        for name, result in results.items():
+        for _name, result in results.items():
             result.vis_kwargs.update({'new_vis': new_report, 'data': result.data})
 
             self.write_numerical(data=result.data, out_name=result.name + '_data')

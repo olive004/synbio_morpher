@@ -1,6 +1,5 @@
 
 
-import os
 from src.srv.io.results.metrics.analytics import Analytics
 from src.utils.misc.type_handling import assert_uniform_type
 
