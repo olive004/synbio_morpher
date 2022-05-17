@@ -45,7 +45,7 @@ def main(config_filepath=None):
                     preprocessor_func=preprocessing_func,
                     exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
                     use_log_xaxis=config_file.get('xaxis_log_scale', False),
-                    use_sns=False,
+                    use_sns=True,
                     title='Maximum interaction strength, unmutated circuits',
                     xlabel='Interaction strength', ylabel='Frequency count'),
             req_input=True,

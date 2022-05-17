@@ -167,10 +167,12 @@ class VisODE():
                 getattr(plt, plot_kwrg, partial(
                     dummy_call, object=plt, function=plot_kwrg))(value)
 
-    def histplot(self, data, out_path, use_sns=False, column=None, use_log_xaxis=False, **plot_kwrgs):
+    def histplot(self, data, out_path, bin_count=50,
+                 use_sns=False, column=None, use_log_xaxis=False, **plot_kwrgs):
         from matplotlib import pyplot as plt
-        import seaborn as sns
         if use_sns:
+            import seaborn as sns
+            data = data.reset_index()
             if column is None:
                 logging.warn(
                     'Make sure a column is specified for visualising with seaborn')
@@ -179,7 +181,8 @@ class VisODE():
             sns.despine(f)
             sns.histplot(
                 data,
-                x=column, hue="cut",
+                x=column,  # hue="cut",
+                bins=bin_count,
                 multiple="stack",
                 palette="light:m_r",
                 edgecolor=".3",
@@ -189,7 +192,7 @@ class VisODE():
             f.savefig(out_path)
         else:
             plt.figure()
-            plt.hist(data, range=(min(data), max(data)), bins=50)
+            plt.hist(data, range=(min(data), max(data)), bins=bin_count)
             self.add_kwrgs(plt, **plot_kwrgs)
             plt.savefig(out_path)
             plt.close()
