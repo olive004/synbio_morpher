@@ -31,7 +31,7 @@ def main(config_filepath=None):
         exclude_rows_via_cols = ['mutation_name']
     else:
         exclude_rows_via_cols = []
-    
+
     protocols = [
         Protocol(
             partial(tabulate_mutation_info, source_dir=source_dir,
@@ -44,6 +44,8 @@ def main(config_filepath=None):
                     plot_type='histplot', out_name='interaction_strength_freqs',
                     preprocessor_func=preprocessing_func,
                     exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
+                    use_log_xaxis=config_file.get('xaxis_log_scale', False),
+                    use_sns=False,
                     title='Maximum interaction strength, unmutated circuits',
                     xlabel='Interaction strength', ylabel='Frequency count'),
             req_input=True,
@@ -54,6 +56,7 @@ def main(config_filepath=None):
         #             plot_type='histplot', out_name='interaction_strength_diffs',
         #             preprocessor_func=preprocessing_func,
         #             exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
+        # use_log_xaxis=config_file.get('xaxis_log_scale', False),
         #             title='Difference btwn circuit and mutated interaction strengths, 2 mutations',
         #             xlabel='Interaction strength difference', ylabel='Frequency count'),
         #     req_input=True,

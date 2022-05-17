@@ -76,6 +76,7 @@ class NetworkCustom(Network):
 def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
                    cols: list = None, plot_type='histplot', out_name='test_plot',
                    preprocessor_func=None, exclude_rows_nonempty_in_cols: list = None,
+                   use_sns=False, use_log_xaxis=False,
                    **plot_kwrgs):
     """ Plot type can be any attributes of VisODE() """
     if exclude_rows_nonempty_in_cols is not None:
@@ -87,8 +88,14 @@ def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
         for col in cols:
             if preprocessor_func:
                 data[col] = preprocessor_func(data[col].values)
+            if use_sns:
+                plot_kwrgs.update({'column': col, 'data': data})
+            else:
+                plot_kwrgs.update({'data': data[col]})
+
             data_writer.output(out_type='png', out_name=out_name,
-                               writer=visualiser.histplot, **merge_dicts({'data': data[col]}, plot_kwrgs))
+                               writer=visualiser.histplot, **merge_dicts({'use_sns': use_sns, "use_log_xaxis": use_log_xaxis},
+                                                                         plot_kwrgs))
     elif plot_type == 'plot':
         try:
             x, y = cols[0], cols[-1]
@@ -160,10 +167,29 @@ class VisODE():
                 getattr(plt, plot_kwrg, partial(
                     dummy_call, object=plt, function=plot_kwrg))(value)
 
-    def histplot(self, data, out_path, **plot_kwrgs):
+    def histplot(self, data, out_path, use_sns=False, column=None, use_log_xaxis=False, **plot_kwrgs):
         from matplotlib import pyplot as plt
-        plt.figure()
-        plt.hist(data, range=(min(data), max(data)), bins=50)
-        self.add_kwrgs(plt, **plot_kwrgs)
-        plt.savefig(out_path)
-        plt.close()
+        import seaborn as sns
+        if use_sns:
+            if column is None:
+                logging.warn(
+                    'Make sure a column is specified for visualising with seaborn')
+            sns.set_theme(style="ticks")
+            f, ax = plt.subplots(figsize=(7, 5))
+            sns.despine(f)
+            sns.histplot(
+                data,
+                x=column, hue="cut",
+                multiple="stack",
+                palette="light:m_r",
+                edgecolor=".3",
+                linewidth=.5,
+                log_scale=use_log_xaxis,
+            )
+            f.savefig(out_path)
+        else:
+            plt.figure()
+            plt.hist(data, range=(min(data), max(data)), bins=50)
+            self.add_kwrgs(plt, **plot_kwrgs)
+            plt.savefig(out_path)
+            plt.close()
