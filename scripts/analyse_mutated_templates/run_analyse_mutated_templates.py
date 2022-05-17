@@ -16,7 +16,9 @@ def main(config_filepath=None):
     # Set configs
     if config_filepath is None:
         config_filepath = os.path.join(
-            "scripts", "analyse_mutated_templates", "configs", "analyse_templates.json")
+            # "scripts", "analyse_mutated_templates", "configs", "logscale", "analyse_templates.json")
+            "scripts", "analyse_mutated_templates", "configs", "logscale", "analyse_mutated_templates_1.json")
+            # "scripts", "analyse_mutated_templates", "configs", "logscale", "analyse_mutated_templates_2.json")
     config_file = load_json_as_dict(config_filepath)
 
     # Start_experiment
@@ -44,7 +46,7 @@ def main(config_filepath=None):
                     plot_type='histplot', out_name='interaction_strength_freqs',
                     preprocessor_func=preprocessing_func,
                     exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
-                    use_log_xaxis=config_file.get('xaxis_log_scale', False),
+                    use_log_xaxis=config_file.get('log_scale', False),
                     use_sns=True,
                     title='Maximum interaction strength, unmutated circuits',
                     xlabel='Interaction strength', ylabel='Frequency count'),
@@ -56,7 +58,7 @@ def main(config_filepath=None):
         #             plot_type='histplot', out_name='interaction_strength_diffs',
         #             preprocessor_func=preprocessing_func,
         #             exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
-        # use_log_xaxis=config_file.get('xaxis_log_scale', False),
+        # use_log_xaxis=config_file.get('log_scale', False),
         #             title='Difference btwn circuit and mutated interaction strengths, 2 mutations',
         #             xlabel='Interaction strength difference', ylabel='Frequency count'),
         #     req_input=True,

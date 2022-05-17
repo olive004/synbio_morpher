@@ -173,6 +173,7 @@ class VisODE():
         if use_sns:
             import seaborn as sns
             data = data.reset_index()
+            logging.info(use_log_xaxis)
             if column is None:
                 logging.warn(
                     'Make sure a column is specified for visualising with seaborn')
