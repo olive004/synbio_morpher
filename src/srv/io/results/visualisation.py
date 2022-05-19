@@ -76,7 +76,7 @@ class NetworkCustom(Network):
 def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
                    cols: list = None, plot_type='histplot', out_name='test_plot',
                    preprocessor_func=None, exclude_rows_nonempty_in_cols: list = None,
-                   use_sns=False, use_log_xaxis=False,
+                   use_sns=False, log_axis=False,
                    **plot_kwrgs):
     """ Plot type can be any attributes of VisODE() """
     if exclude_rows_nonempty_in_cols is not None:
@@ -94,7 +94,7 @@ def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
                 plot_kwrgs.update({'data': data[col]})
 
             data_writer.output(out_type='png', out_name=out_name,
-                               writer=visualiser.histplot, **merge_dicts({'use_sns': use_sns, "use_log_xaxis": use_log_xaxis},
+                               writer=visualiser.histplot, **merge_dicts({'use_sns': use_sns, "log_axis": log_axis},
                                                                          plot_kwrgs))
     elif plot_type == 'plot':
         try:
@@ -168,12 +168,16 @@ class VisODE():
                     dummy_call, object=plt, function=plot_kwrg))(value)
 
     def histplot(self, data, out_path, bin_count=50,
-                 use_sns=False, column=None, use_log_xaxis=False, **plot_kwrgs):
+                 use_sns=False, column: str = None, log_axis: tuple = (False, False), **plot_kwrgs):
         from matplotlib import pyplot as plt
         if use_sns:
             import seaborn as sns
             data = data.reset_index()
-            logging.info(use_log_xaxis)
+            if log_axis[0]:
+                new_col = 'Log of ' + column
+                data = data.rename(columns={column: new_col})
+                column = new_col
+
             if column is None:
                 logging.warn(
                     'Make sure a column is specified for visualising with seaborn')
@@ -181,14 +185,14 @@ class VisODE():
             f, ax = plt.subplots(figsize=(7, 5))
             sns.despine(f)
             sns.histplot(
-                data,
+                data[data[column] != 0],
                 x=column,  # hue="cut",
                 bins=bin_count,
                 multiple="stack",
                 palette="light:m_r",
                 edgecolor=".3",
                 linewidth=.5,
-                log_scale=use_log_xaxis,
+                log_scale=log_axis,
             )
             f.savefig(out_path)
         else:

@@ -19,6 +19,7 @@ def main(config_filepath=None):
             # "scripts", "analyse_mutated_templates", "configs", "logscale", "analyse_templates.json")
             "scripts", "analyse_mutated_templates", "configs", "logscale", "analyse_mutated_templates_1.json")
             # "scripts", "analyse_mutated_templates", "configs", "logscale", "analyse_mutated_templates_2.json")
+    num_mutations = 1
     config_file = load_json_as_dict(config_filepath)
 
     # Start_experiment
@@ -34,6 +35,8 @@ def main(config_filepath=None):
     else:
         exclude_rows_via_cols = []
 
+    plot_grammar = 's' if num_mutations > 1 else ''
+
     protocols = [
         Protocol(
             partial(tabulate_mutation_info, source_dir=source_dir,
@@ -45,25 +48,38 @@ def main(config_filepath=None):
             partial(visualise_data, data_writer=data_writer, cols=['interaction_strength'],
                     plot_type='histplot', out_name='interaction_strength_freqs',
                     preprocessor_func=preprocessing_func,
-                    exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
-                    use_log_xaxis=config_file.get('log_scale', False),
+                    exclude_rows_nonempty_in_cols=['mutation_name'],
+                    log_axis=config_file.get('log_scale', False),
                     use_sns=True,
                     title='Maximum interaction strength, unmutated circuits',
                     xlabel='Interaction strength', ylabel='Frequency count'),
             req_input=True,
-            name='visualise_interactions'
+            name='visualise_circuit_interactions'
         ),
-        # Protocol(
-        #     partial(visualise_data, data_writer=data_writer, cols=['interaction_strength_diff_to_base_circuit'],
-        #             plot_type='histplot', out_name='interaction_strength_diffs',
-        #             preprocessor_func=preprocessing_func,
-        #             exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
-        # use_log_xaxis=config_file.get('log_scale', False),
-        #             title='Difference btwn circuit and mutated interaction strengths, 2 mutations',
-        #             xlabel='Interaction strength difference', ylabel='Frequency count'),
-        #     req_input=True,
-        #     name='visualise_interactions_difference'
-        # )
+        Protocol(
+            partial(visualise_data, data_writer=data_writer, cols=['interaction_strength'],
+                    plot_type='histplot', out_name='interaction_strength_freqs',
+                    preprocessor_func=preprocessing_func,
+                    exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
+                    log_axis=config_file.get('log_scale', False),
+                    use_sns=True,
+                    title=f'Maximum interaction strength, {num_mutations} mutation{plot_grammar}',
+                    xlabel='Interaction strength', ylabel='Frequency count'),
+            req_input=True,
+            name='visualise_mutated_interactions'
+        ),
+        Protocol(
+            partial(visualise_data, data_writer=data_writer, cols=['interaction_strength_diff_to_base_circuit'],
+                    plot_type='histplot', out_name='interaction_strength_diffs',
+                    preprocessor_func=preprocessing_func,
+                    exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
+                    log_axis=config_file.get('log_scale', False),
+                    title=f'Difference btwn circuit and mutated interaction strengths, {num_mutations} mutation{plot_grammar}',
+                    xlabel='Interaction strength difference', ylabel='Frequency count'),
+            req_input=True,
+            name='visualise_interactions_difference',
+            skip=('mutated' not in config_filepath)
+        )
     ]
     experiment = Experiment(config_filepath, protocols,
                             data_writer=data_writer)
