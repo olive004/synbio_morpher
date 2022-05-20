@@ -22,7 +22,7 @@ SIMULATOR_UNITS = {
 class RawSimulationHandling():
 
     def __init__(self, config_args: dict = None, simulator: str = 'IntaRNA') -> None:
-        self.simulator = simulator if config_args is None else config_args.get(
+        self.simulator_name = simulator if config_args is None else config_args.get(
             'name', simulator)
         self.sim_kwargs = config_args if config_args is not None else {}
         self.units = ''
@@ -33,7 +33,7 @@ class RawSimulationHandling():
             raw_sample = sample.get('E', 0)
             return raw_sample
 
-        if self.simulator == "IntaRNA":
+        if self.simulator_name == "IntaRNA":
             return intaRNA_calculator
 
     @staticmethod
@@ -44,12 +44,6 @@ class RawSimulationHandling():
         K = e^(G / RT)
         """
         rate[rate == 0] = 1
-        logging.info(np.log(1))
-        logging.info(np.log(rate.astype('float64')))
-        logging.info(max(rate))
-        logging.info(min(rate))
-        logging.info(np.log(max(rate)))
-        logging.info(np.log(min(rate)))
         energy = np.multiply(SCIENTIFIC['RT'], np.log(rate.astype('float64')))
         energy = energy / 1000
         return energy
@@ -80,9 +74,9 @@ class RawSimulationHandling():
                 input = func(input)
             return input
 
-        if self.simulator == "IntaRNA":
+        if self.simulator_name == "IntaRNA":
             if self.sim_kwargs.get('postprocess', None):
-                self.units = SIMULATOR_UNITS[self.simulator]['rate']
+                self.units = SIMULATOR_UNITS[self.simulator_name]['rate']
                 return partial(processor, funcs=[
                     energy_to_rate,
                     zero_false_rates])
@@ -91,47 +85,21 @@ class RawSimulationHandling():
 
     def get_simulation(self, allow_self_interaction=True):
 
-        def simulate_vanilla(batch):
-            raise NotImplementedError
-            return None
-
-        # @time_it
-        def simulate_intaRNA_data(batch, allow_self_interaction, sim_kwargs):
-            from src.srv.parameter_prediction.IntaRNA.bin.copomus.IntaRNA import IntaRNA
-            simulator = IntaRNA()
-            if batch is not None:
-                data = {}
-                batch_data, batch_labels = list(
-                    batch.values()), list(batch.keys())
-                for i, (label_i, sample_i) in enumerate(zip(batch_labels, batch_data)):
-                    current_pair = {}
-                    for j, (label_j, sample_j) in enumerate(zip(batch_labels, batch_data)):
-                        if not allow_self_interaction and i == j:
-                            continue
-                        if i > j:  # Skip symmetrical
-                            current_pair[label_j] = data[label_j][label_i]
-                        else:
-                            sim_kwargs["query"] = sample_i
-                            sim_kwargs["target"] = sample_j
-                            current_pair[label_j] = simulator.run(**sim_kwargs)
-                    data[label_i] = current_pair
-            else:
-                data = simulator.run(**sim_kwargs)
-            return data
-
-        if self.simulator == "IntaRNA":
-            self.units = SIMULATOR_UNITS[self.simulator]['energy']
+        if self.simulator_name == "IntaRNA":
+            from src.srv.parameter_prediction.simulator import simulate_intaRNA_data
+            self.units = SIMULATOR_UNITS[self.simulator_name]['energy']
             return partial(simulate_intaRNA_data,
                            allow_self_interaction=allow_self_interaction,
                            sim_kwargs=self.sim_kwargs)
 
-        if self.simulator == "CopomuS":
+        if self.simulator_name == "CopomuS":
             # from src.utils.parameter_prediction.IntaRNA.bin.CopomuS import CopomuS
             # simulator = CopomuS(self.sim_config_args)
             # simulator.main()
             raise NotImplementedError
 
         else:
+            from src.srv.parameter_prediction.simulator import simulate_vanilla
             return simulate_vanilla
 
 

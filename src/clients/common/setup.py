@@ -1,5 +1,5 @@
 import logging
-from src.utils.data.data_format_tools.common import load_json_as_dict, process_json
+from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.srv.io.manage.data_manager import DataManager
 from src.utils.misc.io import isolate_filename
 from src.utils.misc.type_handling import cast_all_values_as_list
@@ -9,17 +9,21 @@ from src.utils.system_definition.setup import get_system_type
 
 
 def compose_kwargs(extra_configs: dict = None, config_filepath: str = None, config_file: dict = None) -> dict:
+    """ Extra configs like data paths can be supplied here, eg. for circuits that were dynamically generated. """
     if config_file is None and config_filepath:
-        config_file = process_json(load_json_as_dict(config_filepath))
-    else:
+        config_file = load_json_as_dict(config_filepath)
+    elif config_file and config_filepath:
+        raise ValueError('Both a config and a config filepath were defined - only use one config option.')
+    elif config_file is None and config_filepath is None:
         raise ValueError('Config file or path needed as input to function.')
     if extra_configs is not None:
         for kwarg, config in extra_configs.items():
             if config_file.get(kwarg):
                 config_file[kwarg] = config
         config_file.update(extra_configs)
-    data_manager = DataManager(filepath=config_file.get("data_path"),
-                               identities=config_file.get("identities", {}))
+    data_manager = DataManager(filepath=config_file.get("data_path", None),
+                               identities=config_file.get("identities", {}), 
+                               data=config_file.get("data", None))
     kwargs = {
         "system_type": config_file.get("system_type"),
         "name": isolate_filename(data_manager.data.source),

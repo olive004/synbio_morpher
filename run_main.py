@@ -7,7 +7,8 @@ from fire import Fire
 # from scripts.generate_species_templates.run_generate_species_templates import main
 # from scripts.explore_species_templates.run_explore_species_templates import main
 # from scripts.mutation_effect_on_interactions.run_mutation_effect_on_interactions import main
-from scripts.analyse_mutated_templates.run_analyse_mutated_templates import main
+# from scripts.analyse_mutated_templates.run_analyse_mutated_templates import main
+from scripts.intarna_sandbox.run_intarna_sandbox import main
 
 FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
 FORMAT = "%(filename)s:%(funcName)s():%(lineno)i: %(message)s %(levelname)s"

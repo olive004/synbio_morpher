@@ -46,6 +46,7 @@ class CircuitModeller():
         if not circuit.species.loaded_interactions:
             interactions = self.run_interaction_simulator(circuit,
                                                           circuit.species.data.data)
+            logging.info(interactions)
             circuit.species.interactions = interactions.matrix
             circuit.species.interaction_units = interactions.units
 

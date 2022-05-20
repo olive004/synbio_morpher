@@ -6,7 +6,7 @@
         "generator_protocol": "template_mutate",
         "proportion_to_mutate": 0.35
     },
-    "data": "./data/sandbox_simulators/configs/no_binding.fasta",
+    "data_path": "./scripts/intarna_sandbox/configs/no_binding.fasta",
     "interaction_simulator": {
         "name": "IntaRNA",
         "postprocess": "True"

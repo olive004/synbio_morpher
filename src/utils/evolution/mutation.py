@@ -123,7 +123,8 @@ class Evolver():
                 sequence, species.mutation_nums[sample_idx])
 
             mutations = Mutations(
-                mutation_name=species.data.sample_names[sample_idx]+'_'+str(mutation_idx),
+                mutation_name=species.data.sample_names[sample_idx]+'_'+str(
+                    mutation_idx),
                 template_name=species.data.sample_names[sample_idx],
                 template_file=species.data.source,
                 template_seq=sequence,
@@ -143,8 +144,8 @@ class Evolver():
             return species
 
         if algorithm == "random":
-            return partial(full_mutator, sample_mutator_func=partial(basic_mutator, position_generator=random_mutator)
-                           )
+            return partial(full_mutator, sample_mutator_func=partial(basic_mutator,
+                                                                     position_generator=random_mutator))
         else:
             return ValueError(f'Unrecognised mutation algorithm choice "{algorithm}"')
 

@@ -94,7 +94,7 @@ class DataWriter():
             create_location(location)
             return location
         raise ValueError(
-            f'Unrecognised purpose {purpose} for writing data to.')
+            f'Unrecognised purpose {purpose} for writing data to - make sure directory of this name exists in ./scripts')
 
     def generate_location_instance(self):
         return make_time_str()
