@@ -2,5 +2,5 @@
     "source_dir": "data/mutation_effect_on_interactions/2022_05_06_105250",
     "preprocessing_func": "None",
     "only_visualise_circuits": "False",
-    "log_scale": "True"
+    "log_scale": [2, false]
 }

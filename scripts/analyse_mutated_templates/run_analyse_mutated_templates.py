@@ -9,7 +9,7 @@ from src.srv.io.results.result_writer import ResultWriter
 from src.srv.io.results.visualisation import visualise_data
 from src.srv.parameter_prediction.interactions import RawSimulationHandling
 from src.srv.sequence_exploration.sequence_analysis import tabulate_mutation_info
-from src.utils.data.data_format_tools.common import load_json_as_dict, process_json
+from src.utils.data.data_format_tools.common import load_json_as_dict
 
 
 def main(config_filepath=None):
@@ -17,9 +17,9 @@ def main(config_filepath=None):
     if config_filepath is None:
         config_filepath = os.path.join(
             # "scripts", "analyse_mutated_templates", "configs", "logscale", "analyse_templates.json")
-            "scripts", "analyse_mutated_templates", "configs", "logscale", "analyse_mutated_templates_1.json")
-            # "scripts", "analyse_mutated_templates", "configs", "logscale", "analyse_mutated_templates_2.json")
-    num_mutations = 1
+            # "scripts", "analyse_mutated_templates", "configs", "logscale", "analyse_mutated_templates_1.json")
+            "scripts", "analyse_mutated_templates", "configs", "logscale", "analyse_mutated_templates_2.json")
+    num_mutations = 2
     config_file = load_json_as_dict(config_filepath)
 
     # Start_experiment
