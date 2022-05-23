@@ -27,11 +27,14 @@ class RawSimulationHandling():
         self.sim_kwargs = config_args if config_args is not None else {}
         self.units = ''
 
-    def get_protocol(self):
+    def get_protocol(self, custom_prot: str = None):
 
         def intaRNA_calculator(sample):
             raw_sample = sample.get('E', 0)
             return raw_sample
+
+        def intaRNA_test_protocol(sample):
+            return sample
 
         if self.simulator_name == "IntaRNA":
             return intaRNA_calculator
@@ -83,7 +86,7 @@ class RawSimulationHandling():
             else:
                 return vanilla
 
-    def get_simulation(self, allow_self_interaction=True):
+    def get_simulator(self, allow_self_interaction=True):
 
         if self.simulator_name == "IntaRNA":
             from src.srv.parameter_prediction.simulator import simulate_intaRNA_data
@@ -105,7 +108,7 @@ class RawSimulationHandling():
 
 class InteractionMatrix():
 
-    def __init__(self, #config_args=None,
+    def __init__(self,  # config_args=None,
                  matrix=None,
                  matrix_path: str = None,
                  num_nodes: int = None,
@@ -139,7 +142,8 @@ class InteractionMatrix():
         return matrix, self.units
 
     def load_units(self, interactions_filepath):
-        experiment_config = load_experiment_config(experiment_folder=os.path.dirname(interactions_filepath))
+        experiment_config = load_experiment_config(
+            experiment_folder=os.path.dirname(interactions_filepath))
         simulator_cfgs = experiment_config.get('interaction_simulator')
         if simulator_cfgs.get('name') == 'IntaRNA':
             if simulator_cfgs.get('postprocess'):
@@ -147,7 +151,7 @@ class InteractionMatrix():
             else:
                 return SIMULATOR_UNITS['IntaRNA']['energy']
         else:
-            return SIMULATOR_UNITS['IntaRNA']['rate'] 
+            return SIMULATOR_UNITS['IntaRNA']['rate']
 
     def make_rand_matrix(self, num_nodes):
         if num_nodes is None or num_nodes == 0:
@@ -199,12 +203,15 @@ class InteractionMatrix():
 
 class InteractionData():
 
-    def __init__(self, data, simulation_handler: RawSimulationHandling):
-        self.simulation_handling = simulation_handler
-        self.simulation_protocol = self.simulation_handling.get_protocol()
-        self.simulation_postproc = self.simulation_handling.get_postprocessing()
-        self.data, self.matrix = self.parse(data)
-        self.units = self.simulation_handling.units
+    def __init__(self, data, simulation_handler: RawSimulationHandling,
+                 test_mode=False):
+        self.simulation_protocol = simulation_handler.get_protocol()
+        self.simulation_postproc = simulation_handler.get_postprocessing()
+        if not test_mode:
+            self.data, self.matrix = self.parse(data)
+        else:
+            self.data = self.simulation_protocol()
+        self.units = simulation_handler.units
 
     def parse(self, data):
         matrix = self.make_matrix(data)

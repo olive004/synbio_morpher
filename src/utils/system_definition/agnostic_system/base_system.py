@@ -170,7 +170,6 @@ class BaseSystem():
     def __init__(self, config_args: dict = None):
 
         self.name = config_args.get("name")
-        logging.info(self.name)
 
         if config_args is None:
             config_args = {}
