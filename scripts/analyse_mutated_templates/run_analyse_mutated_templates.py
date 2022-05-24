@@ -12,7 +12,7 @@ from src.srv.sequence_exploration.sequence_analysis import tabulate_mutation_inf
 from src.utils.data.data_format_tools.common import load_json_as_dict
 
 
-def main(config_filepath=None):
+def main(config_filepath: str = None, data_writer=None):
     # Set configs
     if config_filepath is None:
         config_filepath = os.path.join(
@@ -23,7 +23,9 @@ def main(config_filepath=None):
     config_file = load_json_as_dict(config_filepath)
 
     # Start_experiment
-    data_writer = ResultWriter(purpose='analyse_mutated_templates')
+    if data_writer is None:
+        data_writer = ResultWriter(purpose='analyse_mutated_templates')
+
     source_dir = config_file.get('source_dir')
     if config_file.get('preprocessing_func') == 'rate_to_energy':
         preprocessing_func = RawSimulationHandling().rate_to_energy,

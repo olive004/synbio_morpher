@@ -11,15 +11,19 @@ from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.misc.io import get_pathnames
 
 
-def main():
+def main(config_filepath: str = None, data_writer=None):
     # set configs
-    config_filepath = os.path.join(
-        "scripts", "gather_interaction_stats", "configs", "gather_interaction_stats.json")
+    if config_filepath is None:
+        config_filepath = os.path.join(
+            "scripts", "gather_interaction_stats", "configs", "gather_interaction_stats.json")
     config_file = load_json_as_dict(config_filepath)
 
     # start_experiment
-    data_writer_kwargs = {'purpose': load_json_as_dict(config_filepath).get("experiment").get("purpose")}
-    data_writer = DataWriter(**data_writer_kwargs)
+    if data_writer is None:
+        data_writer_kwargs = {'purpose': load_json_as_dict(
+            config_filepath).get("experiment").get("purpose")}
+        data_writer = DataWriter(**data_writer_kwargs)
+
     # search_dir = os.path.join(*list({
     #     'root_dir': "data",
     #     'purpose': "generate_species_templates",

@@ -7,7 +7,7 @@ from src.srv.io.results.experiments import Experiment, Protocol
 
 
 
-def main():
+def main(config_filepath: str = None, data_writer=None):
     Experiment
 
     protocols = [

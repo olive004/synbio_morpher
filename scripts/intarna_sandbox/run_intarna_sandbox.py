@@ -18,36 +18,21 @@ from src.utils.system_definition.agnostic_system.system_manager import CircuitMo
 
 # Test non-binding of IntaRNA
 
-def main():
-    cfg_filepath = os.path.join(
-        'scripts', 'intarna_sandbox', 'configs', 'intarna_no_binding.json')
+def main(config_filepath: str = None, data_writer=None):
+    if config_filepath is None:
+        config_filepath = os.path.join(
+            'scripts', 'intarna_sandbox', 'configs', 'intarna_no_binding.json')
     extra_configs = None
 
-    data_writer = ResultWriter('intarna_sandbox')
-    # protocols = [
-    #     Protocol(
-    #         partial(construct_circuit_from_cfg,
-    #                 extra_configs=extra_configs, config_filepath=cfg_filepath),
-    #         req_output=True,
-    #         name='construct_circuit_from_cfg'
-    #     ),
-    #     Protocol(
-    #         CircuitModeller(data_writer).compute_interaction_strengths
-    #     )
-    # ]
-
-    # # Experiment(protocols=protocols)
-
-    # circuit = construct_circuit_from_cfg(
-    #     extra_configs, config_filepath=cfg_filepath)
-    # modeller = CircuitModeller(data_writer)
-    # modeller.compute_interaction_strengths(circuit)
+    if data_writer is None:
+        data_writer = ResultWriter('intarna_sandbox')
 
     circuit = construct_circuit_from_cfg(
-        extra_configs=extra_configs, config_filepath=cfg_filepath)
+        extra_configs=extra_configs, config_filepath=config_filepath)
     simulation = CircuitModeller(result_writer=data_writer).run_interaction_simulator(circuit,
-                                                                         circuit.species.data.data)
-    circuit = CircuitModeller(result_writer=data_writer).compute_interaction_strengths(circuit)
+                                                                                      circuit.species.data.data)
+    circuit = CircuitModeller(
+        result_writer=data_writer).compute_interaction_strengths(circuit)
     logging.info(simulation.data)
     logging.info(circuit.species.interactions)
 
