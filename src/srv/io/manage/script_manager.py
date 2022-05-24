@@ -12,4 +12,5 @@ class Ensembler():
 
     def run(self):
         for (script, config_filepath) in self.subscripts:
+            self.data_writer.update_ensemble(script.__name__)
             script(config_filepath, self.data_writer)
