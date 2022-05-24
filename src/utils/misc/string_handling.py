@@ -30,5 +30,9 @@ def ordered_merge(list1, list2, mask) -> list:
     return merged
 
 
+def remove_file_extension(filename: str):
+    return '.'.join(filename.split('.')[:-1])
+
+
 def remove_special_py_functions(string_list: list) -> list:
     return [s for s in string_list if '__' not in s]

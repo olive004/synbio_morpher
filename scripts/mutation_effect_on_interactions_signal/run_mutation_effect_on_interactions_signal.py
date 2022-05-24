@@ -13,7 +13,7 @@ from src.utils.misc.io import get_pathnames
 from src.utils.system_definition.agnostic_system.system_manager import CircuitModeller
 
 
-def main(config_filepath=None):
+def main(config_filepath=None, writer=None):
     # Set configs
     if config_filepath is None:
         config_filepath = os.path.join(
@@ -21,8 +21,11 @@ def main(config_filepath=None):
     config_file = load_json_as_dict(config_filepath)
 
     # Start_experiment
-    data_writer_kwargs = {'purpose': config_file.get('purpose', 'mutation_effect_on_interactions_signal')}
-    data_writer = ResultWriter(**data_writer_kwargs)
+    if writer=None:
+        data_writer_kwargs = {'purpose': config_file.get('purpose', 'mutation_effect_on_interactions_signal')}
+        data_writer = ResultWriter(**data_writer_kwargs)
+    else:
+        data_writer = writer
 
     source_experiment_dir = config_file.get(
         'source_dir_species_templates_exploration')

@@ -78,3 +78,14 @@ class Experiment():
             "config_filepath": self.config_filepath,
             "config_params": load_json_as_dict(self.config_filepath)
         }
+
+
+class Ensembler():
+
+    def __init__(self, data_writer, subscripts: list = None) -> None:
+        self.data_writer = data_writer
+        self.subscripts = subscripts
+
+    def run(self):
+        for script, config_path in self.subscripts:
+            script(config_path)

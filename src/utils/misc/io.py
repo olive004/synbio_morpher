@@ -7,6 +7,7 @@ import pandas as pd
 
 from src.srv.io.loaders.misc import load_csv
 from src.utils.data.data_format_tools.common import load_json_as_dict
+from src.utils.misc.string_handling import remove_file_extension
 
 
 def isolate_filename(filepath: str):
@@ -28,7 +29,7 @@ def create_location(pathname):
         os.makedirs(pathname, mode=0o777)
 
 
-def get_pathnames(file_key, search_dir, first_only=False):
+def get_pathnames(file_key, search_dir, first_only=False, allow_empty=False):
     if type(file_key) == list:
         all_path_names = []
         for fk in file_key:
@@ -40,7 +41,7 @@ def get_pathnames(file_key, search_dir, first_only=False):
         path_names = sorted(glob.glob(os.path.join(search_dir, '*' + file_key + '*')))
     if first_only and path_names:
         path_names = path_names[0]
-    if not path_names:
+    if not path_names and not allow_empty:
         raise ValueError(
             f'Could not find file matching "{file_key}" in {search_dir}.')
     return path_names
@@ -82,3 +83,14 @@ def get_path_from_output_summary(name, output_summary: pd.DataFrame = None, expe
         output_summary = load_experiment_output_summary(experiment_folder)
     pathname = output_summary.loc[output_summary['out_name'] == name]['out_path'].values[0]
     return pathname
+
+
+def convert_pathname_to_module(filepath: str):
+    filepath = remove_file_extension(filepath)
+    return os.path.normpath(filepath).replace(os.sep, '.')
+
+
+def import_module_from_path(module_name: str, filepath: str):
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(module_name, filepath)
+    return  importlib.util.module_from_spec(spec)
