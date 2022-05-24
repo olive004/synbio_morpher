@@ -5,7 +5,7 @@
     },
     "molecular_params": "./src/utils/system_definition/specific_systems/RNA/configs/RNA_system.json",
     "experiment": {
-        "purpose": "explore_species_templates"
+        "purpose": "gather_interaction_stats"
     },    
     "system_type": "RNA"
 }

@@ -18,5 +18,5 @@
         "mutate_in_circuit": "single_species_at_a_time"
     },
     "signal": "./scripts/mutation_effect_on_interactions/configs/fixed/in_signal.json",
-    "source_dir_species_templates_exploration": "./data/explore_species_templates/2022_05_10_232313"
+    "source_dir_species_templates_exploration": "./data/gather_interaction_stats/2022_05_10_232313"
 }

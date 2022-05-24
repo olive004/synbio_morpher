@@ -14,7 +14,7 @@ from src.utils.misc.io import get_pathnames
 def main():
     # set configs
     config_filepath = os.path.join(
-        "scripts", "explore_species_templates", "configs", "explore_species_templates.json")
+        "scripts", "gather_interaction_stats", "configs", "gather_interaction_stats.json")
     config_file = load_json_as_dict(config_filepath)
 
     # start_experiment
