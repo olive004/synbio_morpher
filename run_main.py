@@ -6,7 +6,7 @@ from fire import Fire
 # from scripts.pair_species_mutation.run_pair_species_mutation import main
 # from scripts.generate_species_templates.run_generate_species_templates import main
 # from scripts.gather_interaction_stats.run_gather_interaction_stats import main
-# from scripts.mutation_effect_on_interactions.run_mutation_effect_on_interactions import main
+# from scripts.mutation_effect_on_interactions_signal.run_mutation_effect_on_interactions_signal import main
 # from scripts.analyse_mutated_templates.run_analyse_mutated_templates import main
 from scripts.intarna_sandbox.run_intarna_sandbox import main
 

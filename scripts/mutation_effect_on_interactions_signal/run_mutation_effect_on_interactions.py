@@ -17,11 +17,11 @@ def main(config_filepath=None):
     # Set configs
     if config_filepath is None:
         config_filepath = os.path.join(
-            "scripts", "mutation_effect_on_interactions", "configs", "fixed", "mutations_1_config.json")
+            "scripts", "mutation_effect_on_interactions_signal", "configs", "fixed", "mutations_1_config.json")
     config_file = load_json_as_dict(config_filepath)
 
     # Start_experiment
-    data_writer_kwargs = {'purpose': config_file.get('purpose', 'mutation_effect_on_interactions')}
+    data_writer_kwargs = {'purpose': config_file.get('purpose', 'mutation_effect_on_interactions_signal')}
     data_writer = ResultWriter(**data_writer_kwargs)
 
     source_experiment_dir = config_file.get(
