@@ -14,11 +14,13 @@ from src.utils.misc.type_handling import find_sublist_max
 
 class DataWriter():
 
-    def __init__(self, purpose: str, out_location: str = None) -> None:
+    def __init__(self, purpose: str, out_location: str = None, ensembled_script: str = None) -> None:
         self.purpose = purpose
         self.script_dir = os.path.join('scripts')
         self.root_output_dir = os.path.join('data')
         self.exception_dirs = os.path.join('example_data')
+
+        self.ensembled_script = ensembled_script
         if out_location is None:
             self.original_write_dir = self.make_location(purpose)
         else:
@@ -97,13 +99,19 @@ class DataWriter():
             f'Unrecognised purpose {purpose} for writing data to - make sure directory of this name exists in ./scripts')
 
     def generate_location_instance(self):
-        return make_time_str()
+        if self.ensembled_script is None:
+            return make_time_str()
+        else:
+            return os.path.join(make_time_str(), self.ensembled_script)
 
     def subdivide_writing(self, name: str, safe_dir_change=True):
         base_dir = self.original_write_dir if safe_dir_change else self.write_dir
         location = os.path.join(base_dir, name)
         create_location(location)
         self.write_dir = location
+
+    def update_ensemble(self, new_ensemble: str):
+        self.ensembled_script = new_ensemble
 
     def unsubdivide_last_dir(self):
         self.write_dir = os.path.dirname(self.write_dir)
