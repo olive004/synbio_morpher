@@ -1,9 +1,13 @@
 {
     "interaction_simulator": {
         "name": "IntaRNA",
-        "postprocess": false
+        "postprocess": true
     },
-    "molecular_params": "./scripts/common/configs/RNA_system/molecular_params.json",
+    "molecular_params": {
+        "creation_rates": 50,
+        "copynumbers": 5,
+        "degradation_rates": 20
+    },
     "experiment": {
         "purpose": "gather_interaction_stats"
     },    

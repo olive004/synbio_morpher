@@ -21,6 +21,15 @@
         "mutation_nums": 1,
         "mutate_in_circuit": "single_species_at_a_time"
     },
-    "signal": "./scripts/mutation_effect_on_interactions_signal/configs/in_signal.json", 
+    "signal": {
+        "signal":[1, 0, 1, 0],
+        "signal_spec": "raw",
+        "signal_type": "abstract",
+        "total_time":10000,
+        "magnitude":10,
+        "positions":[6, 500],
+        "heights":[50, 80],
+        "durations":[50, 400]
+    }, 
     "source_dir_species_templates_exploration": "./data/gather_interaction_stats/2022_05_10_232313"
 }

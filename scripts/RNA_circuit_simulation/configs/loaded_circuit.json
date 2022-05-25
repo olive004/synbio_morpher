@@ -9,6 +9,6 @@
         "input": "RNA_0",
         "output": "RNA_2"
     },
-    "molecular_params": "./src/utils/system_definition/specific_systems/RNA/configs/RNA_system.json",
+    "molecular_params": "./scripts/common/configs/RNA_system/molecular_params.json",
     "signal": "./scripts/RNA_circuit_simulation/configs/in_signal.json"
 }

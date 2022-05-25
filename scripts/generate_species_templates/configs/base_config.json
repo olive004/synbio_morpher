@@ -1,12 +1,12 @@
 {
     "interaction_simulator": {
         "name": "IntaRNA",
-        "postprocess": false
+        "postprocess": true
     },
     "molecular_params": "./scripts/common/configs/RNA_system/molecular_params.json",
     "circuit_generation": {
         "repetitions": 2000,
-        "sequence_length": 25,
+        "sequence_length": 20,
         "generator_protocol": "template_mutate",
         "proportion_to_mutate": 0.5
     }, 
