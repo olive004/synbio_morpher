@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from types import NoneType
 import numpy as np
 import pandas as pd
 
@@ -15,7 +16,7 @@ def verify_file_type(filepath: str, file_type: str):
     pass
 
 
-def determine_data_format(filepath):
+def determine_data_format(filepath: str) -> str:
     return os.path.basename(filepath).split('.')[-1]
     # for extension, ftype in FORMAT_EXTS.items():
     #     if extension in filepath:
@@ -23,12 +24,15 @@ def determine_data_format(filepath):
     # return None
 
 
-def load_json_as_dict(json_pathname, process=True):
+def load_json_as_dict(json_pathname: str, process=True) -> dict:
     if not json_pathname:
         return {}
-    file = open(json_pathname)
-    jdict = json.load(file)
-    file.close()
+    elif type(json_pathname) == dict:
+        jdict = json_pathname
+    else:
+        file = open(json_pathname)
+        jdict = json.load(file)
+        file.close()
     if process:
         return process_json(jdict)
     return jdict

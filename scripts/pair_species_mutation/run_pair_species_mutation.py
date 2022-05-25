@@ -12,12 +12,12 @@ from src.utils.evolution.mutation import Evolver
 from src.utils.system_definition.agnostic_system.system_manager import CircuitModeller
 
 
-def main(config_filepath: str = None, data_writer=None):
+def main(config=None, data_writer=None):
     # set configs
-    if config_filepath is None:
-        config_filepath = os.path.join(
+    if config is None:
+        config = os.path.join(
             "scripts", "pair_species_mutation", "configs", "RNA_pair_species_mutation.json")
-    config_file = load_json_as_dict(config_filepath)
+    config_file = load_json_as_dict(config)
     exp_configs = config_file.get("circuit_generation", {})
 
     # Start_experiment
@@ -36,7 +36,7 @@ def main(config_filepath: str = None, data_writer=None):
         ),
         Protocol(
             partial(construct_circuit_from_cfg,
-                    config_filepath=config_filepath),
+                    config_filepath=config),
             req_input=True,
             req_output=True,
             name="making_circuit"
@@ -59,7 +59,7 @@ def main(config_filepath: str = None, data_writer=None):
             name="visualise_signal"
         )
     ]
-    experiment = Experiment(config_filepath, protocols,
+    experiment = Experiment(config_filepath=config, protocols=protocols,
                             data_writer=data_writer)
     experiment.run_experiment()
 

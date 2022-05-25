@@ -13,12 +13,12 @@ from src.utils.misc.io import get_pathnames
 from src.utils.system_definition.agnostic_system.system_manager import CircuitModeller
 
 
-def main(config_filepath=None, data_writer=None):
+def main(config=None, data_writer=None):
     # Set configs
-    if config_filepath is None:
-        config_filepath = os.path.join(
+    if config is None:
+        config = os.path.join(
             "scripts", "mutation_effect_on_interactions_signal", "configs", "fixed", "mutations_1_config.json")
-    config_file = load_json_as_dict(config_filepath)
+    config_file = load_json_as_dict(config)
 
     # Start_experiment
     if data_writer is None:
@@ -50,7 +50,7 @@ def main(config_filepath=None, data_writer=None):
             # Construct circuit
             Protocol(
                 partial(construct_circuit_from_cfg,
-                        config_filepath=config_filepath),
+                        config_file=config_file),
                 req_input=True,
                 req_output=True,
                 name='construct_circuit'
@@ -78,7 +78,7 @@ def main(config_filepath=None, data_writer=None):
             )
         ]
     ]
-    experiment = Experiment(config_filepath, protocols,
+    experiment = Experiment(config_filepath=config, protocols=protocols,
                             data_writer=data_writer)
     experiment.run_experiment()
 

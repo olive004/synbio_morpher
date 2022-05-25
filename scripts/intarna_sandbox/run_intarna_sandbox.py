@@ -18,9 +18,9 @@ from src.utils.system_definition.agnostic_system.system_manager import CircuitMo
 
 # Test non-binding of IntaRNA
 
-def main(config_filepath: str = None, data_writer=None):
-    if config_filepath is None:
-        config_filepath = os.path.join(
+def main(config=None, data_writer=None):
+    if config is None:
+        config = os.path.join(
             'scripts', 'intarna_sandbox', 'configs', 'intarna_no_binding.json')
     extra_configs = None
 
@@ -28,7 +28,7 @@ def main(config_filepath: str = None, data_writer=None):
         data_writer = ResultWriter('intarna_sandbox')
 
     circuit = construct_circuit_from_cfg(
-        extra_configs=extra_configs, config_filepath=config_filepath)
+        extra_configs=extra_configs, config_filepath=config)
     simulation = CircuitModeller(result_writer=data_writer).run_interaction_simulator(circuit,
                                                                                       circuit.species.data.data)
     circuit = CircuitModeller(

@@ -11,19 +11,22 @@ from src.utils.data.data_format_tools.common import load_json_as_dict
 
 
 
-def main(config_filepath: str = None, data_writer=None):
+def main(config=None, data_writer=None):
     
-    if config_filepath is None:
-        config_filepath = os.path.join(
+    if config is None:
+        config = os.path.join(
             "scripts", "ensemble_mutation_effect_analysis", "configs", "ensemble_mutation_effect_analysis.json")
-    config_file = load_json_as_dict(config_filepath)
+    config_file = load_json_as_dict(config)
+    ensemble_configs = config_file.get("base_configs_ensemble", {})
 
     if data_writer is None:
         data_writer_kwargs = {'purpose': config_file.get('purpose', 'ensemble_mutation_effect')}
         data_writer = ResultWriter(**data_writer_kwargs)
 
     ensembler = Ensembler(data_writer=data_writer, subscripts=[
-        (generate_species_templates, ),
-        (gather_interaction_stats, ),
-        (mutation_effect_on_interactions_signal, )
+        (generate_species_templates, ensemble_configs.get("generate_species_templates")),
+        (gather_interaction_stats, ensemble_configs.get("gather_interaction_stats")),
+        (mutation_effect_on_interactions_signal, ensemble_configs.get("mutation_effect_on_interactions_signal"))
     ])
+
+    ensembler.run()

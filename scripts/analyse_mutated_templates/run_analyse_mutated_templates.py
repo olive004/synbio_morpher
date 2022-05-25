@@ -12,15 +12,15 @@ from src.srv.sequence_exploration.sequence_analysis import tabulate_mutation_inf
 from src.utils.data.data_format_tools.common import load_json_as_dict
 
 
-def main(config_filepath: str = None, data_writer=None):
+def main(config=None, data_writer=None):
     # Set configs
-    if config_filepath is None:
-        config_filepath = os.path.join(
+    num_mutations = 2
+    if config is None:
+        config = os.path.join(
             # "scripts", "analyse_mutated_templates", "configs", "logscale", "analyse_templates.json")
             # "scripts", "analyse_mutated_templates", "configs", "logscale", "analyse_mutated_templates_1.json")
             "scripts", "analyse_mutated_templates", "configs", "logscale", "analyse_mutated_templates_2.json")
-    num_mutations = 2
-    config_file = load_json_as_dict(config_filepath)
+    config_file = load_json_as_dict(config)
 
     # Start_experiment
     if data_writer is None:
@@ -80,10 +80,10 @@ def main(config_filepath: str = None, data_writer=None):
                     xlabel='Interaction strength difference', ylabel='Frequency count'),
             req_input=True,
             name='visualise_interactions_difference',
-            skip=('mutated' not in config_filepath)
+            skip=config_file.get('only_visualise_circuits', False)
         )
     ]
-    experiment = Experiment(config_filepath, protocols,
+    experiment = Experiment(config_filepath=config, protocols=protocols,
                             data_writer=data_writer)
     experiment.run_experiment()
 

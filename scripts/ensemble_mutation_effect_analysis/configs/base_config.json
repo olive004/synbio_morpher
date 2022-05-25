@@ -1,3 +1,65 @@
 {
-    "num_mutations": 0
+    "base_configs_ensemble": {
+        "generate_species_templates": {
+            "interaction_simulator": {
+                "name": "IntaRNA",
+                "postprocess": true
+            },
+            "experiment": {
+                "purpose": "generate_species_templates"
+            },
+            "molecular_params": {
+                "creation_rates": 50,
+                "copynumbers": 5,
+                "degradation_rates": 20
+            },
+            "circuit_generation": {
+                "repetitions": 2000,
+                "sequence_length": 20,
+                "generator_protocol": "template_mutate",
+                "proportion_to_mutate": 0.5
+            }, 
+            "system_type": "RNA"
+        },
+        "gather_interaction_stats": {
+            "experiment": {
+                "purpose": "gather_interaction_stats"
+            }
+        },
+        "mutation_effect_on_interactions_signal": {
+            "system_type": "RNA",
+            "data_path": null,
+            "experiment": {
+                "purpose": "mutation_effect_on_interactions_signal"
+            },
+            "interaction_simulator": {
+                "name": "IntaRNA",
+                "postprocess": false
+            },
+            "identities": {
+                "input": "RNA_0",
+                "output": "RNA_2"
+            },
+            "filters": {
+                "min_num_interacting": 3,
+                "max_self_interacting": 2
+            },
+            "mutations": {
+                "mutation_counts": 10,
+                "mutation_nums": 1,
+                "mutate_in_circuit": "single_species_at_a_time"
+            },
+            "signal": {
+                "signal":[1, 0, 1, 0],
+                "signal_spec": "raw",
+                "signal_type": "abstract",
+                "total_time":10000,
+                "magnitude":10,
+                "positions":[6, 500],
+                "heights":[50, 80],
+                "durations":[50, 400]
+            }, 
+            "source_dir_species_templates_exploration": "./data/gather_interaction_stats/2022_05_10_232313"
+        }
+    }
 }

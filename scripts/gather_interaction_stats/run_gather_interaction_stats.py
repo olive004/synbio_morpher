@@ -11,17 +11,16 @@ from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.misc.io import get_pathnames
 
 
-def main(config_filepath: str = None, data_writer=None):
+def main(config=None, data_writer=None):
     # set configs
-    if config_filepath is None:
-        config_filepath = os.path.join(
+    if config is None:
+        config = os.path.join(
             "scripts", "gather_interaction_stats", "configs", "gather_interaction_stats.json")
-    config_file = load_json_as_dict(config_filepath)
+    config_file = load_json_as_dict(config)
 
     # start_experiment
     if data_writer is None:
-        data_writer_kwargs = {'purpose': load_json_as_dict(
-            config_filepath).get("experiment").get("purpose")}
+        data_writer_kwargs = {'purpose': config_file.get("experiment").get("purpose")}
         data_writer = DataWriter(**data_writer_kwargs)
 
     # search_dir = os.path.join(*list({
@@ -52,7 +51,7 @@ def main(config_filepath: str = None, data_writer=None):
             )
         ]
     ]
-    experiment = Experiment(config_filepath, protocols,
+    experiment = Experiment(config_filepath=config, protocols=protocols,
                             data_writer=data_writer)
     experiment.run_experiment()
 
