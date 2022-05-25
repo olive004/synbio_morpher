@@ -29,7 +29,7 @@ def create_location(pathname):
         os.makedirs(pathname, mode=0o777)
 
 
-def get_pathnames(search_dir, file_key='*', first_only=False, allow_empty=False):
+def get_pathnames(search_dir, file_key='', first_only=False, allow_empty=False):
     if type(file_key) == list:
         all_path_names = []
         for fk in file_key:
@@ -37,8 +37,12 @@ def get_pathnames(search_dir, file_key='*', first_only=False, allow_empty=False)
                 set(sorted(glob.glob(os.path.join(search_dir, '*' + fk + '*'))))
             )
         path_names = list(all_path_names[0].intersection(*all_path_names[1:]))
+    elif not file_key:
+        path_names = sorted([os.path.join(search_dir, f) for f in os.listdir(
+            search_dir) if os.path.isfile(os.path.join(search_dir, f))])
     else:
-        path_names = sorted(glob.glob(os.path.join(search_dir, '*' + file_key + '*')))
+        path_names = sorted(
+            glob.glob(os.path.join(search_dir, '*' + file_key + '*')))
     if first_only and path_names:
         path_names = path_names[0]
     if not path_names and not allow_empty:
@@ -57,7 +61,8 @@ def get_root_experiment_folder(miscpath):
         return miscpath
     else:
         if len(os.path.split(miscpath)) == 1:
-            raise ValueError(f'Root experiment folder not found recursively in base {miscpath}')
+            raise ValueError(
+                f'Root experiment folder not found recursively in base {miscpath}')
         return get_root_experiment_folder(os.path.dirname(miscpath))
 
 
@@ -81,7 +86,8 @@ def get_path_from_output_summary(name, output_summary: pd.DataFrame = None, expe
     if output_summary is None:
         assert experiment_folder, f'No experiment path given, cannot find experiment summary.'
         output_summary = load_experiment_output_summary(experiment_folder)
-    pathname = output_summary.loc[output_summary['out_name'] == name]['out_path'].values[0]
+    pathname = output_summary.loc[output_summary['out_name']
+                                  == name]['out_path'].values[0]
     return pathname
 
 
@@ -93,4 +99,4 @@ def convert_pathname_to_module(filepath: str):
 def import_module_from_path(module_name: str, filepath: str):
     import importlib.util
     spec = importlib.util.spec_from_file_location(module_name, filepath)
-    return  importlib.util.module_from_spec(spec)
+    return importlib.util.module_from_spec(spec)

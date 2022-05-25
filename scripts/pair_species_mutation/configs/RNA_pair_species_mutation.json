@@ -21,6 +21,6 @@
         "mutation_nums": 1,
         "algorithm": "random"
     },
-    "signal": "./scripts/pair_species_mutation/configs/in_signal.json",
+    "signal": "./scripts/pair_species_mutation/configs/params/in_signal.json",
     "system_type": "RNA"
 }
