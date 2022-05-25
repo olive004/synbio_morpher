@@ -29,7 +29,7 @@ def create_location(pathname):
         os.makedirs(pathname, mode=0o777)
 
 
-def get_pathnames(file_key, search_dir, first_only=False, allow_empty=False):
+def get_pathnames(search_dir, file_key='*', first_only=False, allow_empty=False):
     if type(file_key) == list:
         all_path_names = []
         for fk in file_key:
