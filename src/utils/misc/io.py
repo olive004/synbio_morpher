@@ -82,6 +82,10 @@ def load_experiment_config(experiment_folder: str) -> dict:
     return load_json_as_dict(experiment_report.get('config_filepath'))
 
 
+def get_recent_experiment_folder(purpose_folder: str) -> str:
+    return sorted(os.listdir(purpose_folder))[-1]
+
+
 def get_path_from_output_summary(name, output_summary: pd.DataFrame = None, experiment_folder: str = None):
     if output_summary is None:
         assert experiment_folder, f'No experiment path given, cannot find experiment summary.'

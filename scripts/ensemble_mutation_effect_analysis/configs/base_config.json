@@ -14,7 +14,7 @@
                 "degradation_rates": 20
             },
             "circuit_generation": {
-                "repetitions": 2000,
+                "repetitions": 2,
                 "sequence_length": 20,
                 "generator_protocol": "template_mutate",
                 "proportion_to_mutate": 0.5
@@ -59,7 +59,12 @@
                 "heights":[50, 80],
                 "durations":[50, 400]
             }, 
-            "source_dir_species_templates_exploration": "./data/gather_interaction_stats/2022_05_10_232313"
+            "source_of_interaction_stats": {
+                "update_on_run": true,
+                "source_dir": "./data/ensemble_mutation_effect_analysis",
+                "postupdate_subdir": "gather_interaction_stats",
+                "source_dir_postupdate": null
+            }
         }
     }
 }

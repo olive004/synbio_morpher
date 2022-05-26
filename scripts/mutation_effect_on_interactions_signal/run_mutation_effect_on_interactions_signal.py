@@ -9,7 +9,7 @@ from src.srv.io.results.result_writer import ResultWriter
 from src.srv.sequence_exploration.sequence_analysis import pull_circuits_from_stats
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.evolution.mutation import Evolver
-from src.utils.misc.io import get_pathnames
+from src.utils.misc.io import get_pathnames, get_recent_experiment_folder
 from src.utils.system_definition.agnostic_system.system_manager import CircuitModeller
 
 
@@ -22,11 +22,17 @@ def main(config=None, data_writer=None):
 
     # Start_experiment
     if data_writer is None:
-        data_writer_kwargs = {'purpose': config_file.get('purpose', 'mutation_effect_on_interactions_signal')}
+        data_writer_kwargs = {'purpose': config_file.get(
+            'purpose', 'mutation_effect_on_interactions_signal')}
         data_writer = ResultWriter(**data_writer_kwargs)
 
-    source_experiment_dir = config_file.get(
-        'source_dir_species_templates_exploration')
+    source_interaction_stats = config_file.get(
+        'source_of_interaction_stats')
+    if source_interaction_stats.get("update_on_run"):
+        source_experiment_dir = os.path.join(get_recent_experiment_folder(source_interaction_stats.get(
+            "source_dir")), source_interaction_stats.get("postupdate_subdir"))
+        assert os.path.isdir(source_experiment_dir), f'Could not find directory {source_experiment_dir}'
+        config_file['source_of_interaction_stats']['source_dir_postupdate'] = source_experiment_dir
     protocols = [
         # Load in templates: pathname for circuit stats is in config
         Protocol(
@@ -81,6 +87,8 @@ def main(config=None, data_writer=None):
     experiment = Experiment(config_filepath=config, protocols=protocols,
                             data_writer=data_writer)
     experiment.run_experiment()
+
+    return config_file, data_writer
 
 
 if __name__ == "__main__":

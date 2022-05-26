@@ -31,5 +31,5 @@
         "heights":[50, 80],
         "durations":[50, 400]
     }, 
-    "source_dir_species_templates_exploration": "./data/gather_interaction_stats/2022_05_10_232313"
+    "source_of_interaction_stats": "./data/gather_interaction_stats/2022_05_10_232313"
 }
