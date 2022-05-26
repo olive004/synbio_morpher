@@ -30,9 +30,9 @@ def main(config=None, data_writer=None):
         data_writer = ResultWriter(**data_writer_kwargs)
 
     ensembler = Ensembler(data_writer=data_writer, config_filepath=config_filepath, subscripts=[
-        generate_species_templates,
-        gather_interaction_stats,
-        mutation_effect_on_interactions_signal
+        "generate_species_templates",
+        "gather_interaction_stats",
+        "mutation_effect_on_interactions_signal"
     ])
 
     ensembler.run()
