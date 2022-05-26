@@ -8,7 +8,8 @@ from fire import Fire
 # from scripts.gather_interaction_stats.run_gather_interaction_stats import main
 # from scripts.mutation_effect_on_interactions_signal.run_mutation_effect_on_interactions_signal import main
 # from scripts.analyse_mutated_templates.run_analyse_mutated_templates import main
-from scripts.intarna_sandbox.run_intarna_sandbox import main
+# from scripts.intarna_sandbox.run_intarna_sandbox import main
+from scripts.ensemble_mutation_effect_analysis.run_ensemble_mutation_effect_analysis import main
 
 FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
 FORMAT = "%(filename)s:%(funcName)s():%(lineno)i: %(message)s %(levelname)s"

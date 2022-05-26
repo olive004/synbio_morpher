@@ -26,7 +26,7 @@ def main(config=None, data_writer=None):
     ensemble_configs = config_file.get("base_configs_ensemble", {})
 
     if data_writer is None:
-        data_writer_kwargs = {'purpose': config_file.get('purpose', 'ensemble_mutation_effect')}
+        data_writer_kwargs = {'purpose': config_file.get('purpose', 'ensemble_mutation_effect_analysis')}
         data_writer = ResultWriter(**data_writer_kwargs)
 
     ensembler = Ensembler(data_writer=data_writer, config_filepath=config_filepath, subscripts=[
