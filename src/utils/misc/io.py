@@ -56,6 +56,22 @@ def get_purposes(script_dir=None):
     return get_subdirectories(script_dir, only_basedir=True)
 
 
+def get_search_dir(search_config_key: str, config_file: dict):
+    search_config = config_file.get(search_config_key, {})
+    update = search_config.get("update_on_run", None)
+    if update:
+        search_dir = os.path.join(get_recent_experiment_folder(search_config.get(
+            "source_dir")), search_config.get("postupdate_subdir"))
+        assert os.path.isdir(search_dir), f'Could not find directory {search_dir}'
+        config_file['source_of_interaction_stats']['source_dir_postupdate'] = search_dir
+        return config_file, search_dir 
+    elif update == None:
+        raise KeyError(f'Could not find {search_config_key} in config keys: {config_file.keys()}.')
+    else:
+        search_dir = search_config.get('search_dir')
+        return config_file, search_dir 
+
+
 def get_root_experiment_folder(miscpath):
     if os.path.basename(os.path.dirname(miscpath)) in get_purposes():
         return miscpath

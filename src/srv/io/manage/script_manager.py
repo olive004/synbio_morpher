@@ -26,16 +26,12 @@ class Ensembler():
 
         self.config_filepath = config_filepath
         self.config_file = load_json_as_dict(config_filepath)
-        self.ensemble_configs = self.config_file.get(
-            "base_configs_ensemble", {})
-        logging.info(self.config_file)
-        logging.info(self.ensemble_configs)
+        self.ensemble_configs = self.config_file["base_configs_ensemble"]
 
     def run(self):
         for script_name in self.subscripts:
             script = import_script_func(script_name)
             logging.info(script)
-            logging.info(self.ensemble_configs)
             config = self.ensemble_configs[script_name]
             self.data_writer.update_ensemble(
                 config.get("experiment").get("purpose"))

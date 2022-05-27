@@ -28,7 +28,6 @@
             "source_of_interactions": {
                 "update_on_run": true,
                 "source_dir": "./data/ensemble_mutation_effect_analysis",
-                "postupdate_subdir": "gather_interaction_stats",
                 "source_dir_postupdate": null
             }
         },

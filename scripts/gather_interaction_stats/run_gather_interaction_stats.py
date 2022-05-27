@@ -8,7 +8,7 @@ from src.srv.io.results.experiments import Experiment, Protocol
 from src.srv.io.results.writer import DataWriter
 from src.srv.sequence_exploration.sequence_analysis import generate_interaction_stats
 from src.utils.data.data_format_tools.common import load_json_as_dict
-from src.utils.misc.io import get_pathnames
+from src.utils.misc.io import get_pathnames, get_search_dir
 
 
 def main(config=None, data_writer=None):
@@ -29,7 +29,8 @@ def main(config=None, data_writer=None):
     #     'experiment_key': "2022_05_10_155621",
     #     'subfolder': "interactions"
     # }.values()))
-    search_dir = config_file.get('source_dir')
+
+    config_file, search_dir = get_search_dir("source_of_interactions", config_file=config_file)
     protocols = [
         Protocol(
             # get list of all interaction paths
