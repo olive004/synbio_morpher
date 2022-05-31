@@ -1,4 +1,3 @@
-import logging
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.srv.io.manage.data_manager import DataManager
 from src.utils.misc.io import isolate_filename

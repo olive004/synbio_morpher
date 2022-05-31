@@ -51,7 +51,10 @@ class BaseSpecies():
     def make_interactions(self, config_args):
         if config_args.get("interactions_path", None):
             self.loaded_interactions = True
-            matrix, interaction_units = InteractionMatrix().load(config_args.get("interactions_path"))
+            if config_args.get("interactions_path", None):
+                matrix, interaction_units = InteractionMatrix().load(config_args.get("interactions_path"))
+            elif config_args.get("interactions_dict", None):
+                matrix, interaction_units = 
         else:
             matrix, interaction_units = self.init_matrix(ndims=2, init_type="zeros"), ''
         return (matrix, interaction_units)

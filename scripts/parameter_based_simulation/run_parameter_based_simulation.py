@@ -1,6 +1,7 @@
 import numpy as np
-
-from src.utils.system_definition.agnostic_system.modelling import Deterministic
+from scripts.common.circuit import construct_circuit_from_cfg
+from src.srv.io.results.result_writer import ResultWriter
+from src.utils.system_definition.agnostic_system.system_manager import CircuitModeller
 
 
 def main(config=None, writer=None):
@@ -14,4 +15,7 @@ def main(config=None, writer=None):
 
     matrix_dimensions = np.power(len(interaction_array), num_species)
 
-    Deterministic()
+
+    circuit = construct_circuit_from_cfg(extra_configs=None, config_filepath=config)
+    data_writer = ResultWriter(purpose='parameter_based_simulation')
+    CircuitModeller(result_writer=data_writer).find_steady_states()
