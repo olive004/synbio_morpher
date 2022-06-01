@@ -1,3 +1,4 @@
+import logging
 from math import factorial
 import numpy as np
 
@@ -52,8 +53,8 @@ def make_symmetrical_matrix_from_sequence(arr, side_length: int, total_dimension
             prev_triangle = triangular_sequence(side-1)
             curr_triangle_num = triangular_sequence(side)
 
-            matrix[side-1, 0:side-1] = arr[prev_triangle:curr_triangle_num]
-            matrix[0:side-1, side-1] = arr[prev_triangle:curr_triangle_num]
+            matrix[side-1, 0:side] = arr[prev_triangle:curr_triangle_num]
+            matrix[0:side, side-1] = arr[prev_triangle:curr_triangle_num]
     else:
         raise NotImplementedError(f'Unknown numerical sequence type {sequence}')
     return matrix

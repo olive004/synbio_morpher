@@ -37,15 +37,17 @@ class TestScripts(unittest.TestCase):
                         f'Could not test `main` function in {script_name} because it is wrapped.')
                 else:
                     self.assertIn(
-                        'config', inspect.getfullargspec(script).args)
+                        'config', inspect.getfullargspec(script).args,
+                        msg=f'Could not find "config" in script args "{script_name}"')
                     self.assertIn(
-                        'data_writer', inspect.getfullargspec(script).args)
+                        'data_writer', inspect.getfullargspec(script).args,
+                        msg=f'Could not find "data_writer" in script args "{script_name}"')
 
     def test_script_baseconfig(self):
         """ Test that every purpose in scripts that has a set of configs contain all the keys of the script"""
         exclude = ['common', '__pycache__']
 
-        base_config = {}
+        # base_config = {}
         for script_home in get_subdirectories(SCRIPT_DIR):
             if os.path.basename(script_home) in exclude:
                 continue

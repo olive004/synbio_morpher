@@ -16,7 +16,9 @@ def verify_file_type(filepath: str, file_type: str):
 
 
 def determine_data_format(filepath: str) -> str:
-    return os.path.basename(filepath).split('.')[-1]
+    if filepath:
+        return os.path.basename(filepath).split('.')[-1]
+    return None
     # for extension, ftype in FORMAT_EXTS.items():
     #     if extension in filepath:
     #         return ftype
@@ -28,10 +30,15 @@ def load_json_as_dict(json_pathname: str, process=True) -> dict:
         return {}
     elif type(json_pathname) == dict:
         jdict = json_pathname
+    elif type(json_pathname) == str:
+        if os.stat(json_pathname).st_size == 0:
+            jdict = {}
+        else:
+            file = open(json_pathname)
+            jdict = json.load(file)
+            file.close()
     else:
-        file = open(json_pathname)
-        jdict = json.load(file)
-        file.close()
+        raise TypeError(f'Unknown json loading input {json_pathname} of type {type(json_pathname)}.')
     if process:
         return process_json(jdict)
     return jdict

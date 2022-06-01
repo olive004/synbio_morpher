@@ -7,5 +7,11 @@
     "experiment": {
         "purpose": "gather_interaction_stats"
     },    
-    "system_type": "RNA"
+    "system_type": "RNA",
+    "source_of_interactions": {
+        "update_on_run": false,
+        "source_dir": "./data/gather_interaction_stats",
+        "postupdate_subdir": "gather_interaction_stats",
+        "source_dir_postupdate": null
+    }
 }

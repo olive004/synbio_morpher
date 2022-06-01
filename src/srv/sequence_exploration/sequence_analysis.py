@@ -9,7 +9,7 @@ from src.srv.io.loaders.data_loader import DataLoader
 from src.srv.io.results.writer import DataWriter
 from src.srv.parameter_prediction.interactions import InteractionMatrix
 from src.utils.misc.io import get_path_from_output_summary, get_pathnames, \
-    get_subdirectories, load_experiment_config load_experiment_output_summary
+    get_subdirectories, load_experiment_config, load_experiment_output_summary
 
 
 def generate_interaction_stats(path_name, writer: DataWriter = None, **stat_addons):
@@ -45,7 +45,7 @@ def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path
     if filt_stats.empty:
         logging.warning('No circuits were found matching the selected filters')
         return []
-        
+
     base_folder = os.path.dirname(
         os.path.dirname(filt_stats['interactions'].to_list()[0]))
     experiment_summary = load_experiment_output_summary(base_folder)
@@ -106,7 +106,8 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
         interaction_dir = os.path.join(
             os.path.dirname(os.path.dirname(mutations['template_file'].values[0])), 'interactions')
         interaction_stats = InteractionMatrix(matrix_path=get_pathnames(first_only=True,
-                                                                        file_key=["interactions", circuit_name],
+                                                                        file_key=[
+                                                                            "interactions", circuit_name],
                                                                         search_dir=interaction_dir)).get_stats()
         circuit_interaction_max = interaction_stats['max_interaction']
         current_table = pd.DataFrame.from_dict({

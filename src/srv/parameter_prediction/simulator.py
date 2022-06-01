@@ -1,7 +1,6 @@
 
 import numpy as np
 from functools import partial
-from src.srv.parameter_prediction.interactions import InteractionData
 from src.utils.misc.numerical import SCIENTIFIC
 
 
@@ -105,19 +104,22 @@ class InteractionSimulator():
 
         self.simulation_handler = RawSimulationHandling(config_args)
 
-    def run(self, batch: dict=None, allow_self_interaction=True):
+    def run(self, batch: dict = None, allow_self_interaction=True):
         """ Makes nested dictionary for querying interactions as 
         {sample1: {sample2: interaction}} """
 
-        simulator = self.simulation_handler.get_simulator(allow_self_interaction)
+        simulator = self.simulation_handler.get_simulator(
+            allow_self_interaction)
         data = simulator(batch)
-        data = InteractionData(data, simulation_handler=self.simulation_handler)
+        data = InteractionData(
+            data, simulation_handler=self.simulation_handler)
         return data
 
-        
+
 def simulate_vanilla(batch):
     raise NotImplementedError
     return None
+
 
 def simulate_intaRNA_data(batch: dict, allow_self_interaction: bool, sim_kwargs: dict):
     from src.srv.parameter_prediction.IntaRNA.bin.copomus.IntaRNA import IntaRNA
@@ -141,3 +143,33 @@ def simulate_intaRNA_data(batch: dict, allow_self_interaction: bool, sim_kwargs:
     else:
         data = simulator.run(**sim_kwargs)
     return data
+
+
+class InteractionData():
+
+    def __init__(self, data, simulation_handler: RawSimulationHandling,
+                 test_mode=False):
+        self.simulation_protocol = simulation_handler.get_protocol()
+        self.simulation_postproc = simulation_handler.get_postprocessing()
+        if not test_mode:
+            self.data, self.matrix = self.parse(data)
+        else:
+            self.data = self.simulation_protocol()
+        self.units = simulation_handler.units
+
+    def parse(self, data):
+        matrix = self.make_matrix(data)
+        return data, matrix
+
+    def make_matrix(self, data):
+        matrix = np.zeros((len(data), len(data)))
+        for i, (sample_i, sample_interactions) in enumerate(data.items()):
+            for j, (sample_j, raw_sample) in enumerate(sample_interactions.items()):
+                matrix[i, j] = self.get_interaction(raw_sample)
+        matrix = self.simulation_postproc(matrix)
+        return matrix
+
+    def get_interaction(self, sample):
+        if sample == False:
+            return 0
+        return self.simulation_protocol(sample)

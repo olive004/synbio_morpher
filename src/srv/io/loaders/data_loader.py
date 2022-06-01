@@ -3,6 +3,7 @@
 from functools import partial
 
 from src.utils.data.common import Data
+from src.utils.misc.helper import none_func
 
 
 class DataLoader():
@@ -25,6 +26,8 @@ class DataLoader():
         elif data_type == 'csv':
             from src.srv.io.loaders.misc import load_csv
             return load_csv
+        elif data_type == None:
+            return none_func
         else:
             raise NotImplementedError(
                 "Other filetypes than fasta not supported yet.")

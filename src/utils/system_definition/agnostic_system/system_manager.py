@@ -4,7 +4,6 @@ import os
 import numpy as np
 from scipy import integrate
 from src.srv.io.results.result_writer import ResultWriter
-from src.srv.parameter_prediction.interactions import RawSimulationHandling
 
 from src.utils.misc.decorators import time_it
 from src.utils.misc.numerical import zero_out_negs

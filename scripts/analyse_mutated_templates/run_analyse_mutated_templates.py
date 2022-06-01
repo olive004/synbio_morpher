@@ -1,5 +1,4 @@
 from functools import partial
-import logging
 import os
 
 from fire import Fire
@@ -7,7 +6,7 @@ from fire import Fire
 from src.srv.io.results.experiments import Experiment, Protocol
 from src.srv.io.results.result_writer import ResultWriter
 from src.srv.io.results.visualisation import visualise_data
-from src.srv.parameter_prediction.interactions import RawSimulationHandling
+from src.srv.parameter_prediction.simulator import RawSimulationHandling
 from src.srv.sequence_exploration.sequence_analysis import tabulate_mutation_info
 from src.utils.data.data_format_tools.common import load_json_as_dict
 
