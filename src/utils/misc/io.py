@@ -11,7 +11,9 @@ from src.utils.misc.string_handling import remove_file_extension
 
 
 def isolate_filename(filepath: str):
-    return os.path.splitext(os.path.basename(filepath))[0]
+    if type(filepath) == str:
+        return os.path.splitext(os.path.basename(filepath))[0]
+    return None
 
 
 def get_subdirectories(parent_dir, only_basedir=False):

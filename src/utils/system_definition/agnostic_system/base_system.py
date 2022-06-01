@@ -56,11 +56,11 @@ class BaseSpecies():
                 self.loaded_interactions = True
                 matrix, interaction_units = InteractionMatrix().load(
                     cfg_interactions.get("interactions_path"))
-            elif cfg_interactions.get("interactions_matrix", None):
+            elif cfg_interactions.get("interactions_matrix", None) is not None:
                 self.loaded_interactions = True
                 matrix, interaction_units = InteractionMatrix(
-                    matrix=cfg_interactions.get("interactions_matrix")),
-                cfg_interactions.get("interactions_units", '')
+                    matrix=cfg_interactions.get("interactions_matrix")).matrix, \
+                    cfg_interactions.get("interactions_units", '')
         else:
             matrix, interaction_units = self.init_matrix(
                 ndims=2, init_type="zeros"), ''

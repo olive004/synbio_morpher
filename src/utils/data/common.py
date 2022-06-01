@@ -5,10 +5,10 @@ import pandas as pd
 
 class Data():
 
-    def __init__(self, loaded_data: dict, identities: dict = {}, source_files=None) -> None:
-        self.data = loaded_data
+    def __init__(self, loaded_data: dict, identities: dict = {}, sample_names: list = None, source_files=None) -> None:
+        self.data = loaded_data if loaded_data is not None else {}
         self.source = source_files
-        self.sample_names = self.make_sample_names()
+        self.sample_names = self.make_sample_names(sample_names)
 
         self.identities = self.convert_names_to_idxs(identities, self.sample_names)
 
@@ -31,11 +31,13 @@ class Data():
                 indexed_identities[name_type] = source.index(name)
         return indexed_identities
 
-    def make_sample_names(self):
+    def make_sample_names(self, sample_names=None):
         if type(self.data) == dict:
             return list(self.data.keys())
         elif type(self.data) == pd.DataFrame:
             return list(self.data.columns)
+        elif self.data is None:
+            return sample_names
         raise ValueError(f'Unrecognised loaded data type {type(self.data)}.')
 
     @property

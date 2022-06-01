@@ -22,7 +22,8 @@ def compose_kwargs(extra_configs: dict = None, config_filepath: str = None, conf
         config_file.update(extra_configs)
     data_manager = DataManager(filepath=config_file.get("data_path", None),
                                identities=config_file.get("identities", {}), 
-                               data=config_file.get("data", None))
+                               data=config_file.get("data", None),
+                               sample_names=config_file.get("sample_names", None))
     kwargs = {
         "system_type": config_file.get("system_type"),
         "name": isolate_filename(data_manager.data.source),

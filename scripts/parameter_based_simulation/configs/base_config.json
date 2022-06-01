@@ -1,3 +1,12 @@
 {
-    "hi": null
+    "data_path": "./scripts/parameter_based_simulation/configs/empty_circuit.fasta",
+    "experiment": {
+        "purpose": "parameter_based_simulation"
+    },
+    "molecular_params": {
+        "creation_rates": 50,
+        "copynumbers": 5,
+        "degradation_rates": 20
+    },
+    "system_type": "RNA"
 }
