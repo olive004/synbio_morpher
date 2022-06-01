@@ -8,9 +8,8 @@ import pandas as pd
 from src.srv.io.loaders.data_loader import DataLoader
 from src.srv.io.results.writer import DataWriter
 from src.srv.parameter_prediction.interactions import InteractionMatrix
-from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.misc.io import get_path_from_output_summary, get_pathnames, \
-    get_subdirectories, load_experiment_config, load_experiment_report, load_experiment_output_summary
+    get_subdirectories, load_experiment_config load_experiment_output_summary
 
 
 def generate_interaction_stats(path_name, writer: DataWriter = None, **stat_addons):
@@ -48,7 +47,7 @@ def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path
         return []
         
     base_folder = os.path.dirname(
-        os.path.dirname(filt_stats['interactions_path'].to_list()[0]))
+        os.path.dirname(filt_stats['interactions'].to_list()[0]))
     experiment_summary = load_experiment_output_summary(base_folder)
 
     extra_configs = []
@@ -56,7 +55,7 @@ def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path
         extra_config = {write_key: get_path_from_output_summary(
             row["name"], experiment_summary)}
         extra_config.update(
-            {'interactions_path': row["interactions_path"]}
+            {'interactions': row["interactions"]}
         )
         extra_config.update(load_experiment_config(base_folder))
         extra_configs.append(extra_config)
