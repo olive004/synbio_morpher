@@ -91,3 +91,9 @@ def write_json(data: dict, out_path: str, overwrite=False):
     data = process_dict_for_json(data)
     with open(out_path, 'w+') as fn:
         json.dump(data, fp=fn, indent=4)
+
+
+def write_np(data: np.array, out_path: str, overwrite=False):
+    if not overwrite and os.path.exists(out_path):
+        return
+    np.save(file=out_path, arr=data)
