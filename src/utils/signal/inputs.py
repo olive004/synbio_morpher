@@ -88,7 +88,7 @@ class OscillatingSignal(Signal):
                            heights=self.heights,
                            durations=self.durations)
 
-    def spikes(self, positions, heights, durations) -> np.array:
+    def spikes(self, positions: list, heights: list, durations:list) -> np.array:
         # inputs: np.array of position,height,duration for each triangular pulse
         # pulse positions arranged in ascending order
 

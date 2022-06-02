@@ -11,5 +11,8 @@ def construct_circuit_from_cfg(extra_configs: dict, config_filepath: str = None,
         kwargs.get("signal")[
             "identities_idx"] = circuit.species.identities['input']
         signal = construct_signal(kwargs.get("signal"))
+        logging.info(circuit)
+        logging.info(circuit.signal)
+        logging.info(signal)
         circuit.signal = signal
     return circuit

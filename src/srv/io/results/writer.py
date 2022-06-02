@@ -87,7 +87,7 @@ class DataWriter():
             return partial(write_csv, out_path=out_path, overwrite=overwrite)
         if out_type == "json":
             return partial(write_json, out_path=out_path, overwrite=overwrite)
-        if out_type == "np":
+        if out_type == "npy":
             return partial(write_np, out_path=out_path, overwrite=overwrite)
         raise ValueError(
             f'No write function available for output of type {out_type}')

@@ -185,7 +185,7 @@ class BaseSystem():
             config_args = {}
 
         self.species = BaseSpecies(config_args)
-        self.signal = None
+        self._signal = None
 
         self.result_collector = ResultCollector()
 
@@ -255,3 +255,17 @@ class BaseSystem():
     @property
     def results(self):
         return self.result_collector.results
+
+    @property
+    def signal(self):
+        return self._signal
+
+    @signal.getter
+    def signal(self):
+        if self._signal is None:
+            logging.warning(f'Trying to retrieve None signal from circuit. Make sure signal specified in circuit config')
+        return self._signal
+    
+    @signal.setter
+    def signal(self, value):
+        self._signal = value

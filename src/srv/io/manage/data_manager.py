@@ -13,10 +13,12 @@ class DataManager():
         if data is None and filepath:
             self.data = self.loader.load_data(filepath, identities=identities)
         elif data is None and filepath is None:
-            self.data = Data(data, identities=identities, sample_names=sample_names)
+            self.data = Data(data, identities=identities)
             logging.warning(
                 f'No data: either a data filepath or raw data must be supplied to DataManager')
             # raise ValueError('Either a data filepath or raw data must be supplied.')
+        else:
+            self.data = Data(data, identities=identities)
 
     def __repr__(self) -> str:
         return str(self.data)
