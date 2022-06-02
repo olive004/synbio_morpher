@@ -13,7 +13,8 @@ class Signal():
         self.magnitude = magnitude
         self.time_interval = time_interval
         self.time_steps = time_interval * total_time
-        self.time_dilation_func = partial(np.repeat, repeats=total_time / len(self.abstract_signal))
+        self.time_dilation_func = partial(
+            np.repeat, repeats=total_time / len(self.abstract_signal))
 
     @property
     def abstract_signal(self):
@@ -25,7 +26,13 @@ class Signal():
 
     @property
     def real_signal(self):
-        return self.time_dilation_func(self.abstract_signal) * self.magnitude
+        signal = self.time_dilation_func(self.abstract_signal) * self.magnitude
+        if not len(signal) < self.total_time:
+            np.concatenate(arrays=[signal, np.repeat(
+                signal[-1], self.total_time - len(signal))])
+        assert len(
+            signal) == self.total_time, f'The signal length {len(signal)} does not equal its intended length {self.total_time}'
+        return signal
 
     @property
     def time(self):
@@ -88,7 +95,7 @@ class OscillatingSignal(Signal):
                            heights=self.heights,
                            durations=self.durations)
 
-    def spikes(self, positions: list, heights: list, durations:list) -> np.array:
+    def spikes(self, positions: list, heights: list, durations: list) -> np.array:
         # inputs: np.array of position,height,duration for each triangular pulse
         # pulse positions arranged in ascending order
 
