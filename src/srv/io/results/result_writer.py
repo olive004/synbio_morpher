@@ -3,6 +3,7 @@
 import os
 from src.srv.io.results.results import Result
 from src.srv.io.results.writer import DataWriter
+from src.utils.misc.numerical import transpose_arraylike
 from src.utils.misc.string_handling import make_time_str
 from src.utils.system_definition.agnostic_system.base_system import BaseSystem
 
@@ -32,16 +33,15 @@ class ResultWriter(DataWriter):
         for writeable in keys:
             write_dict[writeable] = source.get(writeable, '')
         self.output(out_type, out_name, overwrite=not(
-            new_report), **{'data': write_dict})
+            new_report), data=write_dict)
 
     def write_numerical(self, data, out_name: str):
-        self.output(out_type='csv', out_name=out_name, **{'data': data})
+        self.output(out_type='csv', out_name=out_name,
+                    data=transpose_arraylike(data))
 
-    def write_metrics(self, result: Result, new_report=False):
+    def write_metrics(self, result: Result, new_report=False, ):
         metrics = result.metrics
-        plotables = ['first_derivative']
         writeables = ['steady_state', 'fold_change']
-        self.make_metric_visualisation(result, plotables, metrics, new_report)
         self.make_report(writeables, metrics, new_report)
 
     def write_results(self, results: dict, new_report=False, no_visualisations=False):
@@ -55,6 +55,8 @@ class ResultWriter(DataWriter):
             if not no_visualisations:
                 self.visualise(out_name=result.name,
                                writer=result.vis_func, **result.vis_kwargs)
+                plottables = ['first_derivative']
+                self.make_metric_visualisation(result, plottables, result.metrics, new_report)
             self.write_metrics(result, new_report=new_report)
 
     def write_all(self, circuit: BaseSystem, new_report: bool, no_visualisations: bool = False):

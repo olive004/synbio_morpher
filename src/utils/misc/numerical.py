@@ -65,5 +65,11 @@ def square_matrix_rand(num_nodes: int = 3):
     return np.random.rand(*dims)
 
 
+def transpose_arraylike(arraylike):
+    if type(arraylike) == list:
+        arraylike = np.array(arraylike)
+    return arraylike.transpose
+
+
 def triangular_sequence(n: int) -> int:
     return int((n*(n+1))/2)

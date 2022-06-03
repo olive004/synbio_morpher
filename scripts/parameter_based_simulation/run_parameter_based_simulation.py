@@ -41,7 +41,7 @@ def main(config=None, data_writer=None):
         assert matrix_size == np.prod(list(
             matrix_dimensions)), 'Something is off about the intended size of the matrix'
 
-        all_species_steady_states = np.zeros(matrix_dimensions)
+        all_species_steady_states = np.zeros(matrix_dimensions, dtype=np.float32)
 
         num_iterations = matrix_size
 
@@ -54,7 +54,7 @@ def main(config=None, data_writer=None):
         logging.info(f'Total data: {num_iterations}')
         logging.info(f'Projected size (inc signal writing):')
         logging.info('\tRate of 23.7GB / 82500 iterations')
-        logging.info(f'\t{23.7/82500*num_iterations}')
+        logging.info(f'\t{np.round(23.7/82500*num_iterations, decimals=3)}Gb')
         modeller = CircuitModeller(result_writer=data_writer)
         for i in range(num_iterations):  # 8100 per min
             if np.mod(i, 500) == 0:
@@ -80,23 +80,22 @@ def main(config=None, data_writer=None):
 
             idx = [slice(0, num_species)] + [[ite] for ite in iterators]
             all_species_steady_states[tuple(
-                idx)] = circuit.species.steady_state_copynums[:]
+                idx)] = circuit.species.steady_state_copynums[:].as_type(np.float32)
             data_writer.output('csv', out_name='flat_triangle_interaction_matrix',
                                write_master=False, data=flat_triangle)
             data_writer.output('csv', out_name='steady_state', write_master=False,
                                data=circuit.species.steady_state_copynums[:])
-            {
-                'flat_triangle_interaction_matrix': flat_triangle,
-                'steady_state': [np.float32(x) for x in circuit.species.steady_state_copynums[:]],
-                'response_time': 
-            }
+            # {
+            #     'flat_triangle_interaction_matrix': flat_triangle,
+            #     'steady_state': [np.float32(x) for x in circuit.species.steady_state_copynums[:]],
+            # }
 
             modeller.write_results(circuit=circuit, no_visualisations=True)
 
             data_writer.unsubdivide_last_dir()
 
         data_writer.output('npy', out_name='steady_state_interpolation',
-                           data=all_species_steady_states)
+                           data=all_species_steady_states.astype(np.float32))
 
     experiment = Experiment(config_filepath=config, protocols=[Protocol(make_interaction_interpolation_matrices)],
                             data_writer=data_writer)
