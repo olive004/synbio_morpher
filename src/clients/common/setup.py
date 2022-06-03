@@ -37,11 +37,6 @@ def compose_kwargs(extra_configs: dict = None, config_filepath: str = None, conf
         "signal": load_json_as_dict(config_file.get("signal")),
         "molecular_params": load_json_as_dict(config_file.get("molecular_params"))
     }
-    logging.info(kwargs["identities"])
-    logging.info(config_file.get("identities", {}))
-    logging.info(data_manager.source)
-    logging.info(data_manager.data)
-    logging.info(data_manager.data.identities)
     return kwargs
 
 

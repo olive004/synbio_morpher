@@ -52,11 +52,16 @@ def main(config=None, data_writer=None):
         logging.info(f'\t{num_iterations / 8000 / 60} in hours')
         logging.info(f'\t{num_iterations / 8000 / 60 / 24} in days')
         logging.info(f'Total data: {num_iterations}')
+        logging.info(f'Projected size (inc signal writing):')
+        logging.info('\tRate of 23.7GB / 82500 iterations')
+        logging.info(f'\t{23.7/82500*num_iterations}')
         modeller = CircuitModeller(result_writer=data_writer)
         for i in range(num_iterations):  # 8100 per min
-            data_writer.subdivide_writing(str(i))
             if np.mod(i, 500) == 0:
+                data_writer.unsubdivide()
+                data_writer.subdivide_writing(f'{i}-{i+500}')
                 logging.info(f'Iteration {i}/{num_iterations}')
+            data_writer.subdivide_writing(str(i))
             iterators = [int(np.mod(i / np.power(size_interaction_array, j),
                              size_interaction_array)) for j in range(num_unique_interactions)]
             flat_triangle = interaction_array[list(iterators)]
@@ -76,12 +81,19 @@ def main(config=None, data_writer=None):
             idx = [slice(0, num_species)] + [[ite] for ite in iterators]
             all_species_steady_states[tuple(
                 idx)] = circuit.species.steady_state_copynums[:]
-            data_writer.output('npy', out_name='flat_triangle_interaction_matrix', subfolder=str(
-                i), write_master=False, data=flat_triangle)
-            data_writer.output('npy', out_name='steady_state', subfolder=str(
-                i), write_master=False, data=circuit.species.steady_state_copynums[:])
+            data_writer.output('csv', out_name='flat_triangle_interaction_matrix',
+                               write_master=False, data=flat_triangle)
+            data_writer.output('csv', out_name='steady_state', write_master=False,
+                               data=circuit.species.steady_state_copynums[:])
+            {
+                'flat_triangle_interaction_matrix': flat_triangle,
+                'steady_state': [np.float32(x) for x in circuit.species.steady_state_copynums[:]],
+                'response_time': 
+            }
 
-            data_writer.unsubdivide()
+            modeller.write_results(circuit=circuit, no_visualisations=True)
+
+            data_writer.unsubdivide_last_dir()
 
         data_writer.output('npy', out_name='steady_state_interpolation',
                            data=all_species_steady_states)

@@ -7,7 +7,7 @@ class Timeseries():
 
         self.stability_threshold = 0.01
 
-    def stability(self):
+    def get_steady_state(self):
         """ Last 5% of data considered steady state """
         final_deriv = np.average(
             self.get_derivative()[:, :-2])
@@ -26,7 +26,10 @@ class Timeseries():
 
     def get_derivative(self):
         deriv = np.gradient(self.data)[1]
-        return deriv  # get column derivative
+        return deriv  # get column derivative 
+    
+    def get_response_time(self, steady_states):
+        self.data
 
     def frequency(self):
         spectrum = np.fft.fft(self.data)/len(self.data)
@@ -38,6 +41,7 @@ class Timeseries():
         analytics = {
             'first_derivative': self.get_derivative(),
             'fold_change': self.fold_change(),
-            'steady_state': self.stability()
+            'steady_state': self.get_steady_state(),
         }
+        analytics['response_time'] = self.get_response_time(analytics['steady_state']['steady_states'])
         return analytics

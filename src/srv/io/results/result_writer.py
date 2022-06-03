@@ -22,7 +22,8 @@ class ResultWriter(DataWriter):
                     'data': source.get(plotable),
                     'new_vis': new_report
                 })
-                self.output(out_name=out_name, writer=result.vis_func, **result.vis_kwargs)
+                self.output(out_name=out_name,
+                            writer=result.vis_func, **result.vis_kwargs)
 
     def make_report(self, keys, source: dict, new_report: bool, out_name='report', out_type='json'):
         if new_report:
@@ -33,7 +34,7 @@ class ResultWriter(DataWriter):
         self.output(out_type, out_name, overwrite=not(
             new_report), **{'data': write_dict})
 
-    def write_numerical(self, data, out_name:str):
+    def write_numerical(self, data, out_name: str):
         self.output(out_type='csv', out_name=out_name, **{'data': data})
 
     def write_metrics(self, result: Result, new_report=False):
@@ -43,18 +44,27 @@ class ResultWriter(DataWriter):
         self.make_metric_visualisation(result, plotables, metrics, new_report)
         self.make_report(writeables, metrics, new_report)
 
-    def write_results(self, results: dict, new_report=False):
+    def write_results(self, results: dict, new_report=False, no_visualisations=False):
 
         for _name, result in results.items():
-            result.vis_kwargs.update({'new_vis': new_report, 'data': result.data})
+            result.vis_kwargs.update(
+                {'new_vis': new_report, 'data': result.data})
 
-            self.write_numerical(data=result.data, out_name=result.name + '_data')
-            self.visualise(out_name=result.name, writer=result.vis_func, **result.vis_kwargs)
+            self.write_numerical(
+                data=result.data, out_name=result.name + '_data')
+            if not no_visualisations:
+                self.visualise(out_name=result.name,
+                               writer=result.vis_func, **result.vis_kwargs)
             self.write_metrics(result, new_report=new_report)
 
-    def write_all(self, circuit: BaseSystem, new_report: bool):
-        self.visualise_graph(circuit)
-        self.write_results(circuit.result_collector.results, new_report=new_report)
+    def write_all(self, circuit: BaseSystem, new_report: bool, no_visualisations: bool = False):
+        if not no_visualisations:
+            self.visualise_graph(circuit)
+            self.write_results(
+                circuit.result_collector.results, new_report=new_report)
+        else:
+            self.write_results(circuit.result_collector.results,
+                               new_report=new_report, no_visualisations=no_visualisations)
 
     def visualise(self, out_name, writer, **vis_kwargs):
         self.output(out_name=out_name, writer=writer, **vis_kwargs)

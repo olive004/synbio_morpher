@@ -27,9 +27,9 @@ class Signal():
     @property
     def real_signal(self):
         signal = self.time_dilation_func(self.abstract_signal) * self.magnitude
-        if not len(signal) < self.total_time:
-            np.concatenate(arrays=[signal, np.repeat(
-                signal[-1], self.total_time - len(signal))])
+        if len(signal) < self.total_time:
+            signal = np.concatenate((signal, np.repeat(
+                signal[-1], self.total_time - len(signal))))
         assert len(
             signal) == self.total_time, f'The signal length {len(signal)} does not equal its intended length {self.total_time}'
         return signal

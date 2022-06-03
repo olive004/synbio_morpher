@@ -179,5 +179,5 @@ class CircuitModeller():
     def visualise_graph(self, circuit: BaseSystem, mode="pyvis", new_vis=False):
         self.result_writer.visualise_graph(circuit, mode, new_vis)
 
-    def write_results(self, circuit, new_report=False):
-        self.result_writer.write_all(circuit, new_report)
+    def write_results(self, circuit, new_report=False, no_visualisations=False):
+        self.result_writer.write_all(circuit, new_report, no_visualisations=no_visualisations)
