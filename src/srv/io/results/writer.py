@@ -106,7 +106,7 @@ class DataWriter():
     def generate_location_instance(self):
         return make_time_str()
 
-    def subdivide_writing(self, name: str, safe_dir_change=True, ):
+    def subdivide_writing(self, name: str, safe_dir_change=True):
         """ Update the working write_dir to write to a new subdirectory. 
         If safe_dir_change is specified, recursive subdividing can be avoided. """
         base_dir = self.top_write_dir if safe_dir_change else self.write_dir

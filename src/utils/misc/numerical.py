@@ -68,7 +68,7 @@ def square_matrix_rand(num_nodes: int = 3):
 def transpose_arraylike(arraylike):
     if type(arraylike) == list:
         arraylike = np.array(arraylike)
-    return arraylike.transpose
+    return np.transpose(arraylike)
 
 
 def triangular_sequence(n: int) -> int:

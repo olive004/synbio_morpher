@@ -1,6 +1,8 @@
 
 
 import os
+
+import numpy as np
 from src.srv.io.results.results import Result
 from src.srv.io.results.writer import DataWriter
 from src.utils.misc.numerical import transpose_arraylike
@@ -32,6 +34,10 @@ class ResultWriter(DataWriter):
         write_dict = {}
         for writeable in keys:
             write_dict[writeable] = source.get(writeable, '')
+            if type(write_dict[writeable]) == np.array:
+                if write_dict[writeable].ndim == 2 and np.shape(write_dict[writeable])[1] == 1:
+                    write_dict[writeable] = np.squeeze(write_dict[writeable])
+                write_dict[writeable] = list(write_dict[writeable])
         self.output(out_type, out_name, overwrite=not(
             new_report), data=write_dict)
 

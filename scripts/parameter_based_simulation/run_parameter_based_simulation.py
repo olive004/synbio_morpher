@@ -41,7 +41,8 @@ def main(config=None, data_writer=None):
         assert matrix_size == np.prod(list(
             matrix_dimensions)), 'Something is off about the intended size of the matrix'
 
-        all_species_steady_states = np.zeros(matrix_dimensions, dtype=np.float32)
+        all_species_steady_states = np.zeros(
+            matrix_dimensions, dtype=np.float32)
 
         num_iterations = matrix_size
 
@@ -57,42 +58,46 @@ def main(config=None, data_writer=None):
         logging.info(f'\t{np.round(23.7/82500*num_iterations, decimals=3)}Gb')
         modeller = CircuitModeller(result_writer=data_writer)
         for i in range(num_iterations):  # 8100 per min
-            if np.mod(i, 500) == 0:
-                data_writer.unsubdivide()
-                data_writer.subdivide_writing(f'{i}-{i+500}')
-                logging.info(f'Iteration {i}/{num_iterations}')
-            data_writer.subdivide_writing(str(i))
-            iterators = [int(np.mod(i / np.power(size_interaction_array, j),
-                             size_interaction_array)) for j in range(num_unique_interactions)]
-            flat_triangle = interaction_array[list(iterators)]
-            interaction_matrix = make_symmetrical_matrix_from_sequence(
-                flat_triangle, num_species)
-            cfg = {"interactions": {
-                "interactions_matrix": interaction_matrix,
-                "interactions_units": SIMULATOR_UNITS['IntaRNA']['rate']},
-                "sample_names": sample_names
-            }
+            def loop_iter():
+                if np.mod(i, 500) == 0:
+                    data_writer.unsubdivide()
+                    data_writer.subdivide_writing(f'{i}-{i+500}')
+                    logging.info(f'Iteration {i}/{num_iterations}')
+                data_writer.subdivide_writing(str(i), safe_dir_change=False)
+                iterators = [int(np.mod(i / np.power(size_interaction_array, j),
+                                        size_interaction_array)) for j in range(num_unique_interactions)]
+                flat_triangle = interaction_array[list(iterators)]
+                interaction_matrix = make_symmetrical_matrix_from_sequence(
+                    flat_triangle, num_species)
+                cfg = {"interactions": {
+                    "interactions_matrix": interaction_matrix,
+                    "interactions_units": SIMULATOR_UNITS['IntaRNA']['rate']},
+                    "sample_names": sample_names
+                }
 
-            circuit = construct_circuit_from_cfg(
-                extra_configs=cfg, config_filepath=config)
-            circuit = modeller.init_circuit(circuit)
-            circuit = modeller.simulate_signal(circuit)
+                circuit = construct_circuit_from_cfg(
+                    extra_configs=cfg, config_filepath=config)
+                circuit = modeller.init_circuit(circuit)
+                circuit = modeller.simulate_signal(circuit)
 
-            idx = [slice(0, num_species)] + [[ite] for ite in iterators]
-            all_species_steady_states[tuple(
-                idx)] = circuit.species.steady_state_copynums[:].as_type(np.float32)
-            data_writer.output('csv', out_name='flat_triangle_interaction_matrix',
-                               write_master=False, data=flat_triangle)
-            data_writer.output('csv', out_name='steady_state', write_master=False,
-                               data=circuit.species.steady_state_copynums[:])
-            # {
-            #     'flat_triangle_interaction_matrix': flat_triangle,
-            #     'steady_state': [np.float32(x) for x in circuit.species.steady_state_copynums[:]],
-            # }
+                idx = [slice(0, num_species)] + [[ite] for ite in iterators]
+                all_species_steady_states[tuple(
+                    idx)] = circuit.species.steady_state_copynums[:].astype(np.float32)
+                data_writer.output(
+                    'csv', out_name='flat_triangle_interaction_matrix', data=flat_triangle)
+                data_writer.output('csv', out_name='steady_state',
+                                   data=circuit.species.steady_state_copynums[:])
+                # {
+                #     'flat_triangle_interaction_matrix': flat_triangle,
+                #     'steady_state': [np.float32(x) for x in circuit.species.steady_state_copynums[:]],
+                # }
 
-            modeller.write_results(circuit=circuit, no_visualisations=True)
+                modeller.write_results(circuit=circuit, no_visualisations=True)
 
-            data_writer.unsubdivide_last_dir()
+                data_writer.unsubdivide_last_dir()
+            experiment = Experiment(config_filepath=config, protocols=[Protocol(loop_iter)],
+                                    data_writer=data_writer)
+            experiment.run_experiment()
 
         data_writer.output('npy', out_name='steady_state_interpolation',
                            data=all_species_steady_states.astype(np.float32))
