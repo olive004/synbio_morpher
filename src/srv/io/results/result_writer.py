@@ -33,7 +33,8 @@ class ResultWriter(DataWriter):
     def make_report(self, keys, source: dict, new_report: bool, out_name='report', out_type='json'):
 
         def prettify_writeable(writeable):
-            if type(writeable) == np.array:
+            if type(writeable) == np.ndarray or type(writeable) == list:
+                writeable = np.array(writeable)
                 if writeable.ndim == 2 and np.shape(writeable)[1] == 1:
                     writeable = np.squeeze(writeable)
                 writeable = list(writeable)
