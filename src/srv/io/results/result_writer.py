@@ -31,19 +31,22 @@ class ResultWriter(DataWriter):
                             writer=result.vis_func, **result.vis_kwargs)
 
     def make_report(self, keys, source: dict, new_report: bool, out_name='report', out_type='json'):
+
+        def prettify_writeable(writeable):
+            if type(writeable) == np.array:
+                if writeable.ndim == 2 and np.shape(writeable)[1] == 1:
+                    writeable = np.squeeze(writeable)
+                writeable = list(writeable)
+            elif type(writeable) == dict:
+                for k, v in writeable.items():
+                    writeable[k] = prettify_writeable(v)
+            return writeable
+
         if new_report:
             out_name = out_name + '_' + make_time_str()
         out_dict = {}
         for writeable in keys:
-            out_dict[writeable] = source.get(writeable, '')
-            if type(out_dict[writeable]) == np.array:
-                logging.info(out_dict[writeable])
-                if out_dict[writeable].ndim == 2 and np.shape(out_dict[writeable])[1] == 1:
-                    out_dict[writeable] = np.squeeze(out_dict[writeable])
-                out_dict[writeable] = list(out_dict[writeable])
-                logging.info(out_dict[writeable])
-        logging.info(writeable)
-        logging.info(out_dict[writeable])
+            out_dict[writeable] = prettify_writeable(source.get(writeable, ''))
         self.output(out_type, out_name, overwrite=not(
             new_report), data=out_dict)
 

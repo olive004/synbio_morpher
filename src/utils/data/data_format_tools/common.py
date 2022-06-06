@@ -92,7 +92,11 @@ def write_csv(data: pd.DataFrame, out_path: str, overwrite=False):
 def write_json(data: dict, out_path: str, overwrite=False):
     data = process_dict_for_json(data)
     with open(out_path, 'w+') as fn:
-        json.dump(data, fp=fn, indent=4)
+        try:
+            json.dump(data, fp=fn, indent=4)
+        except TypeError:
+            data = str(data)
+            json.dump(data, fp=fn, indent=4)
 
 
 def write_np(data: np.array, out_path: str, overwrite=False):
