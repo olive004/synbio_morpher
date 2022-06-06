@@ -1,8 +1,10 @@
 
 
+import logging
 import os
 
 import numpy as np
+from src.srv.io.results.metrics.timeseries import Timeseries
 from src.srv.io.results.results import Result
 from src.srv.io.results.writer import DataWriter
 from src.utils.misc.numerical import transpose_arraylike
@@ -31,15 +33,19 @@ class ResultWriter(DataWriter):
     def make_report(self, keys, source: dict, new_report: bool, out_name='report', out_type='json'):
         if new_report:
             out_name = out_name + '_' + make_time_str()
-        write_dict = {}
+        out_dict = {}
         for writeable in keys:
-            write_dict[writeable] = source.get(writeable, '')
-            if type(write_dict[writeable]) == np.array:
-                if write_dict[writeable].ndim == 2 and np.shape(write_dict[writeable])[1] == 1:
-                    write_dict[writeable] = np.squeeze(write_dict[writeable])
-                write_dict[writeable] = list(write_dict[writeable])
+            out_dict[writeable] = source.get(writeable, '')
+            if type(out_dict[writeable]) == np.array:
+                logging.info(out_dict[writeable])
+                if out_dict[writeable].ndim == 2 and np.shape(out_dict[writeable])[1] == 1:
+                    out_dict[writeable] = np.squeeze(out_dict[writeable])
+                out_dict[writeable] = list(out_dict[writeable])
+                logging.info(out_dict[writeable])
+        logging.info(writeable)
+        logging.info(out_dict[writeable])
         self.output(out_type, out_name, overwrite=not(
-            new_report), data=write_dict)
+            new_report), data=out_dict)
 
     def write_numerical(self, data, out_name: str):
         self.output(out_type='csv', out_name=out_name,
@@ -47,7 +53,7 @@ class ResultWriter(DataWriter):
 
     def write_metrics(self, result: Result, new_report=False, ):
         metrics = result.metrics
-        writeables = ['steady_state', 'fold_change']
+        writeables = Timeseries(data=None).get_writeables()
         self.make_report(writeables, metrics, new_report)
 
     def write_results(self, results: dict, new_report=False, no_visualisations=False):
@@ -62,17 +68,15 @@ class ResultWriter(DataWriter):
                 self.visualise(out_name=result.name,
                                writer=result.vis_func, **result.vis_kwargs)
                 plottables = ['first_derivative']
-                self.make_metric_visualisation(result, plottables, result.metrics, new_report)
+                self.make_metric_visualisation(
+                    result, plottables, result.metrics, new_report)
             self.write_metrics(result, new_report=new_report)
 
     def write_all(self, circuit: BaseSystem, new_report: bool, no_visualisations: bool = False):
         if not no_visualisations:
             self.visualise_graph(circuit)
-            self.write_results(
-                circuit.result_collector.results, new_report=new_report)
-        else:
-            self.write_results(circuit.result_collector.results,
-                               new_report=new_report, no_visualisations=no_visualisations)
+        self.write_results(circuit.result_collector.results,
+                           new_report=new_report, no_visualisations=no_visualisations)
 
     def visualise(self, out_name, writer, **vis_kwargs):
         self.output(out_name=out_name, writer=writer, **vis_kwargs)
