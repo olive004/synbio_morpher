@@ -94,7 +94,7 @@ def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
                 plot_kwrgs.update({'data': data[col]})
 
             data_writer.output(out_type='png', out_name=out_name,
-                               writer=visualiser.histplot, **merge_dicts({'use_sns': use_sns, "log_axis": log_axis},
+                               write_func=visualiser.histplot, **merge_dicts({'use_sns': use_sns, "log_axis": log_axis},
                                                                          plot_kwrgs))
     elif plot_type == 'plot':
         try:
@@ -102,7 +102,7 @@ def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
             if preprocessor_func:
                 x, y = preprocessor_func(x.values), preprocessor_func(y.values)
             data_writer.output(out_type='png', out_name=out_name,
-                               writer=visualiser.plot, **merge_dicts({'data': x, 'y': y}, plot_kwrgs))
+                               write_func=visualiser.plot, **merge_dicts({'data': x, 'y': y}, plot_kwrgs))
         except IndexError:
             assert len(
                 cols) == 2, 'For visualising a plot from a table, please only provide 2 columns as variables.'

@@ -15,9 +15,7 @@ from src.utils.system_definition.agnostic_system.base_system import BaseSystem
 class ResultWriter(DataWriter):
     def __init__(self, purpose, out_location=None) -> None:
         super().__init__(purpose, out_location)
-
-    # def add_result():
-        # There's a ResultCollector class for this
+        self.report = {}
 
     def make_metric_visualisation(self, result, keys, source: dict, new_report: bool):
         for plotable in keys:
@@ -28,9 +26,9 @@ class ResultWriter(DataWriter):
                     'new_vis': new_report
                 })
                 self.output(out_name=out_name,
-                            writer=result.vis_func, **result.vis_kwargs)
+                            write_func=result.vis_func, **result.vis_kwargs)
 
-    def make_report(self, keys, source: dict, new_report: bool, out_name='report', out_type='json'):
+    def make_report(self, keys, source: dict):
 
         def prettify_writeable(writeable):
             if type(writeable) == np.ndarray or type(writeable) == list:
@@ -43,22 +41,29 @@ class ResultWriter(DataWriter):
                     writeable[k] = prettify_writeable(v)
             return writeable
 
+        report = {}
+        for writeable in keys:
+            report[writeable] = prettify_writeable(source.get(writeable, ''))
+        self.report = report
+
+        return report
+
+    def write_report(self, writeables, metrics, new_report, out_name='report', out_type='json'):
+        report = self.make_report(writeables, metrics)
+
         if new_report:
             out_name = out_name + '_' + make_time_str()
-        out_dict = {}
-        for writeable in keys:
-            out_dict[writeable] = prettify_writeable(source.get(writeable, ''))
         self.output(out_type, out_name, overwrite=not(
-            new_report), data=out_dict)
+            new_report), data=report)
 
     def write_numerical(self, data, out_name: str):
         self.output(out_type='csv', out_name=out_name,
                     data=transpose_arraylike(data))
 
-    def write_metrics(self, result: Result, new_report=False, ):
+    def write_metrics(self, result: Result, new_report=False):
         metrics = result.metrics
         writeables = Timeseries(data=None).get_writeables()
-        self.make_report(writeables, metrics, new_report)
+        self.write_report(writeables, metrics, new_report)
 
     def write_results(self, results: dict, new_report=False, no_visualisations=False):
 
@@ -83,7 +88,7 @@ class ResultWriter(DataWriter):
                            new_report=new_report, no_visualisations=no_visualisations)
 
     def visualise(self, out_name, writer, **vis_kwargs):
-        self.output(out_name=out_name, writer=writer, **vis_kwargs)
+        self.output(out_name=out_name, write_func=writer, **vis_kwargs)
 
     def visualise_graph(self, circuit: BaseSystem, mode="pyvis", new_vis=False):
         circuit.refresh_graph()
