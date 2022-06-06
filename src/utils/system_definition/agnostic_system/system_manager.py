@@ -73,9 +73,9 @@ class CircuitModeller():
                                             vis_func=modeller_steady_state.plot,
                                             **{'legend': list(circuit.species.data.sample_names),
                                                'out_type': 'png'})
-        steady_state_metrics = circuit.result_collector.get_result(
-            key='steady_state').metrics
-        circuit.species.steady_state_copynums = steady_state_metrics[
+        steady_state_analytics = circuit.result_collector.get_result(
+            key='steady_state').analytics
+        circuit.species.steady_state_copynums = steady_state_analytics[
             'steady_state']['steady_states']
         return circuit
 

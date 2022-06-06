@@ -13,10 +13,10 @@ class Result():
         self.vis_func = vis_func
         self.vis_kwargs = vis_kwargs
 
-        self.metrics = {}
+        self.analytics = {}
         if category == 'time_series':
-            from src.srv.io.results.metrics.timeseries import Timeseries
-            self.metrics = Timeseries(result_data).generate_analytics()
+            from src.srv.io.results.analytics.timeseries import Timeseries
+            self.analytics = Timeseries(result_data).generate_analytics()
 
     def __repr__(self):
         str_rep = [f'\n\nResult {self.name}\n']

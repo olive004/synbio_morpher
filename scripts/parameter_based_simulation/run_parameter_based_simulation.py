@@ -92,16 +92,16 @@ def main(config=None, data_writer=None):
                 all_species_steady_states[tuple(
                     idxs)] = circuit.species.steady_state_copynums[:].astype(np.float32)
                 all_species_response_time[tuple(
-                    idxs)] = circuit.result_collector.results['signal'].metrics.get('response_time')
+                    idxs)] = circuit.result_collector.results['signal'].analytics.get('response_time')
                 all_species_response_time_low[tuple(
-                    idxs)] = circuit.result_collector.results['signal'].metrics.get('response_time_low')
+                    idxs)] = circuit.result_collector.results['signal'].analytics.get('response_time_low')
                 all_species_response_time_high[tuple(
-                    idxs)] = circuit.result_collector.results['signal'].metrics['response_time_high']
+                    idxs)] = circuit.result_collector.results['signal'].analytics['response_time_high']
 
                 logging.info(circuit.result_collector.results['signal'].analytics.__dict__)
                 
 
-                logging.info(circuit.result_collector.results['signal'].metrics.get('response_time'))
+                logging.info(circuit.result_collector.results['signal'].analytics.get('response_time'))
                 logging.info(all_species_response_time[all_species_response_time>0])
 
                 data_writer.output(

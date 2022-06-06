@@ -4,7 +4,7 @@ import logging
 import os
 
 import numpy as np
-from src.srv.io.results.metrics.timeseries import Timeseries
+from src.srv.io.results.analytics.timeseries import Timeseries
 from src.srv.io.results.results import Result
 from src.srv.io.results.writer import DataWriter
 from src.utils.misc.numerical import transpose_arraylike
@@ -48,8 +48,8 @@ class ResultWriter(DataWriter):
 
         return report
 
-    def write_report(self, writeables, metrics, new_report, out_name='report', out_type='json'):
-        report = self.make_report(writeables, metrics)
+    def write_report(self, writeables, analytics, new_report, out_name='report', out_type='json'):
+        report = self.make_report(writeables, analytics)
 
         if new_report:
             out_name = out_name + '_' + make_time_str()
@@ -60,10 +60,10 @@ class ResultWriter(DataWriter):
         self.output(out_type='csv', out_name=out_name,
                     data=transpose_arraylike(data))
 
-    def write_metrics(self, result: Result, new_report=False):
-        metrics = result.metrics
+    def write_analytics(self, result: Result, new_report=False):
+        analytics = result.analytics
         writeables = Timeseries(data=None).get_writeables()
-        self.write_report(writeables, metrics, new_report)
+        self.write_report(writeables, analytics, new_report)
 
     def write_results(self, results: dict, new_report=False, no_visualisations=False, only_numerical=False):
 
@@ -79,8 +79,8 @@ class ResultWriter(DataWriter):
                                    writer=result.vis_func, **result.vis_kwargs)
                     plottables = ['first_derivative']
                     self.make_metric_visualisation(
-                        result, plottables, result.metrics, new_report)
-                self.write_metrics(result, new_report=new_report)
+                        result, plottables, result.analytics, new_report)
+                self.write_analytics(result, new_report=new_report)
 
     def write_all(self, circuit: BaseSystem, new_report: bool, no_visualisations: bool = False,
                   only_numerical: bool = False):
