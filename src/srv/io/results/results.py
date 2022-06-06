@@ -17,7 +17,7 @@ class Result():
         self.metrics = {}
         self.analytics = Analytics(result_data, category)
         if category == 'time_series':
-            from src.srv.io.results.metrics.plotting import Timeseries
+            from src.srv.io.results.metrics.timeseries import Timeseries
             self.metrics = Timeseries(result_data).generate_analytics()
 
 

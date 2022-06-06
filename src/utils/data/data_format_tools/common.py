@@ -57,10 +57,12 @@ def process_dict_for_json(dict_like):
     for k, v in dict_like.items():
         if type(v) == dict:
             v = process_dict_for_json(v)
-        if type(v) == np.bool_:
+        elif type(v) == np.bool_:
             dict_like[k] = bool(v)
-        if type(v) == np.ndarray:
+        elif type(v) == np.ndarray:
             dict_like[k] = v.tolist()
+        elif type(v) == np.float32 or type(v) == np.int64:
+            dict_like[k] = str(v)
     return dict_like
 
 
