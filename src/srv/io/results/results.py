@@ -1,5 +1,6 @@
 
 
+from numpy import append
 from src.srv.io.results.metrics.analytics import Analytics
 from src.utils.misc.type_handling import assert_uniform_type
 
@@ -19,6 +20,12 @@ class Result():
         if category == 'time_series':
             from src.srv.io.results.metrics.timeseries import Timeseries
             self.metrics = Timeseries(result_data).generate_analytics()
+
+    def __repr__(self):
+        str_rep = [f'\n\nResult {self.name}\n']
+        for k, v in self.__dict__.items():
+            str_rep.append(f'{k}: {v}\n')
+        return ''.join(str_rep)
 
 
 class ResultCollector():

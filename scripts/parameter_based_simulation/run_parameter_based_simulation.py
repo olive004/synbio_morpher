@@ -92,17 +92,23 @@ def main(config=None, data_writer=None):
                 all_species_steady_states[tuple(
                     idxs)] = circuit.species.steady_state_copynums[:].astype(np.float32)
                 all_species_response_time[tuple(
-                    idxs)] = circuit.result_collector.results.get('response_time')
+                    idxs)] = circuit.result_collector.results['signal'].metrics.get('response_time')
                 all_species_response_time_low[tuple(
-                    idxs)] = circuit.result_collector.results.get('response_time_low')
+                    idxs)] = circuit.result_collector.results['signal'].metrics.get('response_time_low')
                 all_species_response_time_high[tuple(
-                    idxs)] = circuit.result_collector.results.get('response_time_high')
+                    idxs)] = circuit.result_collector.results['signal'].metrics['response_time_high']
+
+                logging.info(circuit.result_collector.results['signal'])
+                
+
+                logging.info(circuit.result_collector.results['signal'].metrics.get('response_time'))
+                logging.info(all_species_response_time[all_species_response_time>0])
 
                 data_writer.output(
                     'csv', out_name='flat_triangle_interaction_matrix', data=flat_triangle)
                 data_writer.output('csv', out_name='steady_state',
                                    data=circuit.species.steady_state_copynums[:])
-                modeller.write_results(circuit=circuit, no_visualisations=True, only_numerical=True)
+                modeller.write_results(circuit=circuit, no_visualisations=True, only_numerical=False)
 
                 data_writer.output('npy', out_name='all_species_steady_states',
                                    data=all_species_steady_states.astype(np.float32), overwrite=True,
