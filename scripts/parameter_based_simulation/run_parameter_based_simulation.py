@@ -98,17 +98,17 @@ def main(config=None, data_writer=None):
                 all_species_response_time_high[tuple(
                     idxs)] = circuit.result_collector.results['signal'].analytics['response_time_high']
 
-                logging.info(circuit.result_collector.results['signal'].analytics.__dict__)
+                # logging.info(circuit.result_collector.results['signal'].analytics)
                 
 
-                logging.info(circuit.result_collector.results['signal'].analytics.get('response_time'))
-                logging.info(all_species_response_time[all_species_response_time>0])
+                # logging.info(circuit.result_collector.results['signal'].analytics.get('response_time'))
+                # logging.info(all_species_response_time[all_species_response_time>0])
 
                 data_writer.output(
                     'csv', out_name='flat_triangle_interaction_matrix', data=flat_triangle)
                 data_writer.output('csv', out_name='steady_state',
                                    data=circuit.species.steady_state_copynums[:])
-                modeller.write_results(circuit=circuit, no_visualisations=True, only_numerical=False)
+                modeller.write_results(circuit=circuit, no_visualisations=False, only_numerical=False)
 
                 data_writer.output('npy', out_name='all_species_steady_states',
                                    data=all_species_steady_states.astype(np.float32), overwrite=True,
