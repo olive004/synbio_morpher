@@ -65,7 +65,7 @@ class ResultWriter(DataWriter):
         writeables = Timeseries(data=None).get_writeables()
         self.write_report(writeables, metrics, new_report)
 
-    def write_results(self, results: dict, new_report=False, no_visualisations=False):
+    def write_results(self, results: dict, new_report=False, no_visualisations=False, only_numerical=False):
 
         for _name, result in results.items():
             result.vis_kwargs.update(
@@ -73,19 +73,22 @@ class ResultWriter(DataWriter):
 
             self.write_numerical(
                 data=result.data, out_name=result.name + '_data')
-            if not no_visualisations:
-                self.visualise(out_name=result.name,
-                               writer=result.vis_func, **result.vis_kwargs)
-                plottables = ['first_derivative']
-                self.make_metric_visualisation(
-                    result, plottables, result.metrics, new_report)
-            self.write_metrics(result, new_report=new_report)
+            if not only_numerical:
+                if not no_visualisations:
+                    self.visualise(out_name=result.name,
+                                   writer=result.vis_func, **result.vis_kwargs)
+                    plottables = ['first_derivative']
+                    self.make_metric_visualisation(
+                        result, plottables, result.metrics, new_report)
+                self.write_metrics(result, new_report=new_report)
 
-    def write_all(self, circuit: BaseSystem, new_report: bool, no_visualisations: bool = False):
+    def write_all(self, circuit: BaseSystem, new_report: bool, no_visualisations: bool = False,
+                  only_numerical: bool = False):
         if not no_visualisations:
             self.visualise_graph(circuit)
         self.write_results(circuit.result_collector.results,
-                           new_report=new_report, no_visualisations=no_visualisations)
+                           new_report=new_report, no_visualisations=no_visualisations,
+                           only_numerical=only_numerical)
 
     def visualise(self, out_name, writer, **vis_kwargs):
         self.output(out_name=out_name, write_func=writer, **vis_kwargs)

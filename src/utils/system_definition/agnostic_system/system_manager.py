@@ -34,7 +34,7 @@ class CircuitModeller():
         return circuit
 
     def get_modelling_func(self, modeller, circuit: BaseSystem):
-        
+
         return partial(modeller.dxdt_RNA, interactions=circuit.species.interactions,
                        creation_rates=circuit.species.creation_rates,
                        degradation_rates=circuit.species.degradation_rates,
@@ -72,7 +72,7 @@ class CircuitModeller():
                                             category='time_series',
                                             vis_func=modeller_steady_state.plot,
                                             **{'legend': list(circuit.species.data.sample_names),
-                                            'out_type': 'png'})
+                                               'out_type': 'png'})
         steady_state_metrics = circuit.result_collector.get_result(
             key='steady_state').metrics
         circuit.species.steady_state_copynums = steady_state_metrics[
@@ -91,7 +91,7 @@ class CircuitModeller():
                                                       y0=y0)
             if not steady_state_result.success:
                 raise ValueError(
-                    'Steady state could not be found through solve_ivp - possibly because units ' \
+                    'Steady state could not be found through solve_ivp - possibly because units '
                     f'are in {circuit.species.interaction_units}.')
             all_copynumbers = steady_state_result.y
         return all_copynumbers
@@ -149,7 +149,7 @@ class CircuitModeller():
                                             vis_func=signal_modeller.plot,
                                             save_numerical_vis_data=save_numerical_vis_data,
                                             **{'legend': list(circuit.species.data.sample_names),
-                                            'out_type': 'png'})
+                                               'out_type': 'png'})
         return circuit
 
     @time_it
@@ -179,5 +179,7 @@ class CircuitModeller():
     def visualise_graph(self, circuit: BaseSystem, mode="pyvis", new_vis=False):
         self.result_writer.visualise_graph(circuit, mode, new_vis)
 
-    def write_results(self, circuit, new_report=False, no_visualisations=False):
-        self.result_writer.write_all(circuit, new_report, no_visualisations=no_visualisations)
+    def write_results(self, circuit, new_report: bool = False, no_visualisations: bool = False,
+                      only_numerical: bool = False):
+        self.result_writer.write_all(
+            circuit, new_report, no_visualisations=no_visualisations, only_numerical=only_numerical)

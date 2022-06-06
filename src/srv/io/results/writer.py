@@ -50,17 +50,18 @@ class DataWriter():
             return base_name
 
         def make_out_path(base_name):
+            write_dir = self.write_dir if not write_to_top_dir else self.top_write_dir
             if subfolder:
-                out_subpath = os.path.join(self.write_dir, subfolder)
+                out_subpath = os.path.join(write_dir, subfolder)
                 create_location(out_subpath)
                 out_path = os.path.join(
                     out_subpath, add_outtype(base_name, out_type))
             elif out_type is None:
                 out_path = os.path.join(
-                    self.write_dir, base_name)
+                    write_dir, base_name)
             else:
                 out_path = os.path.join(
-                    self.write_dir, add_outtype(base_name, out_type))
+                    write_dir, add_outtype(base_name, out_type))
             return out_path
 
         base_name = make_base_name(filename_addon)

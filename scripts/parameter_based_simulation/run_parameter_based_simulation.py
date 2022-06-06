@@ -42,10 +42,12 @@ def main(config=None, data_writer=None):
 
         all_species_steady_states = np.zeros(
             matrix_dimensions, dtype=np.float32)
-        # all_species_steady_states = np.zeros(
-        #     matrix_dimensions, dtype=np.float32)
-        # all_species_steady_states = np.zeros(
-        #     matrix_dimensions, dtype=np.float32)
+        all_species_response_time = np.zeros(
+            matrix_dimensions, dtype=np.float32)
+        all_species_response_time_low = np.zeros(
+            matrix_dimensions, dtype=np.float32)
+        all_species_response_time_high = np.zeros(
+            matrix_dimensions, dtype=np.float32)
 
         num_iterations = matrix_size
 
@@ -86,22 +88,34 @@ def main(config=None, data_writer=None):
                 circuit = modeller.init_circuit(circuit)
                 circuit = modeller.simulate_signal(circuit)
 
-                idx = [slice(0, num_species)] + [[ite] for ite in iterators]
+                idxs = [slice(0, num_species)] + [[ite] for ite in iterators]
                 all_species_steady_states[tuple(
-                    idx)] = circuit.species.steady_state_copynums[:].astype(np.float32)
+                    idxs)] = circuit.species.steady_state_copynums[:].astype(np.float32)
+                all_species_response_time[tuple(
+                    idxs)] = circuit.result_collector.results.get('response_time')
+                all_species_response_time_low[tuple(
+                    idxs)] = circuit.result_collector.results.get('response_time_low')
+                all_species_response_time_high[tuple(
+                    idxs)] = circuit.result_collector.results.get('response_time_high')
+
                 data_writer.output(
                     'csv', out_name='flat_triangle_interaction_matrix', data=flat_triangle)
                 data_writer.output('csv', out_name='steady_state',
                                    data=circuit.species.steady_state_copynums[:])
-                {
-                    'flat_triangle_interaction_matrix': flat_triangle,
-                    'steady_state': [np.float32(x) for x in circuit.species.steady_state_copynums[:]]
-                }
+                modeller.write_results(circuit=circuit, no_visualisations=True, only_numerical=True)
 
-                modeller.write_results(circuit=circuit, no_visualisations=True)
-
-                data_writer.output('npy', out_name='steady_state_interpolation',
-                                   data=all_species_steady_states.astype(np.float32), overwrite=True)
+                data_writer.output('npy', out_name='all_species_steady_states',
+                                   data=all_species_steady_states.astype(np.float32), overwrite=True,
+                                   write_to_top_dir=True)
+                data_writer.output('npy', out_name='all_species_response_time',
+                                   data=all_species_response_time.astype(np.float32), overwrite=True,
+                                   write_to_top_dir=True)
+                data_writer.output('npy', out_name='all_species_response_time_low',
+                                   data=all_species_response_time_low.astype(np.float32), overwrite=True,
+                                   write_to_top_dir=True)
+                data_writer.output('npy', out_name='all_species_response_time_high',
+                                   data=all_species_response_time_high.astype(np.float32), overwrite=True,
+                                   write_to_top_dir=True)
 
             # experiment = Experiment(config_filepath=config, protocols=[Protocol(loop_iter)],
             #                         data_writer=data_writer)
@@ -111,7 +125,17 @@ def main(config=None, data_writer=None):
 
         logging.info('Finished: outputting final matrices')
         data_writer.output('npy', out_name='steady_state_interpolation',
-                           data=all_species_steady_states.astype(np.float32))
+                            data=all_species_steady_states.astype(np.float32), overwrite=True,
+                            write_to_top_dir=True)
+        data_writer.output('npy', out_name='all_species_response_time',
+                            data=all_species_response_time.astype(np.float32), overwrite=True,
+                            write_to_top_dir=True)
+        data_writer.output('npy', out_name='all_species_response_time_low',
+                            data=all_species_response_time_low.astype(np.float32), overwrite=True,
+                            write_to_top_dir=True)
+        data_writer.output('npy', out_name='all_species_response_time_high',
+                            data=all_species_response_time_high.astype(np.float32), overwrite=True,
+                            write_to_top_dir=True)
 
     experiment = Experiment(config_filepath=config, protocols=[Protocol(make_interaction_interpolation_matrices)],
                             data_writer=data_writer)
