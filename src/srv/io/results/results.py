@@ -1,7 +1,5 @@
 
 
-from numpy import append
-from src.srv.io.results.metrics.analytics import Analytics
 from src.utils.misc.type_handling import assert_uniform_type
 
 
@@ -16,7 +14,6 @@ class Result():
         self.vis_kwargs = vis_kwargs
 
         self.metrics = {}
-        self.analytics = Analytics(result_data, category)
         if category == 'time_series':
             from src.srv.io.results.metrics.timeseries import Timeseries
             self.metrics = Timeseries(result_data).generate_analytics()

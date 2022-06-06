@@ -98,7 +98,7 @@ def main(config=None, data_writer=None):
                 all_species_response_time_high[tuple(
                     idxs)] = circuit.result_collector.results['signal'].metrics['response_time_high']
 
-                logging.info(circuit.result_collector.results['signal'])
+                logging.info(circuit.result_collector.results['signal'].analytics.__dict__)
                 
 
                 logging.info(circuit.result_collector.results['signal'].metrics.get('response_time'))
