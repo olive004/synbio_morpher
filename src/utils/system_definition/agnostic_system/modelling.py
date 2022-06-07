@@ -10,7 +10,7 @@ class Deterministic():
                  num_samples, signal=None, signal_idx=None):
         """ dx_dt = a - x * I * k * x' - x * ∂   for x=[A, B] 
         Data in format [sample, timestep] or [sample,]"""
-        if signal is not None:
+        if signal_idx is not None:
             copynumbers[signal_idx] = signal
 
         xI = copynumbers * np.identity(num_samples)

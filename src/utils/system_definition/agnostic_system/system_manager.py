@@ -38,7 +38,7 @@ class CircuitModeller():
         return circuit
 
     def make_modelling_func(self, modeller: Deterministic, circuit: BaseSystem, exclude_species_by_idx: Union[int, list] = None,
-                        fixed_value: Timeseries().num_dtype = None, fixed_value_idx: int = None):
+                            fixed_value: Timeseries(None).num_dtype = None, fixed_value_idx: int = None):
         num_samples = circuit.species.data.size
         exclude_species_by_idx = self.process_exclude_species_by_idx(
             exclude_species_by_idx)
@@ -158,14 +158,14 @@ class CircuitModeller():
         copynumbers = np.concatenate((init_copynumbers, np.zeros(
             (np.shape(init_copynumbers)[circuit.species.species_axis], modeller.max_time-1))
         ), axis=1)
-        
+
         if signal is not None:
             if not np.shape(init_copynumbers)[circuit.species.species_axis] == circuit.species.data.size:
                 logging.warning('Shape of copynumbers is not consistent with number of species - make sure '
                                 f'that the index for the species serving as the signal ({signal_identity_idx}) '
                                 'is not misaligned due to exclusion of another species.')
             init_copynumbers[signal_identity_idx] = signal[0]
-        
+
         copynumbers = self.iterate_modelling_func(copynumbers, init_copynumbers, modelling_func,
                                                   max_time=modeller.max_time, time_step=modeller.time_step,
                                                   signal=signal, signal_idx=signal_identity_idx)
@@ -189,13 +189,16 @@ class CircuitModeller():
         return copynumbers
 
     @time_it
-    def simulate_signal(self, circuit: BaseSystem, signal: Signal = None, save_numerical_vis_data=False, re_calculate_steadystate=True):
+    def simulate_signal(self, circuit: BaseSystem, signal: Signal = None, save_numerical_vis_data: bool = False,
+                        use_old_steadystates: bool = False, use_solver: str = 'naive'):
         if signal is None:
             signal = circuit.signal
         modeller_signal = Deterministic(
             max_time=signal.total_time, time_step=1
         )
-        if re_calculate_steadystate:
+        if use_old_steadystates:
+            steady_states = deepcopy(circuit.species.steady_state_copynums)
+        else:
             steady_states = self.compute_steady_states_data(Deterministic(
                 max_time=50, time_step=1),
                 circuit=circuit,
@@ -207,54 +210,35 @@ class CircuitModeller():
             })]
             steady_states = np.insert(steady_states, signal.identities_idx,
                                       signal.real_signal[0], axis=circuit.species.species_axis)
-        else:
-            steady_states = deepcopy(circuit.species.steady_state_copynums)
 
-        new_copynumbers = self.model_circuit(modeller_signal,
-                                             steady_states.reshape(make_dynamic_indexer({
-                                                 circuit.species.species_axis: np.shape(steady_states)[circuit.species.species_axis],
-                                                 circuit.species.time_axis: 1
-                                             })),
-                                             circuit=circuit,
-                                             signal=signal.real_signal,
-                                             signal_identity_idx=signal.identities_idx)
-        
-        # def make_signal_modeller(modelling_func, signal: Signal):
-        #     partial(modelling_func, )
+        if use_solver == 'naive':
+            new_copynumbers = self.model_circuit(modeller_signal,
+                                                 steady_states.reshape(make_dynamic_indexer({
+                                                     circuit.species.species_axis: np.shape(steady_states)[circuit.species.species_axis],
+                                                     circuit.species.time_axis: 1
+                                                 })),
+                                                 circuit=circuit,
+                                                 signal=signal.real_signal,
+                                                 signal_identity_idx=signal.identities_idx)
 
-        #     interactions = circuit.species.interactions
-        #     creation_rates = circuit.species.creation_rates
-        #     degradation_rates = circuit.species.degradation_rates
+        elif use_solver == 'ivp':
+            for signal_component in signal.abstract_signal:
 
-        #     interactions = np.array([
-        #         [1, 1, 1,],
-        #         [1, 1, 1,],
-        #         [1, 1, 1,]
-        #     ])
-        #     copynumbers = np.array([100, 15, 3])
-        #     num_samples = 3
-        #     xI = copynumbers * np.identity(num_samples)
-        #     coupling = np.matmul(np.matmul(xI, np.array([
-        #         [1, 1, 1,],
-        #         [1, 1, 1,],
-        #         [1, 1, 1,]
-        #     ])), copynumbers.T)
-        #     coupling = np.matmul(np.matmul(xI, np.array([
-        #         [4, 2, 3,],
-        #         [2, 1, 1,],
-        #         [3, 1, 1,]
-        #     ])), copynumbers.T)
-
-        #     ''' dx_dt = a - x * I * k * x' - x * ∂   for x=[A, B] 
-        #     Data in format [sample, timestep] or [sample,] '''
-
-        #     xI = copynumbers * np.identity(num_samples)
-        #     coupling = np.matmul(np.matmul(xI, interactions), copynumbers.T)
-
-        #     creation_rates = [50, 50, 50]
-        #     degradation_rates = [20, 20, 20] 
-        #     dxdt = creation_rates.flatten() - coupling.flatten() - \
-        #         copynumbers.flatten() * degradation_rates.flatten()
+                y0 = steady_states
+                steady_state_result = integrate.solve_ivp(
+                    self.make_modelling_func(
+                        modeller=modeller_signal,
+                        circuit=circuit,
+                        fixed_value=signal_component,
+                        fixed_value_idx=circuit.species.identities.get('input')),
+                    (0, modeller_signal.max_time),
+                    y0=y0)
+                if not steady_state_result.success:
+                    raise ValueError(
+                        'Steady state could not be found through solve_ivp - possibly because units '
+                        f'are in {circuit.species.interaction_units}.')
+                new_copynumbers = steady_state_result.y
+                
 
         circuit.species.copynumbers = np.concatenate(
             (circuit.species.copynumbers, new_copynumbers[make_dynamic_indexer({

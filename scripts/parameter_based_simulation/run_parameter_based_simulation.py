@@ -74,6 +74,7 @@ def main(config=None, data_writer=None):
             @time_it
             def loop_iter():
                 """ Timings:
+                'naive' signal simulation
                 0.0010s 
                 Function name: construct_circuit_from_cfg
 
@@ -85,6 +86,27 @@ def main(config=None, data_writer=None):
 
                 0.0393s 
                 Function name: write_all
+
+
+                'ivp' signal simulation
+                0.1569s 
+                Function name: loop_iter
+
+                0.0008s 
+                Function name: construct_circuit_from_cfg
+
+                0.0000s 
+                Function name: compute_interaction_strengths
+
+                0.0183s 
+                Function name: init_circuit
+
+                0.1026s 
+                Function name: simulate_signal
+
+                0.0396s 
+                Function name: write_all
+
                 """
 
                 iterators = [int(np.mod(i / np.power(size_interaction_array, j),
@@ -100,7 +122,7 @@ def main(config=None, data_writer=None):
                 circuit = construct_circuit_from_cfg(
                     extra_configs=cfg, config_filepath=config)
                 circuit = modeller.init_circuit(circuit)
-                circuit = modeller.simulate_signal(circuit)
+                circuit = modeller.simulate_signal(circuit, use_solver='ivp')
 
                 idxs = [slice(0, num_species)] + [[ite] for ite in iterators]
                 all_species_steady_states[tuple(
