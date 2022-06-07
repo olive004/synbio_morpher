@@ -30,12 +30,6 @@ def binary_arpeggiator(sequence: str, count: int):
         seq[arpeggiation] = 1
 
 
-def np_delete_axes(array, rowcol: Union[list, int], axes: list):
-    for axis in axes:
-        array = np.delete(array, rowcol, axis=axis)
-    return array
-
-
 def generate_mixed_binary(length: int, count: int, zeros_to_ones: bool = True):
     # TODO: This could be much better. Generate
     # sequences in a way that
@@ -51,6 +45,21 @@ def generate_mixed_binary(length: int, count: int, zeros_to_ones: bool = True):
         all_sequences[c, idxs] = 1 if zeros_to_ones else 0
 
     return all_sequences
+
+
+def np_delete_axes(array, rowcol: Union[list, int], axes: list):
+    for axis in axes:
+        array = np.delete(array, rowcol, axis=axis)
+    return array
+
+
+def make_dynamic_indexer(desired_axis_index_pairs: dict) -> tuple:
+    """ For numpy array advanced indexing: if you know the desired index-axis pair, 
+    but the axis is dynamic, use this function to create the appropriate indexing tuple """
+    idxs = [0] * len(desired_axis_index_pairs)
+    for axis, index in desired_axis_index_pairs.items():
+        idxs[axis] = index
+    return tuple(idxs)
 
 
 def make_symmetrical_matrix_from_sequence(arr, side_length: int, total_dimensions: int = 2, sequence: str = 'triangular'):
