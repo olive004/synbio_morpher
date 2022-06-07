@@ -6,6 +6,7 @@ from src.srv.io.results.experiments import Experiment, Protocol
 from src.srv.io.results.result_writer import ResultWriter
 from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
 from src.utils.data.data_format_tools.common import load_json_as_dict
+from src.utils.misc.decorators import time_it
 from src.utils.misc.numerical import make_symmetrical_matrix_from_sequence, triangular_sequence
 from src.utils.system_definition.agnostic_system.system_manager import CircuitModeller
 
@@ -64,14 +65,27 @@ def main(config=None, data_writer=None):
             f'\t{np.round(100.7/500*num_iterations/1000, decimals=3)}Gb')
         modeller = CircuitModeller(result_writer=data_writer)
         for i in range(1010, num_iterations):  # 8100 per min
-            logging.info(i)
-            if np.mod(i, 500) == 0:
+            if np.mod(i, 1000) == 0:
                 data_writer.unsubdivide()
-                data_writer.subdivide_writing(f'{i}-{i+500-1}')
+                data_writer.subdivide_writing(f'{i}-{i+1000-1}')
                 logging.info(f'Iteration {i}/{num_iterations}')
             data_writer.subdivide_writing(str(i), safe_dir_change=False)
 
+            @time_it
             def loop_iter():
+                """ Timings:
+                0.0010s 
+                Function name: construct_circuit_from_cfg
+
+                0.0224s 
+                Function name: init_circuit
+
+                0.2604s 
+                Function name: simulate_signal
+
+                0.0393s 
+                Function name: write_all
+                """
 
                 iterators = [int(np.mod(i / np.power(size_interaction_array, j),
                                         size_interaction_array)) for j in range(num_unique_interactions)]
@@ -81,7 +95,6 @@ def main(config=None, data_writer=None):
                 cfg = {"interactions": {
                     "interactions_matrix": interaction_matrix,
                     "interactions_units": SIMULATOR_UNITS['IntaRNA']['rate']}
-                    # "sample_names": sample_names
                 }
 
                 circuit = construct_circuit_from_cfg(
@@ -105,26 +118,29 @@ def main(config=None, data_writer=None):
                 # logging.info(circuit.result_collector.results['signal'].analytics.get('response_time'))
                 # logging.info(all_species_response_time[all_species_response_time>0])
 
-                data_writer.output(
-                    'csv', out_name='flat_triangle_interaction_matrix', data=flat_triangle)
-                data_writer.output('csv', out_name='steady_state',
-                                   data=circuit.species.steady_state_copynums[:])
-                modeller.write_results(circuit=circuit, no_visualisations=False, only_numerical=False)
+                @time_it
+                def write_all():
+                    data_writer.output(
+                        'csv', out_name='flat_triangle_interaction_matrix', data=flat_triangle)
+                    data_writer.output('csv', out_name='steady_state',
+                                    data=circuit.species.steady_state_copynums[:])
+                    # modeller.write_results(circuit=circuit, no_visualisations=False, only_numerical=False)
 
-                for out_type in ['npy']:
-                    data_writer.output(out_type, out_name='all_species_steady_states',
-                                    data=all_species_steady_states.astype(np.float32), overwrite=True,
-                                    write_to_top_dir=True)
-                    data_writer.output(out_type, out_name='all_species_response_time',
-                                    data=all_species_response_time.astype(np.float32), overwrite=True,
-                                    write_to_top_dir=True)
-                    data_writer.output(out_type, out_name='all_species_response_time_low',
-                                    data=all_species_response_time_low.astype(np.float32), overwrite=True,
-                                    write_to_top_dir=True)
-                    data_writer.output(out_type, out_name='all_species_response_time_high',
-                                    data=all_species_response_time_high.astype(np.float32), overwrite=True,
-                                    write_to_top_dir=True)
-
+                    for out_type in ['npy']:
+                        data_writer.output(out_type, out_name='all_species_steady_states',
+                                        data=all_species_steady_states.astype(np.float32), overwrite=True,
+                                        write_to_top_dir=True)
+                        data_writer.output(out_type, out_name='all_species_response_time',
+                                        data=all_species_response_time.astype(np.float32), overwrite=True,
+                                        write_to_top_dir=True)
+                        data_writer.output(out_type, out_name='all_species_response_time_low',
+                                        data=all_species_response_time_low.astype(np.float32), overwrite=True,
+                                        write_to_top_dir=True)
+                        data_writer.output(out_type, out_name='all_species_response_time_high',
+                                        data=all_species_response_time_high.astype(np.float32), overwrite=True,
+                                        write_to_top_dir=True)
+                if np.mod(i, 1) == 0:
+                    write_all()
             # experiment = Experiment(config_filepath=config, protocols=[Protocol(loop_iter)],
             #                         data_writer=data_writer)
             # experiment.run_experiment()

@@ -30,6 +30,7 @@ class CircuitModeller():
         else:
             self.result_writer = result_writer
 
+    @time_it
     def init_circuit(self, circuit: BaseSystem):
         circuit = self.compute_interaction_strengths(circuit)
         circuit = self.find_steady_states(circuit)
@@ -68,6 +69,7 @@ class CircuitModeller():
             exclude_species_by_idx = [exclude_species_by_idx]
         return exclude_species_by_idx
 
+    @time_it
     def compute_interaction_strengths(self, circuit: BaseSystem):
         if not circuit.species.loaded_interactions:
             interactions = self.run_interaction_simulator(circuit,
@@ -182,6 +184,7 @@ class CircuitModeller():
                         1] = current_copynumbers
         return copynumbers
 
+    @time_it
     def simulate_signal(self, circuit: BaseSystem, signal: Signal = None, save_numerical_vis_data=False, re_calculate_steadystate=True):
         if signal is None:
             signal = circuit.signal
