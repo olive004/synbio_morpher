@@ -1,5 +1,6 @@
 import logging
 from math import factorial
+from typing import Union
 import numpy as np
 
 
@@ -29,6 +30,12 @@ def binary_arpeggiator(sequence: str, count: int):
         seq[arpeggiation] = 1
 
 
+def np_delete_axes(array, rowcol: Union[list, int], axes: list):
+    for axis in axes:
+        array = np.delete(array, rowcol, axis=axis)
+    return array
+
+
 def generate_mixed_binary(length: int, count: int, zeros_to_ones: bool = True):
     # TODO: This could be much better. Generate
     # sequences in a way that
@@ -48,7 +55,7 @@ def generate_mixed_binary(length: int, count: int, zeros_to_ones: bool = True):
 
 def make_symmetrical_matrix_from_sequence(arr, side_length: int, total_dimensions: int = 2, sequence: str = 'triangular'):
     matrix = np.zeros(tuple([side_length]*total_dimensions))
-    if sequence=='triangular':
+    if sequence == 'triangular':
         for side in range(1, side_length+1):
             prev_triangle = triangular_sequence(side-1)
             curr_triangle_num = triangular_sequence(side)
@@ -56,7 +63,8 @@ def make_symmetrical_matrix_from_sequence(arr, side_length: int, total_dimension
             matrix[side-1, 0:side] = arr[prev_triangle:curr_triangle_num]
             matrix[0:side, side-1] = arr[prev_triangle:curr_triangle_num]
     else:
-        raise NotImplementedError(f'Unknown numerical sequence type {sequence}')
+        raise NotImplementedError(
+            f'Unknown numerical sequence type {sequence}')
     return matrix
 
 

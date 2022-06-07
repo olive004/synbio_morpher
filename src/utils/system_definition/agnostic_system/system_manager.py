@@ -35,11 +35,35 @@ class CircuitModeller():
         return circuit
 
     def get_modelling_func(self, modeller: Deterministic, circuit: BaseSystem, exclude_species_by_idx: Union[int, list] = None):
+        num_samples = circuit.species.data.size
+        if type(exclude_species_by_idx) == int and exclude_species_by_idx is not None:
+            exclude_species_by_idx = [exclude_species_by_idx]
 
-        return partial(modeller.dxdt_RNA, interactions=circuit.species.interactions,
-                       creation_rates=circuit.species.creation_rates,
-                       degradation_rates=circuit.species.degradation_rates,
-                       num_samples=circuit.species.data.size
+        interactions = circuit.species.interactions
+        creation_rates = circuit.species.creation_rates
+        degradation_rates = circuit.species.degradation_rates
+
+        if exclude_species_by_idx is not None:
+            num_samples -= len(exclude_species_by_idx)
+            for exclude in exclude_species_by_idx:
+                if exclude is None:
+                    continue
+                interactions = np.delete(
+                    interactions, exclude, axis=0)
+                creation_rates = np.delete(
+                    creation_rates, exclude, axis=circuit.species.species_axis)
+                degradation_rates = np.delete(
+                    degradation_rates, exclude, axis=circuit.species.species_axis)
+
+        logging.info(exclude_species_by_idx)
+        logging.info(interactions)
+        logging.info(degradation_rates)
+        logging.info(creation_rates)
+
+        return partial(modeller.dxdt_RNA, interactions=interactions,
+                       creation_rates=creation_rates,
+                       degradation_rates=degradation_rates,
+                       num_samples=num_samples
                        )
 
     def compute_interaction_strengths(self, circuit: BaseSystem):
