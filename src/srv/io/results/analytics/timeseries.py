@@ -32,21 +32,29 @@ class Timeseries():
 
     def get_response_times(self, steady_states):
         margin_high = 1.05
-        margin_high = 0.95
-        has_peak = np.all(np.max(self.data) > steady_states * margin_high)
-        logging.info(has_peak)
+        margin_low = 0.95
+        peak = np.max(self.data)
+        has_peak = np.all(peak > steady_states)
         if has_peak:
-            post_peak_data = self.data[np.argmax(self.data < np.max(self.data)):]
-            response_time = np.argmax(post_peak_data < steady_states).astype(self.num_dtype)
-            response_time_high = np.argmax(post_peak_data < (steady_states * 1.05)).astype(self.num_dtype)
-            response_time_low = np.argmax(post_peak_data < (steady_states * 0.95)).astype(self.num_dtype)
+            post_peak_data = self.data[:, np.argmax(
+                self.data < np.max(self.data)):]
+            response_time = np.argmax(
+                post_peak_data < steady_states, axis=1).astype(self.num_dtype)
+            response_time_high = np.argmax(post_peak_data < (
+                steady_states * margin_high), axis=1).astype(self.num_dtype)
+            response_time_low = np.argmax(post_peak_data < (
+                steady_states * margin_low), axis=1).astype(self.num_dtype)
         else:
             post_peak_data = self.data
-            response_time = np.argmax(post_peak_data >= steady_states).astype(self.num_dtype)
-            response_time_high = np.argmax(post_peak_data >= (steady_states * 1.05)).astype(self.num_dtype)
-            response_time_low = np.argmax(post_peak_data >= (steady_states * 0.95)).astype(self.num_dtype)
-        logging.info(post_peak_data)
+            response_time = np.expand_dims(np.argmax(
+                post_peak_data >= steady_states, axis=1).astype(self.num_dtype), axis=1)
+            response_time_high = np.expand_dims(np.argmax(post_peak_data >= (
+                steady_states * margin_high), axis=1).astype(self.num_dtype), axis=1)
+            response_time_low = np.expand_dims(np.argmax(post_peak_data >= (
+                steady_states * margin_low), axis=1).astype(self.num_dtype), axis=1)
         # logging.info(post_peak_data < steady_states)
+        # logging.info(post_peak_data >= steady_states)
+        # logging.info(np.argmax(post_peak_data >= steady_states, axis=1).astype(self.num_dtype))
         # logging.info(post_peak_data < (steady_states * 1.05))
         # logging.info(post_peak_data < (steady_states * 0.95))
         return response_time, response_time_high, response_time_low

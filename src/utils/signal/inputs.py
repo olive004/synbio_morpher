@@ -25,7 +25,8 @@ class Signal():
         self._abstract_signal = value
 
     @property
-    def real_signal(self):
+    def real_signal(self) -> np.ndarray:
+        """ Signal is 1-d np matrix """
         signal = self.time_dilation_func(self.abstract_signal) * self.magnitude
         if len(signal) < self.total_time:
             signal = np.concatenate((signal, np.repeat(
