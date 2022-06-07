@@ -8,7 +8,7 @@ from scipy import integrate
 from src.srv.io.results.result_writer import ResultWriter
 
 from src.utils.misc.decorators import time_it
-from src.utils.misc.numerical import np_delete_axes, zero_out_negs
+from src.utils.misc.numerical import make_dynamic_indexer, np_delete_axes, zero_out_negs
 from src.utils.misc.type_handling import flatten_nested_dict
 from src.utils.signal.inputs import Signal
 from src.srv.parameter_prediction.simulator import InteractionSimulator
@@ -118,17 +118,15 @@ class CircuitModeller():
                     copynumbers, excluded, axis=circuit.species.species_axis)
         copynumbers = np.reshape(copynumbers, (np.shape(copynumbers)[0], 1))
 
-        indexing = [(circuit.species.species_axis, slice(np.shape(copynumbers)[circuit.species.species_axis])),
-                    (circuit.species.time_axis, -1)]
-        idxs = [0, 0]
-        for axis, idx in indexing:
-            idxs[axis] = idx
+        idxs = make_dynamic_indexer({
+            circuit.species.species_axis: slice(0, np.shape(copynumbers)[circuit.species.species_axis], 1),
+            circuit.species.time_axis: -1})
         if use_solver == 'naive':
             copynumbers = self.model_circuit(
                 modeller, copynumbers, circuit=circuit, exclude_species_by_idx=exclude_species_by_idx)
-            copynumbers = copynumbers[tuple(idxs)]
+            copynumbers = copynumbers
         elif use_solver == 'ivp':
-            y0 = copynumbers[tuple(idxs)]
+            y0 = copynumbers[idxs]
             steady_state_result = integrate.solve_ivp(self.get_modelling_func(modeller, circuit,
                                                                               exclude_species_by_idx),
                                                       (0, modeller.max_time),
@@ -137,8 +135,7 @@ class CircuitModeller():
                 raise ValueError(
                     'Steady state could not be found through solve_ivp - possibly because units '
                     f'are in {circuit.species.interaction_units}.')
-            copynumbers = steady_state_result.y
-        copynumbers = np.reshape(copynumbers, ())
+            copynumbers = steady_state_result.y        
         return copynumbers
 
     def model_circuit(self, modeller, init_copynumbers: np.ndarray, circuit: BaseSystem,
