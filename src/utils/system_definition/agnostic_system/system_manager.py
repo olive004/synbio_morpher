@@ -5,6 +5,7 @@ import logging
 import os
 import numpy as np
 from scipy import integrate
+from src.srv.io.results.analytics.timeseries import Timeseries
 from src.srv.io.results.result_writer import ResultWriter
 
 from src.utils.misc.decorators import time_it
@@ -36,7 +37,8 @@ class CircuitModeller():
         circuit = self.find_steady_states(circuit)
         return circuit
 
-    def get_modelling_func(self, modeller: Deterministic, circuit: BaseSystem, exclude_species_by_idx: Union[int, list] = None):
+    def make_modelling_func(self, modeller: Deterministic, circuit: BaseSystem, exclude_species_by_idx: Union[int, list] = None,
+                        fixed_value: Timeseries().num_dtype = None, fixed_value_idx: int = None):
         num_samples = circuit.species.data.size
         exclude_species_by_idx = self.process_exclude_species_by_idx(
             exclude_species_by_idx)
@@ -60,7 +62,9 @@ class CircuitModeller():
         return partial(modeller.dxdt_RNA, interactions=interactions,
                        creation_rates=creation_rates,
                        degradation_rates=degradation_rates,
-                       num_samples=num_samples
+                       num_samples=num_samples,
+                       signal=fixed_value,
+                       signal_idx=fixed_value_idx
                        )
 
     @staticmethod
@@ -131,8 +135,7 @@ class CircuitModeller():
         elif use_solver == 'ivp':
 
             y0 = copynumbers[idxs]
-            steady_state_result = integrate.solve_ivp(self.get_modelling_func(modeller, circuit,
-                                                                              exclude_species_by_idx),
+            steady_state_result = integrate.solve_ivp(self.make_modelling_func(modeller, circuit, exclude_species_by_idx),
                                                       (0, modeller.max_time),
                                                       y0=y0)
             if not steady_state_result.success:
@@ -142,6 +145,7 @@ class CircuitModeller():
             copynumbers = steady_state_result.y
         return copynumbers
 
+    @time_it
     def model_circuit(self, modeller, init_copynumbers: np.ndarray, circuit: BaseSystem,
                       signal: np.ndarray = None, signal_identity_idx: int = None,
                       exclude_species_by_idx: Union[list, int] = None):
@@ -149,7 +153,7 @@ class CircuitModeller():
             init_copynumbers)[circuit.species.species_axis], 'Please only use 1-d ' \
             f'initial copynumbers instead of {np.shape(init_copynumbers)}'
 
-        modelling_func = partial(self.get_modelling_func(
+        modelling_func = partial(self.make_modelling_func(
             modeller, circuit, exclude_species_by_idx), t=None)
         copynumbers = np.concatenate((init_copynumbers, np.zeros(
             (np.shape(init_copynumbers)[circuit.species.species_axis], modeller.max_time-1))
@@ -195,7 +199,6 @@ class CircuitModeller():
             steady_states = self.compute_steady_states_data(Deterministic(
                 max_time=50, time_step=1),
                 circuit=circuit,
-                # use_solver='naive',
                 use_solver='ivp',
                 exclude_species_by_idx=signal.identities_idx)
             steady_states = steady_states[make_dynamic_indexer({
@@ -215,6 +218,55 @@ class CircuitModeller():
                                              circuit=circuit,
                                              signal=signal.real_signal,
                                              signal_identity_idx=signal.identities_idx)
+        
+        def make_signal_modeller(modelling_func, signal: Signal):
+            partial(modelling_func, )
+
+            interactions = circuit.species.interactions
+            creation_rates = circuit.species.creation_rates
+            degradation_rates = circuit.species.degradation_rates
+
+interactions = np.array([
+    [1, 1, 1,],
+    [1, 1, 1,],
+    [1, 1, 1,]
+])
+copynumbers = np.array([100, 15, 3])
+num_samples = 3
+xI = copynumbers * np.identity(num_samples)
+coupling = np.matmul(np.matmul(xI, np.array([
+    [1, 1, 1,],
+    [1, 1, 1,],
+    [1, 1, 1,]
+])), copynumbers.T)
+coupling = np.matmul(np.matmul(xI, np.array([
+    [4, 2, 3,],
+    [2, 1, 1,],
+    [3, 1, 1,]
+])), copynumbers.T)
+coupling = np.matmul(np.matmul(xI, np.array([
+    [4, 2, 3,],
+    [2, 5, 1,],
+    [3, 1, 1,]
+])), copynumbers.T)
+coupling = np.matmul(np.matmul(xI, np.array([
+    [4, 1, 1,],
+    [1, 1, 1,],
+    [1, 1, 1,]
+])), copynumbers.T)
+
+''' dx_dt = a - x * I * k * x' - x * ∂   for x=[A, B] 
+Data in format [sample, timestep] or [sample,] '''
+
+xI = copynumbers * np.identity(num_samples)
+coupling = np.matmul(np.matmul(xI, interactions), copynumbers.T)
+
+creation_rates = [50, 50, 50]
+degradation_rates = [20, 20, 20] 
+dxdt = creation_rates.flatten() - coupling.flatten() - \
+    copynumbers.flatten() * degradation_rates.flatten()
+
+        new_copynumbers = 0
 
         circuit.species.copynumbers = np.concatenate(
             (circuit.species.copynumbers, new_copynumbers[make_dynamic_indexer({
