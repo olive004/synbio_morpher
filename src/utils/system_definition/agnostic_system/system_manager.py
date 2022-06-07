@@ -219,54 +219,42 @@ class CircuitModeller():
                                              signal=signal.real_signal,
                                              signal_identity_idx=signal.identities_idx)
         
-        def make_signal_modeller(modelling_func, signal: Signal):
-            partial(modelling_func, )
+        # def make_signal_modeller(modelling_func, signal: Signal):
+        #     partial(modelling_func, )
 
-            interactions = circuit.species.interactions
-            creation_rates = circuit.species.creation_rates
-            degradation_rates = circuit.species.degradation_rates
+        #     interactions = circuit.species.interactions
+        #     creation_rates = circuit.species.creation_rates
+        #     degradation_rates = circuit.species.degradation_rates
 
-interactions = np.array([
-    [1, 1, 1,],
-    [1, 1, 1,],
-    [1, 1, 1,]
-])
-copynumbers = np.array([100, 15, 3])
-num_samples = 3
-xI = copynumbers * np.identity(num_samples)
-coupling = np.matmul(np.matmul(xI, np.array([
-    [1, 1, 1,],
-    [1, 1, 1,],
-    [1, 1, 1,]
-])), copynumbers.T)
-coupling = np.matmul(np.matmul(xI, np.array([
-    [4, 2, 3,],
-    [2, 1, 1,],
-    [3, 1, 1,]
-])), copynumbers.T)
-coupling = np.matmul(np.matmul(xI, np.array([
-    [4, 2, 3,],
-    [2, 5, 1,],
-    [3, 1, 1,]
-])), copynumbers.T)
-coupling = np.matmul(np.matmul(xI, np.array([
-    [4, 1, 1,],
-    [1, 1, 1,],
-    [1, 1, 1,]
-])), copynumbers.T)
+        #     interactions = np.array([
+        #         [1, 1, 1,],
+        #         [1, 1, 1,],
+        #         [1, 1, 1,]
+        #     ])
+        #     copynumbers = np.array([100, 15, 3])
+        #     num_samples = 3
+        #     xI = copynumbers * np.identity(num_samples)
+        #     coupling = np.matmul(np.matmul(xI, np.array([
+        #         [1, 1, 1,],
+        #         [1, 1, 1,],
+        #         [1, 1, 1,]
+        #     ])), copynumbers.T)
+        #     coupling = np.matmul(np.matmul(xI, np.array([
+        #         [4, 2, 3,],
+        #         [2, 1, 1,],
+        #         [3, 1, 1,]
+        #     ])), copynumbers.T)
 
-''' dx_dt = a - x * I * k * x' - x * ∂   for x=[A, B] 
-Data in format [sample, timestep] or [sample,] '''
+        #     ''' dx_dt = a - x * I * k * x' - x * ∂   for x=[A, B] 
+        #     Data in format [sample, timestep] or [sample,] '''
 
-xI = copynumbers * np.identity(num_samples)
-coupling = np.matmul(np.matmul(xI, interactions), copynumbers.T)
+        #     xI = copynumbers * np.identity(num_samples)
+        #     coupling = np.matmul(np.matmul(xI, interactions), copynumbers.T)
 
-creation_rates = [50, 50, 50]
-degradation_rates = [20, 20, 20] 
-dxdt = creation_rates.flatten() - coupling.flatten() - \
-    copynumbers.flatten() * degradation_rates.flatten()
-
-        new_copynumbers = 0
+        #     creation_rates = [50, 50, 50]
+        #     degradation_rates = [20, 20, 20] 
+        #     dxdt = creation_rates.flatten() - coupling.flatten() - \
+        #         copynumbers.flatten() * degradation_rates.flatten()
 
         circuit.species.copynumbers = np.concatenate(
             (circuit.species.copynumbers, new_copynumbers[make_dynamic_indexer({
