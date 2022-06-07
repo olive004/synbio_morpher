@@ -18,6 +18,9 @@ logger.setLevel(logging.INFO)
 
 
 class BaseSpecies():
+
+    species_axis = 0
+
     def __init__(self, config_args: dict) -> None:
 
         # Probability distribution for each interaction component?
@@ -160,7 +163,7 @@ class BaseSpecies():
 
     @property
     def copynumbers(self):
-        """ All copynumbers so far in [sample, t]"""
+        """ All copynumbers through time, using the convention [sample, t]"""
         return self._copynumbers
 
     @copynumbers.setter

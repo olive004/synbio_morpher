@@ -13,11 +13,11 @@
         "degradation_rates": 20
     },
     "signal": {
-        "signal":[0, 1, 1, 1],
+        "signal":[0, 1],
         "signal_spec": "raw",
         "signal_type": "abstract",
-        "total_time":5000,
-        "magnitude":10,
+        "total_time":12000,
+        "magnitude":20,
         "positions":null,
         "heights":null,
         "durations": null
