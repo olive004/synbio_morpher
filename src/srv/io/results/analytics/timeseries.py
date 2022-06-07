@@ -38,12 +38,12 @@ class Timeseries():
         if has_peak:
             post_peak_data = self.data[:, np.argmax(
                 self.data < np.max(self.data)):]
-            response_time = np.argmax(
-                post_peak_data < steady_states, axis=1).astype(self.num_dtype)
-            response_time_high = np.argmax(post_peak_data < (
-                steady_states * margin_high), axis=1).astype(self.num_dtype)
-            response_time_low = np.argmax(post_peak_data < (
-                steady_states * margin_low), axis=1).astype(self.num_dtype)
+            response_time = np.expand_dims(np.argmax(
+                post_peak_data < steady_states, axis=1).astype(self.num_dtype), axis=1)
+            response_time_high = np.expand_dims(np.argmax(post_peak_data < (
+                steady_states * margin_high), axis=1).astype(self.num_dtype), axis=1)
+            response_time_low = np.expand_dims(np.argmax(post_peak_data < (
+                steady_states * margin_low), axis=1).astype(self.num_dtype), axis=1)
         else:
             post_peak_data = self.data
             response_time = np.expand_dims(np.argmax(

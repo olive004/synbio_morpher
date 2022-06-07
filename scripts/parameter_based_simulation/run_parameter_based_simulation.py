@@ -63,10 +63,11 @@ def main(config=None, data_writer=None):
         logging.info(
             f'\t{np.round(100.7/500*num_iterations/1000, decimals=3)}Gb')
         modeller = CircuitModeller(result_writer=data_writer)
-        for i in range(num_iterations):  # 8100 per min
+        for i in range(1010, num_iterations):  # 8100 per min
+            logging.info(i)
             if np.mod(i, 500) == 0:
                 data_writer.unsubdivide()
-                data_writer.subdivide_writing(f'{i}-{i+500}')
+                data_writer.subdivide_writing(f'{i}-{i+500-1}')
                 logging.info(f'Iteration {i}/{num_iterations}')
             data_writer.subdivide_writing(str(i), safe_dir_change=False)
 
@@ -110,18 +111,19 @@ def main(config=None, data_writer=None):
                                    data=circuit.species.steady_state_copynums[:])
                 modeller.write_results(circuit=circuit, no_visualisations=False, only_numerical=False)
 
-                data_writer.output('npy', out_name='all_species_steady_states',
-                                   data=all_species_steady_states.astype(np.float32), overwrite=True,
-                                   write_to_top_dir=True)
-                data_writer.output('npy', out_name='all_species_response_time',
-                                   data=all_species_response_time.astype(np.float32), overwrite=True,
-                                   write_to_top_dir=True)
-                data_writer.output('npy', out_name='all_species_response_time_low',
-                                   data=all_species_response_time_low.astype(np.float32), overwrite=True,
-                                   write_to_top_dir=True)
-                data_writer.output('npy', out_name='all_species_response_time_high',
-                                   data=all_species_response_time_high.astype(np.float32), overwrite=True,
-                                   write_to_top_dir=True)
+                for out_type in ['npy']:
+                    data_writer.output(out_type, out_name='all_species_steady_states',
+                                    data=all_species_steady_states.astype(np.float32), overwrite=True,
+                                    write_to_top_dir=True)
+                    data_writer.output(out_type, out_name='all_species_response_time',
+                                    data=all_species_response_time.astype(np.float32), overwrite=True,
+                                    write_to_top_dir=True)
+                    data_writer.output(out_type, out_name='all_species_response_time_low',
+                                    data=all_species_response_time_low.astype(np.float32), overwrite=True,
+                                    write_to_top_dir=True)
+                    data_writer.output(out_type, out_name='all_species_response_time_high',
+                                    data=all_species_response_time_high.astype(np.float32), overwrite=True,
+                                    write_to_top_dir=True)
 
             # experiment = Experiment(config_filepath=config, protocols=[Protocol(loop_iter)],
             #                         data_writer=data_writer)
