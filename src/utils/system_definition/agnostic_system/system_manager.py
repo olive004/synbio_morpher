@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import Union
 from functools import partial
 import logging
@@ -7,7 +8,7 @@ from scipy import integrate
 from src.srv.io.results.result_writer import ResultWriter
 
 from src.utils.misc.decorators import time_it
-from src.utils.misc.numerical import zero_out_negs
+from src.utils.misc.numerical import np_delete_axes, zero_out_negs
 from src.utils.misc.type_handling import flatten_nested_dict
 from src.utils.signal.inputs import Signal
 from src.srv.parameter_prediction.simulator import InteractionSimulator
@@ -36,7 +37,7 @@ class CircuitModeller():
 
     def get_modelling_func(self, modeller: Deterministic, circuit: BaseSystem, exclude_species_by_idx: Union[int, list] = None):
         num_samples = circuit.species.data.size
-        if type(exclude_species_by_idx) == int and exclude_species_by_idx is not None:
+        if type(exclude_species_by_idx) == int:
             exclude_species_by_idx = [exclude_species_by_idx]
 
         interactions = circuit.species.interactions
@@ -48,17 +49,12 @@ class CircuitModeller():
             for exclude in exclude_species_by_idx:
                 if exclude is None:
                     continue
-                interactions = np.delete(
-                    interactions, exclude, axis=0)
+                interactions = np_delete_axes(
+                    interactions, exclude, axes=[circuit.species.species_axis, circuit.species.time_axis])
                 creation_rates = np.delete(
                     creation_rates, exclude, axis=circuit.species.species_axis)
                 degradation_rates = np.delete(
                     degradation_rates, exclude, axis=circuit.species.species_axis)
-
-        logging.info(exclude_species_by_idx)
-        logging.info(interactions)
-        logging.info(degradation_rates)
-        logging.info(creation_rates)
 
         return partial(modeller.dxdt_RNA, interactions=interactions,
                        creation_rates=creation_rates,
@@ -131,18 +127,19 @@ class CircuitModeller():
             copynumbers = steady_state_result.y
         return copynumbers
 
-    def model_circuit(self, modeller, copynumbers, circuit: BaseSystem,
-                      signal=None, signal_identity_idx: int = None):
+    def model_circuit(self, modeller, init_copynumbers: np.ndarray, circuit: BaseSystem,
+                      signal: np.ndarray = None, signal_identity_idx: int = None):
         modelling_func = self.get_modelling_func(modeller, circuit=circuit)
         modelling_func = partial(modelling_func, t=None)
-        current_copynumbers = copynumbers[:, -1].flatten()
-        copynumbers = np.concatenate((copynumbers, np.zeros(
+        logging.info(np.shape(init_copynumbers))
+        copynumbers = np.concatenate((init_copynumbers, np.zeros(
             (circuit.species.data.size, modeller.max_time-1))
         ), axis=1)
+        logging.info(np.shape(init_copynumbers))
         if signal is not None:
-            copynumbers[signal_identity_idx, :] = signal
+            init_copynumbers[signal_identity_idx] = signal[0]
 
-        copynumbers = self.iterate_modelling_func(copynumbers, current_copynumbers, modelling_func,
+        copynumbers = self.iterate_modelling_func(copynumbers, init_copynumbers, modelling_func,
                                                   max_time=modeller.max_time, time_step=modeller.time_step,
                                                   signal=signal, signal_idx=signal_identity_idx)
         return copynumbers
@@ -176,9 +173,11 @@ class CircuitModeller():
                 circuit=circuit,
                 use_solver='ivp',
                 exclude_species_by_idx=signal.identities_idx)
+            steady_states = np.insert(steady_states, signal.identities_idx,
+                                      signal.real_signal[0], axis=circuit.species.species_axis)
             logging.info(f'\n\n\n\n\n\n{steady_states}')
         else:
-            steady_states = circuit.species.steady_state_copynums
+            steady_states = deepcopy(circuit.species.steady_state_copynums)
 
         new_copynumbers = self.model_circuit(modeller_signal,
                                              steady_states,

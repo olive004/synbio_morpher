@@ -20,6 +20,7 @@ logger.setLevel(logging.INFO)
 class BaseSpecies():
 
     species_axis = 0
+    time_axis = 1
 
     def __init__(self, config_args: dict) -> None:
 
