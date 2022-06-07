@@ -95,9 +95,6 @@ def main(config=None, data_writer=None):
                 0.0008s 
                 Function name: construct_circuit_from_cfg
 
-                0.0000s 
-                Function name: compute_interaction_strengths
-
                 0.0183s 
                 Function name: init_circuit
 

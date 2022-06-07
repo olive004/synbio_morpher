@@ -1,4 +1,5 @@
 from functools import partial
+from typing import List
 import numpy as np
 
 
@@ -34,6 +35,15 @@ class Signal():
         assert len(
             signal) == self.total_time, f'The signal length {len(signal)} does not equal its intended length {self.total_time}'
         return signal
+
+    @property
+    def summarized_signal(self) -> List[list]:
+        summ_signal = []
+        for signal in self.abstract_signal:
+            summ_signal.append(
+                (signal*self.magnitude, self.total_time / len(self.abstract_signal))
+            )
+        return summ_signal
 
     @property
     def time(self):

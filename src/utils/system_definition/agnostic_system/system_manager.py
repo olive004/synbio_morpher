@@ -222,6 +222,11 @@ class CircuitModeller():
                                                  signal_identity_idx=signal.identities_idx)
 
         elif use_solver == 'ivp':
+            init_copynumbers = steady_states
+            new_copynumbers = np.concatenate((init_copynumbers, np.zeros(
+                (np.shape(init_copynumbers)[circuit.species.species_axis], modeller_signal.max_time-1))
+            ), axis=1)
+            last_idx = 1
             for signal_component in signal.abstract_signal:
 
                 y0 = steady_states
@@ -237,7 +242,10 @@ class CircuitModeller():
                     raise ValueError(
                         'Steady state could not be found through solve_ivp - possibly because units '
                         f'are in {circuit.species.interaction_units}.')
-                new_copynumbers = steady_state_result.y
+                new_copynumbers[:, last_idx:np.shape(new_copynumbers)[circuit.species.time_axis]] = steady_state_result.y
+                new_copynumbers[:, np.shape(new_copynumbers)[circuit.species.time_axis]]
+
+                last_idx = 
                 
 
         circuit.species.copynumbers = np.concatenate(
