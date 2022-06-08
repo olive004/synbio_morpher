@@ -1,7 +1,8 @@
 {
     "data_path": "./scripts/parameter_based_simulation/configs/empty_circuit.fasta",
     "experiment": {
-        "purpose": "parameter_based_simulation"
+        "purpose": "parameter_based_simulation",
+        "parallelise": true
     },
     "identities": {
         "input": "RNA_0",
@@ -21,7 +22,7 @@
         "positions":null,
         "heights":null,
         "durations": null,
-        "use_solver": "naive"
+        "use_solver": "ivp"
     }, 
     "system_type": "RNA"
 }

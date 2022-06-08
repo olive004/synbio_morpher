@@ -1,4 +1,5 @@
 import logging
+from multiprocessing import Process
 import os
 import numpy as np
 from scripts.common.circuit import construct_circuit_from_cfg
@@ -12,6 +13,7 @@ from src.utils.system_definition.agnostic_system.system_manager import CircuitMo
 
 
 def main(config=None, data_writer=None):
+
     if config is None:
         config = os.path.join(
             'scripts', 'parameter_based_simulation', 'configs', 'base_config.json')
@@ -19,6 +21,19 @@ def main(config=None, data_writer=None):
     if data_writer is None:
         data_writer = ResultWriter(purpose=config_file.get(
             'experiment').get('purpose', 'parameter_based_simulation'))
+
+    if config_file.get('experiment').get('parallelise'):
+        num_subprocesses = 10
+    else: 
+        num_subprocesses = 1
+
+    for subprocess in range(num_subprocesses):
+        p = Process(target=main_subprocess, args=(config, data_writer, subprocess, num_subprocesses))
+        p.start()
+    # p.join()
+
+def main_subprocess(config, data_writer, sub_process, total_processes):
+    config_file = load_json_as_dict(config)
 
     def make_interaction_interpolation_matrices():
         interaction_min = 0
@@ -50,22 +65,25 @@ def main(config=None, data_writer=None):
         all_species_response_time_high = np.zeros(
             matrix_dimensions, dtype=np.float32)
 
-        num_iterations = matrix_size
+        total_iterations = matrix_size
+        num_iterations = total_iterations / total_processes
+        starting_iteration = num_iterations * sub_process
+        end_iteration = num_iterations * (sub_process + 1)
 
         logging.info('-----------------------')
         logging.info('Rate: ca. 8000 / min')
         logging.info('Total estimated time (steady state):')
-        logging.info(f'\t{359500/(13*60)} or {10000/24} in mins')
-        logging.info(f'\t{359500/(13*60)/60} or {10000/24/60} in hours')
-        logging.info(f'\t{359500/(13*60)/60 /24} or {10000/24/60/24} in days')
+        logging.info(f'\t{193000/(13*60)} or {10000/24} in mins')
+        logging.info(f'\t{193000/(13*60)/60} or {10000/24/60} in hours')
+        logging.info(f'\t{193000/(13*60)/60 /24} or {10000/24/60/24} in days')
         logging.info(f'Total data: {num_iterations}')
         logging.info(f'Projected size (inc signal writing):')
         logging.info('\tRate of 100.7Mb / 500 iterations')
         logging.info(
             f'\t{np.round(100.7/500*num_iterations/1000, decimals=3)}Gb')
         modeller = CircuitModeller(result_writer=data_writer)
-        for i in range(1010, num_iterations):  # 8100 per min
-            if np.mod(i, 1000) == 0:
+        for i in range(starting_iteration, end_iteration):  # 8100 per min
+            if np.mod(i, 1000) == 0 or i == starting_iteration:
                 data_writer.unsubdivide()
                 data_writer.subdivide_writing(f'{i}-{i+1000-1}')
                 logging.info(f'Iteration {i}/{num_iterations}')
@@ -158,7 +176,7 @@ def main(config=None, data_writer=None):
                         data_writer.output(out_type, out_name='all_species_response_time_high',
                                         data=all_species_response_time_high.astype(np.float32), overwrite=True,
                                         write_to_top_dir=True)
-                if np.mod(i, 1) == 0:
+                if np.mod(i, 100) == 0:
                     write_all()
             # experiment = Experiment(config_filepath=config, protocols=[Protocol(loop_iter)],
             #                         data_writer=data_writer)

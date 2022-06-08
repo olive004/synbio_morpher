@@ -77,6 +77,10 @@ def make_symmetrical_matrix_from_sequence(arr, side_length: int, total_dimension
     return matrix
 
 
+def round_to_nearest(x, base):
+    return base * round(x/base)
+
+
 def square_matrix_rand(num_nodes: int = 3):
     dims = (num_nodes, num_nodes)
     return np.random.rand(*dims)
