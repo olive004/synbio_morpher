@@ -31,7 +31,7 @@ class CircuitModeller():
         else:
             self.result_writer = result_writer
 
-    @time_it
+    # @time_it
     def init_circuit(self, circuit: BaseSystem):
         circuit = self.compute_interaction_strengths(circuit)
         circuit = self.find_steady_states(circuit)
@@ -73,7 +73,7 @@ class CircuitModeller():
             exclude_species_by_idx = [exclude_species_by_idx]
         return exclude_species_by_idx
 
-    @time_it
+    # @time_it
     def compute_interaction_strengths(self, circuit: BaseSystem):
         if not circuit.species.loaded_interactions:
             interactions = self.run_interaction_simulator(circuit,
@@ -145,7 +145,7 @@ class CircuitModeller():
             copynumbers = steady_state_result.y
         return copynumbers
 
-    @time_it
+    # @time_it
     def model_circuit(self, modeller, init_copynumbers: np.ndarray, circuit: BaseSystem,
                       signal: np.ndarray = None, signal_identity_idx: int = None,
                       exclude_species_by_idx: Union[list, int] = None):
@@ -188,7 +188,7 @@ class CircuitModeller():
                         1] = current_copynumbers
         return copynumbers
 
-    @time_it
+    # @time_it
     def simulate_signal(self, circuit: BaseSystem, signal: Signal = None, save_numerical_vis_data: bool = False,
                         use_old_steadystates: bool = False, use_solver: str = 'naive'):
         if signal is None:
@@ -266,7 +266,7 @@ class CircuitModeller():
                                                'out_type': 'png'})
         return circuit
 
-    @time_it
+    # @time_it
     def wrap_mutations(self, circuit: BaseSystem, methods: dict, include_normal_run=True,
                        write_to_subsystem=False):
         if write_to_subsystem:

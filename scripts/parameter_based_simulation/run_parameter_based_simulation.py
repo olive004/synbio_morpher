@@ -71,7 +71,7 @@ def main(config=None, data_writer=None):
                 logging.info(f'Iteration {i}/{num_iterations}')
             data_writer.subdivide_writing(str(i), safe_dir_change=False)
 
-            @time_it
+            # @time_it
             def loop_iter():
                 """ Timings:
                 'naive' signal simulation
@@ -137,7 +137,7 @@ def main(config=None, data_writer=None):
                 # logging.info(circuit.result_collector.results['signal'].analytics.get('response_time'))
                 # logging.info(all_species_response_time[all_species_response_time>0])
 
-                @time_it
+                # @time_it
                 def write_all():
                     data_writer.output(
                         'csv', out_name='flat_triangle_interaction_matrix', data=flat_triangle)
