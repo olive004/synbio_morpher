@@ -211,12 +211,13 @@ class CircuitModeller():
             steady_states = np.insert(steady_states, signal.identities_idx,
                                       signal.real_signal[0], axis=circuit.species.species_axis)
 
+        steady_states = steady_states.reshape(make_dynamic_indexer({
+            circuit.species.species_axis: np.shape(steady_states)[circuit.species.species_axis],
+            circuit.species.time_axis: 1
+        }))
         if use_solver == 'naive':
             new_copynumbers = self.model_circuit(modeller_signal,
-                                                 steady_states.reshape(make_dynamic_indexer({
-                                                     circuit.species.species_axis: np.shape(steady_states)[circuit.species.species_axis],
-                                                     circuit.species.time_axis: 1
-                                                 })),
+                                                 steady_states,
                                                  circuit=circuit,
                                                  signal=signal.real_signal,
                                                  signal_identity_idx=signal.identities_idx)
@@ -226,10 +227,9 @@ class CircuitModeller():
             new_copynumbers = np.concatenate((init_copynumbers, np.zeros(
                 (np.shape(init_copynumbers)[circuit.species.species_axis], modeller_signal.max_time-1))
             ), axis=1)
-            last_idx = 1
-            for signal_component in signal.abstract_signal:
-
-                y0 = steady_states
+            for signal_component, time_start, time_end in signal.summarized_signal:
+                time_span = time_end - time_start
+                y0 = steady_states.flatten()
                 steady_state_result = integrate.solve_ivp(
                     self.make_modelling_func(
                         modeller=modeller_signal,
@@ -242,11 +242,14 @@ class CircuitModeller():
                     raise ValueError(
                         'Steady state could not be found through solve_ivp - possibly because units '
                         f'are in {circuit.species.interaction_units}.')
-                new_copynumbers[:, last_idx:np.shape(new_copynumbers)[circuit.species.time_axis]] = steady_state_result.y
-                new_copynumbers[:, np.shape(new_copynumbers)[circuit.species.time_axis]]
-
-                last_idx = 
-                
+                logging.info(steady_state_result.y[:, -1])
+                logging.info(np.expand_dims(steady_state_result.y[:, -1], axis=circuit.species.time_axis))
+                expanded_steady_states = np.concatenate(
+                    [steady_state_result.y,
+                     np.repeat(np.expand_dims(steady_state_result.y[:, -1], axis=circuit.species.time_axis),
+                               time_span - np.shape(steady_state_result.y)[1])])
+                new_copynumbers[:,
+                                time_start:time_end] = expanded_steady_states
 
         circuit.species.copynumbers = np.concatenate(
             (circuit.species.copynumbers, new_copynumbers[make_dynamic_indexer({

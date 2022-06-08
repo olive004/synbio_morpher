@@ -20,7 +20,8 @@
         "magnitude":20,
         "positions":null,
         "heights":null,
-        "durations": null
+        "durations": null,
+        "use_solver": "naive"
     }, 
     "system_type": "RNA"
 }

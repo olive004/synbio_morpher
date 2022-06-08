@@ -119,7 +119,7 @@ def main(config=None, data_writer=None):
                 circuit = construct_circuit_from_cfg(
                     extra_configs=cfg, config_filepath=config)
                 circuit = modeller.init_circuit(circuit)
-                circuit = modeller.simulate_signal(circuit, use_solver='ivp')
+                circuit = modeller.simulate_signal(circuit, use_solver=config_file.get('signal').get('use_solver', 'naive'))
 
                 idxs = [slice(0, num_species)] + [[ite] for ite in iterators]
                 all_species_steady_states[tuple(

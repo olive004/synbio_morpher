@@ -38,10 +38,13 @@ class Signal():
 
     @property
     def summarized_signal(self) -> List[list]:
+        """ Return signal as a tuple of the signal scaled to the magnitude, 
+        the starting time, and the ending time point of the signal. """
         summ_signal = []
-        for signal in self.abstract_signal:
+        time_span = self.total_time / len(self.abstract_signal)
+        for i, signal in enumerate(self.abstract_signal):
             summ_signal.append(
-                (signal*self.magnitude, self.total_time / len(self.abstract_signal))
+                (signal*self.magnitude, time_span*i, time_span*(i+1))
             )
         return summ_signal
 
