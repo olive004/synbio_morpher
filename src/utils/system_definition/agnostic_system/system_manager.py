@@ -101,15 +101,14 @@ class CircuitModeller():
                                                                       use_solver='ivp')
 
         circuit.result_collector.add_result(circuit.species.copynumbers,
-                                            name='steady_state',
+                                            name='steady_states',
                                             category='time_series',
                                             vis_func=modeller_steady_state.plot,
                                             vis_kwargs={'legend': list(circuit.species.data.sample_names),
                                                         'out_type': 'png'})
         steady_state_analytics = circuit.result_collector.get_result(
-            key='steady_state').analytics
-        circuit.species.steady_state_copynums = steady_state_analytics[
-            'steady_state']['steady_states']
+            key='steady_states').analytics
+        circuit.species.steady_state_copynums = steady_state_analytics['steady_states']
         return circuit
 
     def compute_steady_states_data(self, modeller, circuit: BaseSystem,

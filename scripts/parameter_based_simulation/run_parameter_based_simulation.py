@@ -3,6 +3,7 @@ from multiprocessing import Process
 import os
 import numpy as np
 from scripts.common.circuit import construct_circuit_from_cfg
+from src.srv.io.results.analytics.timeseries import Timeseries
 from src.srv.io.results.experiments import Experiment, Protocol
 from src.srv.io.results.result_writer import ResultWriter
 from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
@@ -23,15 +24,17 @@ def main(config=None, data_writer=None):
             'experiment').get('purpose', 'parameter_based_simulation'))
 
     if config_file.get('experiment').get('parallelise'):
-        num_subprocesses = 1
-    else: 
+        num_subprocesses = 12
+    else:
         num_subprocesses = 1
 
     for subprocess in range(num_subprocesses):
-        data_writer.update_ensemble(str(subprocess))
-        p = Process(target=main_subprocess, args=(config, data_writer, subprocess, num_subprocesses))
+        data_writer.update_ensemble('subprocess_' + str(subprocess))
+        p = Process(target=main_subprocess, args=(
+            config, data_writer, subprocess, num_subprocesses))
         p.start()
     # p.join()
+
 
 def main_subprocess(config, data_writer, sub_process, total_processes):
     config_file = load_json_as_dict(config)
@@ -69,6 +72,15 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
             matrix_dimensions, dtype=np.float32)
         all_species_fold_change = np.zeros(
             matrix_dimensions, dtype=np.float32)
+        all_species_precision = np.zeros(
+            matrix_dimensions, dtype=np.float32)
+        all_species_sensitivity = np.zeros(
+            matrix_dimensions, dtype=np.float32)
+
+        all_species_analytics = []
+        for analytic in Timeseries(None).get_analytics_types():
+            all_species_analytics.append(np.zeros(
+                matrix_dimensions, dtype=np.float32))
 
         total_iterations = matrix_size
         num_iterations = int(total_iterations / total_processes)
@@ -81,7 +93,7 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
         logging.info(f'\t{193000/(13*60)} or {10000/24} in mins')
         logging.info(f'\t{193000/(13*60)/60} or {10000/24/60} in hours')
         logging.info(f'\t{193000/(13*60)/60 /24} or {10000/24/60/24} in days')
-        logging.info(f'Total data: {num_iterations}')
+        logging.info(f'Total data: {total_iterations}')
         logging.info(f'Projected size (inc signal writing):')
         logging.info('\tRate of 100.7Mb / 500 iterations')
         logging.info(
@@ -91,8 +103,10 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
         for i in range(starting_iteration, end_iteration):  # 8100 per min
             if np.mod(i, 1000) == 0 or i == starting_iteration:
                 data_writer.unsubdivide()
-                data_writer.subdivide_writing(f'{i}-{round_to_nearest(i+1000, 1000)-1}')
-                logging.info(f'Iteration {i}/{num_iterations}')
+                data_writer.subdivide_writing(
+                    f'{i}-{round_to_nearest(i+1000, 1000)-1}')
+                logging.info(
+                    f'Iteration {i}/{total_iterations}, stopping at {end_iteration}')
             data_writer.subdivide_writing(str(i), safe_dir_change=False)
 
             # @time_it
@@ -143,7 +157,8 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
                 circuit = construct_circuit_from_cfg(
                     extra_configs=cfg, config_filepath=config)
                 circuit = modeller.init_circuit(circuit)
-                circuit = modeller.simulate_signal(circuit, use_solver=config_file.get('signal').get('use_solver', 'naive'))
+                circuit = modeller.simulate_signal(
+                    circuit, use_solver=config_file.get('signal').get('use_solver', 'naive'))
 
                 idxs = [slice(0, num_species)] + [[ite] for ite in iterators]
                 all_species_steady_states[tuple(
@@ -158,14 +173,18 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
                     idxs)] = circuit.result_collector.results['signal'].analytics['overshoot']
                 all_species_fold_change[tuple(
                     idxs)] = circuit.result_collector.results['signal'].analytics['fold_change']
+                all_species_precision[tuple(
+                    idxs)] = circuit.result_collector.results['signal'].analytics['precision']
+                all_species_sensitivity[tuple(
+                    idxs)] = circuit.result_collector.results['signal'].analytics['sensitivity']
 
                 # logging.info(circuit.result_collector.results['signal'].analytics)
-                
 
                 # logging.info(circuit.result_collector.results['signal'].analytics.get('response_time'))
                 # logging.info(all_species_response_time[all_species_response_time>0])
 
                 # @time_it
+
                 def write_all():
                     # data_writer.output(
                     #     'csv', out_name='flat_triangle_interaction_matrix', data=flat_triangle)
@@ -175,17 +194,29 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
 
                     for out_type in ['npy']:
                         data_writer.output(out_type, out_name='all_species_steady_states',
-                                        data=all_species_steady_states.astype(np.float32), overwrite=True,
-                                        write_to_top_dir=True)
+                                           data=all_species_steady_states.astype(np.float32), overwrite=True,
+                                           write_to_top_dir=True)
                         data_writer.output(out_type, out_name='all_species_response_time',
-                                        data=all_species_response_time.astype(np.float32), overwrite=True,
-                                        write_to_top_dir=True)
+                                           data=all_species_response_time.astype(np.float32), overwrite=True,
+                                           write_to_top_dir=True)
                         data_writer.output(out_type, out_name='all_species_response_time_low',
-                                        data=all_species_response_time_low.astype(np.float32), overwrite=True,
-                                        write_to_top_dir=True)
+                                           data=all_species_response_time_low.astype(np.float32), overwrite=True,
+                                           write_to_top_dir=True)
                         data_writer.output(out_type, out_name='all_species_response_time_high',
-                                        data=all_species_response_time_high.astype(np.float32), overwrite=True,
-                                        write_to_top_dir=True)
+                                           data=all_species_response_time_high.astype(np.float32), overwrite=True,
+                                           write_to_top_dir=True)
+                        data_writer.output(out_type, out_name='all_species_response_time_high',
+                                           data=all_species_response_time_high.astype(np.float32), overwrite=True,
+                                           write_to_top_dir=True)
+                        data_writer.output(out_type, out_name='all_species_response_time_high',
+                                           data=all_species_response_time_high.astype(np.float32), overwrite=True,
+                                           write_to_top_dir=True)
+                        data_writer.output(out_type, out_name='all_species_response_time_high',
+                                           data=all_species_response_time_high.astype(np.float32), overwrite=True,
+                                           write_to_top_dir=True)
+                        data_writer.output(out_type, out_name='all_species_response_time_high',
+                                           data=all_species_response_time_high.astype(np.float32), overwrite=True,
+                                           write_to_top_dir=True)
                 if np.mod(i, 100) == 0:
                     write_all()
             # experiment = Experiment(config_filepath=config, protocols=[Protocol(loop_iter)],
@@ -196,17 +227,17 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
 
         logging.info('Finished: outputting final matrices')
         data_writer.output('npy', out_name='steady_state_interpolation',
-                            data=all_species_steady_states.astype(np.float32), overwrite=True,
-                            write_to_top_dir=True)
+                           data=all_species_steady_states.astype(np.float32), overwrite=True,
+                           write_to_top_dir=True)
         data_writer.output('npy', out_name='all_species_response_time',
-                            data=all_species_response_time.astype(np.float32), overwrite=True,
-                            write_to_top_dir=True)
+                           data=all_species_response_time.astype(np.float32), overwrite=True,
+                           write_to_top_dir=True)
         data_writer.output('npy', out_name='all_species_response_time_low',
-                            data=all_species_response_time_low.astype(np.float32), overwrite=True,
-                            write_to_top_dir=True)
+                           data=all_species_response_time_low.astype(np.float32), overwrite=True,
+                           write_to_top_dir=True)
         data_writer.output('npy', out_name='all_species_response_time_high',
-                            data=all_species_response_time_high.astype(np.float32), overwrite=True,
-                            write_to_top_dir=True)
+                           data=all_species_response_time_high.astype(np.float32), overwrite=True,
+                           write_to_top_dir=True)
 
     experiment = Experiment(config_filepath=config, protocols=[Protocol(make_interaction_interpolation_matrices)],
                             data_writer=data_writer)

@@ -15,11 +15,7 @@ class Timeseries():
             self.get_derivative()[:, :-2])
         is_steady_state_reached = final_deriv < self.stability_threshold
         steady_states = np.expand_dims(self.data[:, -1], axis=1)
-        return {
-            "is_steady_state_reached": is_steady_state_reached,
-            "steady_states": steady_states,
-            "final_deriv": final_deriv
-        }
+        return steady_states, is_steady_state_reached, final_deriv
 
     def fold_change(self):
         division_vector = self.data[:, -1].clip(1)
@@ -42,7 +38,7 @@ class Timeseries():
         starting_states = np.expand_dims(self.data[:, 0], axis=1)
         signal_low = np.min(self.data[signal_idx, :])
         signal_high = np.max(self.data[signal_idx, :])
-        
+
         """ MODIFYING THIS PART A BIT - GETTING DIVIDE BY ZERO ERROR OTHERWISE
         Original: 
         return np.absolute(np.divide(
@@ -95,15 +91,18 @@ class Timeseries():
                 steady_states * margin_high), axis=1).astype(self.num_dtype), axis=1)
             response_time_low = np.expand_dims(np.argmax(post_peak_data >= (
                 steady_states * margin_low), axis=1).astype(self.num_dtype), axis=1)
-        # logging.info(post_peak_data < steady_states)
-        # logging.info(post_peak_data >= steady_states)
-        # logging.info(np.argmax(post_peak_data >= steady_states, axis=1).astype(self.num_dtype))
-        # logging.info(post_peak_data < (steady_states * 1.05))
-        # logging.info(post_peak_data < (steady_states * 0.95))
         return response_time, response_time_high, response_time_low
 
-    def get_writeables(self):
-        return ['fold_change', 'steady_state', 'response_time', 'response_time_high', 'response_time_low']
+    def get_analytics_types(self):
+        return ['fold_change',
+                'is_steady_state_reached',
+                'overshoot',
+                'precision',
+                'response_time',
+                'response_time_high',
+                'response_time_low',
+                'sensitivity',
+                'steady_states']
 
     def frequency(self):
         spectrum = np.fft.fft(self.data)/len(self.data)
@@ -115,14 +114,18 @@ class Timeseries():
         analytics = {
             'first_derivative': self.get_derivative(),
             'fold_change': self.fold_change(),
-            'steady_state': self.get_steady_state(),
             'sensitivity': self.get_sensitivity(signal_idx)
         }
+        analytics['steady_states'], \
+            analytics['is_steady_state_reached'], \
+            analytics['final_deriv'] = self.get_steady_state()
         analytics['response_time'], \
             analytics['response_time_high'], \
             analytics['response_time_low'] = self.get_response_times(
-            analytics['steady_state']['steady_states'])
-        
-        analytics['overshoot'] = self.get_overshoot(analytics['steady_state']['steady_states'])
-        analytics['precision'] = self.get_precision(analytics['steady_state']['steady_states'], signal_idx)
+            analytics['steady_states'])
+
+        analytics['overshoot'] = self.get_overshoot(
+            analytics['steady_states'])
+        analytics['precision'] = self.get_precision(
+            analytics['steady_states'], signal_idx)
         return analytics
