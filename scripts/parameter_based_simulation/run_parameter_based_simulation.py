@@ -65,6 +65,10 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
             matrix_dimensions, dtype=np.float32)
         all_species_response_time_high = np.zeros(
             matrix_dimensions, dtype=np.float32)
+        all_species_overshoot = np.zeros(
+            matrix_dimensions, dtype=np.float32)
+        all_species_fold_change = np.zeros(
+            matrix_dimensions, dtype=np.float32)
 
         total_iterations = matrix_size
         num_iterations = int(total_iterations / total_processes)
@@ -150,6 +154,10 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
                     idxs)] = circuit.result_collector.results['signal'].analytics.get('response_time_low')
                 all_species_response_time_high[tuple(
                     idxs)] = circuit.result_collector.results['signal'].analytics['response_time_high']
+                all_species_overshoot[tuple(
+                    idxs)] = circuit.result_collector.results['signal'].analytics['overshoot']
+                all_species_fold_change[tuple(
+                    idxs)] = circuit.result_collector.results['signal'].analytics['fold_change']
 
                 # logging.info(circuit.result_collector.results['signal'].analytics)
                 
@@ -159,10 +167,10 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
 
                 # @time_it
                 def write_all():
-                    data_writer.output(
-                        'csv', out_name='flat_triangle_interaction_matrix', data=flat_triangle)
-                    data_writer.output('csv', out_name='steady_state',
-                                    data=circuit.species.steady_state_copynums[:])
+                    # data_writer.output(
+                    #     'csv', out_name='flat_triangle_interaction_matrix', data=flat_triangle)
+                    # data_writer.output('csv', out_name='steady_state',
+                    #                 data=circuit.species.steady_state_copynums[:])
                     # modeller.write_results(circuit=circuit, no_visualisations=False, only_numerical=False)
 
                     for out_type in ['npy']:

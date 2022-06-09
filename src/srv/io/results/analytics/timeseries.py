@@ -30,6 +30,31 @@ class Timeseries():
         deriv = np.gradient(self.data)[1]
         return deriv  # get column derivative
 
+    def get_overshoot(self, steady_states):
+        return np.max(self.data, axis=1) - steady_states
+
+    def get_precision(self, steady_states, signal_idx):
+        starting_states = self.data[:, 0]
+        signal_low = np.min(self.data[signal_idx, :])
+        signal_high = np.max(self.data[signal_idx, :])
+        
+        return np.absolute(np.divide(
+            (steady_states - starting_states) / starting_states,
+            (signal_high - signal_low) / signal_low
+        ))
+
+    def get_sensitivity(self, signal_idx):
+        starting_states = self.data[:, 0]
+        peaks = np.max(self.data, axis=1)
+        signal_low = np.min(self.data[signal_idx, :])
+        signal_high = np.max(self.data[signal_idx, :])
+
+        return np.absolute(np.divide(
+            (peaks - starting_states) / starting_states,
+            (signal_high - signal_low) / signal_low
+        ))
+
+
     def get_response_times(self, steady_states):
         margin_high = 1.05
         margin_low = 0.95
@@ -72,10 +97,14 @@ class Timeseries():
         analytics = {
             'first_derivative': self.get_derivative(),
             'fold_change': self.fold_change(),
-            'steady_state': self.get_steady_state(),
+            'steady_state': self.get_steady_state()
         }
         analytics['response_time'], \
             analytics['response_time_high'], \
             analytics['response_time_low'] = self.get_response_times(
             analytics['steady_state']['steady_states'])
+        
+        analytics['overshoot'] = self.get_overshoot(analytics['steady_state']['steady_states'])
+        analytics['precision'] = self.get_precision(analytics['steady_state']['steady_states'])
+        analytics['sensitivity'] = self.get_sensitivity(analytics['steady_state']['steady_states'])
         return analytics
