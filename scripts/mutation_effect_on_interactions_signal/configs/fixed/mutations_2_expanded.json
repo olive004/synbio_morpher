@@ -1,0 +1,22 @@
+{
+    "system_type": "RNA",
+    "data_path": "None",
+    "experiment": {
+        "purpose": "mutation_effect_on_interactions_signal"
+    },
+    "interaction_simulator": {
+        "name": "IntaRNA",
+        "postprocess": "False"
+    },
+    "identities": {
+        "input": "RNA_0",
+        "output": "RNA_2"
+    },
+    "mutations": {
+        "mutation_counts": 100,
+        "mutation_nums": 2,
+        "mutate_in_circuit": "single_species_at_a_time"
+    },
+    "signal": "./scripts/mutation_effect_on_interactions_signal/configs/fixed/in_signal.json",
+    "source_of_interaction_stats": "./data/gather_interaction_stats/2022_05_10_232313"
+}

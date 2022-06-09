@@ -55,7 +55,7 @@ def load_simulator_cfgs(dict_args) -> Dict:
 
 def retrieve_default_args() -> Dict:
     fn = get_pathnames(file_key='default_args', search_dir=os.path.join(
-        'scripts', 'common'), first_only=True)
+        'scripts', 'common', 'configs', 'simulators'), first_only=True)
     default_args = json.load(open(fn))
     return default_args
 

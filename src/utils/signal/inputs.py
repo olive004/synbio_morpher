@@ -1,4 +1,5 @@
 from functools import partial
+from typing import List
 import numpy as np
 
 
@@ -13,7 +14,8 @@ class Signal():
         self.magnitude = magnitude
         self.time_interval = time_interval
         self.time_steps = time_interval * total_time
-        self.time_dilation_func = partial(np.repeat, repeats=total_time / len(self.abstract_signal))
+        self.time_dilation_func = partial(
+            np.repeat, repeats=total_time / len(self.abstract_signal))
 
     @property
     def abstract_signal(self):
@@ -24,8 +26,27 @@ class Signal():
         self._abstract_signal = value
 
     @property
-    def real_signal(self):
-        return self.time_dilation_func(self.abstract_signal) * self.magnitude
+    def real_signal(self) -> np.ndarray:
+        """ Signal is 1-d np matrix """
+        signal = self.time_dilation_func(self.abstract_signal) * self.magnitude
+        if len(signal) < self.total_time:
+            signal = np.concatenate((signal, np.repeat(
+                signal[-1], self.total_time - len(signal))))
+        assert len(
+            signal) == self.total_time, f'The signal length {len(signal)} does not equal its intended length {self.total_time}'
+        return signal
+
+    @property
+    def summarized_signal(self) -> List[list]:
+        """ Return signal as a tuple of the signal scaled to the magnitude, 
+        the starting time, and the ending time point of the signal. """
+        summ_signal = []
+        time_span = self.total_time / len(self.abstract_signal)
+        for i, signal in enumerate(self.abstract_signal):
+            summ_signal.append(
+                (signal*self.magnitude, time_span*i, time_span*(i+1))
+            )
+        return summ_signal
 
     @property
     def time(self):
@@ -88,7 +109,7 @@ class OscillatingSignal(Signal):
                            heights=self.heights,
                            durations=self.durations)
 
-    def spikes(self, positions, heights, durations) -> np.array:
+    def spikes(self, positions: list, heights: list, durations: list) -> np.array:
         # inputs: np.array of position,height,duration for each triangular pulse
         # pulse positions arranged in ascending order
 

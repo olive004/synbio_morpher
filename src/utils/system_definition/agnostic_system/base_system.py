@@ -18,6 +18,10 @@ logger.setLevel(logging.INFO)
 
 
 class BaseSpecies():
+
+    species_axis = 0
+    time_axis = 1
+
     def __init__(self, config_args: dict) -> None:
 
         # Probability distribution for each interaction component?
@@ -28,7 +32,8 @@ class BaseSpecies():
         self.identities = config_args.get("identities")
 
         self.loaded_interactions = False
-        self.interactions, self.interaction_units = self.make_interactions(config_args)
+        self.interactions, self.interaction_units = self.make_interactions(
+            config_args)
         self.degradation_rates = self.init_matrix(ndims=1, init_type="uniform")
         self.creation_rates = self.init_matrix(ndims=1, init_type="uniform")
 
@@ -49,11 +54,20 @@ class BaseSpecies():
         self.initial_values = self.save_initial_values()
 
     def make_interactions(self, config_args):
-        if config_args.get("interactions_path", None):
-            self.loaded_interactions = True
-            matrix, interaction_units = InteractionMatrix().load(config_args.get("interactions_path"))
+        cfg_interactions = config_args.get("interactions")
+        if cfg_interactions:
+            if cfg_interactions.get("interactions_path", None):
+                self.loaded_interactions = True
+                matrix, interaction_units = InteractionMatrix().load(
+                    cfg_interactions.get("interactions_path"))
+            elif cfg_interactions.get("interactions_matrix", None) is not None:
+                self.loaded_interactions = True
+                matrix, interaction_units = InteractionMatrix(
+                    matrix=cfg_interactions.get("interactions_matrix")).matrix, \
+                    cfg_interactions.get("interactions_units", '')
         else:
-            matrix, interaction_units = self.init_matrix(ndims=2, init_type="zeros"), ''
+            matrix, interaction_units = self.init_matrix(
+                ndims=2, init_type="zeros"), ''
         return (matrix, interaction_units)
 
     def init_matrices(self, uniform_vals, ndims=2, init_type="rand") -> List[np.array]:
@@ -150,7 +164,7 @@ class BaseSpecies():
 
     @property
     def copynumbers(self):
-        """ All copynumbers so far in [sample, t]"""
+        """ All copynumbers through time, using the convention [sample, t]"""
         return self._copynumbers
 
     @copynumbers.setter
@@ -170,13 +184,12 @@ class BaseSystem():
     def __init__(self, config_args: dict = None):
 
         self.name = config_args.get("name")
-        logging.info(self.name)
 
         if config_args is None:
             config_args = {}
 
         self.species = BaseSpecies(config_args)
-        self.signal = None
+        self._signal = None
 
         self.result_collector = ResultCollector()
 
@@ -246,3 +259,17 @@ class BaseSystem():
     @property
     def results(self):
         return self.result_collector.results
+
+    @property
+    def signal(self):
+        return self._signal
+
+    @signal.getter
+    def signal(self):
+        if self._signal is None:
+            logging.warning(f'Trying to retrieve None signal from circuit. Make sure signal specified in circuit config')
+        return self._signal
+    
+    @signal.setter
+    def signal(self, value):
+        self._signal = value

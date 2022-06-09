@@ -1,16 +1,17 @@
 
 
+import logging
 import pandas as pd
 
 
 class Data():
 
     def __init__(self, loaded_data: dict, identities: dict = {}, source_files=None) -> None:
-        self.data = loaded_data
+        self.data = loaded_data if loaded_data is not None else {}
         self.source = source_files
         self.sample_names = self.make_sample_names()
-
-        self.identities = self.convert_names_to_idxs(identities, self.sample_names)
+        self.identities = self.convert_names_to_idxs(
+            identities, self.sample_names)
 
     def get_data_by_idx(self, idx):
         if idx not in self.sample_names:
@@ -29,13 +30,17 @@ class Data():
         for name_type, name in names_table.items():
             if name in source:
                 indexed_identities[name_type] = source.index(name)
+        if not indexed_identities and names_table and source:
+            logging.warning(f'Identities not found: {names_table.values()} not in {source}')
         return indexed_identities
 
-    def make_sample_names(self):
+    def make_sample_names(self, sample_names: list = None) -> list:
         if type(self.data) == dict:
             return list(self.data.keys())
         elif type(self.data) == pd.DataFrame:
             return list(self.data.columns)
+        elif self.data is None:
+            return sample_names
         raise ValueError(f'Unrecognised loaded data type {type(self.data)}.')
 
     @property

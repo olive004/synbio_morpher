@@ -1,0 +1,39 @@
+{
+    "circuit_generation": {
+        "repetitions": 2000,
+        "species_count": 3,
+        "sequence_length": 25,
+        "generator_protocol": "template_mutate",
+        "proportion_to_mutate": 0.35
+    },
+    "data": "./data/example_data/toy_mRNA_circuit.fasta",
+    "interaction_simulator": {
+        "name": "IntaRNA",
+        "postprocess": false
+    },
+    "identities": {
+        "input": "RNA_0",
+        "output": "RNA_2"
+    },
+    "molecular_params": {
+        "creation_rates": 50,
+        "copynumbers": 5,
+        "degradation_rates": 20
+    },
+    "mutations": {
+        "mutation_counts": 10,
+        "mutation_nums": 1,
+        "algorithm": "random"
+    },
+    "signal": {
+        "signal":[1, 0, 1, 0],
+        "signal_spec": "raw",
+        "signal_type": "abstract",
+        "total_time":10000,
+        "magnitude":10,
+        "positions":[6, 500],
+        "heights":[50, 80],
+        "durations":[50, 400]
+    },
+    "system_type": "RNA"
+}

@@ -8,4 +8,5 @@ numpy
 pandas
 pyvis
 python-libsbml # https://synonym.caltech.edu/software/libsbml/libsbml-docs/api/python/
+seaborn
 scipy==1.7.3

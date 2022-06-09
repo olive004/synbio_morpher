@@ -1,25 +1,31 @@
 
 
-import os
-from src.srv.io.results.metrics.analytics import Analytics
 from src.utils.misc.type_handling import assert_uniform_type
 
 
 class Result():
     def __init__(self, name, result_data, category, vis_func, save_numerical_vis_data=False,
-                 **vis_kwargs) -> None:
+                 vis_kwargs=None, analytics_kwargs=None) -> None:
         self.name = name
         self.data = result_data
         self.category = category
         self.save_numerical_vis_data = save_numerical_vis_data
         self.vis_func = vis_func
         self.vis_kwargs = vis_kwargs
+        self.analytics_kwargs = analytics_kwargs
 
-        self.metrics = {}
-        self.analytics = Analytics(result_data, category)
+        self.analytics = {}
         if category == 'time_series':
-            from src.srv.io.results.metrics.plotting import Timeseries
-            self.metrics = Timeseries(result_data).generate_analytics()
+            from src.srv.io.results.analytics.timeseries import Timeseries
+            analytics_kwargs = analytics_kwargs if analytics_kwargs is not None else {}
+            self.analytics = Timeseries(
+                result_data).generate_analytics(**analytics_kwargs)
+
+    def __repr__(self):
+        str_rep = [f'\n\nResult {self.name}\n']
+        for k, v in self.__dict__.items():
+            str_rep.append(f'{k}: {v}\n')
+        return ''.join(str_rep)
 
 
 class ResultCollector():
@@ -28,11 +34,12 @@ class ResultCollector():
 
         self.results = {}
 
-    def add_result(self, result_data, category, vis_func, name, save_numerical_vis_data=False, **vis_kwargs):
+    def add_result(self, result_data, category, vis_func, name, save_numerical_vis_data=False,
+                   vis_kwargs=None, analytics_kwargs=None):
         """ category: 'time_series', 'graph' """
         name = f'Result_{len(self.results.keys())}' if not name else name
         result_entry = Result(name, result_data, category,
-                              vis_func, save_numerical_vis_data, **vis_kwargs)
+                              vis_func, save_numerical_vis_data, vis_kwargs, analytics_kwargs)
         self.results[name] = result_entry
 
     def get_result(self, key):
