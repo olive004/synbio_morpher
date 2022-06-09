@@ -1,8 +1,10 @@
+import logging
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.srv.io.manage.data_manager import DataManager
 from src.utils.misc.io import isolate_filename
 from src.utils.misc.type_handling import cast_all_values_as_list
 from src.utils.signal.configs import get_signal_type, parse_sig_args
+from src.utils.signal.inputs import Signal
 from src.utils.system_definition.config import parse_cfg_args
 from src.utils.system_definition.setup import get_system_type
 
@@ -38,7 +40,7 @@ def compose_kwargs(extra_configs: dict = None, config_filepath: str = None, conf
     return kwargs
 
 
-def construct_signal(kwargs):
+def construct_signal(kwargs) -> Signal:
     signal_kwargs = parse_sig_args(kwargs)
     SignalType = get_signal_type(kwargs.get("signal_type"))
     return SignalType(**signal_kwargs)

@@ -1,5 +1,6 @@
 import logging
 from math import factorial
+from typing import Union
 import numpy as np
 
 
@@ -46,9 +47,24 @@ def generate_mixed_binary(length: int, count: int, zeros_to_ones: bool = True):
     return all_sequences
 
 
+def np_delete_axes(array, rowcol: Union[list, int], axes: list):
+    for axis in axes:
+        array = np.delete(array, rowcol, axis=axis)
+    return array
+
+
+def make_dynamic_indexer(desired_axis_index_pairs: dict) -> tuple:
+    """ For numpy array advanced indexing: if you know the desired index-axis pair, 
+    but the axis is dynamic, use this function to create the appropriate indexing tuple """
+    idxs = [0] * len(desired_axis_index_pairs)
+    for axis, index in desired_axis_index_pairs.items():
+        idxs[axis] = index
+    return tuple(idxs)
+
+
 def make_symmetrical_matrix_from_sequence(arr, side_length: int, total_dimensions: int = 2, sequence: str = 'triangular'):
     matrix = np.zeros(tuple([side_length]*total_dimensions))
-    if sequence=='triangular':
+    if sequence == 'triangular':
         for side in range(1, side_length+1):
             prev_triangle = triangular_sequence(side-1)
             curr_triangle_num = triangular_sequence(side)
@@ -56,13 +72,24 @@ def make_symmetrical_matrix_from_sequence(arr, side_length: int, total_dimension
             matrix[side-1, 0:side] = arr[prev_triangle:curr_triangle_num]
             matrix[0:side, side-1] = arr[prev_triangle:curr_triangle_num]
     else:
-        raise NotImplementedError(f'Unknown numerical sequence type {sequence}')
+        raise NotImplementedError(
+            f'Unknown numerical sequence type {sequence}')
     return matrix
+
+
+def round_to_nearest(x, base):
+    return base * round(x/base)
 
 
 def square_matrix_rand(num_nodes: int = 3):
     dims = (num_nodes, num_nodes)
     return np.random.rand(*dims)
+
+
+def transpose_arraylike(arraylike):
+    if type(arraylike) == list:
+        arraylike = np.array(arraylike)
+    return np.transpose(arraylike)
 
 
 def triangular_sequence(n: int) -> int:
