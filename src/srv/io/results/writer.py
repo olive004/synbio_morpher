@@ -3,7 +3,6 @@ from functools import partial
 from abc import ABC, abstractmethod
 import logging
 import os
-import numpy as np
 import pandas as pd
 from src.utils.data.data_format_tools.common import write_csv, write_json, write_np
 
@@ -21,13 +20,14 @@ class DataWriter():
         self.root_output_dir = os.path.join('data')
         self.exception_dirs = os.path.join('example_data')
 
-        self.ensemble_script = ensemble_script
         if out_location is None:
-            self.top_write_dir = self.make_location(purpose)
+            self.top_write_dir = self.make_location_from_purpose(purpose)
         else:
             self.top_write_dir = out_location
+        self.ensemble_script = ensemble_script
         self.ensemble_write_dir = deepcopy(self.top_write_dir) if self.ensemble_script is None \
             else os.path.join(self.top_write_dir, self.ensemble_script)
+        create_location(self.ensemble_write_dir)
         self.write_dir = deepcopy(self.top_write_dir)
 
     def output(self, out_type: str = None, out_name: str = None, overwrite: bool = False, return_path: bool = False,
@@ -93,7 +93,7 @@ class DataWriter():
         raise ValueError(
             f'No write function available for output of type {out_type}')
 
-    def make_location(self, purpose: str):
+    def make_location_from_purpose(self, purpose: str):
 
         if purpose in get_subdirectories(self.script_dir, only_basedir=True) or purpose in self.exception_dirs:
             location = os.path.join(self.root_output_dir,
@@ -118,6 +118,7 @@ class DataWriter():
     def update_ensemble(self, new_ensemble: str):
         self.ensemble_script = new_ensemble
         self.ensemble_write_dir = os.path.join(self.top_write_dir, self.ensemble_script)
+        create_location(os.path.join(self.top_write_dir, self.ensemble_script))
 
     def unsubdivide_last_dir(self):
         self.write_dir = os.path.dirname(self.write_dir)

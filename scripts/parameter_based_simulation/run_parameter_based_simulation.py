@@ -24,12 +24,12 @@ def main(config=None, data_writer=None):
             'experiment').get('purpose', 'parameter_based_simulation'))
 
     if config_file.get('experiment').get('parallelise'):
-        num_subprocesses = 12
+        num_subprocesses = 10
     else:
         num_subprocesses = 1
 
     for subprocess in range(num_subprocesses):
-        data_writer.update_ensemble('subprocess_' + str(subprocess))
+        data_writer.update_ensemble('subprocess_' + str(subprocess+1))
         p = Process(target=main_subprocess, args=(
             config, data_writer, subprocess, num_subprocesses))
         p.start()
@@ -40,6 +40,7 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
     config_file = load_json_as_dict(config)
 
     def make_interaction_interpolation_matrices():
+        # Parameter space to scan
         interaction_min = 0
         interaction_max = 1
         interaction_step_size = 0.1
@@ -47,12 +48,14 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
             interaction_min, interaction_max, interaction_step_size)
         size_interaction_array = np.size(interaction_array)
 
+        # Load data names
         from src.utils.data.data_format_tools.manipulate_fasta import load_seq_from_FASTA
         sample_names = load_seq_from_FASTA(
             config_file.get("data_path"), as_type='dict')
         num_species = len(sample_names)
         num_unique_interactions = triangular_sequence(num_species)
 
+        # Create matrices
         matrix_dimensions = tuple(
             [num_species] + [size_interaction_array]*num_unique_interactions)
         matrix_size = num_species * \
@@ -66,6 +69,7 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
             all_species_analytics.append(np.zeros(
                 matrix_dimensions, dtype=np.float32))
 
+        # Set loop vars
         total_iterations = matrix_size
         num_iterations = int(total_iterations / total_processes)
         starting_iteration = int(num_iterations * sub_process)
@@ -85,40 +89,7 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
         modeller = CircuitModeller(result_writer=data_writer)
 
         # @time_it
-        def loop_iter():
-            """ Timings:
-            'naive' signal simulation
-            0.0010s 
-            Function name: construct_circuit_from_cfg
-
-            0.0224s 
-            Function name: init_circuit
-
-            0.2604s 
-            Function name: simulate_signal
-
-            0.0393s 
-            Function name: write_all
-
-
-            'ivp' signal simulation
-            0.1569s 
-            Function name: loop_iter
-
-            0.0008s 
-            Function name: construct_circuit_from_cfg
-
-            0.0183s 
-            Function name: init_circuit
-
-            0.1026s 
-            Function name: simulate_signal
-
-            0.0396s 
-            Function name: write_all
-
-            """
-
+        def loop_iter(i):
             iterators = [int(np.mod(i / np.power(size_interaction_array, j),
                                     size_interaction_array)) for j in range(num_unique_interactions)]
             flat_triangle = interaction_array[list(iterators)]
@@ -136,8 +107,9 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
                 circuit, use_solver=config_file.get('signal').get('use_solver', 'naive'))
 
             idxs = [slice(0, num_species)] + [[ite] for ite in iterators]
-            for i, analytic in enumerate(analytic_types):
-                all_species_analytics[i][tuple(idxs)] = circuit.result_collector.results['signal'].analytics.get(analytic)
+            for j, analytic in enumerate(analytic_types):
+                all_species_analytics[j][tuple(
+                    idxs)] = circuit.result_collector.results['signal'].analytics.get(analytic)
 
             # @time_it
             if np.mod(i, 100) == 0:
@@ -146,20 +118,21 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
         def write_all(out_type='npy'):
             for i, analytic in enumerate(analytic_types):
                 data_writer.output(out_type, out_name=f'all_species_{analytic}',
-                                    data=all_species_analytics[i].astype(np.float32), overwrite=True,
-                                    write_to_top_dir=True)
+                                   data=all_species_analytics[i].astype(np.float32), overwrite=True,
+                                   write_to_top_dir=True)
 
+        # Main loop
         for i in range(starting_iteration, end_iteration):  # 8100 per min
             if np.mod(i, 1000) == 0 or i == starting_iteration:
-                data_writer.unsubdivide()
-                data_writer.subdivide_writing(
-                    f'{i}-{round_to_nearest(i+1000, 1000)-1}')
+                # data_writer.unsubdivide()
+                # data_writer.subdivide_writing(
+                #     f'{i}-{round_to_nearest(i+1000, 1000)-1}')
                 logging.info(
                     f'Iteration {i}/{total_iterations}, stopping at {end_iteration}')
-            data_writer.subdivide_writing(str(i), safe_dir_change=False)
+            # data_writer.subdivide_writing(str(i), safe_dir_change=False)
 
-            loop_iter()
-            data_writer.unsubdivide_last_dir()
+            loop_iter(i)
+            # data_writer.unsubdivide_last_dir()
 
         logging.info('Finished: outputting final matrices')
         write_all()
