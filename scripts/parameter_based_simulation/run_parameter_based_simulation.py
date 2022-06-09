@@ -8,7 +8,7 @@ from src.srv.io.results.result_writer import ResultWriter
 from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.misc.decorators import time_it
-from src.utils.misc.numerical import make_symmetrical_matrix_from_sequence, triangular_sequence
+from src.utils.misc.numerical import make_symmetrical_matrix_from_sequence, round_to_nearest, triangular_sequence
 from src.utils.system_definition.agnostic_system.system_manager import CircuitModeller
 
 
@@ -28,6 +28,7 @@ def main(config=None, data_writer=None):
         num_subprocesses = 1
 
     for subprocess in range(num_subprocesses):
+        data_writer.update_ensemble(str(subprocess))
         p = Process(target=main_subprocess, args=(config, data_writer, subprocess, num_subprocesses))
         p.start()
     # p.join()
@@ -66,9 +67,9 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
             matrix_dimensions, dtype=np.float32)
 
         total_iterations = matrix_size
-        num_iterations = total_iterations / total_processes
-        starting_iteration = num_iterations * sub_process
-        end_iteration = num_iterations * (sub_process + 1)
+        num_iterations = int(total_iterations / total_processes)
+        starting_iteration = int(num_iterations * sub_process)
+        end_iteration = int(num_iterations * (sub_process + 1))
 
         logging.info('-----------------------')
         logging.info('Rate: ca. 8000 / min')
@@ -82,10 +83,11 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
         logging.info(
             f'\t{np.round(100.7/500*num_iterations/1000, decimals=3)}Gb')
         modeller = CircuitModeller(result_writer=data_writer)
+
         for i in range(starting_iteration, end_iteration):  # 8100 per min
             if np.mod(i, 1000) == 0 or i == starting_iteration:
                 data_writer.unsubdivide()
-                data_writer.subdivide_writing(f'{i}-{i+1000-1}')
+                data_writer.subdivide_writing(f'{i}-{round_to_nearest(i+1000, 1000)-1}')
                 logging.info(f'Iteration {i}/{num_iterations}')
             data_writer.subdivide_writing(str(i), safe_dir_change=False)
 

@@ -50,7 +50,7 @@ class DataWriter():
             return base_name
 
         def make_out_path(base_name):
-            write_dir = self.write_dir if not write_to_top_dir else self.top_write_dir
+            write_dir = self.write_dir if not write_to_top_dir else self.ensemble_write_dir
             if subfolder:
                 out_subpath = os.path.join(write_dir, subfolder)
                 create_location(out_subpath)
@@ -110,7 +110,7 @@ class DataWriter():
     def subdivide_writing(self, name: str, safe_dir_change=True):
         """ Update the working write_dir to write to a new subdirectory. 
         If safe_dir_change is specified, recursive subdividing can be avoided. """
-        base_dir = self.top_write_dir if safe_dir_change else self.write_dir
+        base_dir = self.ensemble_write_dir if safe_dir_change else self.write_dir
         location = os.path.join(base_dir, name)
         create_location(location)
         self.write_dir = location
@@ -121,11 +121,15 @@ class DataWriter():
 
     def unsubdivide_last_dir(self):
         self.write_dir = os.path.dirname(self.write_dir)
-        if self.top_write_dir not in self.write_dir:
+        if self.ensemble_write_dir not in self.write_dir:
             self.unsubdivide()
 
+    def rebase_from_ensemble(self):
+        self.ensemble_script = ''
+        self.ensemble_write_dir = deepcopy(self.top_write_dir)
+
     def unsubdivide(self):
-        self.write_dir = deepcopy(self.top_write_dir)
+        self.write_dir = deepcopy(self.ensemble_write_dir)
 
     def write_to_output_summary(self, name: str, **kwargs):
         output_summary = {str(k): str(v) for k, v in kwargs.items()}

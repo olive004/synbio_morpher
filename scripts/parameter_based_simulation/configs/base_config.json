@@ -22,7 +22,7 @@
         "positions":null,
         "heights":null,
         "durations": null,
-        "use_solver": "ivp"
+        "use_solver": "naive"
     }, 
     "system_type": "RNA"
 }
