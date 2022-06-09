@@ -1,29 +1,32 @@
-from fire import Fire
-import os
 
+
+import os
+from fire import Fire
+from scripts.common.circuit import construct_circuit_from_cfg
+from src.srv.io.results.result_writer import ResultWriter
 from src.utils.misc.decorators import time_it
-from src.clients.common.setup import compose_kwargs, instantiate_system, construct_signal
+from src.utils.system_definition.agnostic_system.system_manager import CircuitModeller
 
 
 @time_it
-def main(config_filepath=None):
+def main(config=None, data_writer=None):
 
-    from src.utils.data.fake_data_generation.seq_generator import RNAGenerator
-    RNAGenerator(purpose='example_data').generate_circuit(
-        count=3, slength=25, protocol="template_mix")
+    # from src.utils.data.fake_data_generation.seq_generator import RNAGenerator
+    # RNAGenerator(purpose='example_data').generate_circuit(
+    #     count=3, slength=25, protocol="template_mix")
 
-    config_filepath = os.path.join(
-        "scripts", "RNA_circuit_simulation", "configs", "toy_RNA.json")
-    kwargs = compose_kwargs(config_filepath)
-    circuit = instantiate_system(kwargs)
+    if config is None:
+        config = os.path.join(
+            "scripts", "RNA_circuit_simulation", "configs", "loaded_circuit.json")
 
-    kwargs.get("signal")[
-        "identities_idx"] = circuit.species.identities['input']
-    signal = construct_signal(kwargs.get("signal"))
-    signal.show()
+    if data_writer is None:
+        data_writer_kwargs = {'purpose': 'RNA_circuit_simulation'}
+        data_writer = ResultWriter(**data_writer_kwargs)
 
-    circuit.simulate_signal(signal)
-    circuit.visualise(new_vis=False)
+    circuit = construct_circuit_from_cfg(None, config_filepath=config)
+    modeller = CircuitModeller(result_writer=data_writer)
+    circuit = modeller.compute_interaction_strengths(circuit)
+    circuit = modeller.visualise_graph(circuit)
 
 
 if __name__ == "__main__":

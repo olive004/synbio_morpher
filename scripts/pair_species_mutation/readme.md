@@ -1,7 +1,7 @@
 
 # Purpose
 
-The purpose of 'pair_species_mutation' is to generate a number of RNA circuits, where the length of each RNA sequence is uniform and specified in the config file, along with the number of species.
+The purpose of 'pair_species_mutation' is to generate a number of RNA circuits and then mutate them, where the length of each RNA sequence is uniform and specified in the config file, along with the number of species.
 
 ## Circuit generation
 

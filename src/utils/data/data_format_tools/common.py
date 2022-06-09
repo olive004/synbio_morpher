@@ -15,18 +15,30 @@ def verify_file_type(filepath: str, file_type: str):
     pass
 
 
-def determine_data_format(filepath):
-    return os.path.basename(filepath).split('.')[-1]
+def determine_data_format(filepath: str) -> str:
+    if filepath:
+        return os.path.basename(filepath).split('.')[-1]
+    return None
     # for extension, ftype in FORMAT_EXTS.items():
     #     if extension in filepath:
     #         return ftype
     # return None
 
 
-def load_json_as_dict(json_pathname, process=True):
+def load_json_as_dict(json_pathname: str, process=True) -> dict:
     if not json_pathname:
         return {}
-    jdict = json.load(open(json_pathname))
+    elif type(json_pathname) == dict:
+        jdict = json_pathname
+    elif type(json_pathname) == str:
+        if os.stat(json_pathname).st_size == 0:
+            jdict = {}
+        else:
+            file = open(json_pathname)
+            jdict = json.load(file)
+            file.close()
+    else:
+        raise TypeError(f'Unknown json loading input {json_pathname} of type {type(json_pathname)}.')
     if process:
         return process_json(jdict)
     return jdict
@@ -45,10 +57,12 @@ def process_dict_for_json(dict_like):
     for k, v in dict_like.items():
         if type(v) == dict:
             v = process_dict_for_json(v)
-        if type(v) == np.bool_:
+        elif type(v) == np.bool_:
             dict_like[k] = bool(v)
-        if type(v) == np.ndarray:
+        elif type(v) == np.ndarray:
             dict_like[k] = v.tolist()
+        elif type(v) == np.float32 or type(v) == np.int64:
+            dict_like[k] = str(v)
     return dict_like
 
 
@@ -78,4 +92,14 @@ def write_csv(data: pd.DataFrame, out_path: str, overwrite=False):
 def write_json(data: dict, out_path: str, overwrite=False):
     data = process_dict_for_json(data)
     with open(out_path, 'w+') as fn:
-        json.dump(data, fp=fn, indent=4)
+        try:
+            json.dump(data, fp=fn, indent=4)
+        except TypeError:
+            data = str(data)
+            json.dump(data, fp=fn, indent=4)
+
+
+def write_np(data: np.array, out_path: str, overwrite=False):
+    if not overwrite and os.path.exists(out_path):
+        return
+    np.save(file=out_path, arr=data)

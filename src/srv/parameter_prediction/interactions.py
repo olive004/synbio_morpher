@@ -1,143 +1,20 @@
-from copy import deepcopy
-import logging
-import os
-import sys
-import pandas as pd
+
+
 import numpy as np
-from functools import partial
+import os
+import pandas as pd
+from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
+from src.utils.misc.type_handling import flatten_listlike
 from src.srv.io.loaders.misc import load_csv
 from src.utils.data.data_format_tools.common import determine_data_format
-from src.utils.misc.io import load_experiment_config, load_experiment_report
-from src.utils.misc.numerical import SCIENTIFIC, square_matrix_rand
+from src.utils.misc.io import load_experiment_config
+from src.utils.misc.numerical import square_matrix_rand
 from src.utils.misc.type_handling import flatten_listlike
-
-SIMULATOR_UNITS = {
-    'IntaRNA': {
-        'energy': 'kJ/mol',
-        'rate': 'rate'
-    }
-}
-
-
-class RawSimulationHandling():
-
-    def __init__(self, config_args: dict = None, simulator: str = 'IntaRNA') -> None:
-        self.simulator = simulator if config_args is None else config_args.get(
-            'name', simulator)
-        self.sim_kwargs = config_args if config_args is not None else {}
-        self.units = ''
-
-    def get_protocol(self):
-
-        def intaRNA_calculator(sample):
-            raw_sample = sample.get('E', 0)
-            return raw_sample
-
-        if self.simulator == "IntaRNA":
-            return intaRNA_calculator
-
-    @staticmethod
-    def rate_to_energy(rate):
-        """ Reverse translation of interaction binding energy to binding rate:
-        AG = RT ln(K)
-        AG = RT ln(kb/kd)
-        K = e^(G / RT)
-        """
-        rate[rate == 0] = 1
-        logging.info(np.log(1))
-        logging.info(np.log(rate.astype('float64')))
-        logging.info(max(rate))
-        logging.info(min(rate))
-        logging.info(np.log(max(rate)))
-        logging.info(np.log(min(rate)))
-        energy = np.multiply(SCIENTIFIC['RT'], np.log(rate.astype('float64')))
-        energy = energy / 1000
-        return energy
-
-    def get_postprocessing(self):
-
-        def vanilla(data):
-            return data
-
-        def energy_to_rate(energies):
-            """ Translate interaction binding energy to binding rate:
-            AG = RT ln(K)
-            AG = RT ln(kb/kd)
-            K = e^(G / RT)
-            """
-            energies = energies * 1000  # convert kJ/mol to J/mol
-            K = np.exp(np.divide(energies, SCIENTIFIC['RT']))
-            return K
-
-        def zero_false_rates(rates):
-            """ Exponential of e^0 is equal to 1, but IntaRNA sets energies 
-            equal to 0 for non-interactions. """
-            rates[rates == 1] = 0
-            return rates
-
-        def processor(input, funcs):
-            for func in funcs:
-                input = func(input)
-            return input
-
-        if self.simulator == "IntaRNA":
-            if self.sim_kwargs.get('postprocess', None):
-                self.units = SIMULATOR_UNITS[self.simulator]['rate']
-                return partial(processor, funcs=[
-                    energy_to_rate,
-                    zero_false_rates])
-            else:
-                return vanilla
-
-    def get_simulation(self, allow_self_interaction=True):
-
-        def simulate_vanilla(batch):
-            raise NotImplementedError
-            return None
-
-        # @time_it
-        def simulate_intaRNA_data(batch, allow_self_interaction, sim_kwargs):
-            from src.srv.parameter_prediction.IntaRNA.bin.copomus.IntaRNA import IntaRNA
-            simulator = IntaRNA()
-            if batch is not None:
-                data = {}
-                batch_data, batch_labels = list(
-                    batch.values()), list(batch.keys())
-                for i, (label_i, sample_i) in enumerate(zip(batch_labels, batch_data)):
-                    current_pair = {}
-                    for j, (label_j, sample_j) in enumerate(zip(batch_labels, batch_data)):
-                        if not allow_self_interaction and i == j:
-                            continue
-                        if i > j:  # Skip symmetrical
-                            current_pair[label_j] = data[label_j][label_i]
-                        else:
-                            sim_kwargs["query"] = sample_i
-                            sim_kwargs["target"] = sample_j
-                            current_pair[label_j] = simulator.run(**sim_kwargs)
-                    data[label_i] = current_pair
-            else:
-                data = simulator.run(**sim_kwargs)
-            return data
-
-        if self.simulator == "IntaRNA":
-            self.units = SIMULATOR_UNITS[self.simulator]['energy']
-            return partial(simulate_intaRNA_data,
-                           allow_self_interaction=allow_self_interaction,
-                           sim_kwargs=self.sim_kwargs)
-
-        if self.simulator == "CopomuS":
-            # from src.utils.parameter_prediction.IntaRNA.bin.CopomuS import CopomuS
-            # simulator = CopomuS(self.sim_config_args)
-            # simulator.main()
-            raise NotImplementedError
-
-        else:
-            return simulate_vanilla
 
 
 class InteractionMatrix():
 
-    def __init__(self, #config_args=None,
+    def __init__(self,  # config_args=None,
                  matrix=None,
                  matrix_path: str = None,
                  num_nodes: int = None,
@@ -171,7 +48,8 @@ class InteractionMatrix():
         return matrix, self.units
 
     def load_units(self, interactions_filepath):
-        experiment_config = load_experiment_config(experiment_folder=os.path.dirname(interactions_filepath))
+        experiment_config = load_experiment_config(
+            experiment_folder=os.path.dirname(interactions_filepath))
         simulator_cfgs = experiment_config.get('interaction_simulator')
         if simulator_cfgs.get('name') == 'IntaRNA':
             if simulator_cfgs.get('postprocess'):
@@ -179,7 +57,7 @@ class InteractionMatrix():
             else:
                 return SIMULATOR_UNITS['IntaRNA']['energy']
         else:
-            return SIMULATOR_UNITS['IntaRNA']['rate'] 
+            return SIMULATOR_UNITS['IntaRNA']['rate']
 
     def make_rand_matrix(self, num_nodes):
         if num_nodes is None or num_nodes == 0:
@@ -227,30 +105,3 @@ class InteractionMatrix():
         idxs_interacting = np.argwhere(self.matrix > 0)
         idxs_interacting = sorted([tuple(sorted(i)) for i in idxs_interacting])
         return list(set(idxs_interacting))
-
-
-class InteractionData():
-
-    def __init__(self, data, simulation_handler: RawSimulationHandling):
-        self.simulation_handling = simulation_handler
-        self.simulation_protocol = self.simulation_handling.get_protocol()
-        self.simulation_postproc = self.simulation_handling.get_postprocessing()
-        self.data, self.matrix = self.parse(data)
-        self.units = self.simulation_handling.units
-
-    def parse(self, data):
-        matrix = self.make_matrix(data)
-        return data, matrix
-
-    def make_matrix(self, data):
-        matrix = np.zeros((len(data), len(data)))
-        for i, (sample_i, sample_interactions) in enumerate(data.items()):
-            for j, (sample_j, raw_sample) in enumerate(sample_interactions.items()):
-                matrix[i, j] = self.get_interaction(raw_sample)
-        matrix = self.simulation_postproc(matrix)
-        return matrix
-
-    def get_interaction(self, sample):
-        if sample == False:
-            return 0
-        return self.simulation_protocol(sample)

@@ -73,7 +73,7 @@ class NucleotideGenerator(SeqGenerator):
                 template, symb)
         return seq_permutations
 
-    def generate_circuits(self, iter_count=1, name='toy_mRNA_circuit', **circuit_kwargs):
+    def generate_circuits(self, iter_count=1, name='toy_mRNA_circuit', **circuit_kwargs) -> list:
         circuit_paths = []
         for i in range(iter_count):
             circuit_kwargs['name'] = name + '_' + str(i)
@@ -84,7 +84,7 @@ class NucleotideGenerator(SeqGenerator):
     def generate_circuit(self, count=5, slength=20, protocol="random",
                          name='toy_mRNA_circuit',
                          out_type='fasta',
-                         proportion_to_mutate=0, template=None):
+                         proportion_to_mutate=0, template=None) -> dict:
         """ Protocol can be 
         'random': Random sequence generated with weighted characters
         'template_mix': A template sequence is interleaved with complementary characters

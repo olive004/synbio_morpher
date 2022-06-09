@@ -74,24 +74,35 @@ class NetworkCustom(Network):
 
 
 def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
-                   cols: list = None, plot_type='', out_name='test_plot',
-                   preprocessor_func=None,
+                   cols: list = None, plot_type='histplot', out_name='test_plot',
+                   preprocessor_func=None, exclude_rows_nonempty_in_cols: list = None,
+                   use_sns=False, log_axis=False,
                    **plot_kwrgs):
     """ Plot type can be any attributes of VisODE() """
+    if exclude_rows_nonempty_in_cols is not None:
+        for exc_col in exclude_rows_nonempty_in_cols:
+            data = data[data[exc_col] == '']
+
     visualiser = VisODE()
     if plot_type == 'histplot':
         for col in cols:
             if preprocessor_func:
                 data[col] = preprocessor_func(data[col].values)
+            if use_sns:
+                plot_kwrgs.update({'column': col, 'data': data})
+            else:
+                plot_kwrgs.update({'data': data[col]})
+
             data_writer.output(out_type='png', out_name=out_name,
-                               writer=visualiser.histplot, **merge_dicts({'data': data[col]}, plot_kwrgs))
+                               write_func=visualiser.histplot, **merge_dicts({'use_sns': use_sns, "log_axis": log_axis},
+                                                                         plot_kwrgs))
     elif plot_type == 'plot':
         try:
             x, y = cols[0], cols[-1]
             if preprocessor_func:
                 x, y = preprocessor_func(x.values), preprocessor_func(y.values)
             data_writer.output(out_type='png', out_name=out_name,
-                               writer=visualiser.plot, **merge_dicts({'data': x, 'y': y}, plot_kwrgs))
+                               write_func=visualiser.plot, **merge_dicts({'data': x, 'y': y}, plot_kwrgs))
         except IndexError:
             assert len(
                 cols) == 2, 'For visualising a plot from a table, please only provide 2 columns as variables.'
@@ -156,10 +167,37 @@ class VisODE():
                 getattr(plt, plot_kwrg, partial(
                     dummy_call, object=plt, function=plot_kwrg))(value)
 
-    def histplot(self, data, out_path, **plot_kwrgs):
+    def histplot(self, data, out_path, bin_count=50,
+                 use_sns=False, column: str = None, log_axis: tuple = (False, False), **plot_kwrgs):
         from matplotlib import pyplot as plt
-        plt.figure()
-        plt.hist(data, range=(min(data), max(data)), bins=50)
-        self.add_kwrgs(plt, **plot_kwrgs)
-        plt.savefig(out_path)
-        plt.close()
+        if use_sns:
+            import seaborn as sns
+            data = data.reset_index()
+            if log_axis[0]:
+                new_col = 'Log of ' + column
+                data = data.rename(columns={column: new_col})
+                column = new_col
+
+            if column is None:
+                logging.warn(
+                    'Make sure a column is specified for visualising with seaborn')
+            sns.set_theme(style="ticks")
+            f, ax = plt.subplots(figsize=(7, 5))
+            sns.despine(f)
+            sns.histplot(
+                data[data[column] != 0],
+                x=column,  # hue="cut",
+                bins=bin_count,
+                multiple="stack",
+                palette="light:m_r",
+                edgecolor=".3",
+                linewidth=.5,
+                log_scale=log_axis,
+            )
+            f.savefig(out_path)
+        else:
+            plt.figure()
+            plt.hist(data, range=(min(data), max(data)), bins=bin_count)
+            self.add_kwrgs(plt, **plot_kwrgs)
+            plt.savefig(out_path)
+            plt.close()
