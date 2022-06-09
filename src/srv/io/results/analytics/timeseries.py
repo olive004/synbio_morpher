@@ -24,36 +24,54 @@ class Timeseries():
     def fold_change(self):
         division_vector = self.data[:, -1].clip(1)
         division_matrix = np.divide(division_vector, division_vector.T)
-        return division_matrix
+        if np.ndim(division_matrix) == 1:
+            return np.expand_dims(division_matrix, axis=1)
+        else:
+            return division_matrix
 
     def get_derivative(self):
         deriv = np.gradient(self.data)[1]
         return deriv  # get column derivative
 
     def get_overshoot(self, steady_states):
-        return np.max(self.data, axis=1) - steady_states
+        return np.expand_dims(np.max(self.data, axis=1), axis=1) - steady_states
 
-    def get_precision(self, steady_states, signal_idx):
-        starting_states = self.data[:, 0]
+    def get_precision(self, steady_states, signal_idx: int):
+        if signal_idx is None:
+            return None
+        starting_states = np.expand_dims(self.data[:, 0], axis=1)
         signal_low = np.min(self.data[signal_idx, :])
         signal_high = np.max(self.data[signal_idx, :])
         
+        """ MODIFYING THIS PART A BIT - GETTING DIVIDE BY ZERO ERROR OTHERWISE
+        Original: 
         return np.absolute(np.divide(
             (steady_states - starting_states) / starting_states,
             (signal_high - signal_low) / signal_low
-        ))
+        )).astype(self.num_dtype) """
+        return np.absolute(np.divide(
+            steady_states - starting_states,
+            signal_high - signal_low
+        )).astype(self.num_dtype)
 
-    def get_sensitivity(self, signal_idx):
+    def get_sensitivity(self, signal_idx: int):
+        if signal_idx is None:
+            return None
         starting_states = self.data[:, 0]
         peaks = np.max(self.data, axis=1)
         signal_low = np.min(self.data[signal_idx, :])
         signal_high = np.max(self.data[signal_idx, :])
 
+        """ MODIFYING THIS PART A BIT - GETTING DIVIDE BY ZERO ERROR OTHERWISE
+        Original: 
         return np.absolute(np.divide(
             (peaks - starting_states) / starting_states,
             (signal_high - signal_low) / signal_low
-        ))
-
+        )).astype(self.num_dtype) """
+        return np.expand_dims(np.absolute(np.divide(
+            peaks - starting_states,
+            signal_high - signal_low
+        )).astype(self.num_dtype), axis=1)
 
     def get_response_times(self, steady_states):
         margin_high = 1.05
@@ -93,11 +111,12 @@ class Timeseries():
         freq = np.fft.fftfreq(len(spectrum))
         return freq
 
-    def generate_analytics(self):
+    def generate_analytics(self, signal_idx=None):
         analytics = {
             'first_derivative': self.get_derivative(),
             'fold_change': self.fold_change(),
-            'steady_state': self.get_steady_state()
+            'steady_state': self.get_steady_state(),
+            'sensitivity': self.get_sensitivity(signal_idx)
         }
         analytics['response_time'], \
             analytics['response_time_high'], \
@@ -105,6 +124,5 @@ class Timeseries():
             analytics['steady_state']['steady_states'])
         
         analytics['overshoot'] = self.get_overshoot(analytics['steady_state']['steady_states'])
-        analytics['precision'] = self.get_precision(analytics['steady_state']['steady_states'])
-        analytics['sensitivity'] = self.get_sensitivity(analytics['steady_state']['steady_states'])
+        analytics['precision'] = self.get_precision(analytics['steady_state']['steady_states'], signal_idx)
         return analytics

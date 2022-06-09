@@ -104,8 +104,8 @@ class CircuitModeller():
                                             name='steady_state',
                                             category='time_series',
                                             vis_func=modeller_steady_state.plot,
-                                            **{'legend': list(circuit.species.data.sample_names),
-                                               'out_type': 'png'})
+                                            vis_kwargs={'legend': list(circuit.species.data.sample_names),
+                                                        'out_type': 'png'})
         steady_state_analytics = circuit.result_collector.get_result(
             key='steady_state').analytics
         circuit.species.steady_state_copynums = steady_state_analytics[
@@ -243,7 +243,8 @@ class CircuitModeller():
                         'Steady state could not be found through solve_ivp - possibly because units '
                         f'are in {circuit.species.interaction_units}.')
                 logging.info(steady_state_result.y[:, -1])
-                logging.info(np.expand_dims(steady_state_result.y[:, -1], axis=circuit.species.time_axis))
+                logging.info(np.expand_dims(
+                    steady_state_result.y[:, -1], axis=circuit.species.time_axis))
                 expanded_steady_states = np.concatenate(
                     [steady_state_result.y,
                      np.repeat(np.expand_dims(steady_state_result.y[:, -1], axis=circuit.species.time_axis),
@@ -262,8 +263,9 @@ class CircuitModeller():
                                             category='time_series',
                                             vis_func=modeller_signal.plot,
                                             save_numerical_vis_data=save_numerical_vis_data,
-                                            **{'legend': list(circuit.species.data.sample_names),
-                                               'out_type': 'png'})
+                                            vis_kwargs={'legend': list(circuit.species.data.sample_names),
+                                                        'out_type': 'png'},
+                                            analytics_kwargs={'signal_idx': signal.identities_idx})
         return circuit
 
     # @time_it

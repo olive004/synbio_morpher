@@ -23,7 +23,7 @@ def main(config=None, data_writer=None):
             'experiment').get('purpose', 'parameter_based_simulation'))
 
     if config_file.get('experiment').get('parallelise'):
-        num_subprocesses = 10
+        num_subprocesses = 1
     else: 
         num_subprocesses = 1
 

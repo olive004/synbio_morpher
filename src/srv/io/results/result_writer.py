@@ -76,7 +76,7 @@ class ResultWriter(DataWriter):
             if not only_numerical:
                 if not no_visualisations:
                     self.visualise(out_name=result.name,
-                                   writer=result.vis_func, **result.vis_kwargs)
+                                   writer=result.vis_func, vis_kwargs=result.vis_kwargs)
                     plottables = ['first_derivative']
                     self.make_metric_visualisation(
                         result, plottables, result.analytics, new_report)
@@ -90,8 +90,8 @@ class ResultWriter(DataWriter):
                            new_report=new_report, no_visualisations=no_visualisations,
                            only_numerical=only_numerical)
 
-    def visualise(self, out_name, writer, **vis_kwargs):
-        self.output(out_name=out_name, write_func=writer, **vis_kwargs)
+    def visualise(self, out_name, writer, vis_kwargs):
+        self.output(out_name=out_name, write_func=writer, vis_kwargs=vis_kwargs)
 
     def visualise_graph(self, circuit: BaseSystem, mode="pyvis", new_vis=False):
         circuit.refresh_graph()
