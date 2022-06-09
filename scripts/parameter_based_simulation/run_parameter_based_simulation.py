@@ -24,7 +24,7 @@ def main(config=None, data_writer=None):
             'experiment').get('purpose', 'parameter_based_simulation'))
 
     if config_file.get('experiment').get('parallelise'):
-        num_subprocesses = 10
+        num_subprocesses = 12
     else:
         num_subprocesses = 1
 
@@ -76,14 +76,14 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
         end_iteration = int(num_iterations * (sub_process + 1))
 
         logging.info('-----------------------')
-        logging.info('Rate: ca. 8000 / min')
-        logging.info('Total estimated time (steady state):')
-        logging.info(f'\t{193000/(13*60)} or {10000/24} in mins')
-        logging.info(f'\t{193000/(13*60)/60} or {10000/24/60} in hours')
-        logging.info(f'\t{193000/(13*60)/60 /24} or {10000/24/60/24} in days')
+        # logging.info('Rate: ca. 8000 / min')
+        # logging.info('Total estimated time (steady state):')
+        # logging.info(f'\t{193000/(13*60)} or {10000/24} in mins')
+        # logging.info(f'\t{193000/(13*60)/60} or {10000/24/60} in hours')
+        # logging.info(f'\t{193000/(13*60)/60 /24} or {10000/24/60/24} in days')
         logging.info(f'Total data: {total_iterations}')
         logging.info(f'Projected size (inc signal writing):')
-        logging.info('\tRate of 100.7Mb / 500 iterations')
+        logging.info('\t12 * 108Mb = 1.3Gb')
         logging.info(
             f'\t{np.round(100.7/500*num_iterations/1000, decimals=3)}Gb')
         modeller = CircuitModeller(result_writer=data_writer)
@@ -117,7 +117,7 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
 
         def write_all(out_type='npy'):
             for i, analytic in enumerate(analytic_types):
-                data_writer.output(out_type, out_name=f'all_species_{analytic}',
+                data_writer.output(out_type, out_name=analytic,
                                    data=all_species_analytics[i].astype(np.float32), overwrite=True,
                                    write_to_top_dir=True)
 
