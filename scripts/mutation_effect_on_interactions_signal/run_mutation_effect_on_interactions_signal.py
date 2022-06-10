@@ -46,7 +46,7 @@ def main(config=None, data_writer=None):
             req_output=True,
             name='pull_circuit_from_stats'
         ),
-        [
+        [ # for each circuit
             # Construct circuit
             Protocol(
                 partial(construct_circuit_from_cfg,
