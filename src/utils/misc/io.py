@@ -67,7 +67,7 @@ def get_search_dir(search_config_key: str, config_file: dict):
                                       "source_dir")), search_config.get("postupdate_subdir"))
         assert os.path.isdir(
             search_dir), f'Could not find directory {search_dir}'
-        config_file['source_of_interaction_stats']['source_dir_postupdate'] = search_dir
+        config_file[search_config_key]['source_dir_postupdate'] = search_dir
         return config_file, search_dir
     elif update == None:
         raise KeyError(
