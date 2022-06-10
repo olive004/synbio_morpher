@@ -17,11 +17,10 @@ def main(config=None, data_writer=None):
     if config is None:
         config = os.path.join(
             "scripts", "ensemble_mutation_effect_analysis", "configs", "ensemble_mutation_effect_analysis_1.json")
-        config_filepath = deepcopy(config)
-    elif type(config) == str:
-        config_filepath = deepcopy(config)
+    if type(config) == str:
+        config_filepath = config
     else:
-        config_filepath = None
+        raise ValueError(f'Must load in config as path for config reconfiguration, instead of config as {config}')
     config_file = load_json_as_dict(config)
     ensemble_configs = config_file.get("base_configs_ensemble", {})
 
@@ -29,10 +28,12 @@ def main(config=None, data_writer=None):
         data_writer_kwargs = {'purpose': config_file.get('purpose', 'ensemble_mutation_effect_analysis')}
         data_writer = ResultWriter(**data_writer_kwargs)
 
-    ensembler = Ensembler(data_writer=data_writer, config_filepath=config_filepath, subscripts=[
-        "generate_species_templates",
-        "gather_interaction_stats",
-        "mutation_effect_on_interactions_signal"
-    ])
+    subscripts = [script for script in ensemble_configs.keys()]
+    ensembler = Ensembler(data_writer=data_writer, config_filepath=config_filepath, subscripts=subscripts)
+    # [
+    #     "generate_species_templates",
+    #     "gather_interaction_stats",
+    #     "mutation_effect_on_interactions_signal"
+    # ])
 
     ensembler.run()
