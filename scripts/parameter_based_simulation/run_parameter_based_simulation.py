@@ -24,7 +24,7 @@ def main(config=None, data_writer=None):
             'experiment').get('purpose', 'parameter_based_simulation'))
 
     if config_file.get('experiment').get('parallelise'):
-        num_subprocesses = 12
+        num_subprocesses = config_file.get('num_subprocesses', 1)
     else:
         num_subprocesses = 1
 
@@ -41,9 +41,9 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
 
     def make_interaction_interpolation_matrices():
         # Parameter space to scan
-        interaction_min = 0
-        interaction_max = 1
-        interaction_step_size = 0.1
+        interaction_min = config_file['parameter_based_simulation']['interaction_min']
+        interaction_max = config_file['parameter_based_simulation']['interaction_max']
+        interaction_step_size = config_file['parameter_based_simulation']['interaction_step_size']
         interaction_array = np.arange(
             interaction_min, interaction_max, interaction_step_size)
         size_interaction_array = np.size(interaction_array)

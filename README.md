@@ -8,5 +8,12 @@ Predicting alternative steady states that may arise in a heterologous gene circu
 
 If you want to start the docker container, follow these steps.
 
-1. From your terminal, change directories to be inside the home directory of this project.
+_Linux_
+1. From your terminal, change directories to be inside the home directory of this project. For example you can do this by using the `cd` and navigating to the `gene-circuit-glitch-prediction` directory.
 2. Run the setup/start_docker.sh using bash, eg `bash setup/startup_docker.sh`. If you run this from another directory, the docker container will simply contain all the folder in the directory you ran this command from rather than only containing the folders within the scope of this project.
+
+
+_Windows_
+While running docker from Windows is very similar to Linux as the current version of Docker Desktop ships with WSL (a linux emulator), Windows-specific powershell commands such as pathnames, variable definition and line breaks have been corrected for in the `.cmd` version of `startup_docker`.
+1. From your power shell, change directories to be inside the home directory of this project. For example you can do this by using the `cd` and navigating to the `gene-circuit-glitch-prediction` directory.
+2. Run the setup/start_docker.cmd, eg `.\setup\startup_docker.cmd`. If you run this from another directory, the relative pathnames specified in the cmd script to the `docker` directory in the project will not work.
