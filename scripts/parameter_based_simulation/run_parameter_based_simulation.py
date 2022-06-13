@@ -3,6 +3,7 @@ from multiprocessing import Process
 import os
 import numpy as np
 from scripts.common.circuit import construct_circuit_from_cfg
+from src.srv.io.manage.sys_interface import make_filename_safely
 from src.srv.io.results.analytics.timeseries import Timeseries
 from src.srv.io.results.experiments import Experiment, Protocol
 from src.srv.io.results.result_writer import ResultWriter
@@ -24,7 +25,7 @@ def main(config=None, data_writer=None):
             'experiment').get('purpose', 'parameter_based_simulation'))
 
     if config_file.get('experiment').get('parallelise'):
-        num_subprocesses = config_file.get('num_subprocesses', 1)
+        num_subprocesses = config_file.get('experiment').get('num_subprocesses', 1)
     else:
         num_subprocesses = 1
 
@@ -74,6 +75,7 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
         num_iterations = int(total_iterations / total_processes)
         starting_iteration = int(num_iterations * sub_process)
         end_iteration = int(num_iterations * (sub_process + 1))
+        starting_iteration = end_iteration - 50000
 
         logging.info('-----------------------')
         # logging.info('Rate: ca. 8000 / min')
@@ -101,7 +103,7 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
             }
 
             circuit = construct_circuit_from_cfg(
-                extra_configs=cfg, config_filepath=config)
+                extra_configs=cfg, config_file=config_file)
             circuit = modeller.init_circuit(circuit)
             circuit = modeller.simulate_signal(
                 circuit, use_solver=config_file.get('signal').get('use_solver', 'naive'))
