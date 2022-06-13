@@ -3,7 +3,7 @@
     "experiment": {
         "purpose": "parameter_based_simulation",
         "parallelise": true,
-        "num_subprocesses": 6
+        "num_subprocesses": 12
     },
     "identities": {
         "input": "RNA_0",

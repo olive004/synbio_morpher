@@ -10,7 +10,7 @@ from src.srv.io.results.result_writer import ResultWriter
 from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.misc.decorators import time_it
-from src.utils.misc.numerical import make_symmetrical_matrix_from_sequence, round_to_nearest, triangular_sequence
+from src.utils.misc.numerical import make_symmetrical_matrix_from_sequence, triangular_sequence
 from src.utils.system_definition.agnostic_system.system_manager import CircuitModeller
 
 
@@ -18,7 +18,7 @@ def main(config=None, data_writer=None):
 
     if config is None:
         config = os.path.join(
-            'scripts', 'parameter_based_simulation', 'configs', 'alternate_parameter_space.json')
+            'scripts', 'parameter_based_simulation', 'configs', 'medium_parameter_space.json')
     config_file = load_json_as_dict(config)
     if data_writer is None:
         data_writer = ResultWriter(purpose=config_file.get(
@@ -75,7 +75,6 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
         num_iterations = int(total_iterations / total_processes)
         starting_iteration = int(num_iterations * sub_process)
         end_iteration = int(num_iterations * (sub_process + 1))
-        starting_iteration = end_iteration - 50000
 
         logging.info('-----------------------')
         # logging.info('Rate: ca. 8000 / min')
@@ -128,7 +127,7 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
             if np.mod(i, 1000) == 0 or i == starting_iteration:
                 # data_writer.unsubdivide()
                 # data_writer.subdivide_writing(
-                #     f'{i}-{round_to_nearest(i+1000, 1000)-1}')
+                #     f'{i}-{+1000, 1000)-1}')
                 logging.info(
                     f'Iteration {i}/{total_iterations}, stopping at {end_iteration}')
             # data_writer.subdivide_writing(str(i), safe_dir_change=False)
