@@ -18,7 +18,7 @@ RUN cd /usr/lib/install_requirements && \
 ENV ROOT_DIR /workdir
 ENV PYTHONPATH /workdir
 ENV MNT ..
-WORKDIR /workdir/gcg
+WORKDIR /workdir
 # ENTRYPOINT ["/bin/bash"]
 
 

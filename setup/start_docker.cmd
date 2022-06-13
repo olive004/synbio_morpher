@@ -8,7 +8,7 @@ docker build -t genetic_glitch:latest .\docker_windows
 docker create -it ^
 --rm ^
 --name gcg ^
---mount=type=bind,source=%cd%,target=/workdir/gcg ^
+--mount=type=bind,source=%cd%,target=/workdir ^
 genetic_glitch:latest
 docker container start gcg
 docker exec -it gcg /bin/bash 
