@@ -7,6 +7,7 @@ import inspect
 
 import numpy as np
 from scripts.common.circuit import construct_circuit_from_cfg
+from src.srv.io.manage.sys_interface import make_filename_safely
 from src.srv.io.results.result_writer import ResultWriter
 from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
 from src.utils.data.data_format_tools.common import load_json_as_dict
@@ -75,7 +76,7 @@ class TestScripts(unittest.TestCase):
 
     def test_parameter_based_simulation(self):
         config = {
-            "data_path": "./scripts/parameter_based_simulation/configs/empty_circuit.fasta",
+            "data_path": make_filename_safely("./scripts/parameter_based_simulation/configs/empty_circuit.fasta"),
             "experiment": {
                 "purpose": "parameter_based_simulation"
             },

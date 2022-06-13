@@ -3,13 +3,14 @@ from multiprocessing import Process
 import os
 import numpy as np
 from scripts.common.circuit import construct_circuit_from_cfg
+from src.srv.io.manage.sys_interface import make_filename_safely
 from src.srv.io.results.analytics.timeseries import Timeseries
 from src.srv.io.results.experiments import Experiment, Protocol
 from src.srv.io.results.result_writer import ResultWriter
 from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.misc.decorators import time_it
-from src.utils.misc.numerical import make_symmetrical_matrix_from_sequence, round_to_nearest, triangular_sequence
+from src.utils.misc.numerical import make_symmetrical_matrix_from_sequence, triangular_sequence
 from src.utils.system_definition.agnostic_system.system_manager import CircuitModeller
 
 
@@ -17,14 +18,14 @@ def main(config=None, data_writer=None):
 
     if config is None:
         config = os.path.join(
-            'scripts', 'parameter_based_simulation', 'configs', 'base_config.json')
+            'scripts', 'parameter_based_simulation', 'configs', 'medium_parameter_space.json')
     config_file = load_json_as_dict(config)
     if data_writer is None:
         data_writer = ResultWriter(purpose=config_file.get(
             'experiment').get('purpose', 'parameter_based_simulation'))
 
     if config_file.get('experiment').get('parallelise'):
-        num_subprocesses = 12
+        num_subprocesses = config_file.get('experiment').get('num_subprocesses', 1)
     else:
         num_subprocesses = 1
 
@@ -41,9 +42,9 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
 
     def make_interaction_interpolation_matrices():
         # Parameter space to scan
-        interaction_min = 0
-        interaction_max = 1
-        interaction_step_size = 0.1
+        interaction_min = config_file['parameter_based_simulation']['interaction_min']
+        interaction_max = config_file['parameter_based_simulation']['interaction_max']
+        interaction_step_size = config_file['parameter_based_simulation']['interaction_step_size']
         interaction_array = np.arange(
             interaction_min, interaction_max, interaction_step_size)
         size_interaction_array = np.size(interaction_array)
@@ -51,7 +52,7 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
         # Load data names
         from src.utils.data.data_format_tools.manipulate_fasta import load_seq_from_FASTA
         sample_names = load_seq_from_FASTA(
-            config_file.get("data_path"), as_type='dict')
+            make_filename_safely(config_file.get("data_path")), as_type='dict')
         num_species = len(sample_names)
         num_unique_interactions = triangular_sequence(num_species)
 
@@ -101,7 +102,7 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
             }
 
             circuit = construct_circuit_from_cfg(
-                extra_configs=cfg, config_filepath=config)
+                extra_configs=cfg, config_file=config_file)
             circuit = modeller.init_circuit(circuit)
             circuit = modeller.simulate_signal(
                 circuit, use_solver=config_file.get('signal').get('use_solver', 'naive'))
@@ -126,7 +127,7 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
             if np.mod(i, 1000) == 0 or i == starting_iteration:
                 # data_writer.unsubdivide()
                 # data_writer.subdivide_writing(
-                #     f'{i}-{round_to_nearest(i+1000, 1000)-1}')
+                #     f'{i}-{+1000, 1000)-1}')
                 logging.info(
                     f'Iteration {i}/{total_iterations}, stopping at {end_iteration}')
             # data_writer.subdivide_writing(str(i), safe_dir_change=False)
