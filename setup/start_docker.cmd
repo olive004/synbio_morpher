@@ -13,8 +13,6 @@ genetic_glitch:latest
 docker container start gcg
 docker exec -it gcg /bin/bash 
 @REM # docker container stop gcg
-@REM --workdir /gcg ^
-@REM --volume ${PWD}:\gcg ^
 
 
 @REM # Docusaurus
