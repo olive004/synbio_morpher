@@ -17,7 +17,7 @@ def main(config=None, data_writer=None):
 
     if config is None:
         config = os.path.join(
-            'scripts', 'parameter_based_simulation', 'configs', 'base_config.json')
+            'scripts', 'parameter_based_simulation', 'configs', 'alternate_parameter_space.json')
     config_file = load_json_as_dict(config)
     if data_writer is None:
         data_writer = ResultWriter(purpose=config_file.get(
@@ -51,7 +51,7 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
         # Load data names
         from src.utils.data.data_format_tools.manipulate_fasta import load_seq_from_FASTA
         sample_names = load_seq_from_FASTA(
-            config_file.get("data_path"), as_type='dict')
+            make_filename_safely(config_file.get("data_path")), as_type='dict')
         num_species = len(sample_names)
         num_unique_interactions = triangular_sequence(num_species)
 
