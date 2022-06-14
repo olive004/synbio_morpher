@@ -26,9 +26,9 @@
                 "purpose": "gather_interaction_stats"
             },
             "source_of_interactions": {
-                "update_on_run": true,
+                "require_from_previous_script_in_ensemble": true,
                 "source_dir": "./data/ensemble_mutation_effect_analysis",
-                "postupdate_subdir": "gather_interaction_stats",
+                "previous_script_purpose": "gather_interaction_stats",
                 "source_dir_postupdate": null
             }
         },
@@ -66,9 +66,9 @@
                 "durations":[50, 400]
             }, 
             "source_of_interaction_stats": {
-                "update_on_run": true,
+                "require_from_previous_script_in_ensemble": true,
                 "source_dir": "./data/ensemble_mutation_effect_analysis",
-                "postupdate_subdir": "gather_interaction_stats",
+                "previous_script_purpose": "gather_interaction_stats",
                 "source_dir_postupdate": null
             }
         }
