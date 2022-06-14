@@ -35,33 +35,35 @@ def handle_simulator_cfgs(simulator, simulator_cfg_path):
     return cfg_protocol(simulator_cfg)
 
 
-def parse_cfg_args(config_args: dict = None, dict_args: Dict = None) -> Dict:
+def parse_cfg_args(config_args: dict = None, default_args: Dict = None) -> Dict:
 
-    if dict_args is None:
-        dict_args = retrieve_default_args()
-    dict_args = load_simulator_cfgs(dict_args)
-    dict_args = merge_dicts(dict_args, config_args)
-    logging.info(dict_args)
+    if default_args is None:
+        default_args = retrieve_default_arg_filenames()
+    logging.info(default_args)
+    default_args = load_simulator_kwargs(default_args, config_args['interaction_simulator']['name'])
+    config_args = merge_dicts(default_args, config_args)
+    logging.info(config_args)
 
-    return dict_args
+    return config_args
 
 
-def load_simulator_cfgs(dict_args) -> Dict:
+def load_simulator_kwargs(default_args: dict, simulator_name: str) -> Dict:
     for simulator_name in get_simulator_names():
-        if simulator_name in dict_args:
-            simulator_cfg = handle_simulator_cfgs(
-                simulator_name, dict_args[simulator_name])
-            dict_args['interaction_simulator'] = simulator_cfg
-    return dict_args
-
-
-def retrieve_default_args() -> Dict:
-    fn = get_pathnames(file_key='default_args', search_dir=os.path.join(
-        'scripts', 'common', 'configs', 'simulators'), first_only=True)
-    default_args = json.load(open(fn))
+        if simulator_name in default_args:
+            simulator_kwargs = handle_simulator_cfgs(
+                simulator_name, default_args[simulator_name])
+            default_args['interaction_simulator'] = {}
+            default_args['interaction_simulator']['simulator_kwargs'] = simulator_kwargs
     return default_args
 
 
-def update_namespace_with_dict(args, updater_dict: Dict):
-    vars(args).update(updater_dict)
-    return args
+def retrieve_default_arg_filenames() -> Dict:
+    fn = get_pathnames(file_key='default_args', search_dir=os.path.join(
+        'scripts', 'common', 'configs', 'simulators'), first_only=True)
+    default_args = load_json_as_dict(fn)
+    return default_args
+
+
+def update_namespace_with_dict(namespace_args, updater_dict: Dict):
+    vars(namespace_args).update(updater_dict)
+    return namespace_args

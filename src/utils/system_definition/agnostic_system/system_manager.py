@@ -90,8 +90,9 @@ class CircuitModeller():
         return circuit
 
     def run_interaction_simulator(self, circuit: BaseSystem, data):
+        
         simulator = InteractionSimulator(
-            circuit.simulator_args)
+            circuit.simulator_args['simulator_kwargs'])
         return simulator.run(data)
 
     def find_steady_states(self, circuit: BaseSystem):

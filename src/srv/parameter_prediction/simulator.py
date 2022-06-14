@@ -15,9 +15,8 @@ SIMULATOR_UNITS = {
 
 class RawSimulationHandling():
 
-    def __init__(self, config_args: dict = None, simulator: str = 'IntaRNA') -> None:
-        self.simulator_name = simulator if config_args is None else config_args.get(
-            'name', simulator)
+    def __init__(self, config_args: dict = None) -> None:
+        self.simulator_name = config_args.get('name', 'IntaRNA')
         self.sim_kwargs = config_args if config_args is not None else {}
         self.units = ''
 
@@ -102,9 +101,9 @@ class RawSimulationHandling():
 
 
 class InteractionSimulator():
-    def __init__(self, config_args: dict = None):
+    def __init__(self, sim_kwargs: dict = None):
 
-        self.simulation_handler = RawSimulationHandling(config_args, )
+        self.simulation_handler = RawSimulationHandling(sim_kwargs)
 
     def run(self, batch: dict = None, allow_self_interaction=True):
         """ Makes nested dictionary for querying interactions as 

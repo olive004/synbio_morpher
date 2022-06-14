@@ -11,7 +11,7 @@ def merge_dicts(*dict_objs):
             for k, v in dict_obj.items():
                 if type(v) == dict and type(all_dicts[k]) == dict:
                     all_dicts[k] = merge_dicts(all_dicts[k], v)
-                elif not type(all_dicts[k]) == dict:
+                elif type(v) == dict and not type(all_dicts[k]) == dict:
                     logging.warning(f'Could not merge {all_dicts[k]} with {v} for dict {dict_obj}')
         else:
             logging.warning(f'Could not merge object {dict_obj} of type {type(dict_obj)} with {all_dicts}')
