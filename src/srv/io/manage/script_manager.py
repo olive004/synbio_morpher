@@ -14,7 +14,6 @@ SCRIPT_DIR = 'scripts'
 
 def import_script_func(script_name):
     script_filepath = os.path.join(SCRIPT_DIR, script_name, f'run_{script_name}.py')
-    logging.info(script_filepath)
     script_module = __import__(
         convert_pathname_to_module(script_filepath), fromlist=[''])
     return getattr(script_module, 'main')

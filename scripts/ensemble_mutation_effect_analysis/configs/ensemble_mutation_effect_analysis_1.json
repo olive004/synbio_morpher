@@ -20,7 +20,7 @@
                 "proportion_to_mutate": 0.5
             },
             "system_type": "RNA",
-            "data_path": "data/ensemble_mutation_effect_analysis/2022_06_14_002122/generate_species_templates/circuits/toy_mRNA_circuit_1.fasta"
+            "data_path": "data/ensemble_mutation_effect_analysis/2022_06_14_100344/generate_species_templates/circuits/toy_mRNA_circuit_1.fasta"
         },
         "gather_interaction_stats": {
             "experiment": {
@@ -30,7 +30,7 @@
                 "require_from_previous_script_in_ensemble": true,
                 "source_dir": "./data/ensemble_mutation_effect_analysis",
                 "previous_script_purpose": "generate_species_templates",
-                "source_dir_postupdate": null
+                "source_dir_postupdate": "./data/ensemble_mutation_effect_analysis/2022_06_14_100344/generate_species_templates"
             }
         },
         "mutation_effect_on_interactions_signal": {
@@ -84,7 +84,7 @@
                 "require_from_previous_script_in_ensemble": true,
                 "source_dir": "./data/ensemble_mutation_effect_analysis",
                 "previous_script_purpose": "gather_interaction_stats",
-                "source_dir_postupdate": null
+                "source_dir_postupdate": "./data/ensemble_mutation_effect_analysis/2022_06_14_100344/gather_interaction_stats"
             }
         }
     }

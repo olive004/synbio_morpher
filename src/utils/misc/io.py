@@ -53,7 +53,6 @@ def get_pathnames(search_dir, file_key='', first_only=False, allow_empty=False, 
     if not path_names and not allow_empty:
         raise ValueError(
             f'Could not find file matching "{file_key}" in {search_dir}.')
-    logging.info(path_names)
     return path_names
 
 
@@ -83,7 +82,8 @@ def get_search_dir(search_config_key: str, config_file: dict):
 
 
 def get_root_experiment_folder(miscpath):
-    if os.path.basename(os.path.dirname(miscpath)) in get_purposes():
+    if os.path.basename(os.path.dirname(miscpath)) in get_purposes() or \
+            os.path.basename(miscpath) in get_purposes():
         return miscpath
     else:
         if len(os.path.split(miscpath)) == 1:
@@ -104,6 +104,9 @@ def load_experiment_report(experiment_folder: str) -> dict:
 
 
 def load_experiment_config(experiment_folder: str) -> dict:
+    if experiment_folder is None:
+        raise ValueError('If trying to load something from the experiment config, please supply '
+                         f'a valid directory for the source experiment instead of {experiment_folder}')
     experiment_report = load_experiment_report(experiment_folder)
     return load_json_as_dict(experiment_report.get('config_filepath'))
 

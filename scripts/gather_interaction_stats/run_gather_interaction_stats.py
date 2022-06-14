@@ -24,22 +24,14 @@ def main(config=None, data_writer=None):
             "experiment").get("purpose")}
         data_writer = DataWriter(**data_writer_kwargs)
 
-    # search_dir = os.path.join(*list({
-    #     'root_dir': "data",
-    #     'purpose': "generate_species_templates",
-    #     'experiment_key': "2022_05_10_155621",
-    #     'subfolder': "interactions"
-    # }.values()))
-
     config_file, search_dir = get_search_dir(
         "source_of_interactions", config_file=config_file)
-    logging.info(search_dir)
     protocols = [
         Protocol(
             # get list of all interaction paths
             partial(get_pathnames,
                     file_key='interactions',
-                    search_dir=search_dir, 
+                    search_dir=search_dir,
                     optional_subdir='interactions'
                     ),
             req_output=True,
@@ -49,7 +41,8 @@ def main(config=None, data_writer=None):
         [
             # do some analytics
             Protocol(
-                partial(generate_interaction_stats, writer=data_writer),
+                partial(generate_interaction_stats,
+                        experiment_dir=search_dir, writer=data_writer),
                 req_output=True,
                 req_input=True,
                 name='analyse_interactions'

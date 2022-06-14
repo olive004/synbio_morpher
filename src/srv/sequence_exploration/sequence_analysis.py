@@ -12,9 +12,10 @@ from src.utils.misc.io import get_path_from_output_summary, get_pathnames, \
     get_subdirectories, load_experiment_config, load_experiment_output_summary
 
 
-def generate_interaction_stats(path_name, writer: DataWriter = None, **stat_addons):
+def generate_interaction_stats(path_name, writer: DataWriter = None, experiment_dir: str = None, **stat_addons) -> pd.DataFrame:
 
-    interactions = InteractionMatrix(matrix_path=path_name)
+    interactions = InteractionMatrix(
+        matrix_path=path_name, experiment_dir=experiment_dir)
 
     stats = interactions.get_stats()
     add_stats = pd.DataFrame.from_dict({'interactions_path': [path_name]})
