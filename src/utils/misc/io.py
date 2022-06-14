@@ -1,5 +1,6 @@
 
 
+from copy import deepcopy
 import glob
 import logging
 import os
@@ -82,17 +83,21 @@ def get_search_dir(search_config_key: str, config_file: dict):
 
 
 def get_root_experiment_folder(miscpath):
-    purposes = [p for p in os.path.split(miscpath) if p in get_purposes()]
-    split_path = os.path.split(miscpath)
+    split_path = miscpath.split(os.sep)
+    purposes = [p for p in split_path if p in get_purposes()]
     if len(purposes) == 1:
-        experiment_folder = os.path.join(split_path[:split_path.index(purposes[0])])
+        target_top_dir = os.path.join(*split_path[:split_path.index(purposes[0])+1])
+        experiment_folder = deepcopy(miscpath)
+        while not os.path.dirname(experiment_folder) == target_top_dir:
+            experiment_folder = os.path.dirname(experiment_folder)
     elif len(purposes) == 2:
-        experiment_folder = os.path.join(split_path[:split_path.index(purposes[1])])
+        experiment_folder = os.path.join(*split_path[:split_path.index(purposes[1])+1])
     else:
         if len(os.path.split(miscpath)) == 1:
             raise ValueError(
                 f'Root experiment folder not found recursively in base {miscpath}')
-        return get_root_experiment_folder(os.path.dirname(miscpath))
+        experiment_folder = get_root_experiment_folder(os.path.dirname(miscpath))
+    return experiment_folder
 
 
 def load_experiment_output_summary(experiment_folder) -> pd.DataFrame:

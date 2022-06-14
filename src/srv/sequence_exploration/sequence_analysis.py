@@ -48,21 +48,17 @@ def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path
         logging.warning(stats)
         return []
 
-    base_folder = get_root_experiment_folder(filt_stats['interactions_path'].to_list()[0])
-    logging.info(base_folder)
-    base_folder = os.path.dirname(
-        os.path.dirname(filt_stats['interactions_path'].to_list()[0]))
-    logging.info(base_folder)
-    experiment_summary = load_experiment_output_summary(base_folder)
+    experiment_folder = get_root_experiment_folder(filt_stats['interactions_path'].to_list()[0])
+    experiment_summary = load_experiment_output_summary(experiment_folder)
 
     extra_configs = []
     for index, row in filt_stats.iterrows():
         extra_config = {write_key: get_path_from_output_summary(
             row["name"], experiment_summary)}
         extra_config.update(
-            {'interactions': row["interactions_path"]}
+            {'interactions_path': row["interactions_path"]}
         )
-        extra_config.update(load_experiment_config(base_folder))
+        extra_config.update(load_experiment_config(experiment_folder))
         extra_configs.append(extra_config)
     return extra_configs
 
