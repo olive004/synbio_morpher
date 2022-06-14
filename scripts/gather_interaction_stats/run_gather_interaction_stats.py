@@ -20,7 +20,8 @@ def main(config=None, data_writer=None):
 
     # start_experiment
     if data_writer is None:
-        data_writer_kwargs = {'purpose': config_file.get("experiment").get("purpose")}
+        data_writer_kwargs = {'purpose': config_file.get(
+            "experiment").get("purpose")}
         data_writer = DataWriter(**data_writer_kwargs)
 
     # search_dir = os.path.join(*list({
@@ -30,13 +31,16 @@ def main(config=None, data_writer=None):
     #     'subfolder': "interactions"
     # }.values()))
 
-    config_file, search_dir = get_search_dir("source_of_interactions", config_file=config_file)
+    config_file, search_dir = get_search_dir(
+        "source_of_interactions", config_file=config_file)
+    logging.info(search_dir)
     protocols = [
         Protocol(
             # get list of all interaction paths
             partial(get_pathnames,
-                    file_key="interactions",
-                    search_dir=search_dir
+                    file_key='interactions',
+                    search_dir=search_dir, 
+                    optional_subdir='interactions'
                     ),
             req_output=True,
             name='get_pathnames'

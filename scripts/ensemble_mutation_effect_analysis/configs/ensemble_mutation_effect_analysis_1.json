@@ -21,9 +21,7 @@
             },
             "system_type": "RNA",
             "data_path": "data/ensemble_mutation_effect_analysis/2022_06_14_002122/generate_species_templates/circuits/toy_mRNA_circuit_1.fasta"
-        }
-    },
-    "skipLol": {
+        },
         "gather_interaction_stats": {
             "experiment": {
                 "purpose": "gather_interaction_stats"

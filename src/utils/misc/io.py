@@ -31,7 +31,7 @@ def create_location(pathname):
         os.makedirs(pathname, mode=0o777)
 
 
-def get_pathnames(search_dir, file_key='', first_only=False, allow_empty=False):
+def get_pathnames(search_dir, file_key='', first_only=False, allow_empty=False, optional_subdir=''):
     if type(file_key) == list:
         all_path_names = []
         for fk in file_key:
@@ -43,13 +43,17 @@ def get_pathnames(search_dir, file_key='', first_only=False, allow_empty=False):
         path_names = sorted([os.path.join(search_dir, f) for f in os.listdir(
             search_dir) if os.path.isfile(os.path.join(search_dir, f))])
     else:
-        path_names = sorted(
-            glob.glob(os.path.join(search_dir, '*' + file_key + '*')))
+        path_names = sorted([f for f in glob.glob(os.path.join(
+            search_dir, '*' + file_key + '*')) if os.path.isfile(f)])
     if first_only and path_names:
         path_names = path_names[0]
+    if not path_names and optional_subdir:
+        path_names = get_pathnames(os.path.join(search_dir, optional_subdir), file_key=file_key,
+                                   first_only=first_only, allow_empty=allow_empty)
     if not path_names and not allow_empty:
         raise ValueError(
             f'Could not find file matching "{file_key}" in {search_dir}.')
+    logging.info(path_names)
     return path_names
 
 
@@ -60,7 +64,8 @@ def get_purposes(script_dir=None):
 
 def get_search_dir(search_config_key: str, config_file: dict):
     search_config = config_file.get(search_config_key, {})
-    update = search_config.get("require_from_previous_script_in_ensemble", None)
+    update = search_config.get(
+        "require_from_previous_script_in_ensemble", None)
     if update:
         search_dir = os.path.join(search_config.get("source_dir"),
                                   get_recent_experiment_folder(search_config.get(
