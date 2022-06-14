@@ -65,7 +65,7 @@ class InteractionMatrix():
             else:
                 return SIMULATOR_UNITS['IntaRNA']['energy']
         else:
-            return SIMULATOR_UNITS['IntaRNA']['rate']
+            return 'unknown'
 
     def make_rand_matrix(self, num_nodes):
         if num_nodes is None or num_nodes == 0:
@@ -110,6 +110,12 @@ class InteractionMatrix():
         return [idx[0] for idx in idxs_interacting if len(set(idx)) == 1]
 
     def get_unique_interacting_idxs(self):
-        idxs_interacting = np.argwhere(self.matrix > 0)
-        idxs_interacting = sorted([tuple(sorted(i)) for i in idxs_interacting])
+        if self.units == SIMULATOR_UNITS['IntaRNA']['energy']:
+            idxs_interacting = np.argwhere(self.matrix > 0)
+            idxs_interacting = sorted([tuple(sorted(i)) for i in idxs_interacting])
+        elif self.units == SIMULATOR_UNITS['IntaRNA']['rate']:
+            idxs_interacting = np.argwhere(self.matrix < 0)
+            idxs_interacting = sorted([tuple(sorted(i)) for i in idxs_interacting])
+        else:
+            raise ValueError(f'Cannot determine interaction properties from units "{self.units}"')
         return list(set(idxs_interacting))

@@ -9,7 +9,7 @@ from src.srv.io.results.result_writer import ResultWriter
 from src.srv.sequence_exploration.sequence_analysis import pull_circuits_from_stats
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.evolution.mutation import Evolver
-from src.utils.misc.io import get_pathnames, get_recent_experiment_folder, get_search_dir
+from src.utils.misc.io import get_pathnames, get_search_dir
 from src.utils.system_definition.agnostic_system.system_manager import CircuitModeller
 
 

@@ -82,9 +82,12 @@ def get_search_dir(search_config_key: str, config_file: dict):
 
 
 def get_root_experiment_folder(miscpath):
-    if os.path.basename(os.path.dirname(miscpath)) in get_purposes() or \
-            os.path.basename(miscpath) in get_purposes():
-        return miscpath
+    purposes = [p for p in os.path.split(miscpath) if p in get_purposes()]
+    split_path = os.path.split(miscpath)
+    if len(purposes) == 1:
+        experiment_folder = os.path.join(split_path[:split_path.index(purposes[0])])
+    elif len(purposes) == 2:
+        experiment_folder = os.path.join(split_path[:split_path.index(purposes[1])])
     else:
         if len(os.path.split(miscpath)) == 1:
             raise ValueError(
