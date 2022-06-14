@@ -1,5 +1,6 @@
 import argparse
 import json
+import logging
 import os
 from typing import Dict, List
 
@@ -40,6 +41,7 @@ def parse_cfg_args(config_args: dict = None, dict_args: Dict = None) -> Dict:
         dict_args = retrieve_default_args()
     dict_args = load_simulator_cfgs(dict_args)
     dict_args = merge_dicts(dict_args, config_args)
+    logging.info(dict_args)
 
     return dict_args
 

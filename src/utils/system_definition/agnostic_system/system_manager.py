@@ -12,7 +12,7 @@ from src.utils.misc.decorators import time_it
 from src.utils.misc.numerical import make_dynamic_indexer, np_delete_axes, zero_out_negs
 from src.utils.misc.type_handling import flatten_nested_dict
 from src.utils.signal.inputs import Signal
-from src.srv.parameter_prediction.simulator import InteractionSimulator
+from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS, InteractionSimulator
 from src.utils.system_definition.agnostic_system.base_system import BaseSystem
 from src.utils.system_definition.agnostic_system.modelling import Deterministic
 
@@ -25,7 +25,9 @@ class SystemManager():
 
 class CircuitModeller():
 
-    def __init__(self, result_writer=None) -> None:
+    def __init__(self, result_writer=None, config: dict = {}) -> None:
+        self.steady_state_solver = config.get("steady_state_solver", 'ivp')
+
         if result_writer is None:
             self.result_writer = ResultWriter()
         else:
@@ -96,9 +98,9 @@ class CircuitModeller():
         modeller_steady_state = Deterministic(
             max_time=50, time_step=1)
 
-        circuit.species.copynumbers = self.compute_steady_states_data(modeller_steady_state,
-                                                                      circuit=circuit,
-                                                                      use_solver='ivp')
+        circuit.species.copynumbers = self.compute_steady_states(modeller_steady_state,
+                                                                 circuit=circuit,
+                                                                 use_solver=self.steady_state_solver)
 
         circuit.result_collector.add_result(circuit.species.copynumbers,
                                             name='steady_states',
@@ -111,9 +113,9 @@ class CircuitModeller():
         circuit.species.steady_state_copynums = steady_state_analytics['steady_states']
         return circuit
 
-    def compute_steady_states_data(self, modeller, circuit: BaseSystem,
-                                   use_solver: str = 'naive',
-                                   exclude_species_by_idx: Union[int, list] = None):
+    def compute_steady_states(self, modeller, circuit: BaseSystem,
+                              use_solver: str = 'naive',
+                              exclude_species_by_idx: Union[int, list] = None):
         copynumbers = circuit.species.copynumbers[:, -1]
         if exclude_species_by_idx is not None:
             exclude_species_by_idx = self.process_exclude_species_by_idx(
@@ -137,10 +139,16 @@ class CircuitModeller():
             steady_state_result = integrate.solve_ivp(self.make_modelling_func(modeller, circuit, exclude_species_by_idx),
                                                       (0, modeller.max_time),
                                                       y0=y0)
+            logging.info(y0)
+            logging.info(steady_state_result)
+            logging.info(copynumbers)
+            logging.info(modeller.max_time)
+            logging.info(self.make_modelling_func(modeller, circuit, exclude_species_by_idx))
+            logging.info(steady_state_result.y)
             if not steady_state_result.success:
                 raise ValueError(
                     'Steady state could not be found through solve_ivp - possibly because units '
-                    f'are in {circuit.species.interaction_units}.')
+                    f'are in {circuit.species.interaction_units}. {SIMULATOR_UNITS}')
             copynumbers = steady_state_result.y
         return copynumbers
 
@@ -198,10 +206,10 @@ class CircuitModeller():
         if use_old_steadystates:
             steady_states = deepcopy(circuit.species.steady_state_copynums)
         else:
-            steady_states = self.compute_steady_states_data(Deterministic(
+            steady_states = self.compute_steady_states(Deterministic(
                 max_time=50, time_step=1),
                 circuit=circuit,
-                use_solver='ivp',
+                use_solver=self.steady_state_solver,
                 exclude_species_by_idx=signal.identities_idx)
             steady_states = steady_states[make_dynamic_indexer({
                 circuit.species.species_axis: slice(np.shape(steady_states)[circuit.species.species_axis]),
@@ -222,7 +230,8 @@ class CircuitModeller():
                                                  signal_identity_idx=signal.identities_idx)
 
         elif use_solver == 'ivp':
-            logging.warning('Solving steady state with ivp not fully implemented yet.')
+            logging.warning(
+                'Solving steady state with ivp not fully implemented yet.')
             init_copynumbers = steady_states
             new_copynumbers = np.concatenate((init_copynumbers, np.zeros(
                 (np.shape(init_copynumbers)[circuit.species.species_axis], modeller_signal.max_time-1))
@@ -274,6 +283,8 @@ class CircuitModeller():
         if write_to_subsystem:
             self.result_writer.subdivide_writing(circuit.name)
         mutation_dict = flatten_nested_dict(circuit.species.mutations.items())
+        logging.info(
+            f'Running functions {methods} on circuit with {len(mutation_dict)} items.')
         for i, (name, mutation) in enumerate(mutation_dict.items()):
             # logging.info(f'Running methods on mutation {name}')
             if include_normal_run and i == 0:

@@ -62,7 +62,7 @@ class ResultWriter(DataWriter):
 
     def write_analytics(self, result: Result, new_report=False):
         analytics = result.analytics
-        writeables = Timeseries(data=None).get_writeables()
+        writeables = Timeseries(data=None).get_analytics_types()
         self.write_report(writeables, analytics, new_report)
 
     def write_results(self, results: dict, new_report=False, no_visualisations=False, only_numerical=False):

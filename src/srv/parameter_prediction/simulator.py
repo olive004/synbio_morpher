@@ -1,4 +1,5 @@
 
+import logging
 import numpy as np
 from functools import partial
 from src.utils.misc.numerical import SCIENTIFIC
@@ -71,6 +72,7 @@ class RawSimulationHandling():
             return input
 
         if self.simulator_name == "IntaRNA":
+            logging.info(self.sim_kwargs)
             if self.sim_kwargs.get('postprocess', None):
                 self.units = SIMULATOR_UNITS[self.simulator_name]['rate']
                 return partial(processor, funcs=[
@@ -102,7 +104,7 @@ class RawSimulationHandling():
 class InteractionSimulator():
     def __init__(self, config_args: dict = None):
 
-        self.simulation_handler = RawSimulationHandling(config_args)
+        self.simulation_handler = RawSimulationHandling(config_args, )
 
     def run(self, batch: dict = None, allow_self_interaction=True):
         """ Makes nested dictionary for querying interactions as 

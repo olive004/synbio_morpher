@@ -26,7 +26,8 @@ def main(config=None, data_writer=None):
             'purpose', 'mutation_effect_on_interactions_signal')}
         data_writer = ResultWriter(**data_writer_kwargs)
 
-    config_file, source_experiment_dir = get_search_dir('source_of_interaction_stats', config_file=config_file)
+    config_file, source_experiment_dir = get_search_dir(
+        'source_of_interaction_stats', config_file=config_file)
     protocols = [
         # Load in templates: pathname for circuit stats is in config
         Protocol(
@@ -46,7 +47,7 @@ def main(config=None, data_writer=None):
             req_output=True,
             name='pull_circuit_from_stats'
         ),
-        [ # for each circuit
+        [  # for each circuit
             # Construct circuit
             Protocol(
                 partial(construct_circuit_from_cfg,
@@ -65,7 +66,7 @@ def main(config=None, data_writer=None):
             ),
             # Simulate signal and write results
             Protocol(
-                partial(CircuitModeller(result_writer=data_writer).wrap_mutations,
+                partial(CircuitModeller(result_writer=data_writer, config=config_file).wrap_mutations,
                         write_to_subsystem=True,
                         methods={
                     "init_circuit": {},
