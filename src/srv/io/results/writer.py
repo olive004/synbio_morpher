@@ -35,6 +35,7 @@ class DataWriter():
                write_func=None, write_to_top_dir=False, **writer_kwargs):
 
         if out_type is None:
+            out_type = writer_kwargs
             raise ValueError(
                 f'The out_type for file "{out_name}" needs to be specified for writing with function "{write_func}".')
 

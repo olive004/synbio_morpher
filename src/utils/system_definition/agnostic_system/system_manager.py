@@ -104,8 +104,8 @@ class CircuitModeller():
                                             name='steady_states',
                                             category='time_series',
                                             vis_func=modeller_steady_state.plot,
-                                            **{'legend': list(circuit.species.data.sample_names),
-                                               'out_type': 'png'})
+                                            vis_kwargs={'legend': list(circuit.species.data.sample_names),
+                                                        'out_type': 'png'})
         steady_state_analytics = circuit.result_collector.get_result(
             key='steady_states').analytics
         circuit.species.steady_state_copynums = steady_state_analytics['steady_states']
@@ -222,8 +222,7 @@ class CircuitModeller():
                                                  signal_identity_idx=signal.identities_idx)
 
         elif use_solver == 'ivp':
-            logging.warning(
-                'Solving steady state with ivp not fully implemented yet.')
+            logging.warning('Solving steady state with ivp not fully implemented yet.')
             init_copynumbers = steady_states
             new_copynumbers = np.concatenate((init_copynumbers, np.zeros(
                 (np.shape(init_copynumbers)[circuit.species.species_axis], modeller_signal.max_time-1))

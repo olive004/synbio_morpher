@@ -91,7 +91,7 @@ class ResultWriter(DataWriter):
                            only_numerical=only_numerical)
 
     def visualise(self, out_name, writer, vis_kwargs):
-        self.output(out_name=out_name, write_func=writer, vis_kwargs=vis_kwargs)
+        self.output(out_name=out_name, write_func=writer, **vis_kwargs)
 
     def visualise_graph(self, circuit: BaseSystem, mode="pyvis", new_vis=False):
         circuit.refresh_graph()
