@@ -45,7 +45,8 @@ class CircuitModeller():
         exclude_species_by_idx = self.process_exclude_species_by_idx(
             exclude_species_by_idx)
 
-        interactions = circuit.species.interactions
+        # interactions = circuit.species.interactions
+        interactions = np.ones(np.shape(circuit.species.interactions)) * -10
         creation_rates = circuit.species.creation_rates
         degradation_rates = circuit.species.degradation_rates
 
@@ -90,9 +91,8 @@ class CircuitModeller():
         return circuit
 
     def run_interaction_simulator(self, circuit: BaseSystem, data):
-        
         simulator = InteractionSimulator(
-            circuit.simulator_args['simulator_kwargs'])
+            circuit.simulator_args['interaction_simulator'])
         return simulator.run(data)
 
     def find_steady_states(self, circuit: BaseSystem):

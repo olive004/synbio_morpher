@@ -13,7 +13,6 @@ class RNASystem(BaseSystem):
         super(RNASystem, self).__init__(config_args)
 
         self.simulator_args = config_args.get("interaction_simulator", {})
-        logging.info(self.simulator_args)
 
         self.species = self.init_species(config_args)
         self.process_species()

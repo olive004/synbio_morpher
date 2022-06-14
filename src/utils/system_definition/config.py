@@ -39,22 +39,18 @@ def parse_cfg_args(config_args: dict = None, default_args: Dict = None) -> Dict:
 
     if default_args is None:
         default_args = retrieve_default_arg_filenames()
-    logging.info(default_args)
-    default_args = load_simulator_kwargs(default_args, config_args['interaction_simulator']['name'])
-    config_args = merge_dicts(default_args, config_args)
-    logging.info(config_args)
+    simulator_kwargs = load_simulator_kwargs(default_args, config_args['interaction_simulator']['name'])
+    config_args['interaction_simulator']['simulator_kwargs'] = simulator_kwargs
 
     return config_args
 
 
-def load_simulator_kwargs(default_args: dict, simulator_name: str) -> Dict:
+def load_simulator_kwargs(default_args: dict, target_simulator_name: str) -> Dict:
     for simulator_name in get_simulator_names():
-        if simulator_name in default_args:
+        if simulator_name in default_args and simulator_name == target_simulator_name:
             simulator_kwargs = handle_simulator_cfgs(
                 simulator_name, default_args[simulator_name])
-            default_args['interaction_simulator'] = {}
-            default_args['interaction_simulator']['simulator_kwargs'] = simulator_kwargs
-    return default_args
+    return simulator_kwargs
 
 
 def retrieve_default_arg_filenames() -> Dict:
