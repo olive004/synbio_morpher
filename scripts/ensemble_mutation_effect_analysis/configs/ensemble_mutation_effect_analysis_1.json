@@ -4,7 +4,17 @@
             "steady_state_solver": "ivp",
             "interaction_simulator": {
                 "name": "IntaRNA",
-                "postprocess": true
+                "postprocess": true,
+                "simulator_kwargs": {
+                    "qidxpos0": 1,
+                    "tidxpos0": 1,
+                    "outcsvcols": "E, ED1, ED2, E_hybrid, E_norm, E_hybridNorm, Eall, Eall1, Eall2, Etotal, Zall, EallTotal, bpList, P_E, Pu1, Pu2",
+                    "threads": 0,
+                    "n": 1,
+                    "param_file": "./scripts/common/configs/simulators/intaRNA_parameterFile.sh",
+                    "query": "AGCCGGCAGAAUGUCCGAUC",
+                    "target": "AGCCGGCAGAAUGUCCGAUC"
+                }
             },
             "experiment": {
                 "purpose": "generate_species_templates"
@@ -21,7 +31,7 @@
                 "proportion_to_mutate": 0.5
             },
             "system_type": "RNA",
-            "data_path": "data/ensemble_mutation_effect_analysis/2022_06_14_102842/generate_species_templates/circuits/toy_mRNA_circuit_19.fasta"
+            "data_path": "data/ensemble_mutation_effect_analysis/2022_06_15_003807/generate_species_templates/circuits/toy_mRNA_circuit_19.fasta"
         },
         "gather_interaction_stats": {
             "experiment": {
@@ -31,19 +41,29 @@
                 "require_from_previous_script_in_ensemble": true,
                 "source_dir": "./data/ensemble_mutation_effect_analysis",
                 "previous_script_purpose": "generate_species_templates",
-                "source_dir_postupdate": "./data/ensemble_mutation_effect_analysis/2022_06_14_102842/generate_species_templates"
+                "source_dir_postupdate": "./data/ensemble_mutation_effect_analysis/2022_06_15_003807/generate_species_templates"
             }
         },
         "mutation_effect_on_interactions_signal": {
             "system_type": "RNA",
-            "data_path": null,
+            "data_path": "data/ensemble_mutation_effect_analysis/2022_06_15_003807/generate_species_templates/circuits/toy_mRNA_circuit_19.fasta",
             "steady_state_solver": "ivp",
             "experiment": {
-                "purpose": "mutation_effect_on_interactions_signal"
+                "purpose": "generate_species_templates"
             },
             "interaction_simulator": {
                 "name": "IntaRNA",
-                "postprocess": true
+                "postprocess": true,
+                "simulator_kwargs": {
+                    "qidxpos0": 1,
+                    "tidxpos0": 1,
+                    "outcsvcols": "E, ED1, ED2, E_hybrid, E_norm, E_hybridNorm, Eall, Eall1, Eall2, Etotal, Zall, EallTotal, bpList, P_E, Pu1, Pu2",
+                    "threads": 0,
+                    "n": 1,
+                    "param_file": "./scripts/common/configs/simulators/intaRNA_parameterFile.sh",
+                    "query": "AGCCGGCAGAAUGUCCGAUC",
+                    "target": "AGCCGGCAGAAUGUCCGAUC"
+                }
             },
             "identities": {
                 "input": "RNA_0",
@@ -80,13 +100,26 @@
                 "durations": [
                     50,
                     400
-                ]
+                ],
+                "identities_idx": 0
             },
             "source_of_interaction_stats": {
                 "require_from_previous_script_in_ensemble": true,
                 "source_dir": "./data/ensemble_mutation_effect_analysis",
                 "previous_script_purpose": "gather_interaction_stats",
-                "source_dir_postupdate": "./data/ensemble_mutation_effect_analysis/2022_06_14_102842/gather_interaction_stats"
+                "source_dir_postupdate": "./data/ensemble_mutation_effect_analysis/2022_06_15_003807/gather_interaction_stats"
+            },
+            "interactions_path": "./data/ensemble_mutation_effect_analysis/2022_06_15_003807/generate_species_templates/interactions/toy_mRNA_circuit_9_interactions.csv",
+            "molecular_params": {
+                "creation_rates": 50,
+                "copynumbers": 5,
+                "degradation_rates": 20
+            },
+            "circuit_generation": {
+                "repetitions": 20,
+                "sequence_length": 20,
+                "generator_protocol": "template_mutate",
+                "proportion_to_mutate": 0.5
             }
         }
     }

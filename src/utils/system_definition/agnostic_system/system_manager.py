@@ -45,8 +45,7 @@ class CircuitModeller():
         exclude_species_by_idx = self.process_exclude_species_by_idx(
             exclude_species_by_idx)
 
-        # interactions = circuit.species.interactions
-        interactions = np.ones(np.shape(circuit.species.interactions)) * -10
+        interactions = circuit.species.interactions
         creation_rates = circuit.species.creation_rates
         degradation_rates = circuit.species.degradation_rates
 
@@ -91,8 +90,7 @@ class CircuitModeller():
         return circuit
 
     def run_interaction_simulator(self, circuit: BaseSystem, data):
-        simulator = InteractionSimulator(
-            circuit.simulator_args['interaction_simulator'])
+        simulator = InteractionSimulator(circuit.simulator_args)
         return simulator.run(data)
 
     def find_steady_states(self, circuit: BaseSystem):
@@ -136,16 +134,19 @@ class CircuitModeller():
 
         elif use_solver == 'ivp':
 
+            if circuit.species.interaction_units == SIMULATOR_UNITS['IntaRNA']['energy']:
+                logging.warning(f'Interactions in units of {circuit.species.interaction_units} may not be suitable for '
+                                'solving with IVP')
             y0 = copynumbers[idxs]
             steady_state_result = integrate.solve_ivp(self.make_modelling_func(modeller, circuit, exclude_species_by_idx),
                                                       (0, modeller.max_time),
                                                       y0=y0)
-            logging.info(y0)
-            logging.info(steady_state_result)
-            logging.info(copynumbers)
-            logging.info(modeller.max_time)
-            logging.info(self.make_modelling_func(modeller, circuit, exclude_species_by_idx))
-            logging.info(steady_state_result.y)
+            # logging.info(y0)
+            # logging.info(steady_state_result)
+            # logging.info(copynumbers)
+            # logging.info(modeller.max_time)
+            # logging.info(self.make_modelling_func(
+            #     modeller, circuit, exclude_species_by_idx))
             if not steady_state_result.success:
                 raise ValueError(
                     'Steady state could not be found through solve_ivp - possibly because units '
