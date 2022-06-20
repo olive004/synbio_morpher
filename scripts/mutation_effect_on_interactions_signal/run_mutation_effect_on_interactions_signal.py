@@ -80,7 +80,7 @@ def main(config=None, data_writer=None):
         ]
     ]
     experiment = Experiment(config_filepath=config, protocols=protocols,
-                            data_writer=data_writer)
+                            data_writer=data_writer, debug_inputs=True)
     experiment.run_experiment()
 
     return config_file, data_writer
