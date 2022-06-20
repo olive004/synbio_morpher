@@ -11,6 +11,11 @@ from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.misc.io import get_pathnames, get_search_dir
 
 
+def readout(var_obj):
+    logging.info(f'Using directory or files {var_obj} for gathering the gene circuit interactions from.')
+    return var_obj
+
+
 def main(config=None, data_writer=None):
     # set configs
     if config is None:
@@ -38,6 +43,12 @@ def main(config=None, data_writer=None):
             name='get_pathnames'
         ),
         # read in data one at a time
+        Protocol(
+            # Just doing some readout for debugging clarity
+            readout,
+            req_input=True,
+            req_output=True
+        ),
         [
             # do some analytics
             Protocol(
