@@ -117,9 +117,9 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
                 write_all()
 
         def write_all(out_type='npy'):
-            for i, analytic in enumerate(analytic_types):
+            for m, analytic in enumerate(analytic_types):
                 data_writer.output(out_type, out_name=analytic,
-                                   data=all_species_analytics[i].astype(np.float32), overwrite=True,
+                                   data=all_species_analytics[m].astype(np.float32), overwrite=True,
                                    write_to_top_dir=True)
 
         # Main loop
