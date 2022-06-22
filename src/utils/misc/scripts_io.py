@@ -17,8 +17,12 @@ def get_purposes(script_dir=None):
     return get_subdirectories(script_dir, only_basedir=True)
 
 
-def get_search_dir(config_search_key: str, config_file: dict):
+# retrieve_search_dir
+def get_search_dir(config_search_key: str, config_file: dict) -> tuple:
     search_config = config_file.get(config_search_key, {})
+    if not search_config:
+        raise KeyError(
+            f'Could not find {config_search_key} in config keys: {config_file.keys()}.')
     update = search_config.get(
         "is_source_dir_incomplete", None)
     if update:
@@ -29,11 +33,8 @@ def get_search_dir(config_search_key: str, config_file: dict):
             search_dir), f'Could not find directory {search_dir}'
         config_file[config_search_key]['source_dir_actually_used_if_incomplete'] = search_dir
         return config_file, search_dir
-    elif update == None:
-        raise KeyError(
-            f'Could not find {config_search_key} in config keys: {config_file.keys()}.')
     else:
-        search_dir = search_config.get('search_dir')
+        search_dir = search_config.get('source_dir')
         return config_file, search_dir
 
 

@@ -23,17 +23,18 @@ def main(config=None, data_writer=None):
 
     # Load in parameter grids
 
-    source_dir = get_search_dir('source_parameter_dir', config_file=config_file)
-    logging.info(source_dir)
-    experiment_configs = load_experiment_config(source_dir)
+    config_file, source_dir = get_search_dir('source_parameter_dir', config_file=config_file)
+    experiment_config = load_experiment_config(source_dir)
+    experiment_settings = experiment_config['experiment']
+    logging.info(experiment_config)
     num_subprocesses = 1
-    if experiment_configs['parallelise']:
-        num_subprocesses = experiment_configs['num_subprocesses']
+    if experiment_settings['parallelise']:
+        num_subprocesses = experiment_settings['num_subprocesses']
     
     # If there was multithreading, load each parameter_grid one by one from subfolders
     parameter_grids = []
     for subprocess in range(num_subprocesses):
-        subproccess_dir = get_subprocesses_dirnames(search_dir=source_dir)
+        subproccess_dir = get_subprocesses_dirnames(source_dir)
         parameter_grids.append(DataLoader().load_data(source_dir))
 
     logging.info(parameter_grids)
