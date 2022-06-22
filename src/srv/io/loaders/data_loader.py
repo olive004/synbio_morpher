@@ -27,6 +27,8 @@ class DataLoader():
             from src.srv.io.loaders.misc import load_csv
             return load_csv
         elif data_type == 'numpy':
+            import numpy as np
+            return np.load
         elif data_type == None:
             return none_func
         else:

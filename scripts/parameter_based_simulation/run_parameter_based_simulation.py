@@ -64,10 +64,10 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
         assert matrix_size == np.prod(list(
             matrix_dimensions)), 'Something is off about the intended size of the matrix'
 
-        all_species_analytics = []
+        all_analytic_matrices = []
         analytic_types = Timeseries(None).get_analytics_types()
         for analytic in analytic_types:
-            all_species_analytics.append(np.zeros(
+            all_analytic_matrices.append(np.zeros(
                 matrix_dimensions, dtype=np.float32))
 
         # Set loop vars
@@ -109,7 +109,7 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
 
             idxs = [slice(0, num_species)] + [[ite] for ite in iterators]
             for j, analytic in enumerate(analytic_types):
-                all_species_analytics[j][tuple(
+                all_analytic_matrices[j][tuple(
                     idxs)] = circuit.result_collector.results['signal'].analytics.get(analytic)
 
             # @time_it
@@ -119,7 +119,7 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
         def write_all(out_type='npy'):
             for m, analytic in enumerate(analytic_types):
                 data_writer.output(out_type, out_name=analytic,
-                                   data=all_species_analytics[m].astype(np.float32), overwrite=True,
+                                   data=all_analytic_matrices[m].astype(np.float32), overwrite=True,
                                    write_to_top_dir=True)
 
         # Main loop
