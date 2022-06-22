@@ -4,11 +4,12 @@ import os
 import numpy as np
 import pandas as pd
 
-from src.srv.io.manage.sys_interface import make_filename_safely
-
 
 FORMAT_EXTS = {
-    ".fasta": "fasta"
+    "fasta": "fasta",
+    "npy": "numpy",
+    "csv": "csv",
+    "json": "json"
 }
 
 
@@ -17,14 +18,9 @@ def verify_file_type(filepath: str, file_type: str):
     pass
 
 
-def determine_data_format(filepath: str) -> str:
-    if filepath:
-        return os.path.basename(filepath).split('.')[-1]
-    return None
-    # for extension, ftype in FORMAT_EXTS.items():
-    #     if extension in filepath:
-    #         return ftype
-    # return None
+def determine_file_format(filepath: str) -> str:
+    ext = os.path.basename(filepath).split('.')[-1]
+    return FORMAT_EXTS[ext]
 
 
 def load_json_as_dict(json_pathname: str, process=True) -> dict:

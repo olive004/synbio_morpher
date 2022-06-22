@@ -62,8 +62,8 @@ def get_purposes(script_dir=None):
     return get_subdirectories(script_dir, only_basedir=True)
 
 
-def get_search_dir(search_config_key: str, config_file: dict):
-    search_config = config_file.get(search_config_key, {})
+def get_search_dir(config_search_key: str, config_file: dict):
+    search_config = config_file.get(config_search_key, {})
     update = search_config.get(
         "is_source_dir_incomplete", None)
     if update:
@@ -72,11 +72,11 @@ def get_search_dir(search_config_key: str, config_file: dict):
                                       "source_dir")), search_config.get("purpose_of_ensembled_source_dir"))
         assert os.path.isdir(
             search_dir), f'Could not find directory {search_dir}'
-        config_file[search_config_key]['source_dir_actually_used_if_incomplete'] = search_dir
+        config_file[config_search_key]['source_dir_actually_used_if_incomplete'] = search_dir
         return config_file, search_dir
     elif update == None:
         raise KeyError(
-            f'Could not find {search_config_key} in config keys: {config_file.keys()}.')
+            f'Could not find {config_search_key} in config keys: {config_file.keys()}.')
     else:
         search_dir = search_config.get('search_dir')
         return config_file, search_dir
