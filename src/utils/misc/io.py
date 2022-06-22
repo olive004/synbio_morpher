@@ -8,6 +8,7 @@ import pandas as pd
 
 from src.srv.io.loaders.misc import load_csv
 from src.utils.data.data_format_tools.common import load_json_as_dict
+from src.utils.misc.helper import vanilla_return
 from src.utils.misc.string_handling import remove_file_extension
 
 
@@ -32,25 +33,33 @@ def create_location(pathname):
         os.makedirs(pathname, mode=0o777)
 
 
-def get_pathnames(search_dir, file_key='', first_only=False, allow_empty=False, optional_subdir=''):
+def get_pathnames(search_dir, file_key='', first_only=False, allow_empty=False,
+                  optional_subdir='', conditional='filenames'):
+    path_condition = vanilla_return
+    if conditional == 'directories':
+        path_condition = os.path.isdir
+    elif conditional == 'filenames':
+        path_condition = os.path.isfile
+
     if type(file_key) == list:
         all_path_names = []
         for fk in file_key:
             all_path_names.append(
-                set(sorted(glob.glob(os.path.join(search_dir, '*' + fk + '*'))))
+                set(sorted([f for f in glob.glob(os.path.join(
+                    search_dir, '*' + file_key + '*')) if path_condition(f)]))
             )
         path_names = list(all_path_names[0].intersection(*all_path_names[1:]))
     elif not file_key:
         path_names = sorted([os.path.join(search_dir, f) for f in os.listdir(
-            search_dir) if os.path.isfile(os.path.join(search_dir, f))])
+            search_dir) if path_condition(os.path.join(search_dir, f))])
     else:
         path_names = sorted([f for f in glob.glob(os.path.join(
-            search_dir, '*' + file_key + '*')) if os.path.isfile(f)])
+            search_dir, '*' + file_key + '*')) if path_condition(f)])
     if first_only and path_names:
         path_names = path_names[0]
     if not path_names and optional_subdir:
         path_names = get_pathnames(os.path.join(search_dir, optional_subdir), file_key=file_key,
-                                   first_only=first_only, allow_empty=allow_empty)
+                                   first_only=first_only, allow_empty=allow_empty, conditional=conditional)
     if not path_names and not allow_empty:
         raise ValueError(
             f'Could not find file matching "{file_key}" in {search_dir}.')
@@ -86,18 +95,25 @@ def get_root_experiment_folder(miscpath):
     split_path = miscpath.split(os.sep)
     purposes = [p for p in split_path if p in get_purposes()]
     if len(purposes) == 1:
-        target_top_dir = os.path.join(*split_path[:split_path.index(purposes[0])+1])
+        target_top_dir = os.path.join(
+            *split_path[:split_path.index(purposes[0])+1])
         experiment_folder = deepcopy(miscpath)
         while not os.path.dirname(experiment_folder) == target_top_dir:
             experiment_folder = os.path.dirname(experiment_folder)
     elif len(purposes) == 2:
-        experiment_folder = os.path.join(*split_path[:split_path.index(purposes[1])+1])
+        experiment_folder = os.path.join(
+            *split_path[:split_path.index(purposes[1])+1])
     else:
         if len(os.path.split(miscpath)) == 1:
             raise ValueError(
                 f'Root experiment folder not found recursively in base {miscpath}')
-        experiment_folder = get_root_experiment_folder(os.path.dirname(miscpath))
+        experiment_folder = get_root_experiment_folder(
+            os.path.dirname(miscpath))
     return experiment_folder
+
+
+def get_subprocesses_dirnames(source_dir):
+    experiment_folder = get_root_experiment_folder(source_dir)
 
 
 def load_experiment_output_summary(experiment_folder) -> pd.DataFrame:

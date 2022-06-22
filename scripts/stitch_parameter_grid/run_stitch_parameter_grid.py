@@ -8,7 +8,7 @@ import numpy as np
 from src.srv.io.loaders.data_loader import DataLoader
 from src.srv.io.results.result_writer import ResultWriter
 from src.utils.data.data_format_tools.common import load_json_as_dict
-from src.utils.misc.io import get_search_dir, load_experiment_report
+from src.utils.misc.io import get_pathnames, get_search_dir, load_experiment_report
 
 
 def main(config=None, data_writer=None):
@@ -24,9 +24,17 @@ def main(config=None, data_writer=None):
     # Load in parameter grids
 
     source_dir = get_search_dir('source_parameter_dir', config_file=config_file)
-
-    # If there was multithreading, load accordingly
-    parameter_grids = DataLoader().load_data(source_dir)
+    source_experiment_report = load_experiment_report(experiment_folder=source_dir)
+    experiment_configs = source_experiment_report.get('config_params', {}).get('experiment', {})
+    num_subprocesses = 1
+    if experiment_configs['parallelise']:
+        num_subprocesses = experiment_configs['num_subprocesses']
+    
+    # If there was multithreading, load each parameter_grid one by one from subfolders
+    parameter_grids = []
+    for subprocess in range(num_subprocesses):
+        subproccess_dir = get_pathnames(search_dir=source_dir)
+        parameter_grids.append(DataLoader().load_data(source_dir))
 
     logging.info(parameter_grids)
 
@@ -37,6 +45,5 @@ def main(config=None, data_writer=None):
 
             # If there was multithreading, indices will be different
 
-    load_experiment_report()
 
     # Write full matrices

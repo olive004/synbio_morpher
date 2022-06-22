@@ -6,3 +6,7 @@ def next_wrapper(generator):
 
 def none_func(input):
     return None
+
+
+def vanilla_return(input):
+    return input
