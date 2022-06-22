@@ -6,4 +6,5 @@
 *.cpython-38.pyc
 __pycache__
 *.txt
-*data
+data/*
+!data/example_data

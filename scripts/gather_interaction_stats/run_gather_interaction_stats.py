@@ -11,6 +11,11 @@ from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.misc.io import get_pathnames, get_search_dir
 
 
+def readout(var_obj):
+    logging.info(f'Using directory or files {var_obj} for gathering the gene circuit interactions from.')
+    return var_obj
+
+
 def main(config=None, data_writer=None):
     # set configs
     if config is None:
@@ -20,32 +25,35 @@ def main(config=None, data_writer=None):
 
     # start_experiment
     if data_writer is None:
-        data_writer_kwargs = {'purpose': config_file.get("experiment").get("purpose")}
+        data_writer_kwargs = {'purpose': config_file.get(
+            "experiment").get("purpose")}
         data_writer = DataWriter(**data_writer_kwargs)
 
-    # search_dir = os.path.join(*list({
-    #     'root_dir': "data",
-    #     'purpose': "generate_species_templates",
-    #     'experiment_key': "2022_05_10_155621",
-    #     'subfolder': "interactions"
-    # }.values()))
-
-    config_file, search_dir = get_search_dir("source_of_interactions", config_file=config_file)
+    config_file, search_dir = get_search_dir(
+        "source_of_interactions", config_file=config_file)
     protocols = [
         Protocol(
             # get list of all interaction paths
             partial(get_pathnames,
-                    file_key="interactions",
-                    search_dir=search_dir
+                    file_key='interactions',
+                    search_dir=search_dir,
+                    optional_subdir='interactions'
                     ),
             req_output=True,
             name='get_pathnames'
         ),
         # read in data one at a time
+        Protocol(
+            # Just doing some readout for debugging clarity
+            readout,
+            req_input=True,
+            req_output=True
+        ),
         [
             # do some analytics
             Protocol(
-                partial(generate_interaction_stats, writer=data_writer),
+                partial(generate_interaction_stats,
+                        experiment_dir=search_dir, writer=data_writer),
                 req_output=True,
                 req_input=True,
                 name='analyse_interactions'

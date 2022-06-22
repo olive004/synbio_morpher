@@ -1,4 +1,5 @@
 
+import logging
 import numpy as np
 from functools import partial
 from src.utils.misc.numerical import SCIENTIFIC
@@ -14,10 +15,10 @@ SIMULATOR_UNITS = {
 
 class RawSimulationHandling():
 
-    def __init__(self, config_args: dict = None, simulator: str = 'IntaRNA') -> None:
-        self.simulator_name = simulator if config_args is None else config_args.get(
-            'name', simulator)
-        self.sim_kwargs = config_args if config_args is not None else {}
+    def __init__(self, config_args: dict = None) -> None:
+        self.simulator_name = config_args.get('name', 'IntaRNA')
+        self.postprocess = config_args.get('postprocess')
+        self.sim_kwargs = config_args.get('simulator_kwargs', {})
         self.units = ''
 
     def get_protocol(self, custom_prot: str = None):
@@ -71,7 +72,7 @@ class RawSimulationHandling():
             return input
 
         if self.simulator_name == "IntaRNA":
-            if self.sim_kwargs.get('postprocess', None):
+            if self.postprocess:
                 self.units = SIMULATOR_UNITS[self.simulator_name]['rate']
                 return partial(processor, funcs=[
                     energy_to_rate,
@@ -100,9 +101,9 @@ class RawSimulationHandling():
 
 
 class InteractionSimulator():
-    def __init__(self, config_args: dict = None):
+    def __init__(self, sim_args: dict = None):
 
-        self.simulation_handler = RawSimulationHandling(config_args)
+        self.simulation_handler = RawSimulationHandling(sim_args)
 
     def run(self, batch: dict = None, allow_self_interaction=True):
         """ Makes nested dictionary for querying interactions as 

@@ -9,7 +9,7 @@ logger.setLevel(logging.INFO)
 
 
 class RNASystem(BaseSystem):
-    def __init__(self, config_args, simulator="IntaRNA"):
+    def __init__(self, config_args):
         super(RNASystem, self).__init__(config_args)
 
         self.simulator_args = config_args.get("interaction_simulator", {})

@@ -9,7 +9,7 @@ from src.srv.io.results.result_writer import ResultWriter
 from src.srv.sequence_exploration.sequence_analysis import pull_circuits_from_stats
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.evolution.mutation import Evolver
-from src.utils.misc.io import get_pathnames, get_recent_experiment_folder, get_search_dir
+from src.utils.misc.io import get_pathnames, get_search_dir
 from src.utils.system_definition.agnostic_system.system_manager import CircuitModeller
 
 
@@ -26,7 +26,8 @@ def main(config=None, data_writer=None):
             'purpose', 'mutation_effect_on_interactions_signal')}
         data_writer = ResultWriter(**data_writer_kwargs)
 
-    config_file, source_experiment_dir = get_search_dir('source_of_interaction_stats', config_file=config_file)
+    config_file, source_experiment_dir = get_search_dir(
+        'source_of_interaction_stats', config_file=config_file)
     protocols = [
         # Load in templates: pathname for circuit stats is in config
         Protocol(
@@ -46,7 +47,7 @@ def main(config=None, data_writer=None):
             req_output=True,
             name='pull_circuit_from_stats'
         ),
-        [
+        [  # for each circuit
             # Construct circuit
             Protocol(
                 partial(construct_circuit_from_cfg,
@@ -65,7 +66,7 @@ def main(config=None, data_writer=None):
             ),
             # Simulate signal and write results
             Protocol(
-                partial(CircuitModeller(result_writer=data_writer).wrap_mutations,
+                partial(CircuitModeller(result_writer=data_writer, config=config_file).wrap_mutations,
                         write_to_subsystem=True,
                         methods={
                     "init_circuit": {},
@@ -79,7 +80,7 @@ def main(config=None, data_writer=None):
         ]
     ]
     experiment = Experiment(config_filepath=config, protocols=protocols,
-                            data_writer=data_writer)
+                            data_writer=data_writer, debug_inputs=True)
     experiment.run_experiment()
 
     return config_file, data_writer
