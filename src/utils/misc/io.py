@@ -41,7 +41,7 @@ def get_pathnames(search_dir: str, file_key: Union[List, str] = '', first_only: 
                 set(sorted([f for f in glob.glob(os.path.join(
                     search_dir, '*' + file_key + '*')) if path_condition(f)]))
             )
-        path_names = list(get_intersecting_string(all_path_names))
+        path_names = list(all_path_names[0].intersection(*all_path_names[1:]))
     elif not file_key:
         path_names = sorted([os.path.join(search_dir, f) for f in os.listdir(
             search_dir) if path_condition(os.path.join(search_dir, f))])
