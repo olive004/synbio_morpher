@@ -35,6 +35,15 @@ class DataLoader():
             raise NotImplementedError(
                 "Other filetypes than fasta not supported yet.")
 
-    def load_data(self, filepath: str, identities: dict = {}):
+    def load_data(self, filepath: str):
         loader = self.get_loader(filepath)
-        return Data(loader(filepath), source_files=filepath, identities=identities)
+        return loader(filepath)
+
+
+class GeneCircuitLoader(DataLoader):
+
+    def __init__(self) -> None:
+        super().__init__()
+
+    def load_data(self, filepath: str, identities: dict = {}):
+        return Data(super().load_data(filepath=filepath), source_files=filepath, identities=identities)
