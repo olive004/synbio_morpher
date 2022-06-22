@@ -65,14 +65,14 @@ def get_purposes(script_dir=None):
 def get_search_dir(search_config_key: str, config_file: dict):
     search_config = config_file.get(search_config_key, {})
     update = search_config.get(
-        "require_from_previous_script_in_ensemble", None)
+        "is_source_dir_incomplete", None)
     if update:
         search_dir = os.path.join(search_config.get("source_dir"),
                                   get_recent_experiment_folder(search_config.get(
-                                      "source_dir")), search_config.get("previous_script_purpose"))
+                                      "source_dir")), search_config.get("purpose_of_ensembled_source_dir"))
         assert os.path.isdir(
             search_dir), f'Could not find directory {search_dir}'
-        config_file[search_config_key]['source_dir_postupdate'] = search_dir
+        config_file[search_config_key]['source_dir_actually_used_if_incomplete'] = search_dir
         return config_file, search_dir
     elif update == None:
         raise KeyError(
