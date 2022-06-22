@@ -8,7 +8,8 @@ from src.srv.io.results.experiments import Experiment, Protocol
 from src.srv.io.results.writer import DataWriter
 from src.srv.sequence_exploration.sequence_analysis import generate_interaction_stats
 from src.utils.data.data_format_tools.common import load_json_as_dict
-from src.utils.misc.io import get_pathnames, get_search_dir
+from src.utils.misc.io import get_pathnames
+from src.utils.misc.scripts_io import get_search_dir
 
 
 def readout(var_obj):

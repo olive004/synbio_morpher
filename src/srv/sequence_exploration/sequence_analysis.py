@@ -8,8 +8,9 @@ import pandas as pd
 from src.srv.io.loaders.data_loader import DataLoader
 from src.srv.io.results.writer import DataWriter
 from src.srv.parameter_prediction.interactions import InteractionMatrix
-from src.utils.misc.io import get_path_from_output_summary, get_pathnames, get_root_experiment_folder, \
-    get_subdirectories, load_experiment_config, load_experiment_output_summary
+from src.utils.misc.io import get_pathnames, get_subdirectories
+from src.utils.misc.scripts_io import get_path_from_output_summary, get_root_experiment_folder, \
+    load_experiment_config, load_experiment_output_summary
 
 
 def generate_interaction_stats(path_name, writer: DataWriter = None, experiment_dir: str = None, **stat_addons) -> pd.DataFrame:

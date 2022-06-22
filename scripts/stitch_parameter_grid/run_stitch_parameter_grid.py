@@ -8,7 +8,7 @@ import numpy as np
 from src.srv.io.loaders.data_loader import DataLoader
 from src.srv.io.results.result_writer import ResultWriter
 from src.utils.data.data_format_tools.common import load_json_as_dict
-from src.utils.misc.io import get_pathnames, get_search_dir, load_experiment_report
+from src.utils.misc.scripts_io import get_search_dir, get_subprocesses_dirnames, load_experiment_report 
 
 
 def main(config=None, data_writer=None):
@@ -33,7 +33,7 @@ def main(config=None, data_writer=None):
     # If there was multithreading, load each parameter_grid one by one from subfolders
     parameter_grids = []
     for subprocess in range(num_subprocesses):
-        subproccess_dir = get_pathnames(search_dir=source_dir)
+        subproccess_dir = get_subprocesses_dirnames(search_dir=source_dir)
         parameter_grids.append(DataLoader().load_data(source_dir))
 
     logging.info(parameter_grids)
