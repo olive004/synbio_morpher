@@ -1,10 +1,8 @@
 
 
-from ctypes import Union
 import glob
 import os
-from types import NoneType
-from typing import List
+from typing import List, Union
 
 from src.utils.misc.helper import vanilla_return
 from src.utils.misc.string_handling import remove_file_extension
@@ -23,7 +21,7 @@ def create_location(pathname):
 
 
 def get_pathnames(search_dir: str, file_key: Union[List, str] = '', first_only: bool = False, allow_empty: bool = False,
-                  optional_subdir: str = '', conditional: Union[NoneType, str] = 'filenames'):
+                  optional_subdir: str = '', conditional: Union[str, None] = 'filenames'):
     """ Get the pathnames in a folder given a keyword. 
 
     Args:

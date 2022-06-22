@@ -1,4 +1,7 @@
 {
+    "experiment": {
+        "purpose": "stitch_parameter_grid"
+    },
     "source_parameter_dir": {
         "is_source_dir_incomplete": false,
         "source_dir": "data/scripts/parameter_based_simulation/2022_06_13_161436/",
