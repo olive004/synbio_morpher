@@ -14,7 +14,8 @@ class Timeseries():
         final_deriv = np.average(
             self.get_derivative()[:, :-2])
         is_steady_state_reached = final_deriv < self.stability_threshold
-        steady_states = np.expand_dims(self.data[:, -1], axis=1).astype(np.float32)
+        steady_states = np.expand_dims(
+            self.data[:, -1], axis=1).astype(np.float32)
         return steady_states, is_steady_state_reached, final_deriv
 
     def fold_change(self):

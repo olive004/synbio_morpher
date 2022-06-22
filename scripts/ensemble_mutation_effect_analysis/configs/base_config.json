@@ -14,7 +14,7 @@
                 "degradation_rates": 20
             },
             "circuit_generation": {
-                "repetitions": 2,
+                "repetitions": 3,
                 "sequence_length": 20,
                 "generator_protocol": "template_mutate",
                 "proportion_to_mutate": 0.5
@@ -26,9 +26,9 @@
                 "purpose": "gather_interaction_stats"
             },
             "source_of_interactions": {
-                "update_on_run": true,
+                "require_from_previous_script_in_ensemble": true,
                 "source_dir": "./data/ensemble_mutation_effect_analysis",
-                "postupdate_subdir": "gather_interaction_stats",
+                "previous_script_purpose": "gather_interaction_stats",
                 "source_dir_postupdate": null
             }
         },
@@ -40,18 +40,18 @@
             },
             "interaction_simulator": {
                 "name": "IntaRNA",
-                "postprocess": false
+                "postprocess": true
             },
             "identities": {
                 "input": "RNA_0",
                 "output": "RNA_2"
             },
             "filters": {
-                "min_num_interacting": 3,
-                "max_self_interacting": 2
+                "min_num_interacting": 0,
+                "max_self_interacting": 3
             },
             "mutations": {
-                "mutation_counts": 10,
+                "mutation_counts": 6,
                 "mutation_nums": 1,
                 "mutate_in_circuit": "single_species_at_a_time"
             },
@@ -66,9 +66,9 @@
                 "durations":[50, 400]
             }, 
             "source_of_interaction_stats": {
-                "update_on_run": true,
+                "require_from_previous_script_in_ensemble": true,
                 "source_dir": "./data/ensemble_mutation_effect_analysis",
-                "postupdate_subdir": "gather_interaction_stats",
+                "previous_script_purpose": "gather_interaction_stats",
                 "source_dir_postupdate": null
             }
         }

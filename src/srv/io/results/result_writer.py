@@ -62,7 +62,7 @@ class ResultWriter(DataWriter):
 
     def write_analytics(self, result: Result, new_report=False):
         analytics = result.analytics
-        writeables = Timeseries(data=None).get_writeables()
+        writeables = Timeseries(data=None).get_analytics_types()
         self.write_report(writeables, analytics, new_report)
 
     def write_results(self, results: dict, new_report=False, no_visualisations=False, only_numerical=False):
@@ -84,6 +84,7 @@ class ResultWriter(DataWriter):
 
     def write_all(self, circuit: BaseSystem, new_report: bool, no_visualisations: bool = False,
                   only_numerical: bool = False):
+        logging.info(circuit.name)
         if not no_visualisations:
             self.visualise_graph(circuit)
         self.write_results(circuit.result_collector.results,
@@ -91,7 +92,7 @@ class ResultWriter(DataWriter):
                            only_numerical=only_numerical)
 
     def visualise(self, out_name, writer, vis_kwargs):
-        self.output(out_name=out_name, write_func=writer, vis_kwargs=vis_kwargs)
+        self.output(out_name=out_name, write_func=writer, **vis_kwargs)
 
     def visualise_graph(self, circuit: BaseSystem, mode="pyvis", new_vis=False):
         circuit.refresh_graph()

@@ -8,13 +8,14 @@ import pandas as pd
 from src.srv.io.loaders.data_loader import DataLoader
 from src.srv.io.results.writer import DataWriter
 from src.srv.parameter_prediction.interactions import InteractionMatrix
-from src.utils.misc.io import get_path_from_output_summary, get_pathnames, \
+from src.utils.misc.io import get_path_from_output_summary, get_pathnames, get_root_experiment_folder, \
     get_subdirectories, load_experiment_config, load_experiment_output_summary
 
 
-def generate_interaction_stats(path_name, writer: DataWriter = None, **stat_addons):
+def generate_interaction_stats(path_name, writer: DataWriter = None, experiment_dir: str = None, **stat_addons) -> pd.DataFrame:
 
-    interactions = InteractionMatrix(matrix_path=path_name)
+    interactions = InteractionMatrix(
+        matrix_path=path_name, experiment_dir=experiment_dir)
 
     stats = interactions.get_stats()
     add_stats = pd.DataFrame.from_dict({'interactions_path': [path_name]})
@@ -43,21 +44,21 @@ def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path
     filt_stats = filter_data(stats, filters)
 
     if filt_stats.empty:
-        logging.warning('No circuits were found matching the selected filters')
+        logging.warning(f'No circuits were found matching the selected filters {filters}')
+        logging.warning(stats)
         return []
 
-    base_folder = os.path.dirname(
-        os.path.dirname(filt_stats['interactions'].to_list()[0]))
-    experiment_summary = load_experiment_output_summary(base_folder)
+    experiment_folder = get_root_experiment_folder(filt_stats['interactions_path'].to_list()[0])
+    experiment_summary = load_experiment_output_summary(experiment_folder)
 
     extra_configs = []
     for index, row in filt_stats.iterrows():
         extra_config = {write_key: get_path_from_output_summary(
             row["name"], experiment_summary)}
         extra_config.update(
-            {'interactions': row["interactions"]}
+            {'interactions_path': row["interactions_path"]}
         )
-        extra_config.update(load_experiment_config(base_folder))
+        extra_config.update(load_experiment_config(experiment_folder))
         extra_configs.append(extra_config)
     return extra_configs
 
