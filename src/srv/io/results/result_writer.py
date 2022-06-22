@@ -84,6 +84,7 @@ class ResultWriter(DataWriter):
 
     def write_all(self, circuit: BaseSystem, new_report: bool, no_visualisations: bool = False,
                   only_numerical: bool = False):
+        logging.info(circuit.name)
         if not no_visualisations:
             self.visualise_graph(circuit)
         self.write_results(circuit.result_collector.results,

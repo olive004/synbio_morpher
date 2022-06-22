@@ -49,17 +49,15 @@ class Experiment():
 
     def iterate_protocols(self, protocols: List[Protocol], out: Any):
         for protocol in protocols:
-            if self.debug_inputs:
-                logging.info(f'Input to protocol {protocol.name}: {out}')
             if type(protocol) == Protocol:
+                if self.debug_inputs:
+                    logging.info(f'Input to protocol {protocol.name}: {out}')
                 out = self.call_protocol(protocol, out)
                 if self.debug_inputs:
                     logging.info(f'Output to protocol {protocol.name}: {out}')
             elif type(protocol) == list and type(out) == list:
                 for o in out:
                     self.iterate_protocols(protocols=protocol, out=o)
-            if self.debug_inputs:
-                logging.info(f'Output to protocol {protocol.name}: {out}')
 
     def call_protocol(self, protocol, out=None):
         if protocol.req_input and protocol.req_output:

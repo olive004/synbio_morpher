@@ -11,8 +11,8 @@
                     "threads": 0,
                     "n": 1,
                     "param_file": "./scripts/common/configs/simulators/intaRNA_parameterFile.sh",
-                    "query": "GUGGUUAACCCACAAAAACU",
-                    "target": "GUGGUUAACCCACAAAAACU"
+                    "query": "GGUAGGGUCCCUGGUGUUCA",
+                    "target": "GGUAGGGUCCCUGGUGUUCA"
                 }
             },
             "experiment": {
@@ -30,7 +30,7 @@
                 "proportion_to_mutate": 0.5
             },
             "system_type": "RNA",
-            "data_path": "data/ensemble_mutation_effect_analysis/2022_06_20_140711/generate_species_templates/circuits/toy_mRNA_circuit_2.fasta"
+            "data_path": "data/ensemble_mutation_effect_analysis/2022_06_20_234516/generate_species_templates/circuits/toy_mRNA_circuit_2.fasta"
         },
         "gather_interaction_stats": {
             "experiment": {
@@ -40,12 +40,12 @@
                 "require_from_previous_script_in_ensemble": true,
                 "source_dir": "./data/ensemble_mutation_effect_analysis",
                 "previous_script_purpose": "generate_species_templates",
-                "source_dir_postupdate": "./data/ensemble_mutation_effect_analysis/2022_06_20_140711/generate_species_templates"
+                "source_dir_postupdate": "./data/ensemble_mutation_effect_analysis/2022_06_20_234516/generate_species_templates"
             }
         },
         "mutation_effect_on_interactions_signal": {
             "system_type": "RNA",
-            "data_path": "data/ensemble_mutation_effect_analysis/2022_06_20_140711/generate_species_templates/circuits/toy_mRNA_circuit_2.fasta",
+            "data_path": "data/ensemble_mutation_effect_analysis/2022_06_20_234516/generate_species_templates/circuits/toy_mRNA_circuit_2.fasta",
             "experiment": {
                 "purpose": "generate_species_templates"
             },
@@ -59,8 +59,8 @@
                     "threads": 0,
                     "n": 1,
                     "param_file": "./scripts/common/configs/simulators/intaRNA_parameterFile.sh",
-                    "query": "GUGGUUAACCCACAAAAACU",
-                    "target": "GUGGUUAACCCACAAAAACU"
+                    "query": "GGUAGGGUCCCUGGUGUUCA",
+                    "target": "GGUAGGGUCCCUGGUGUUCA"
                 }
             },
             "identities": {
@@ -105,9 +105,9 @@
                 "require_from_previous_script_in_ensemble": true,
                 "source_dir": "./data/ensemble_mutation_effect_analysis",
                 "previous_script_purpose": "gather_interaction_stats",
-                "source_dir_postupdate": "./data/ensemble_mutation_effect_analysis/2022_06_20_140711/gather_interaction_stats"
+                "source_dir_postupdate": "./data/ensemble_mutation_effect_analysis/2022_06_20_234516/gather_interaction_stats"
             },
-            "interactions_path": "./data/ensemble_mutation_effect_analysis/2022_06_20_140711/generate_species_templates/interactions/toy_mRNA_circuit_2_interactions.csv",
+            "interactions_path": "./data/ensemble_mutation_effect_analysis/2022_06_20_234516/generate_species_templates/interactions/toy_mRNA_circuit_2_interactions.csv",
             "molecular_params": {
                 "creation_rates": 50,
                 "copynumbers": 5,
