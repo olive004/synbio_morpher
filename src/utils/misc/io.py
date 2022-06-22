@@ -5,7 +5,7 @@ import os
 from typing import List, Union
 
 from src.utils.misc.helper import vanilla_return
-from src.utils.misc.string_handling import remove_file_extension
+from src.utils.misc.string_handling import get_intersecting_string, remove_file_extension
 
 
 def isolate_filename(filepath: str):
@@ -41,7 +41,7 @@ def get_pathnames(search_dir: str, file_key: Union[List, str] = '', first_only: 
                 set(sorted([f for f in glob.glob(os.path.join(
                     search_dir, '*' + file_key + '*')) if path_condition(f)]))
             )
-        path_names = list(all_path_names[0].intersection(*all_path_names[1:]))
+        path_names = list(get_intersecting_string(all_path_names))
     elif not file_key:
         path_names = sorted([os.path.join(search_dir, f) for f in os.listdir(
             search_dir) if path_condition(os.path.join(search_dir, f))])

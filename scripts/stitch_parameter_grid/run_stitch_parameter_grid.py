@@ -27,7 +27,6 @@ def main(config=None, data_writer=None):
         'source_parameter_dir', config_file=config_file)
     experiment_config = load_experiment_config(source_dir)
     experiment_settings = experiment_config['experiment']
-    logging.info(experiment_config)
     num_subprocesses = 1
     if experiment_settings['parallelise']:
         num_subprocesses = experiment_settings['num_subprocesses']
@@ -35,16 +34,15 @@ def main(config=None, data_writer=None):
     # If there was multithreading, load each parameter_grid one by one from subfolders
     all_parameter_grids = {}
     subprocess_dirs = get_subprocesses_dirnames(source_dir)
-    for subprocess_dir in subprocess_dirs:
+    for subprocess_dir in sorted(subprocess_dirs):
+        logging.info(os.path.basename(subprocess_dir))
         parameter_grids = get_pathnames(subprocess_dir, 'npy')
         for parameter_grid in parameter_grids:
             analytic_name = isolate_filename(parameter_grid)
-            if not all_parameter_grids.get(analytic_name):
+            if analytic_name not in all_parameter_grids.keys():
                 all_parameter_grids[analytic_name] = []
-            all_parameter_grids[analytic_name] = all_parameter_grids[analytic_name].append(
+            all_parameter_grids[analytic_name].append(
                 DataLoader().load_data(parameter_grid))
-
-    logging.info(all_parameter_grids)
 
     # stitch them together
     # Find the starting and ending indices
