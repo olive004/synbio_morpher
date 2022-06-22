@@ -6,13 +6,5 @@
 *.cpython-38.pyc
 __pycache__
 *.txt
-*data/RNA_circuit_simulation/
-*data/analyse_mutated_templates/
-*data/ensemble_mutation_effect_analysis/
-*data/explore_species_templates/
-*data/generate_species_templates/
-*data/intarna_sandbox/
-*data/mutation_effect_on_interactions/
-*data/parameter_based_simulation/2022_06_13_161436/
-*data/parameter_based_simulation/
-*data/
+data/*
+!data/example_data
