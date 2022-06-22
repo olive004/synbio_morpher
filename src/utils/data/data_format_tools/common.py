@@ -4,6 +4,8 @@ import os
 import numpy as np
 import pandas as pd
 
+from src.utils.misc.type_handling import inverse_dict
+
 
 FORMAT_EXTS = {
     "fasta": "fasta",
@@ -14,8 +16,8 @@ FORMAT_EXTS = {
 
 
 def verify_file_type(filepath: str, file_type: str):
-    NotImplemented
-    pass
+    assert file_type in filepath or inverse_dict(FORMAT_EXTS).get(file_type) in filepath, \
+        f'File {filepath} is not of type {file_type}'
 
 
 def determine_file_format(filepath: str) -> str:
@@ -27,7 +29,8 @@ def determine_file_format(filepath: str) -> str:
             raise KeyError(f'Could not determine the file format of file {filepath}: "{ext}" '
                            f'not in acceptable extensions {FORMAT_EXTS.keys()}')
         else:
-            raise ValueError(f'Attempted to determine file format of an object that is not a file: {filepath}')
+            raise ValueError(
+                f'Attempted to determine file format of an object that is not a file: {filepath}')
 
 
 def load_json_as_dict(json_pathname: str, process=True) -> dict:

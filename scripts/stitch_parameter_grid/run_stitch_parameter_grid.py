@@ -8,6 +8,7 @@ import numpy as np
 from src.srv.io.loaders.data_loader import DataLoader
 from src.srv.io.results.result_writer import ResultWriter
 from src.utils.data.data_format_tools.common import load_json_as_dict
+from src.utils.misc.io import get_pathnames
 from src.utils.misc.scripts_io import get_search_dir, get_subprocesses_dirnames, load_experiment_config
 
 
@@ -32,12 +33,16 @@ def main(config=None, data_writer=None):
         num_subprocesses = experiment_settings['num_subprocesses']
     
     # If there was multithreading, load each parameter_grid one by one from subfolders
-    parameter_grids = []
-    for subprocess in range(num_subprocesses):
-        subproccess_dir = get_subprocesses_dirnames(source_dir)
-        parameter_grids.append(DataLoader().load_data(source_dir))
+    all_parameter_grids = {}
+    subproccess_dirs = get_subprocesses_dirnames(source_dir)
+    for subprocess_dir in subproccess_dirs:
+        parameter_grids = get_pathnames(subproccess_dirs, 'npy') 
+        for analytic_name in parameter_grids:
 
-    logging.info(parameter_grids)
+            all_parameter_grids[analytic_name] = all_parameter_grids[analytic_name] + \
+                [].append(DataLoader().load_data(subprocess_dir))
+
+    logging.info(all_parameter_grids)
 
     # stitch them together 
         # Find the starting and ending indices
