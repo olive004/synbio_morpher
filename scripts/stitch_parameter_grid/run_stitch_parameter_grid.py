@@ -60,11 +60,10 @@ def main(config=None, data_writer=None):
         num_species = np.shape(a_parameter_grid)[0]
         num_unique_interactions = triangular_sequence(num_species)
         size_interaction_array = np.shape(a_parameter_grid)[-1]
-        
+
         def make_indices(iteration):
-            tuple([int(np.mod(iteration / np.power(size_interaction_array, unique_interaction),
+            return tuple([slice(0, num_species)] + [int(np.mod(iteration / np.power(size_interaction_array, unique_interaction),
                               size_interaction_array)) for unique_interaction in range(num_unique_interactions)])
-        
 
         logging.info(matrix_size)
         logging.info(np.shape(a_parameter_grid))
@@ -80,15 +79,28 @@ def main(config=None, data_writer=None):
             np.shape(a_parameter_grid)) for k in all_parameter_grids.keys()}
         logging.info(
             f'Number of zeros before stitching: {np.sum(stitched_parameter_grids[list(stitched_parameter_grids.keys())[0]] == 0)}')
+        all_iterators = [None] * total_iterations_correct
+        for ite in range(total_iterations_correct):
+            all_iterators[ite] = make_indices(ite)
         for analytic_name in stitched_parameter_grids.keys():
             logging.info('\n\n')
             logging.info(analytic_name)
 
+            for i in range(num_subprocesses):
+                for ite in range(total_iterations_correct):
+                    idxs = all_iterators[ite]
+                    stitched_parameter_grids[analytic_name][idxs] = all_parameter_grids[analytic_name][i][idxs]
+
+                logging.info(
+                    f'Number of zeros in subprocess matrix: {np.sum(all_parameter_grids[analytic_name][i] == 0)}')
+                logging.info(
+                    f'Number of zeros in stitched matrix: {np.sum(stitched_parameter_grids[analytic_name] == 0)}')
+                logging.info(
+                    f'Difference in zeros: {np.absolute(np.sum(all_parameter_grids[analytic_name][i] == 0) - np.sum(stitched_parameter_grids[analytic_name] == 0))}')
+
+            break
             checking_for_unique_idxs = [None] * \
                 num_iterations * num_subprocesses
-            all_iterators = [None] * total_iterations_correct
-            for ite in range(total_iterations_correct):
-                all_iterators[ite] = make_indices(ite)
             for i in range(num_subprocesses):
                 start_idx = num_iterations*i
                 end_idx = num_iterations*(i+1)-1
