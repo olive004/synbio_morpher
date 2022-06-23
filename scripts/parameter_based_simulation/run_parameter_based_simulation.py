@@ -25,7 +25,8 @@ def main(config=None, data_writer=None):
             'experiment').get('purpose', 'parameter_based_simulation'))
 
     if config_file.get('experiment').get('parallelise'):
-        num_subprocesses = config_file.get('experiment').get('num_subprocesses', 1)
+        num_subprocesses = config_file.get(
+            'experiment').get('num_subprocesses', 1)
     else:
         num_subprocesses = 1
 
@@ -45,9 +46,9 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
         interaction_min = config_file['parameter_based_simulation']['interaction_min']
         interaction_max = config_file['parameter_based_simulation']['interaction_max']
         interaction_step_size = config_file['parameter_based_simulation']['interaction_step_size']
-        interaction_array = np.arange(
+        interaction_strengths = np.arange(
             interaction_min, interaction_max, interaction_step_size)
-        size_interaction_array = np.size(interaction_array)
+        size_interaction_array = np.size(interaction_strengths)
 
         # Load data names
         from src.utils.data.data_format_tools.manipulate_fasta import load_seq_from_FASTA
@@ -71,7 +72,7 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
                 matrix_dimensions, dtype=np.float32))
 
         # Set loop vars
-        total_iterations = matrix_size
+        total_iterations = np.power(size_interaction_array, num_unique_interactions)
         num_iterations = int(total_iterations / total_processes)
         starting_iteration = int(num_iterations * sub_process)
         end_iteration = int(num_iterations * (sub_process + 1))
@@ -91,9 +92,10 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
 
         # @time_it
         def loop_iter(i):
-            iterators = [int(np.mod(i / np.power(size_interaction_array, j),
-                                    size_interaction_array)) for j in range(num_unique_interactions)]
-            flat_triangle = interaction_array[list(iterators)]
+            interaction_strength_choices = [int(np.mod(i / np.power(size_interaction_array, unique_interaction),
+                                                       size_interaction_array)) for unique_interaction in range(num_unique_interactions)]
+            flat_triangle = interaction_strengths[list(
+                interaction_strength_choices)]
             interaction_matrix = make_symmetrical_matrix_from_sequence(
                 flat_triangle, num_species)
             cfg = {"interactions": {
@@ -107,7 +109,8 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
             circuit = modeller.simulate_signal(
                 circuit, use_solver=config_file.get('signal').get('use_solver', 'naive'))
 
-            idxs = [slice(0, num_species)] + [[ite] for ite in iterators]
+            idxs = [slice(0, num_species)] + [[strength_idx]
+                                              for strength_idx in interaction_strength_choices]
             for j, analytic in enumerate(analytic_types):
                 all_analytic_matrices[j][tuple(
                     idxs)] = circuit.result_collector.results['signal'].analytics.get(analytic)
@@ -123,7 +126,7 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
                                    write_to_top_dir=True)
 
         # Main loop
-        for i in range(starting_iteration, end_iteration):  # 8100 per min
+        for i in range(starting_iteration, end_iteration):
             if np.mod(i, 1000) == 0 or i == starting_iteration:
                 # data_writer.unsubdivide()
                 # data_writer.subdivide_writing(
