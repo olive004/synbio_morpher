@@ -84,8 +84,8 @@ def main(config=None, data_writer=None):
                 start_idx = num_iterations*i
                 end_idx = num_iterations*(i+1)-1
                 # Fixing my original error in dimensionality specification in the original parameter_based_simulation script
-                end_idx = np.min(num_iterations*(i+1)-1,
-                                 int(total_iterations / num_species))
+                end_idx = np.min([num_iterations*(i+1)-1,
+                                 int(total_iterations / num_species)])
 
                 start_indices = [int(np.mod(start_idx / np.power(size_interaction_array, unique_interaction),
                                             size_interaction_array)) for unique_interaction in range(num_unique_interactions)]
@@ -109,7 +109,7 @@ def main(config=None, data_writer=None):
                 logging.info(
                     f'Number of zeros in subprocess matrix: {np.sum(all_parameter_grids[analytic_name][i] == 0)}')
                 logging.info(
-                    f'Number of zeros in stiched matrix: {np.sum(stitched_parameter_grids[analytic_name] == 0)}')
+                    f'Number of zeros in stitched matrix: {np.sum(stitched_parameter_grids[analytic_name] == 0)}')
                 logging.info(
                     f'Difference in zeros: {np.absolute(np.sum(all_parameter_grids[analytic_name][i] == 0) - np.sum(stitched_parameter_grids[analytic_name] == 0))}')
 
