@@ -59,15 +59,18 @@ def main(config=None, data_writer=None):
         matrix_size = np.size(a_parameter_grid)
         num_species = np.shape(a_parameter_grid)[0]
         num_unique_interactions = triangular_sequence(num_species)
-        # interaction_strengths = np.arange(np.shape(a_parameter_grid)[-1])
-        # size_interaction_array = np.size(interaction_strengths)
         size_interaction_array = np.shape(a_parameter_grid)[-1]
+        
+        def make_indices(iteration):
+            tuple([int(np.mod(iteration / np.power(size_interaction_array, unique_interaction),
+                              size_interaction_array)) for unique_interaction in range(num_unique_interactions)])
+        
 
         logging.info(matrix_size)
         logging.info(np.shape(a_parameter_grid))
         # logging.info(a_parameter_grid[1])
 
-        total_iterations = np.power(
+        total_iterations_correct = np.power(
             size_interaction_array, num_unique_interactions)
         total_iterations = matrix_size
         num_iterations = int(total_iterations / num_subprocesses)
@@ -80,6 +83,12 @@ def main(config=None, data_writer=None):
         for analytic_name in stitched_parameter_grids.keys():
             logging.info('\n\n')
             logging.info(analytic_name)
+
+            checking_for_unique_idxs = [None] * \
+                num_iterations * num_subprocesses
+            all_iterators = [None] * total_iterations_correct
+            for ite in range(total_iterations_correct):
+                all_iterators[ite] = make_indices(ite)
             for i in range(num_subprocesses):
                 start_idx = num_iterations*i
                 end_idx = num_iterations*(i+1)-1
@@ -87,12 +96,13 @@ def main(config=None, data_writer=None):
                 end_idx = np.min([num_iterations*(i+1)-1,
                                  int(total_iterations / num_species)])
 
-                start_indices = [int(np.mod(start_idx / np.power(size_interaction_array, unique_interaction),
-                                            size_interaction_array)) for unique_interaction in range(num_unique_interactions)]
-                end_indices = [int(np.mod(end_idx / np.power(size_interaction_array, unique_interaction),
-                                          size_interaction_array)) + 1 for unique_interaction in range(num_unique_interactions)]
+                start_indices = make_indices(start_idx)
+                end_indices = make_indices(end_idx) + 1
                 idxs = [slice(0, num_species)] + [slice(s, e)
                                                   for s, e in zip(start_indices, end_indices)]
+                for iteration in range(start_idx, end_idx):
+                    checking_for_unique_idxs[iteration] = tuple([int(np.mod(iteration / np.power(size_interaction_array, unique_interaction),
+                                                                 size_interaction_array)) for unique_interaction in range(num_unique_interactions)])
                 logging.info(start_idx)
                 logging.info(end_idx)
                 logging.info(start_indices)
@@ -116,6 +126,9 @@ def main(config=None, data_writer=None):
                 # Fixing og error
                 if end_idx == total_iterations / num_species:
                     break
+
+            logging.info(len(set(checking_for_unique_idxs)))
+            logging.info(len(checking_for_unique_idxs))
             break
         return stitched_parameter_grids
 
