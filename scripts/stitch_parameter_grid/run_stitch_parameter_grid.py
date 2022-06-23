@@ -86,19 +86,21 @@ def main(config=None, data_writer=None):
             logging.info('\n\n')
             logging.info(analytic_name)
 
-            for i in range(num_subprocesses):
-                for ite in range(total_iterations_correct):
-                    idxs = all_iterators[ite]
-                    stitched_parameter_grids[analytic_name][idxs] = all_parameter_grids[analytic_name][i][idxs]
+            for ite in range(total_iterations_correct):
+                i = int(ite/num_iterations)
+                current_grid = all_parameter_grids[analytic_name][i]
+                idxs = all_iterators[ite]
+                stitched_parameter_grids[analytic_name][idxs] = current_grid[idxs]
 
-                logging.info(
-                    f'Number of zeros in subprocess matrix: {np.sum(all_parameter_grids[analytic_name][i] == 0)}')
-                logging.info(
-                    f'Number of zeros in stitched matrix: {np.sum(stitched_parameter_grids[analytic_name] == 0)}')
-                logging.info(
-                    f'Difference in zeros: {np.absolute(np.sum(all_parameter_grids[analytic_name][i] == 0) - np.sum(stitched_parameter_grids[analytic_name] == 0))}')
+            logging.info(
+                f'Number of zeros in subprocess matrix: {np.sum(all_parameter_grids[analytic_name][i] == 0)}')
+            logging.info(
+                f'Number of zeros in stitched matrix: {np.sum(stitched_parameter_grids[analytic_name] == 0)}')
+            logging.info(
+                f'Difference in zeros: {np.absolute(np.sum(all_parameter_grids[analytic_name][i] == 0) - np.sum(stitched_parameter_grids[analytic_name] == 0))}')
 
-            break
+            continue
+            # My attempt to make this iteration faster via slicing - kept running into dimensionality discrepancies
             checking_for_unique_idxs = [None] * \
                 num_iterations * num_subprocesses
             for i in range(num_subprocesses):
@@ -109,7 +111,7 @@ def main(config=None, data_writer=None):
                                  int(total_iterations / num_species)])
 
                 start_indices = make_indices(start_idx)
-                end_indices = make_indices(end_idx) + 1
+                end_indices = tuple(list(make_indices(end_idx)) + 1)
                 idxs = [slice(0, num_species)] + [slice(s, e)
                                                   for s, e in zip(start_indices, end_indices)]
                 for iteration in range(start_idx, end_idx):
@@ -146,37 +148,12 @@ def main(config=None, data_writer=None):
 
     stitched_parameter_grids = stitch_grids()
 
-    # for analytic_name in stitched_parameter_grids.keys():
-    #     logging.info(analytic_name)
-    #     logging.info(np.sum(stitched_parameter_grids[analytic_name] == 0))
-
-    # interaction_strength_choices = []
-    # counts = np.array([0] * num_unique_interactions)
-    # prev_counts = np.array([0] * num_unique_interactions)
-    # for i in range(0*num_iterations, num_subprocesses * num_iterations):
-    #     interaction_strength_choice = [int(np.mod(i / np.power(size_interaction_array, unique_interaction),
-    #                                               size_interaction_array)) for unique_interaction in range(num_unique_interactions)]
-    #     interaction_strength_choices.append(tuple(interaction_strength_choice))
-    #     # logging.info(list(interaction_strength_choice))
-    #     current_counts = (np.array(interaction_strength_choice) == size_interaction_array-1).astype(int)
-    #     flagged_counts = current_counts * (prev_counts == 0).astype(int)
-    #     prev_counts = deepcopy(current_counts)
-    #     counts += flagged_counts
-    #     # if i == num_iterations -1:
-    #     #     remainders = [int(np.mod(strength, size_interaction_array-1)) for strength in list(interaction_strength_choice)]
-    #     #     counts += remainders
-    # logging.info(len(interaction_strength_choices))
-    # logging.info(len(set(interaction_strength_choices)))
-    # logging.info(counts)
-
-    #     interaction_strength_choices = [int(np.mod(i / np.power(size_interaction_array, unique_interaction),
-    #                                                size_interaction_array)) for unique_interaction in range(num_unique_interactions)]
-    #     idxs = [slice(0, num_species)] + [[strength_idx]
-    #                                       for strength_idx in interaction_strength_choices]
-
-    #     logging.info(a_parameter_grid[0:3, 0, 0, 0, 0, 0, 0])
-    # logging.info(np.all(a_parameter_grid[0:3][:num_iterations]))
-
+    # Write full matrices
+    def write_all(out_type='npy'):
+        for analytic_name, grid in stitched_parameter_grids.items():
+            data_writer.output(out_type, out_name=analytic_name,
+                                data=grid.astype(np.float32), overwrite=True,
+                                write_to_top_dir=True)
+    write_all()
     # If there was multithreading, indices will be different
 
-    # Write full matrices
