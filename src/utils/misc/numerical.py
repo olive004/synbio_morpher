@@ -30,6 +30,21 @@ def binary_arpeggiator(sequence: str, count: int):
         seq[arpeggiation] = 1
 
 
+def matrix_triangle_idxs(flat_triangle_idx):
+    """ Computes the indices of a triangle, or the lower half
+    of a symmetrical square matrix. Assuming that 1D index 
+    traverses columns then rows.
+    For example, a 1D flat input of 5 would index into the 
+    3rd row and 2nd column, returning the 0-based indices (2, 1) """
+
+    # Reverse of the triangle_sequence formula
+    n = (-1 + np.sqrt(1 - 4 * 1 * (-2*flat_triangle_idx))) / 2
+    row = np.ceil(n)
+    col = flat_triangle_idx - triangular_sequence(np.floor(n))
+    
+    return (row, col)
+
+
 def generate_mixed_binary(length: int, count: int, zeros_to_ones: bool = True):
     # TODO: This could be much better. Generate
     # sequences in a way that
@@ -94,3 +109,6 @@ def transpose_arraylike(arraylike):
 
 def triangular_sequence(n: int) -> int:
     return int((n*(n+1))/2)
+
+
+pass

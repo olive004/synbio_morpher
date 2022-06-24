@@ -5,6 +5,7 @@ from src.srv.io.loaders.data_loader import DataLoader, GeneCircuitLoader
 from src.srv.io.results.result_writer import ResultWriter
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.misc.io import get_pathnames, isolate_filename
+from src.utils.misc.numerical import triangular_sequence
 from src.utils.misc.scripts_io import get_search_dir
 
 
@@ -42,9 +43,14 @@ def main(config=None, data_writer=None):
         # --> might need lookup table
         config_file['species_interactions_to_vary'] = ['RNA1', 'RNA2']
         def get_species_interaction_idx():
+            species_interactions_index_map = {}
             circuit_filepath = config_file('filepath')
             data = GeneCircuitLoader().load_data(circuit_filepath)
-            return data.names
+            flat_triangle_size = triangular_sequence(data.size)
+            for combination in range(flat_triangle_size):
+                species_interactions_index_map[combination] = (
+                    data.sample_names[], data.sample_names[]
+                )
         species_interaction_flat_triangle_lookup = {
 
         }
