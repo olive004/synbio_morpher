@@ -54,7 +54,7 @@ def remove_special_py_functions(string_list: list) -> list:
 
 def sort_by_ordinal_number(string_list: list) -> list:
     base_string = get_intersecting_string(string_list)
-    int_equivalents = list(map(partial(string_to_num, base_string=base_string), string_list))
+    int_equivalents = string_to_num_fromlist(string_list, base_string)
     sorted_strings = deepcopy(string_list)
     for i, int_equiv in enumerate(int_equivalents):
         sorted_strings[int_equiv-1] = string_list[i]
@@ -73,3 +73,7 @@ def string_to_num(string_in, base_string):
         else:
             probable_num = None
         return probable_num
+
+
+def string_to_num_fromlist(string_list, base_string):
+    return list(map(partial(string_to_num, base_string=base_string), string_list))
