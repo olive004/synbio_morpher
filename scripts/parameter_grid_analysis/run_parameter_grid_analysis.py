@@ -1,11 +1,14 @@
 
 
+from functools import reduce
 import os
+
+import numpy as np
 from src.srv.io.loaders.data_loader import DataLoader, GeneCircuitLoader
 from src.srv.io.results.result_writer import ResultWriter
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.misc.io import get_pathnames, isolate_filename
-from src.utils.misc.numerical import triangular_sequence
+from src.utils.misc.numerical import expand_matrix_triangle_idx, triangular_sequence
 from src.utils.misc.scripts_io import get_search_dir
 
 
@@ -30,7 +33,9 @@ def main(config=None, data_writer=None):
             all_parameter_grids[isolate_filename(
                 parameter_grid)] = DataLoader().load_data(parameter_grid)
         return all_parameter_grids
-    parameter_grids = load_parameter_grids()
+    all_parameter_grids = load_parameter_grids()
+    num_species = np.shape(
+        all_parameter_grids[list(all_parameter_grids.keys())[0]])
 
     # For each parameter grid
 
@@ -41,20 +46,38 @@ def main(config=None, data_writer=None):
         # --> return dimension indices
         # --> get choice from config
         # --> might need lookup table
-        config_file['species_interactions_to_vary'] = ['RNA1', 'RNA2']
-        def get_species_interaction_idx():
+        # Example
+        config_file['species_interactions_to_vary'] = [
+            ['RNA1', 'RNA2'],
+            ['RNA2', 'RNA2']
+        ]
+        species_interactions_to_vary_idxs = [
+            [0, 1],
+            [1, 1]
+        ]
+        # /Example
+
+        def translate_interaction():
             species_interactions_index_map = {}
-            circuit_filepath = config_file('filepath')
-            data = GeneCircuitLoader().load_data(circuit_filepath)
-            flat_triangle_size = triangular_sequence(data.size)
+            flat_triangle_size = triangular_sequence(num_species)
             for combination in range(flat_triangle_size):
-                species_interactions_index_map[combination] = (
-                    data.sample_names[], data.sample_names[]
-                )
+                species_interactions_index_map[combination] = expand_matrix_triangle_idx(
+                    combination)
+            return species_interactions_index_map
         species_interaction_flat_triangle_lookup = {
 
         }
-        species_interactions_to_vary = config_file.get('species_interactions_to_vary')
+
+        def translate_species_idx_to_name(idx):
+            circuit_filepath = config_file('filepath')
+            data = GeneCircuitLoader().load_data(circuit_filepath)
+            return data.sample_names[translate_species_to_idx(idx)]
+
+        def translate_species_to_idx(species: str, species_list: list):
+            return species_list.index(species)
+
+        species_interactions_to_vary_idxs = reduce(lambda x: translate_species_to_idx(x),
+                                                   config_file.get('species_interactions_to_vary'))
 
         # Keep the rest constant - choose constant value for these
         # --> determine the index corresponding to this value
@@ -68,4 +91,3 @@ def main(config=None, data_writer=None):
         start_parameter = parameter_to_index()
         end_parameter = parameter_to_index()
         slice_window = slice(start_parameter, end_parameter)
-

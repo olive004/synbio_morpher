@@ -30,7 +30,7 @@ def binary_arpeggiator(sequence: str, count: int):
         seq[arpeggiation] = 1
 
 
-def matrix_triangle_idxs(flat_triangle_idx):
+def expand_matrix_triangle_idx(flat_triangle_idx):
     """ Computes the indices of a triangle, or the lower half
     of a symmetrical square matrix. Assuming that 1D index 
     traverses columns then rows.
@@ -39,8 +39,8 @@ def matrix_triangle_idxs(flat_triangle_idx):
 
     # Reverse of the triangle_sequence formula
     n = (-1 + np.sqrt(1 - 4 * 1 * (-2*flat_triangle_idx))) / 2
-    row = np.ceil(n)
-    col = flat_triangle_idx - triangular_sequence(np.floor(n))
+    row = np.ceil(n) - 1
+    col = flat_triangle_idx - triangular_sequence(np.floor(n)) - 1
     
     return (row, col)
 
