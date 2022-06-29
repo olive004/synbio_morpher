@@ -38,6 +38,9 @@ def main(config=None, data_writer=None):
         all_parameter_grids[list(all_parameter_grids.keys())[0]])
 
     # For each parameter grid
+    slicing_configs = config_file['slicing']
+    selected_species = slicing_configs['interactions']['interacting_species']
+    selected_analytics = slicing_configs['analytics']['names']
 
     # Slice in 2D or 3D
     def make_slice():
@@ -47,7 +50,7 @@ def main(config=None, data_writer=None):
         # --> get choice from config
         # --> might need lookup table
         # Example
-        config_file['species_interactions_to_vary'] = [
+        config_file['slicing']['interactions']['species_names'] = [
             ['RNA1', 'RNA2'],
             ['RNA2', 'RNA2']
         ]
@@ -64,9 +67,6 @@ def main(config=None, data_writer=None):
                 species_interactions_index_map[combination] = expand_matrix_triangle_idx(
                     combination)
             return species_interactions_index_map
-        species_interaction_flat_triangle_lookup = {
-
-        }
 
         def translate_species_idx_to_name(idx):
             circuit_filepath = config_file('filepath')
@@ -76,18 +76,44 @@ def main(config=None, data_writer=None):
         def translate_species_to_idx(species: str, species_list: list):
             return species_list.index(species)
 
-        species_interactions_to_vary_idxs = reduce(lambda x: translate_species_to_idx(x),
-                                                   config_file.get('species_interactions_to_vary'))
+        def reduce_interacting_species_idx(pair_species_idxs: list):
+            pair_species_idxs = sorted(pair_species_idxs)
+            return pair_species_idxs[0] * num_species + pair_species_idxs[1]
 
         # Keep the rest constant - choose constant value for these
         # --> determine the index corresponding to this value
+
         def parameter_to_index(parameter):
             pass
 
         # Might want a slice window for the ones that are varying
         # --> make config accept "all" or named basis of starting and ending parameters
+        def make_species_slice(selected_species, num_species):
+            if type(selected_species) == list:
+                selected_species_idxs = reduce(lambda x: translate_species_to_idx(x),
+                                               selected_species)
+            elif selected_species == 'all':
+                return slice(0, num_species)
+            else:
+                raise ValueError(
+                    'Please input the species you want to include in the visualisations')
+
+        def make_interactions_slice(interacting_species_idxs, parameter_config):
+            min_idx = parameter_config['range_min'] 
+            
+
+
+            return
+
+        for species_group, interacting_species_names in selected_species.items():
+            selected_species[species_group] = reduce_interacting_species_idx(
+                reduce(lambda x: translate_species_to_idx(x), interacting_species_names))
+
+        species_slice = make_species_slice(selected_species, num_species)
+        parameters_slice = make_interactions_slice(interacting_species_idxs, slicing_configs['interactions']['strengths'])
+        grid_slice = slice(species_slice, analytics_slices)
         if config_file.get('slice_choice') == 'all':
-            slice = 
+            slice = slice(species_slice, analytics_slices)
         start_parameter = parameter_to_index()
         end_parameter = parameter_to_index()
         slice_window = slice(start_parameter, end_parameter)

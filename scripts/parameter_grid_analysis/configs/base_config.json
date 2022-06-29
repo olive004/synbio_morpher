@@ -10,18 +10,20 @@
     },
     "slicing": {
         "interactions": {
-            "species_names": [
-                ["RNA0", "RNA1"],
-                ["RNA1", "RNA2"]
-            ],
+            "help": "Can select a maximum of 3 interacting species to visualise against one another (3D). Labels for species interacting are arbitrary and must just match the keys in the 'strengths' field. \nThe strengths are in the form [start, stop, stepsize], where null is default",
+            "interacting_species": {
+                "0": ["RNA0", "RNA1"],
+                "1": ["RNA1", "RNA2"],
+                "2": ["RNA0", "RNA2"]
+            },
             "strengths": {
-                "range_min": 0,
-                "range_max": 0.5,
-                "step": 1
+                "0": [0, 0.5, null],
+                "1": [0.1, 0.6, null],
+                "2": [null, null, null]
             }
         },
         "analytics": {
-            "error": "Can select a maximum of 2 analytics to visualise against one another (2D).",
+            "error": "",
             "names": [
                 "steady_state",
                 "precision"
