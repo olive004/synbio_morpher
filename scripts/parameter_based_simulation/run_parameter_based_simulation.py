@@ -11,6 +11,7 @@ from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.misc.decorators import time_it
 from src.utils.misc.numerical import make_symmetrical_matrix_from_sequence, triangular_sequence
+from src.utils.parameter_inference.interpolation_grid import create_parameter_range
 from src.utils.system_definition.agnostic_system.system_manager import CircuitModeller
 
 
@@ -46,8 +47,7 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
         interaction_min = config_file['parameter_based_simulation']['interaction_min']
         interaction_max = config_file['parameter_based_simulation']['interaction_max']
         interaction_step_size = config_file['parameter_based_simulation']['interaction_step_size']
-        interaction_strengths = np.arange(
-            interaction_min, interaction_max, interaction_step_size)
+        interaction_strengths = create_parameter_range(config_file['parameter_based_simulation'])
         size_interaction_array = np.size(interaction_strengths)
 
         # Load data names

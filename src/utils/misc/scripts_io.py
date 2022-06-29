@@ -5,6 +5,7 @@ from ctypes import Union
 import glob
 import logging
 import os
+from typing import Tuple
 import pandas as pd
 
 from src.srv.io.loaders.misc import load_csv
@@ -18,7 +19,7 @@ def get_purposes(script_dir=None):
 
 
 # retrieve_search_dir
-def get_search_dir(config_search_key: str, config_file: dict) -> tuple:
+def get_search_dir(config_search_key: str, config_file: dict, modify_config_for_posterity=True) -> Tuple[dict, str]:
     search_config = config_file.get(config_search_key, {})
     if not search_config:
         raise KeyError(
@@ -31,7 +32,8 @@ def get_search_dir(config_search_key: str, config_file: dict) -> tuple:
                                       "source_dir")), search_config.get("purpose_of_ensembled_source_dir"))
         assert os.path.isdir(
             search_dir), f'Could not find directory {search_dir}'
-        config_file[config_search_key]['source_dir_actually_used_if_incomplete'] = search_dir
+        if modify_config_for_posterity:
+            config_file[config_search_key]['source_dir_actually_used_if_incomplete'] = search_dir
         return config_file, search_dir
     else:
         search_dir = search_config.get('source_dir')

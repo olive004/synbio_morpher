@@ -1,0 +1,21 @@
+
+
+import numpy as np
+
+
+def parameter_range_creation(range_min, range_max, range_step, is_logscale=False) -> np.ndarray:
+    if not is_logscale:
+        return np.arange(range_min, range_max, range_step)
+    else:
+        num_parameters = 
+
+
+def create_parameter_range(range_configs: dict) -> np.ndarray:
+
+    min_key = [k for k in range_configs.keys() if 'min' in k][0]
+    max_key = [k for k in range_configs.keys() if 'max' in k][0]
+    step_key = [k for k in range_configs.keys() if 'step' in k][0]
+    is_logscale = range_configs['log_scale']
+    parameter_range_creation(*[
+        range_configs[min_key], range_configs[max_key], range_configs[step_key]
+    ], is_logscale=is_logscale)

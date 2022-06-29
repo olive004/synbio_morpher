@@ -9,7 +9,7 @@ from src.srv.io.results.result_writer import ResultWriter
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.misc.io import get_pathnames, isolate_filename
 from src.utils.misc.numerical import expand_matrix_triangle_idx, triangular_sequence
-from src.utils.misc.scripts_io import get_search_dir
+from src.utils.misc.scripts_io import get_search_dir, load_experiment_config
 
 
 def main(config=None, data_writer=None):
@@ -98,19 +98,35 @@ def main(config=None, data_writer=None):
                 raise ValueError(
                     'Please input the species you want to include in the visualisations')
 
-        def make_interactions_slice(interacting_species_idxs, parameter_config):
-            min_idx = parameter_config['range_min'] 
-            
+        def make_parameter_slice(interacting_species_idxs, parameter_config):
 
+            def convert_parameter_values_to_idxs(start_value, end_value, stepsize):
+                original_config = load_experiment_config(source_dir)
+                if original_config['experiment']['purpose'] == 'stitch_parameter_grid':
+                    original_config, original_source_dir = get_search_dir(original_config)
+                    original_config = load_experiment_config(original_source_dir)
+                if original_config['experiment']['purpose'] == 'parameter_based_simulation':
+                    original_parameter_range = [
+                        original_config['parameter_based_simulation']['interaction_min'],
+                        original_config['parameter_based_simulation']['interaction_max'],
+                        original_config['parameter_based_simulation']['interaction_step_size']
+                    ]
+                    original_parameter_range = create_parameter_range(original_config['parameter_based_simulation'])
+
+            for group, idx in interacting_species_idxs.items():
+                convert_parameter_values_to_idxs = parameter_config[group]
 
             return
 
+        # Converted the names of the interacting species to the index of that interacting pair in the interpolation grid
+        selected_species_idxs = {}
         for species_group, interacting_species_names in selected_species.items():
-            selected_species[species_group] = reduce_interacting_species_idx(
+            selected_species_idxs[species_group] = reduce_interacting_species_idx(
                 reduce(lambda x: translate_species_to_idx(x), interacting_species_names))
 
+
         species_slice = make_species_slice(selected_species, num_species)
-        parameters_slice = make_interactions_slice(interacting_species_idxs, slicing_configs['interactions']['strengths'])
+        parameters_slice = make_parameter_slice(selected_species_idxs, slicing_configs['interactions']['strengths'])
         grid_slice = slice(species_slice, analytics_slices)
         if config_file.get('slice_choice') == 'all':
             slice = slice(species_slice, analytics_slices)
