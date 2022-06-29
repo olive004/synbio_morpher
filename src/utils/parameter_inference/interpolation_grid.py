@@ -7,7 +7,9 @@ def parameter_range_creation(range_min, range_max, range_step, is_logscale=False
     if not is_logscale:
         return np.arange(range_min, range_max, range_step)
     else:
-        num_parameters = 
+        num_parameters = int(np.ceil((range_max - range_min) / range_step))
+        log_scale = np.logspace(range_min, range_max, num=num_parameters)
+        return np.interp(log_scale, (log_scale.min(), log_scale.max()), (range_min, range_max))
 
 
 def create_parameter_range(range_configs: dict) -> np.ndarray:
