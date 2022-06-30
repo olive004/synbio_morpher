@@ -4,8 +4,8 @@ import os
 from fire import Fire
 from scripts.common.circuit import construct_circuit_from_cfg
 
-from src.srv.io.results.experiments import Experiment, Protocol
-from src.srv.io.results.result_writer import ResultWriter
+from src.src.utils.results.experiments import Experiment, Protocol
+from src.src.utils.results.result_writer import ResultWriter
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.data.fake_data_generation.seq_generator import RNAGenerator
 from src.utils.evolution.mutation import Evolver

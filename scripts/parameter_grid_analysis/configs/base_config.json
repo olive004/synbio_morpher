@@ -17,17 +17,15 @@
                 "2": ["RNA0", "RNA2"]
             },
             "strengths": {
-                "0": [0, 0.5, null],
-                "1": [0.1, 0.6, null],
-                "2": [null, null, null]
+                "0": {"start_value": 0, "end_value": 0.5, "step_size": null},
+                "1": {"start_value": 0.1, "end_value": 0.6, "step_size": null},
+                "2": {"start_value": null, "end_value": null, "step_size": null}
             }
         },
+        "species_choices": ["RNA1, RNA2"],
         "analytics": {
-            "error": "",
-            "names": [
-                "steady_state",
-                "precision"
-            ]
+            "help": "If you want to analyse all the different analytics generated for the circuits, just make 'names' equal to None (null)",
+            "names": null
         }
 
     },

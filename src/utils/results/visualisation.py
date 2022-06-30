@@ -3,7 +3,7 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import logging
-from src.srv.io.results.writer import DataWriter
+from src.src.utils.results.writer import DataWriter
 from src.utils.misc.string_handling import add_outtype, make_time_str
 from pyvis.network import Network
 from src.utils.misc.type_handling import merge_dicts

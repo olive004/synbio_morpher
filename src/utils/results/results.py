@@ -16,7 +16,7 @@ class Result():
 
         self.analytics = {}
         if category == 'time_series':
-            from src.srv.io.results.analytics.timeseries import Timeseries
+            from src.src.utils.results.analytics.timeseries import Timeseries
             analytics_kwargs = analytics_kwargs if analytics_kwargs is not None else {}
             self.analytics = Timeseries(
                 result_data).generate_analytics(**analytics_kwargs)

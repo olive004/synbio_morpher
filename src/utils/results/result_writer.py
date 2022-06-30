@@ -4,9 +4,9 @@ import logging
 import os
 
 import numpy as np
-from src.srv.io.results.analytics.timeseries import Timeseries
-from src.srv.io.results.results import Result
-from src.srv.io.results.writer import DataWriter
+from src.src.utils.results.analytics.timeseries import Timeseries
+from src.src.utils.results.results import Result
+from src.src.utils.results.writer import DataWriter
 from src.utils.misc.numerical import transpose_arraylike
 from src.utils.misc.string_handling import make_time_str
 from src.utils.system_definition.agnostic_system.base_system import BaseSystem
@@ -99,9 +99,9 @@ class ResultWriter(DataWriter):
 
         out_path = os.path.join(self.write_dir, 'graph')
         if mode == 'pyvis':
-            from src.srv.io.results.visualisation import visualise_graph_pyvis
+            from src.src.utils.results.visualisation import visualise_graph_pyvis
             visualise_graph_pyvis(graph=circuit.graph,
                                   out_path=out_path, new_vis=new_vis)
         else:
-            from src.srv.io.results.visualisation import visualise_graph_pyplot
+            from src.src.utils.results.visualisation import visualise_graph_pyplot
             visualise_graph_pyplot(graph=circuit.graph, new_vis=new_vis)

@@ -8,7 +8,8 @@ from typing import Union
 
 import numpy as np
 from src.srv.io.loaders.data_loader import DataLoader, GeneCircuitLoader
-from src.srv.io.results.result_writer import ResultWriter
+from src.src.utils.results.analytics.timeseries import Timeseries
+from src.src.utils.results.result_writer import ResultWriter
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.misc.io import get_pathnames, isolate_filename
 from src.utils.misc.numerical import expand_matrix_triangle_idx, triangular_sequence
@@ -45,6 +46,8 @@ def main(config=None, data_writer=None):
     slicing_configs = config_file['slicing']
     selected_species_interactions = slicing_configs['interactions']['interacting_species']
     selected_analytics = slicing_configs['analytics']['names']
+    if selected_analytics is None:
+        selected_analytics = Timeseries(None).get_analytics_types()
 
     # Slice in 2D or 3D
     def make_slice():
@@ -150,5 +153,8 @@ def main(config=None, data_writer=None):
         species_slice = make_species_slice(
             slicing_configs['species_choices'], num_species)
         grid_slice = [species_slice] + [p_slice for p_slice in parameters_slices]
+        return tuple(grid_slice)
 
-        
+    # Make visualisations for each analytic chosen 
+    for analytic in selected_analytics:
+        all_parameter_grids[analytic] = 
