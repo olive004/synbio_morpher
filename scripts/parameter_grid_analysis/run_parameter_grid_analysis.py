@@ -3,6 +3,8 @@
 from functools import reduce
 import logging
 import os
+from select import select
+from typing import Union
 
 import numpy as np
 from src.srv.io.loaders.data_loader import DataLoader, GeneCircuitLoader
@@ -41,7 +43,7 @@ def main(config=None, data_writer=None):
 
     # For each parameter grid
     slicing_configs = config_file['slicing']
-    selected_species = slicing_configs['interactions']['interacting_species']
+    selected_species_interactions = slicing_configs['interactions']['interacting_species']
     selected_analytics = slicing_configs['analytics']['names']
 
     # Slice in 2D or 3D
@@ -90,53 +92,63 @@ def main(config=None, data_writer=None):
 
         # Might want a slice window for the ones that are varying
         # --> make config accept "all" or named basis of starting and ending parameters
-        def make_species_slice(selected_species, num_species):
+        def make_species_slice(selected_species: list, num_species: int) -> Union[tuple, slice]:
             if type(selected_species) == list:
-                selected_species_idxs = reduce(lambda x: translate_species_to_idx(x),
-                                               selected_species)
-            elif selected_species == 'all':
+                selected_species_idxs = sorted(reduce(lambda x: translate_species_to_idx(x),
+                                               selected_species))
+                if len(selected_species_idxs) == num_species:
+                    selected_species = 'all'
+                else:
+                    return tuple(selected_species_idxs)
+            if selected_species == 'all':
                 return slice(0, num_species)
             else:
                 raise ValueError(
                     'Please input the species you want to include in the visualisations')
 
-        def make_parameter_slice(interacting_species_idxs, parameter_config):
+        def make_parameter_slice(interacting_species_idxs, parameter_config) -> dict:
 
-            def convert_parameter_values_to_slice(start_value, end_value, stepsize):
-                original_config = load_experiment_config(source_dir)
-                if original_config['experiment']['purpose'] == 'stitch_parameter_grid':
-                    original_config, original_source_dir = get_search_dir(
-                        original_config)
-                    original_config = load_experiment_config(
-                        original_source_dir)
-                if not original_config['experiment']['purpose'] == 'parameter_based_simulation':
-                    logging.warning(f'Loaded wrong config from {original_source_dir} with purpose '
-                                    f'{original_config["experiment"]["purpose"]}')
-                original_parameter_range = create_parameter_range(
-                    original_config['parameter_based_simulation'])
-                selected_parameter_range_idxs = np.arange(len(original_parameter_range))[original_parameter_range >= start_value and
-                                                                                         original_parameter_range <= end_parameter]
-                parameters_slice = slice(
-                    selected_parameter_range_idxs[0], selected_parameter_range_idxs[-1], stepsize)
-                return parameters_slice
+            def convert_parameter_values_to_slice(start_value, end_value, step_size) -> slice:
 
-            for group, idx in interacting_species_idxs.items():
-                convert_parameter_values_to_slice(*parameter_config[group])
+                def make_original_parameter_range(source_dir):
+                    original_config = load_experiment_config(source_dir)
+                    if original_config['experiment']['purpose'] == 'stitch_parameter_grid':
+                        original_config, original_source_dir = get_search_dir(
+                            original_config)
+                        original_config = load_experiment_config(
+                            original_source_dir)
+                    if not original_config['experiment']['purpose'] == 'parameter_based_simulation':
+                        logging.warning(f'Loaded wrong config from {original_source_dir} with purpose '
+                                        f'{original_config["experiment"]["purpose"]}')
+                    return create_parameter_range(
+                        original_config['parameter_based_simulation'])
 
-            return
+                original_parameter_range = make_original_parameter_range(
+                    source_dir)
+                selected_parameter_range_idxs = np.arange(len(
+                    original_parameter_range))[original_parameter_range >= start_value and
+                                               original_parameter_range <= end_value]
+                return slice(
+                    selected_parameter_range_idxs[0], selected_parameter_range_idxs[-1], step_size)
+
+            slice_idx_map = {}
+            for grouping, interaction_idx in interacting_species_idxs.items():
+                slice_idx_map[interaction_idx] = convert_parameter_values_to_slice(
+                    **parameter_config[grouping])
+
+            return slice_idx_map
 
         # Converted the names of the interacting species to the index of that interacting pair in the interpolation grid
         selected_species_idxs = {}
-        for species_group, interacting_species_names in selected_species.items():
+        for species_group, interacting_species_names in selected_species_interactions.items():
             selected_species_idxs[species_group] = reduce_interacting_species_idx(
                 reduce(lambda x: translate_species_to_idx(x), interacting_species_names))
 
-        species_slice = make_species_slice(selected_species, num_species)
-        parameters_slice = make_parameter_slice(
+        # species_slice = make_species_slice(selected_species, num_species)
+        parameters_slices = make_parameter_slice(
             selected_species_idxs, slicing_configs['interactions']['strengths'])
-        grid_slice = slice(species_slice, analytics_slices)
-        if config_file.get('slice_choice') == 'all':
-            slice = slice(species_slice, analytics_slices)
-        start_parameter = parameter_to_index()
-        end_parameter = parameter_to_index()
-        slice_window = slice(start_parameter, end_parameter)
+        species_slice = make_species_slice(
+            slicing_configs['species_choices'], num_species)
+        grid_slice = [species_slice] + [p_slice for p_slice in parameters_slices]
+
+        
