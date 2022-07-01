@@ -8,8 +8,8 @@ from typing import Union
 
 import numpy as np
 from src.srv.io.loaders.data_loader import DataLoader, GeneCircuitLoader
-from src.src.utils.results.analytics.timeseries import Timeseries
-from src.src.utils.results.result_writer import ResultWriter
+from src.utils.results.analytics.timeseries import Timeseries
+from src.utils.results.result_writer import ResultWriter
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.misc.io import get_pathnames, isolate_filename
 from src.utils.misc.numerical import expand_matrix_triangle_idx, triangular_sequence

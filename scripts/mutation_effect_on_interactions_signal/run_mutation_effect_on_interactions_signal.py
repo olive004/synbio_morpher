@@ -4,8 +4,8 @@ import os
 from fire import Fire
 from scripts.common.circuit import construct_circuit_from_cfg
 
-from src.src.utils.results.experiments import Experiment, Protocol
-from src.src.utils.results.result_writer import ResultWriter
+from src.utils.results.experiments import Experiment, Protocol
+from src.utils.results.result_writer import ResultWriter
 from src.srv.sequence_exploration.sequence_analysis import pull_circuits_from_stats
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.evolution.mutation import Evolver

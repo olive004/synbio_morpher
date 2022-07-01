@@ -5,8 +5,8 @@ import logging
 import os
 import numpy as np
 from scipy import integrate
-from src.src.utils.results.analytics.timeseries import Timeseries
-from src.src.utils.results.result_writer import ResultWriter
+from src.utils.results.analytics.timeseries import Timeseries
+from src.utils.results.result_writer import ResultWriter
 
 from src.utils.misc.decorators import time_it
 from src.utils.misc.numerical import make_dynamic_indexer, np_delete_axes, zero_out_negs

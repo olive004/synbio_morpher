@@ -6,7 +6,7 @@ import pandas as pd
 
 
 from src.srv.io.loaders.data_loader import GeneCircuitLoader
-from src.src.utils.results.writer import DataWriter
+from src.utils.results.writer import DataWriter
 from src.srv.parameter_prediction.interactions import InteractionMatrix
 from src.utils.misc.io import get_pathnames, get_subdirectories
 from src.utils.misc.scripts_io import get_path_from_output_summary, get_root_experiment_folder, \
