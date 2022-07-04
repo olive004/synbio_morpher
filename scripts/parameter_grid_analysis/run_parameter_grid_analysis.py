@@ -3,18 +3,20 @@
 from functools import reduce
 import logging
 import os
-from select import select
 from typing import Union
 
 import numpy as np
 from src.srv.io.loaders.data_loader import DataLoader, GeneCircuitLoader
+from src.utils.misc.type_handling import merge_dicts
 from src.utils.results.analytics.timeseries import Timeseries
 from src.utils.results.result_writer import ResultWriter
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.misc.io import get_pathnames, isolate_filename
 from src.utils.misc.numerical import expand_matrix_triangle_idx, triangular_sequence
-from src.utils.misc.scripts_io import get_search_dir, load_experiment_config
+from src.utils.misc.scripts_io import get_search_dir, load_experiment_config, load_experiment_config_original
 from src.utils.parameter_inference.interpolation_grid import create_parameter_range
+from src.utils.results.results import ResultCollector
+from src.utils.system_definition.agnostic_system.modelling import Deterministic
 
 
 def main(config=None, data_writer=None):
@@ -38,34 +40,26 @@ def main(config=None, data_writer=None):
             all_parameter_grids[isolate_filename(
                 parameter_grid)] = DataLoader().load_data(parameter_grid)
         return all_parameter_grids
+
     all_parameter_grids = load_parameter_grids()
     num_species = np.shape(
         all_parameter_grids[list(all_parameter_grids.keys())[0]])
 
-    # For each parameter grid
+    # Get relevant configs
     slicing_configs = config_file['slicing']
     selected_species_interactions = slicing_configs['interactions']['interacting_species']
+    unselected_species_interactions = slicing_configs['interactions']['non_varying_species_interactions']
     selected_analytics = slicing_configs['analytics']['names']
     if selected_analytics is None:
         selected_analytics = Timeseries(None).get_analytics_types()
 
-    # Slice in 2D or 3D
+    # Determine the indices to slice the parameter grid with
     def make_slice():
 
         # Choose which type of interactions to vary: self vs. inter
         # --> return dimension indices
         # --> get choice from config
         # --> might need lookup table
-        # Example
-        config_file['slicing']['interactions']['species_names'] = [
-            ['RNA1', 'RNA2'],
-            ['RNA2', 'RNA2']
-        ]
-        species_interactions_to_vary_idxs = [
-            [0, 1],
-            [1, 1]
-        ]
-        # /Example
 
         def translate_interaction():
             species_interactions_index_map = {}
@@ -74,11 +68,6 @@ def main(config=None, data_writer=None):
                 species_interactions_index_map[combination] = expand_matrix_triangle_idx(
                     combination)
             return species_interactions_index_map
-
-        def translate_species_idx_to_name(idx):
-            circuit_filepath = config_file('filepath')
-            data = GeneCircuitLoader().load_data(circuit_filepath)
-            return data.sample_names[translate_species_to_idx(idx)]
 
         def translate_species_to_idx(species: str, species_list: list):
             return species_list.index(species)
@@ -114,15 +103,8 @@ def main(config=None, data_writer=None):
             def convert_parameter_values_to_slice(start_value, end_value, step_size) -> slice:
 
                 def make_original_parameter_range(source_dir):
-                    original_config = load_experiment_config(source_dir)
-                    if original_config['experiment']['purpose'] == 'stitch_parameter_grid':
-                        original_config, original_source_dir = get_search_dir(
-                            original_config)
-                        original_config = load_experiment_config(
-                            original_source_dir)
-                    if not original_config['experiment']['purpose'] == 'parameter_based_simulation':
-                        logging.warning(f'Loaded wrong config from {original_source_dir} with purpose '
-                                        f'{original_config["experiment"]["purpose"]}')
+                    original_config = load_experiment_config_original(
+                        source_dir, target_purpose='parameter_based_simulations')
                     return create_parameter_range(
                         original_config['parameter_based_simulation'])
 
@@ -141,20 +123,50 @@ def main(config=None, data_writer=None):
 
             return slice_idx_map
 
-        # Converted the names of the interacting species to the index of that interacting pair in the interpolation grid
-        selected_species_idxs = {}
-        for species_group, interacting_species_names in selected_species_interactions.items():
-            selected_species_idxs[species_group] = reduce_interacting_species_idx(
-                reduce(lambda x: translate_species_to_idx(x), interacting_species_names))
+        # Convert the names of the interacting species to the index of that interacting pair in the interpolation grid
+        def collect_parameter_slices(species_interactions: dict, parameter_cfg_keyname: str) -> dict:
+            species_idxs = {}
+            for species_group, interacting_species_names in species_interactions.items():
+                species_idxs[species_group] = reduce_interacting_species_idx(
+                    reduce(lambda x: translate_species_to_idx(x), interacting_species_names))
 
-        # species_slice = make_species_slice(selected_species, num_species)
-        parameters_slices = make_parameter_slice(
-            selected_species_idxs, slicing_configs['interactions']['strengths'])
+            # species_slice = make_species_slice(selected_species, num_species)
+            parameters_slices = make_parameter_slice(
+                species_idxs, slicing_configs['interactions'][parameter_cfg_keyname])
+            return parameters_slices
+        parameters_slices = merge_dicts(collect_parameter_slices(
+            selected_species_interactions, parameter_cfg_keyname='strengths'),
+            collect_parameter_slices(unselected_species_interactions,
+                                     parameter_cfg_keyname='non_varying_strengths'))
         species_slice = make_species_slice(
             slicing_configs['species_choices'], num_species)
-        grid_slice = [species_slice] + [p_slice for p_slice in parameters_slices]
+        grid_slice = [species_slice] + \
+            [p_slice for p_slice in parameters_slices]
         return tuple(grid_slice)
 
-    # Make visualisations for each analytic chosen 
-    for analytic in selected_analytics:
-        all_parameter_grids[analytic] = 
+    # Make visualisations for each analytic chosen
+
+    def get_sample_names(source_dir, target_purpose):
+        circuit_filepath = load_experiment_config_original(
+            source_dir, target_purpose)['data_path']
+        data = GeneCircuitLoader().load_data(circuit_filepath)
+        return data.sample_names
+    
+    target_purpose='parameter_based_simulations'
+    
+    sample_names = get_sample_names(
+        source_dir, target_purpose)
+    slice_indices = make_slice()
+    result_collector = ResultCollector()
+    for analytic_name in selected_analytics:
+        data = all_parameter_grids[slice_indices]
+        result_collector.add_result(data,
+                                    name=analytic_name,
+                                    category=None,
+                                    vis_func=Deterministic().plot,
+                                    save_numerical_vis_data=False,
+                                    vis_kwargs={'legend': list(sample_names),
+                                                'out_type': 'png'},
+                                    analytics_kwargs={'signal_idx': load_experiment_config_original(
+                                        source_dir, target_purpose)['identities']})
+        data_writer.output()

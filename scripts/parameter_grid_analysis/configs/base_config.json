@@ -20,6 +20,16 @@
                 "0": {"start_value": 0, "end_value": 0.5, "step_size": null},
                 "1": {"start_value": 0.1, "end_value": 0.6, "step_size": null},
                 "2": {"start_value": null, "end_value": null, "step_size": null}
+            },
+            "non_varying_species_interactions": {
+                "0": ["RNA0", "RNA0"],
+                "1": ["RNA1", "RNA1"],
+                "2": ["RNA2", "RNA2"]
+            },
+            "non_varying_strengths": {
+                "0": 0,
+                "1": 0,
+                "2": 0
             }
         },
         "species_choices": ["RNA1, RNA2"],

@@ -5,11 +5,13 @@ from ctypes import Union
 import glob
 import logging
 import os
+from tracemalloc import start
 from typing import Tuple
 import pandas as pd
 
 from src.srv.io.loaders.misc import load_csv
 from src.utils.data.data_format_tools.common import load_json_as_dict
+from src.utils.misc.errors import ConfigError
 from src.utils.misc.io import get_pathnames, get_subdirectories
 
 
@@ -30,8 +32,8 @@ def get_search_dir(config_search_key: str, config_file: dict, modify_config_for_
         search_dir = os.path.join(search_config.get("source_dir"),
                                   get_recent_experiment_folder(search_config.get(
                                       "source_dir")), search_config.get("purpose_of_ensembled_source_dir"))
-        assert os.path.isdir(
-            search_dir), f'Could not find directory {search_dir}'
+        if not os.path.isdir(search_dir):
+            raise ConfigError(f'Could not find directory {search_dir}')
         if modify_config_for_posterity:
             config_file[config_search_key]['source_dir_actually_used_if_incomplete'] = search_dir
         return config_file, search_dir
@@ -75,6 +77,24 @@ def load_experiment_report(experiment_folder: str) -> dict:
     experiment_folder = get_root_experiment_folder(experiment_folder)
     report_path = os.path.join(experiment_folder, 'experiment.json')
     return load_json_as_dict(report_path)
+
+
+def load_experiment_config_original(starting_experiment_folder: str, target_purpose: str) -> dict:
+    original_config = load_experiment_config(starting_experiment_folder)
+    while not original_config['experiment']['purpose'] == target_purpose:
+        try:
+            original_config, original_source_dir = get_search_dir(
+                original_config)
+        except ConfigError:
+            raise ConfigError('Could not find the original configuration file used '
+                              f'for purpose {target_purpose} when starting from '
+                              f'experiment folder {starting_experiment_folder}.')
+        original_config = load_experiment_config(
+            original_source_dir)
+    if not original_config['experiment']['purpose'] == 'parameter_based_simulation':
+        logging.warning(f'Loaded wrong config from {original_source_dir} with purpose '
+                        f'{original_config["experiment"]["purpose"]}')
+    return original_config
 
 
 def load_experiment_config(experiment_folder: str) -> dict:
