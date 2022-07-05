@@ -39,10 +39,10 @@ def expand_matrix_triangle_idx(flat_triangle_idx):
 
     # Reverse of the triangle_sequence formula
     n = (-1 + np.sqrt(1 - 4 * 1 * (-2*flat_triangle_idx))) / 2
-    row = np.ceil(n) - 1
-    col = flat_triangle_idx - triangular_sequence(np.floor(n)) - 1
+    row = np.floor(n) 
+    col = flat_triangle_idx - triangular_sequence(np.floor(n))
     
-    return (row, col)
+    return (int(row), int(col))
 
 
 def generate_mixed_binary(length: int, count: int, zeros_to_ones: bool = True):

@@ -144,3 +144,4 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
     experiment = Experiment(config_filepath=config, protocols=[Protocol(make_interaction_interpolation_matrices)],
                             data_writer=data_writer)
     experiment.run_experiment()
+    return config, data_writer

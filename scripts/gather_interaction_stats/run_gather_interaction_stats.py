@@ -31,7 +31,7 @@ def main(config=None, data_writer=None):
         data_writer = DataWriter(**data_writer_kwargs)
 
     config_file, search_dir = get_search_dir(
-        "source_of_interactions", config_file=config_file)
+        config_search_key="source_of_interactions", config_file=config_file)
     protocols = [
         Protocol(
             # get list of all interaction paths

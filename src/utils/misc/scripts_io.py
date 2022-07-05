@@ -21,7 +21,22 @@ def get_purposes(script_dir=None):
 
 
 # retrieve_search_dir
-def get_search_dir(config_search_key: str, config_file: dict, modify_config_for_posterity=True) -> Tuple[dict, str]:
+def get_search_dir(config_file: dict, config_search_key: str = None,
+                   modify_config_for_posterity: bool = True) -> Tuple[dict, str]:
+    def find_config_search_key(config_search_key):
+        if config_search_key is None:
+            config_search_key = [k for k, v in config_file.items() if type(
+                v) == dict and 'source_dir' in v.keys()]
+            if len(config_search_key) > 1:
+                logging.warning(f'Detected multiple candidate search directories as keys: {config_search_key}'
+                                f'\nFor config file {config_file}')
+            elif not config_search_key:
+                raise KeyError(
+                    f'Could not find search directory with "source_dir" for config {config_file}.')
+            else:
+                config_search_key = config_search_key[0]
+        return config_search_key
+    config_search_key = find_config_search_key(config_search_key)
     search_config = config_file.get(config_search_key, {})
     if not search_config:
         raise KeyError(
@@ -84,7 +99,7 @@ def load_experiment_config_original(starting_experiment_folder: str, target_purp
     while not original_config['experiment']['purpose'] == target_purpose:
         try:
             original_config, original_source_dir = get_search_dir(
-                original_config)
+                config_file=original_config)
         except ConfigError:
             raise ConfigError('Could not find the original configuration file used '
                               f'for purpose {target_purpose} when starting from '

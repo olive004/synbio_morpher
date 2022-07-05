@@ -9,6 +9,7 @@ from src.utils.results.result_writer import ResultWriter
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.misc.io import get_pathnames, isolate_filename
 from src.utils.misc.numerical import triangular_sequence
+from src.utils.results.experiments import Experiment, Protocol
 from src.utils.misc.scripts_io import get_search_dir, get_subprocesses_dirnames, load_experiment_config
 from src.utils.misc.string_handling import sort_by_ordinal_number
 
@@ -25,7 +26,7 @@ def main(config=None, data_writer=None):
 
     # Load in parameter grids
     config_file, source_dir = get_search_dir(
-        'source_parameter_dir', config_file=config_file)
+        config_search_key='source_parameter_dir', config_file=config_file)
     experiment_config = load_experiment_config(source_dir)
     experiment_settings = experiment_config['experiment']
     num_subprocesses = 1
@@ -63,10 +64,10 @@ def main(config=None, data_writer=None):
         total_iterations = matrix_size
         num_iterations = int(total_iterations / num_subprocesses)
 
-        # Iterate through all possible index combinations (corresponding to all possible parameter combinations)        
+        # Iterate through all possible index combinations (corresponding to all possible parameter combinations)
         def make_indices(iteration):
             return tuple([slice(0, num_species)] + [int(np.mod(iteration / np.power(size_interaction_array, unique_interaction),
-                              size_interaction_array)) for unique_interaction in range(num_unique_interactions)])
+                                                               size_interaction_array)) for unique_interaction in range(num_unique_interactions)])
 
         all_iterators = [None] * total_iterations_correct
         for ite in range(total_iterations_correct):
@@ -92,15 +93,20 @@ def main(config=None, data_writer=None):
                 f'Difference in zeros: {np.absolute(np.sum(all_parameter_grids[analytic_name][i] == 0) - np.sum(stitched_parameter_grids[analytic_name] == 0))}')
         return stitched_parameter_grids
 
-    stitched_parameter_grids = stitch_grids()
-
     # Write full matrices
-    def write_all(out_type='npy'):
+    def write_all(stitched_parameter_grids, out_type='npy'):
         for analytic_name, grid in stitched_parameter_grids.items():
             data_writer.output(out_type, out_name=analytic_name,
-                                data=grid.astype(np.float32), overwrite=True,
-                                write_to_top_dir=True)
-    write_all()
+                               data=grid.astype(np.float32), overwrite=True,
+                               write_to_top_dir=True)
 
+    # stitched_parameter_grids = stitch_grids()
+    # write_all(stitched_parameter_grids)
+
+    experiment = Experiment(config_filepath=config, protocols=[
+        Protocol(stitch_grids, req_output=True, name='Stitching grids together'),
+        Protocol(write_all, req_input=True, name='Writing stitched grids')],
+        data_writer=data_writer)
+    experiment.run_experiment()
+    
     return config, data_writer
-
