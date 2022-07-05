@@ -3,8 +3,9 @@
 import logging
 import os
 from typing import Union
-
 import numpy as np
+import pandas as pd
+
 from src.srv.io.loaders.data_loader import DataLoader, GeneCircuitLoader
 from src.utils.misc.type_handling import flatten_listlike, merge_dicts
 from src.utils.results.analytics.timeseries import Timeseries
@@ -22,7 +23,7 @@ def main(config=None, data_writer=None):
 
     if config is None:
         config = os.path.join(
-            'scripts', 'parameter_grid_analysis', 'configs', 'base_config.json')
+            'scripts', 'parameter_grid_analysis', 'configs', 'minimal_cfg.json')
     config_file = load_json_as_dict(config)
     if data_writer is None:
         data_writer = ResultWriter(purpose=config_file.get(
@@ -78,6 +79,49 @@ def main(config=None, data_writer=None):
     validate_species_cfgs(flatten_listlike(list(selected_species_interactions.values())),
                           flatten_listlike(list(unselected_species_interactions.values())))
 
+    # Helper funcs
+    def convert_parameter_values_to_slice(start_value, end_value, step_size) -> Union[slice, tuple]:
+
+        def parse_parameter_range_kwargs(start_value, end_value, step_size, original_parameter_range):
+            if start_value is None:
+                start_value = 0
+            if end_value is None:
+                end_value = len(original_parameter_range)
+            return start_value, end_value, step_size
+
+        def make_original_parameter_range(source_dir: str, target_purpose: str) -> np.ndarray:
+            original_config = load_experiment_config_original(
+                source_dir, target_purpose=target_purpose)
+            return create_parameter_range(
+                original_config[target_purpose])
+
+        original_parameter_range = make_original_parameter_range(
+            source_dir, target_purpose)
+        start_value, end_value, step_size = parse_parameter_range_kwargs(start_value, end_value,
+                                                                         step_size, original_parameter_range)
+        selected_parameter_range_idxs = np.arange(len(
+            original_parameter_range))[(original_parameter_range >= start_value) == (original_parameter_range <= end_value)]
+        if len(selected_parameter_range_idxs) > 1:
+            return slice(
+                selected_parameter_range_idxs[0], selected_parameter_range_idxs[-1], step_size)
+        else:
+            # Keep the rest constant - choose constant value for these
+            # --> determine the index corresponding to this value
+            return tuple(selected_parameter_range_idxs)
+
+    def make_species_interactions_index_map(num_species) -> dict:
+        species_interactions_index_map = {}
+        flat_triangle_size = triangular_sequence(num_species)
+        for combination in range(flat_triangle_size):
+            triangle_idx = expand_matrix_triangle_idx(combination)
+            species_interactions_index_map[triangle_idx] = combination
+            species_interactions_index_map[tuple(
+                reversed(triangle_idx))] = combination
+        return species_interactions_index_map
+
+    def translate_species_idx(species_name):
+        return sample_names.index(species_name)
+
     # Determine the indices to slice the parameter grid with
     def make_slice() -> dict:
 
@@ -86,16 +130,6 @@ def main(config=None, data_writer=None):
         # --> get choice from config
         # --> might need lookup table
 
-        def make_species_interactions_index_map(num_species) -> dict:
-            species_interactions_index_map = {}
-            flat_triangle_size = triangular_sequence(num_species)
-            for combination in range(flat_triangle_size):
-                triangle_idx = expand_matrix_triangle_idx(combination)
-                species_interactions_index_map[triangle_idx] = combination
-                species_interactions_index_map[tuple(
-                    reversed(triangle_idx))] = combination
-            return species_interactions_index_map
-
         def translate_species_interaction_to_idx(species_interaction: list) -> int:
             species_idxs = tuple(
                 map(lambda x: translate_species_idx(x), species_interaction))
@@ -103,18 +137,9 @@ def main(config=None, data_writer=None):
                 species_idxs]
             return species_interaction_idx
 
-        def translate_species_idx(species_name):
-            return sample_names.index(species_name)
-
         def reduce_interacting_species_idx(pair_species_idxs: list):
             pair_species_idxs = sorted(pair_species_idxs)
             return pair_species_idxs[0] * num_species + pair_species_idxs[1]
-
-        # Keep the rest constant - choose constant value for these
-        # --> determine the index corresponding to this value
-
-        def parameter_to_index(parameter):
-            pass
 
         # Might want a slice window for the ones that are varying
         # --> make config accept "all" or named basis of starting and ending parameters
@@ -134,33 +159,6 @@ def main(config=None, data_writer=None):
 
         def make_parameter_slice(interacting_species_idxs, parameter_config) -> dict:
 
-            def convert_parameter_values_to_slice(start_value, end_value, step_size) -> Union[slice, tuple]:
-
-                def parse_parameter_range_kwargs(start_value, end_value, step_size, original_parameter_range):
-                    if start_value is None:
-                        start_value = 0
-                    if end_value is None:
-                        end_value = len(original_parameter_range)
-                    return start_value, end_value, step_size
-
-                def make_original_parameter_range(source_dir: str, target_purpose: str) -> np.ndarray:
-                    original_config = load_experiment_config_original(
-                        source_dir, target_purpose=target_purpose)
-                    return create_parameter_range(
-                        original_config[target_purpose])
-
-                original_parameter_range = make_original_parameter_range(
-                    source_dir, target_purpose)
-                start_value, end_value, step_size = parse_parameter_range_kwargs(start_value, end_value,
-                                                                                 step_size, original_parameter_range)
-                selected_parameter_range_idxs = np.arange(len(
-                    original_parameter_range))[(original_parameter_range >= start_value) == (original_parameter_range <= end_value)]
-                if len(selected_parameter_range_idxs) > 1:
-                    return slice(
-                        selected_parameter_range_idxs[0], selected_parameter_range_idxs[-1], step_size)
-                else:
-                    return tuple(selected_parameter_range_idxs)
-
             slice_idx_map = {}
             for grouping, interaction_idx in interacting_species_idxs.items():
                 if type(parameter_config[grouping]) == dict:
@@ -176,13 +174,20 @@ def main(config=None, data_writer=None):
         # Convert the names of the interacting species to the index of that interacting pair in the interpolation grid
         def collect_parameter_slices(species_interactions: dict, parameter_choices_cfg_keyname: str) -> dict:
             species_idxs = {}
-            for species_group, interacting_species_names in species_interactions.items():
-                species_idxs[species_group] = translate_species_interaction_to_idx(
+            for species_grouping, interacting_species_names in species_interactions.items():
+                species_idxs[species_grouping] = translate_species_interaction_to_idx(
                     interacting_species_names)
 
             parameters_slices = make_parameter_slice(
                 species_idxs, slicing_configs['interactions'][parameter_choices_cfg_keyname])
             return parameters_slices
+
+        def make_grid_slice(species_slice, parameters_slices, shape_parameter_grid):
+            grid_slice = [None] * len(shape_parameter_grid)
+            grid_slice[0] = species_slice
+            for grid_dimension, param_slice in parameters_slices.items():
+                grid_slice[grid_dimension +
+                           len(np.shape(species_slice))] = param_slice
 
         selected_parameters_slices = collect_parameter_slices(
             selected_species_interactions, parameter_choices_cfg_keyname='strengths')
@@ -192,27 +197,56 @@ def main(config=None, data_writer=None):
             selected_parameters_slices, unselected_parameters_slices)
         species_slice = make_species_slice(
             slicing_configs['species_choices'], num_species)
-        grid_slice = [None] * len(shape_parameter_grid)
-        grid_slice[0] = species_slice
-        for grid_dimension, param_slice in parameters_slices.items():
-            grid_slice[grid_dimension +
-                       len(np.shape(species_slice))] = param_slice
+        grid_slice = make_grid_slice(
+            species_slice, parameters_slices, shape_parameter_grid)
         return tuple(grid_slice)
 
     # Make visualisations for each analytic chosen
+    def custom_3D_visualisation(data: pd.DataFrame, out_path: str = None, out_type='png', legend=None, heatmap=True, new_vis=False):
+        import seaborn as sns
+
+        ax = sns.heatmap(data)
+        fig = ax.get_figure()
+        fig.savefig(out_path)
+
+    def make_species_interaction_ref(species_interactions, parameter_config):
+        all_refs = {}
+        for grouping, species_interaction in species_interactions.items():
+            species_interactions_ref = {}
+            all_refs[tuple(species_interaction)] = species_interactions_ref
+            species_interactions_ref['species_idxs'] = tuple(
+                map(lambda x: translate_species_idx(x), species_interaction))
+            species_interactions_ref['species_interaction_idx'] = make_species_interactions_index_map(num_species)[
+                species_interactions_ref['species_idxs']]
+            species_interactions_ref['interaction_params'] = parameter_config[grouping]
+            if type(parameter_config[grouping]) == dict:
+                species_interactions_ref['interaction_slice'] = convert_parameter_values_to_slice(
+                    **parameter_config[grouping])
+            else:
+                species_interactions_ref['interaction_slice'] = convert_parameter_values_to_slice(
+                    start_value=parameter_config[grouping], end_value=parameter_config[grouping],
+                    step_size=None)
+
+    species_interaction_refs = make_species_interaction_ref(
+        selected_species_interactions, slicing_configs['interactions']['strengths'])
     slice_indices = make_slice()
     result_collector = ResultCollector()
     for analytic_name in selected_analytics:
         data = all_parameter_grids[analytic_name][slice_indices]
-        result_collector.add_result(data,
-                                    name=analytic_name,
-                                    category=None,
-                                    vis_func=Deterministic().plot,
-                                    save_numerical_vis_data=False,
-                                    vis_kwargs={'legend': slicing_configs['species_choices'],
-                                                'out_type': 'png'})
-                                    # analytics_kwargs={'signal_idx': load_experiment_config_original(
-                                    #     source_dir, target_purpose)['identities']})
+        for i, species_name in enumerate(slicing_configs['species_choices']):
+            data_per_species = data[i]
+            data_container = pd.DataFrame(
+                data=np.squeeze(data_per_species), index=create_parameter_range(slicing_configs['interactions']['strengths']))  # , columns=(
+            # list(selected_species_interactions.values())))
+            data_container.head()
+            result_collector.add_result(data_container,
+                                        name=analytic_name,
+                                        category=None,
+                                        # vis_func=Deterministic().plot,
+                                        vis_func=custom_3D_visualisation,
+                                        save_numerical_vis_data=False,
+                                        vis_kwargs={'legend': slicing_configs['species_choices'],
+                                                    'out_type': 'png'})
         data_writer.write_results(result_collector.results, new_report=False,
                                   no_visualisations=False, only_numerical=False,
                                   no_analytics=True)

@@ -14,8 +14,8 @@ def parameter_range_creation(range_min, range_max, range_step, is_logscale=False
 
 def create_parameter_range(range_configs: dict) -> np.ndarray:
 
-    min_key = [k for k in range_configs.keys() if 'min' in k][0]
-    max_key = [k for k in range_configs.keys() if 'max' in k][0]
+    min_key = [k for k in range_configs.keys() if 'min' in k or 'start' in k][0]
+    max_key = [k for k in range_configs.keys() if 'max' in k or 'end' in k][0]
     step_key = [k for k in range_configs.keys() if 'step' in k][0]
     is_logscale = range_configs.get('log_scale', False)
     return parameter_range_creation(*[
