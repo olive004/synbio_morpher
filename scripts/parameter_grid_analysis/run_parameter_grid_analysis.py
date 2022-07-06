@@ -1,6 +1,7 @@
 
 
 from copy import deepcopy
+from functools import partial
 import logging
 import os
 from typing import Union
@@ -10,6 +11,7 @@ import pandas as pd
 from src.srv.io.loaders.data_loader import DataLoader, GeneCircuitLoader
 from src.utils.misc.type_handling import flatten_listlike, merge_dicts
 from src.utils.results.analytics.timeseries import Timeseries
+from src.utils.results.experiments import Experiment, Protocol
 from src.utils.results.result_writer import ResultWriter
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.misc.io import get_pathnames, isolate_filename
@@ -203,11 +205,16 @@ def main(config=None, data_writer=None):
     # Make visualisations for each analytic chosen
     def custom_3D_visualisation(data: pd.DataFrame, out_path: str = None, out_type='png', legend=None, heatmap=True, new_vis=False):
         import seaborn as sns
+        import matplotlib.pyplot as plt
+        sns.set_theme()
 
+        plt.figure()
         ax = sns.heatmap(data)
         fig = ax.get_figure()
         fig.savefig(out_path)
+        plt.clf()
 
+    # Convenience table
     def make_species_interaction_ref(species_interactions, parameter_config):
         all_refs = {}
         for grouping, species_interaction in species_interactions.items():
@@ -232,35 +239,48 @@ def main(config=None, data_writer=None):
                     step_size=None)
         return all_refs
 
-    species_interaction_refs = make_species_interaction_ref(
-        selected_species_interactions, slicing_configs['interactions']['strengths'])
-    slice_indices = make_slice(selected_species_interactions, unselected_species_interactions,
-                               slicing_configs, num_species, shape_parameter_grid)
-    result_collector = ResultCollector()
-    for analytic_name in selected_analytics:
-        data = all_parameter_grids[analytic_name][slice_indices]
-        for i, species_name in enumerate(slicing_configs['species_choices']):
-            data_per_species = data[i]
-            species_interaction_idxs = {
-                species_interaction_refs[k]['species_interaction_idx']: k for k in species_interaction_refs.keys()}
-            sorted_species_interactions = [
-                species_interaction_idxs[k] for k in sorted(species_interaction_idxs.keys())]
-            ind, cols = list(map(
-                lambda k: species_interaction_refs[k]['parameter_range'], sorted_species_interactions[:2]))
-            data_container = pd.DataFrame(
-                data=np.squeeze(data_per_species),
-                index=ind,
-                columns=cols)
-            data_container.head()
-            result_collector.add_result(data_container,
-                                        name=analytic_name,
-                                        category=None,
-                                        # vis_func=Deterministic().plot,
-                                        vis_func=custom_3D_visualisation,
-                                        save_numerical_vis_data=False,
-                                        vis_kwargs={'legend': slicing_configs['species_choices'],
-                                                    'out_type': 'png',
-                                                    })
-        data_writer.write_results(result_collector.results, new_report=False,
-                                  no_visualisations=False, only_numerical=False,
-                                  no_analytics=True)
+    def run_visualisation(all_parameter_grids, data_writer, selected_analytics, selected_species_interactions, slicing_configs):
+        species_interaction_refs = make_species_interaction_ref(
+            selected_species_interactions, slicing_configs['interactions']['strengths'])
+        slice_indices = make_slice(selected_species_interactions, unselected_species_interactions,
+                                   slicing_configs, num_species, shape_parameter_grid)
+        for analytic_name in selected_analytics:
+            data = all_parameter_grids[analytic_name][slice_indices]
+            result_collector = ResultCollector()
+            for i, species_name in enumerate(slicing_configs['species_choices']):
+                data_per_species = data[i]
+                species_interaction_idxs = {
+                    species_interaction_refs[k]['species_interaction_idx']: k for k in species_interaction_refs.keys()}
+                sorted_species_interactions = [
+                    species_interaction_idxs[k] for k in sorted(species_interaction_idxs.keys())]
+                ind, cols = list(map(
+                    lambda k: species_interaction_refs[k]['parameter_range'], sorted_species_interactions[:2]))
+                # data_container = pd.DataFrame(
+                #     data=np.squeeze(data_per_species),
+                #     index=ind,
+                #     columns=cols)
+                # data_container.head()
+                # data_container = np.expand_dims(data_per_species[0], axis=0)
+                data_container = np.squeeze(data_per_species)
+                result_collector.add_result(data_container,
+                                            name=analytic_name,
+                                            category=None,
+                                            # vis_func=Deterministic().plot,
+                                            vis_func=custom_3D_visualisation,
+                                            save_numerical_vis_data=False,
+                                            vis_kwargs={'legend': slicing_configs['species_choices'],
+                                                        'out_type': 'png',
+                                                        })
+            data_writer.write_results(result_collector.results, new_report=False,
+                                      no_visualisations=False, only_numerical=False,
+                                      no_analytics=True, no_numerical=True)
+
+    experiment = Experiment(config_filepath=config, protocols=[
+        Protocol(partial(run_visualisation,
+                         all_parameter_grids=all_parameter_grids,
+                         data_writer=data_writer,
+                         selected_analytics=selected_analytics,
+                         selected_species_interactions=selected_species_interactions,
+                         slicing_configs=slicing_configs))
+    ], data_writer=data_writer)
+    experiment.run_experiment()
