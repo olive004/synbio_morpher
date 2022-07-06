@@ -24,7 +24,7 @@ def main(config=None, data_writer=None):
 
     if config is None:
         config = os.path.join(
-            'scripts', 'parameter_grid_analysis', 'configs', 'minimal_cfg.json')
+            'scripts', 'parameter_grid_analysis', 'configs', 'heatmap_cfg.json')
     config_file = load_json_as_dict(config)
     if data_writer is None:
         data_writer = ResultWriter(purpose=config_file.get(
@@ -204,6 +204,8 @@ def main(config=None, data_writer=None):
     def custom_3D_visualisation(data: pd.DataFrame, out_path: str = None, out_type='png', legend=None, heatmap=True, new_vis=False):
         import seaborn as sns
 
+        logging.info(data)
+        logging.info(np.shape(data))
         ax = sns.heatmap(data)
         fig = ax.get_figure()
         fig.savefig(out_path)
@@ -241,18 +243,23 @@ def main(config=None, data_writer=None):
         data = all_parameter_grids[analytic_name][slice_indices]
         for i, species_name in enumerate(slicing_configs['species_choices']):
             data_per_species = data[i]
+            species_interaction_idxs = {species_interaction_refs[k]['species_interaction_idx']: k for k in species_interaction_refs.keys()}
+            sorted_species_interactions = [species_interaction_idxs[k] for k in sorted(species_interaction_idxs.keys())]
+            ind, cols = list(map(lambda k: species_interaction_refs[k]['parameter_range'], sorted_species_interactions[:2]))
             data_container = pd.DataFrame(
                 data=np.squeeze(data_per_species),
-                index=species_interaction_refs[tuple(list(selected_species_interactions.values())[0])]['parameter_range'])
+                index=ind,
+                columns=cols)
             data_container.head()
             result_collector.add_result(data_container,
                                         name=analytic_name,
                                         category=None,
-                                        vis_func=Deterministic().plot,
-                                        # vis_func=custom_3D_visualisation,
+                                        # vis_func=Deterministic().plot,
+                                        vis_func=custom_3D_visualisation,
                                         save_numerical_vis_data=False,
                                         vis_kwargs={'legend': slicing_configs['species_choices'],
-                                                    'out_type': 'png'})
+                                                    'out_type': 'png',
+                                                    })
         data_writer.write_results(result_collector.results, new_report=False,
                                   no_visualisations=False, only_numerical=False,
                                   no_analytics=True)
