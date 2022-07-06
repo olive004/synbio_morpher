@@ -83,12 +83,12 @@ def main(config=None, data_writer=None):
     # Helper funcs
     def convert_parameter_values_to_slice(start_value, end_value, step_size) -> Union[slice, tuple]:
 
-        def parse_parameter_range_kwargs(start_value, end_value, step_size, original_parameter_range):
+        def parse_parameter_range_kwargs(start_value, end_value, original_parameter_range):
             if start_value is None:
-                start_value = 0
+                start_value = np.float64(0)
             if end_value is None:
-                end_value = original_parameter_range[-1]
-            return start_value, end_value, step_size
+                end_value = np.float64(original_parameter_range[-1])
+            return np.float64(start_value), np.float64(end_value)
 
         def make_original_parameter_range(source_dir: str, target_purpose: str) -> np.ndarray:
             original_config = load_experiment_config_original(
@@ -98,8 +98,8 @@ def main(config=None, data_writer=None):
 
         original_parameter_range = make_original_parameter_range(
             source_dir, target_purpose)
-        start_value, end_value, step_size = parse_parameter_range_kwargs(start_value, end_value,
-                                                                         step_size, original_parameter_range)
+        start_value, end_value = parse_parameter_range_kwargs(start_value, end_value,
+                                                              original_parameter_range)
         selected_parameter_range_idxs = np.arange(len(
             original_parameter_range))[(original_parameter_range >= start_value) == (original_parameter_range <= end_value)]
         if len(selected_parameter_range_idxs) > 1:
@@ -204,8 +204,6 @@ def main(config=None, data_writer=None):
     def custom_3D_visualisation(data: pd.DataFrame, out_path: str = None, out_type='png', legend=None, heatmap=True, new_vis=False):
         import seaborn as sns
 
-        logging.info(data)
-        logging.info(np.shape(data))
         ax = sns.heatmap(data)
         fig = ax.get_figure()
         fig.savefig(out_path)
@@ -243,9 +241,12 @@ def main(config=None, data_writer=None):
         data = all_parameter_grids[analytic_name][slice_indices]
         for i, species_name in enumerate(slicing_configs['species_choices']):
             data_per_species = data[i]
-            species_interaction_idxs = {species_interaction_refs[k]['species_interaction_idx']: k for k in species_interaction_refs.keys()}
-            sorted_species_interactions = [species_interaction_idxs[k] for k in sorted(species_interaction_idxs.keys())]
-            ind, cols = list(map(lambda k: species_interaction_refs[k]['parameter_range'], sorted_species_interactions[:2]))
+            species_interaction_idxs = {
+                species_interaction_refs[k]['species_interaction_idx']: k for k in species_interaction_refs.keys()}
+            sorted_species_interactions = [
+                species_interaction_idxs[k] for k in sorted(species_interaction_idxs.keys())]
+            ind, cols = list(map(
+                lambda k: species_interaction_refs[k]['parameter_range'], sorted_species_interactions[:2]))
             data_container = pd.DataFrame(
                 data=np.squeeze(data_per_species),
                 index=ind,
