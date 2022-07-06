@@ -9,6 +9,10 @@
         "input": "RNA_0",
         "output": "RNA_2"
     },
+    "interaction_simulator": {
+        "name": "IntaRNA",
+        "postprocess": true
+    },
     "molecular_params": {
         "creation_rates": 50,
         "copynumbers": 5,

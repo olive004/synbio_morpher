@@ -181,7 +181,7 @@ class BaseSpecies():
 
 
 class BaseSystem():
-    def __init__(self, config_args: dict = None):
+    def __init__(self, config_args):
 
         self.name = config_args.get("name")
 
