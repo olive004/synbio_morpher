@@ -11,11 +11,11 @@ def parameter_range_creation(range_min, range_max, range_step, is_logscale=False
     to avoid numerical errors downstream """
     if not is_logscale:
         parameter_range = np.arange(range_min, range_max, range_step).astype(np.float64)
+        return np.around(parameter_range, np.power(10, calculate_num_decimals(range_step)-1))
     else:
         num_parameters = int(np.ceil((range_max - range_min) / range_step))
         log_scale = np.logspace(range_min, range_max, num=num_parameters)
-        parameter_range = np.interp(log_scale, (log_scale.min(), log_scale.max()), (range_min, range_max)).astype(np.float64)
-    return np.around(parameter_range, np.power(10, calculate_num_decimals(range_step)-1))
+        return np.interp(log_scale, (log_scale.min(), log_scale.max()), (range_min, range_max)).astype(np.float64)
 
 
 def create_parameter_range(range_configs: dict) -> np.ndarray:

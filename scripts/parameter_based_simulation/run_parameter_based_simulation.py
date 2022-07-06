@@ -3,13 +3,12 @@ from multiprocessing import Process
 import os
 import numpy as np
 from scripts.common.circuit import construct_circuit_from_cfg
+from src.srv.io.manage.script_manager import script_preamble
 from src.srv.io.manage.sys_interface import make_filename_safely
 from src.utils.results.analytics.timeseries import Timeseries
 from src.utils.results.experiments import Experiment, Protocol
-from src.utils.results.result_writer import ResultWriter
 from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
 from src.utils.data.data_format_tools.common import load_json_as_dict
-from src.utils.misc.decorators import time_it
 from src.utils.misc.numerical import make_symmetrical_matrix_from_sequence, triangular_sequence
 from src.utils.parameter_inference.interpolation_grid import create_parameter_range
 from src.utils.system_definition.agnostic_system.system_manager import CircuitModeller
@@ -17,13 +16,9 @@ from src.utils.system_definition.agnostic_system.system_manager import CircuitMo
 
 def main(config=None, data_writer=None):
 
-    if config is None:
-        config = os.path.join(
-            'scripts', 'parameter_based_simulation', 'configs', 'medium_parameter_space.json')
+    config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
+            'scripts', 'parameter_based_simulation', 'configs', 'medium_parameter_space.json'))
     config_file = load_json_as_dict(config)
-    if data_writer is None:
-        data_writer = ResultWriter(purpose=config_file.get(
-            'experiment').get('purpose', 'parameter_based_simulation'))
 
     if config_file.get('experiment').get('parallelise'):
         num_subprocesses = config_file.get(

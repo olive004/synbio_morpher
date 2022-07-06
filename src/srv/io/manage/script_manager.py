@@ -3,7 +3,7 @@
 from copy import deepcopy
 import logging
 import os
-from typing import Union
+from src.srv.io.results.writer import DataWriter
 from src.utils.results.result_writer import ResultWriter
 from src.utils.data.data_format_tools.common import load_json_as_dict, write_json
 from src.utils.misc.io import convert_pathname_to_module
@@ -17,6 +17,16 @@ def import_script_func(script_name):
     script_module = __import__(
         convert_pathname_to_module(script_filepath), fromlist=[''])
     return getattr(script_module, 'main')
+
+
+def script_preamble(config, data_writer, alt_cfg_filepath: str, use_resultwriter=True):
+    writer_class = ResultWriter if use_resultwriter else DataWriter
+    if config is None:
+        config = alt_cfg_filepath
+    config_file = load_json_as_dict(config)
+    if data_writer is None:
+        data_writer = writer_class(purpose=config_file['experiment']['purpose'])
+    return config, data_writer
 
 
 class Ensembler():
