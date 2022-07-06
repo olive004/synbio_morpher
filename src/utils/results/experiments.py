@@ -3,7 +3,7 @@ import logging
 from typing import Any, List
 from src.utils.data.data_format_tools.common import load_json_as_dict
 
-from src.srv.io.results.writer import DataWriter
+from src.utils.results.writer import DataWriter
 from src.utils.misc.type_handling import make_attribute_list
 
 

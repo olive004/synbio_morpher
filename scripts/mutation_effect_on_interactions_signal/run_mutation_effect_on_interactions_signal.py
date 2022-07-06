@@ -4,12 +4,13 @@ import os
 from fire import Fire
 from scripts.common.circuit import construct_circuit_from_cfg
 
-from src.srv.io.results.experiments import Experiment, Protocol
-from src.srv.io.results.result_writer import ResultWriter
+from src.utils.results.experiments import Experiment, Protocol
+from src.utils.results.result_writer import ResultWriter
 from src.srv.sequence_exploration.sequence_analysis import pull_circuits_from_stats
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.evolution.mutation import Evolver
-from src.utils.misc.io import get_pathnames, get_search_dir
+from src.utils.misc.io import get_pathnames
+from src.utils.misc.scripts_io import get_search_dir
 from src.utils.system_definition.agnostic_system.system_manager import CircuitModeller
 
 
@@ -27,7 +28,7 @@ def main(config=None, data_writer=None):
         data_writer = ResultWriter(**data_writer_kwargs)
 
     config_file, source_experiment_dir = get_search_dir(
-        'source_of_interaction_stats', config_file=config_file)
+        config_search_key='source_of_interaction_stats', config_file=config_file)
     protocols = [
         # Load in templates: pathname for circuit stats is in config
         Protocol(

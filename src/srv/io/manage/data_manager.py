@@ -1,13 +1,13 @@
 
 
 import logging
-from src.srv.io.loaders.data_loader import DataLoader
+from src.srv.io.loaders.data_loader import GeneCircuitLoader
 from src.utils.data.common import Data
 
 
 class DataManager():
     def __init__(self, filepath: str = None, identities: dict = None, data=None, sample_names: list = None):
-        self.loader = DataLoader()
+        self.loader = GeneCircuitLoader()
         self.source = filepath
         self.data = data
         if data is None and filepath:

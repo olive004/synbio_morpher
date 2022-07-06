@@ -4,9 +4,9 @@ import logging
 import os
 
 import numpy as np
-from src.srv.io.results.analytics.timeseries import Timeseries
-from src.srv.io.results.results import Result
-from src.srv.io.results.writer import DataWriter
+from src.utils.results.analytics.timeseries import Timeseries
+from src.utils.results.results import Result
+from src.utils.results.writer import DataWriter
 from src.utils.misc.numerical import transpose_arraylike
 from src.utils.misc.string_handling import make_time_str
 from src.utils.system_definition.agnostic_system.base_system import BaseSystem
@@ -65,14 +65,16 @@ class ResultWriter(DataWriter):
         writeables = Timeseries(data=None).get_analytics_types()
         self.write_report(writeables, analytics, new_report)
 
-    def write_results(self, results: dict, new_report=False, no_visualisations=False, only_numerical=False):
+    def write_results(self, results: dict, new_report=False, no_visualisations=False,
+                      only_numerical=False, no_analytics=False, no_numerical=False):
 
         for _name, result in results.items():
             result.vis_kwargs.update(
                 {'new_vis': new_report, 'data': result.data})
 
-            self.write_numerical(
-                data=result.data, out_name=result.name + '_data')
+            if not no_numerical:
+                self.write_numerical(
+                    data=result.data, out_name=result.name + '_data')
             if not only_numerical:
                 if not no_visualisations:
                     self.visualise(out_name=result.name,
@@ -80,7 +82,8 @@ class ResultWriter(DataWriter):
                     plottables = ['first_derivative']
                     self.make_metric_visualisation(
                         result, plottables, result.analytics, new_report)
-                self.write_analytics(result, new_report=new_report)
+                if not no_analytics:
+                    self.write_analytics(result, new_report=new_report)
 
     def write_all(self, circuit: BaseSystem, new_report: bool, no_visualisations: bool = False,
                   only_numerical: bool = False):
@@ -99,9 +102,9 @@ class ResultWriter(DataWriter):
 
         out_path = os.path.join(self.write_dir, 'graph')
         if mode == 'pyvis':
-            from src.srv.io.results.visualisation import visualise_graph_pyvis
+            from src.utils.results.visualisation import visualise_graph_pyvis
             visualise_graph_pyvis(graph=circuit.graph,
                                   out_path=out_path, new_vis=new_vis)
         else:
-            from src.srv.io.results.visualisation import visualise_graph_pyplot
+            from src.utils.results.visualisation import visualise_graph_pyplot
             visualise_graph_pyplot(graph=circuit.graph, new_vis=new_vis)

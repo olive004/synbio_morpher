@@ -37,10 +37,10 @@
                 "purpose": "gather_interaction_stats"
             },
             "source_of_interactions": {
-                "require_from_previous_script_in_ensemble": true,
+                "is_source_dir_incomplete": true,
                 "source_dir": "./data/ensemble_mutation_effect_analysis",
-                "previous_script_purpose": "generate_species_templates",
-                "source_dir_postupdate": "./data/ensemble_mutation_effect_analysis/2022_06_20_234516/generate_species_templates"
+                "purpose_of_ensembled_source_dir": "generate_species_templates",
+                "source_dir_actually_used_if_incomplete": "./data/ensemble_mutation_effect_analysis/2022_06_20_234516/generate_species_templates"
             }
         },
         "mutation_effect_on_interactions_signal": {
@@ -102,10 +102,10 @@
                 "identities_idx": 0
             },
             "source_of_interaction_stats": {
-                "require_from_previous_script_in_ensemble": true,
+                "is_source_dir_incomplete": true,
                 "source_dir": "./data/ensemble_mutation_effect_analysis",
-                "previous_script_purpose": "gather_interaction_stats",
-                "source_dir_postupdate": "./data/ensemble_mutation_effect_analysis/2022_06_20_234516/gather_interaction_stats"
+                "purpose_of_ensembled_source_dir": "gather_interaction_stats",
+                "source_dir_actually_used_if_incomplete": "./data/ensemble_mutation_effect_analysis/2022_06_20_234516/gather_interaction_stats"
             },
             "interactions_path": "./data/ensemble_mutation_effect_analysis/2022_06_20_234516/generate_species_templates/interactions/toy_mRNA_circuit_2_interactions.csv",
             "molecular_params": {

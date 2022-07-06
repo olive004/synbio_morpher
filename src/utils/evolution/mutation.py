@@ -6,7 +6,7 @@ import random
 import pandas as pd
 import numpy as np
 from src.srv.io.loaders.misc import load_csv
-from src.srv.io.results.writer import DataWriter, Tabulated
+from src.utils.results.writer import DataWriter, Tabulated
 from src.utils.misc.string_handling import add_outtype
 
 

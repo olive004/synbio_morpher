@@ -3,7 +3,7 @@
 import os
 from fire import Fire
 from scripts.common.circuit import construct_circuit_from_cfg
-from src.srv.io.results.result_writer import ResultWriter
+from src.utils.results.result_writer import ResultWriter
 from src.utils.misc.decorators import time_it
 from src.utils.system_definition.agnostic_system.system_manager import CircuitModeller
 

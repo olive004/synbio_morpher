@@ -26,10 +26,10 @@
                 "purpose": "gather_interaction_stats"
             },
             "source_of_interactions": {
-                "require_from_previous_script_in_ensemble": true,
+                "is_source_dir_incomplete": true,
                 "source_dir": "./data/ensemble_mutation_effect_analysis",
-                "previous_script_purpose": "gather_interaction_stats",
-                "source_dir_postupdate": null
+                "purpose_of_ensembled_source_dir": "gather_interaction_stats",
+                "source_dir_actually_used_if_incomplete": null
             }
         },
         "mutation_effect_on_interactions_signal": {
@@ -66,10 +66,10 @@
                 "durations":[50, 400]
             }, 
             "source_of_interaction_stats": {
-                "require_from_previous_script_in_ensemble": true,
+                "is_source_dir_incomplete": true,
                 "source_dir": "./data/ensemble_mutation_effect_analysis",
-                "previous_script_purpose": "gather_interaction_stats",
-                "source_dir_postupdate": null
+                "purpose_of_ensembled_source_dir": "gather_interaction_stats",
+                "source_dir_actually_used_if_incomplete": null
             }
         }
     }
