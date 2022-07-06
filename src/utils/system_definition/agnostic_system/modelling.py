@@ -23,6 +23,6 @@ class Deterministic():
 
     def plot(self, data, y=None, out_path='test_plot', new_vis=False, out_type='png',
     **plot_kwrgs):
-        from src.srv.io.results.visualisation import VisODE
+        from src.utils.results.visualisation import VisODE
         data = data.T if len(plot_kwrgs.get('legend', [])) == np.shape(data)[0] else data
         VisODE().plot(data, y, new_vis, out_path=out_path, out_type=out_type, **plot_kwrgs)

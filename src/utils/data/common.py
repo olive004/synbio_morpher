@@ -31,7 +31,8 @@ class Data():
             if name in source:
                 indexed_identities[name_type] = source.index(name)
         if not indexed_identities and names_table and source:
-            logging.warning(f'Identities not found: {names_table.values()} not in {source}')
+            logging.warning(
+                f'Identities not found: {names_table.values()} not in {source}')
         return indexed_identities
 
     def make_sample_names(self, sample_names: list = None) -> list:
@@ -45,11 +46,21 @@ class Data():
 
     @property
     def size(self):
-        return len(self.data)
+        if len(self.data) == len(self.sample_names):
+            return len(self.data)
+        else:
+            logging.warning('Number of samples could be inaccurate - sample names '
+                            f'{self.sample_names} different to number of data points ({len(self.data)})')
+            return max(len(self.data), len(self.sample_names))
 
     @size.getter
     def size(self):
-        return len(self.data)
+        if len(self.data) == len(self.sample_names):
+            return len(self.data)
+        else:
+            logging.warning('Number of samples could be inaccurate - sample names '
+                            f'{self.sample_names} different to number of data points ({len(self.data)})')
+            return max(len(self.data), len(self.sample_names))
 
     @property
     def sample_names(self):

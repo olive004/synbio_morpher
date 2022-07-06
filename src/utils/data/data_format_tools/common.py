@@ -4,27 +4,33 @@ import os
 import numpy as np
 import pandas as pd
 
-from src.srv.io.manage.sys_interface import make_filename_safely
+from src.utils.misc.type_handling import inverse_dict
 
 
 FORMAT_EXTS = {
-    ".fasta": "fasta"
+    "fasta": "fasta",
+    "npy": "numpy",
+    "csv": "csv",
+    "json": "json"
 }
 
 
 def verify_file_type(filepath: str, file_type: str):
-    NotImplemented
-    pass
+    assert file_type in filepath or inverse_dict(FORMAT_EXTS).get(file_type) in filepath, \
+        f'File {filepath} is not of type {file_type}'
 
 
-def determine_data_format(filepath: str) -> str:
-    if filepath:
-        return os.path.basename(filepath).split('.')[-1]
-    return None
-    # for extension, ftype in FORMAT_EXTS.items():
-    #     if extension in filepath:
-    #         return ftype
-    # return None
+def determine_file_format(filepath: str) -> str:
+    ext = os.path.basename(filepath).split('.')[-1]
+    try:
+        return FORMAT_EXTS[ext]
+    except KeyError:
+        if os.path.isfile(filepath):
+            raise KeyError(f'Could not determine the file format of file {filepath}: "{ext}" '
+                           f'not in acceptable extensions {FORMAT_EXTS.keys()}')
+        else:
+            raise ValueError(
+                f'Attempted to determine file format of an object that is not a file: {filepath}')
 
 
 def load_json_as_dict(json_pathname: str, process=True) -> dict:
@@ -40,7 +46,8 @@ def load_json_as_dict(json_pathname: str, process=True) -> dict:
             jdict = json.load(file)
             file.close()
     else:
-        raise TypeError(f'Unknown json loading input {json_pathname} of type {type(json_pathname)}.')
+        raise TypeError(
+            f'Unknown json loading input {json_pathname} of type {type(json_pathname)}.')
     if process:
         return process_json(jdict)
     return jdict

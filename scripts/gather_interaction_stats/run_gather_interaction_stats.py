@@ -4,11 +4,12 @@ import os
 
 from fire import Fire
 
-from src.srv.io.results.experiments import Experiment, Protocol
-from src.srv.io.results.writer import DataWriter
+from src.utils.results.experiments import Experiment, Protocol
+from src.utils.results.writer import DataWriter
 from src.srv.sequence_exploration.sequence_analysis import generate_interaction_stats
 from src.utils.data.data_format_tools.common import load_json_as_dict
-from src.utils.misc.io import get_pathnames, get_search_dir
+from src.utils.misc.io import get_pathnames
+from src.utils.misc.scripts_io import get_search_dir
 
 
 def readout(var_obj):
@@ -30,7 +31,7 @@ def main(config=None, data_writer=None):
         data_writer = DataWriter(**data_writer_kwargs)
 
     config_file, search_dir = get_search_dir(
-        "source_of_interactions", config_file=config_file)
+        config_search_key="source_of_interactions", config_file=config_file)
     protocols = [
         Protocol(
             # get list of all interaction paths

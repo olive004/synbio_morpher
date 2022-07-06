@@ -5,10 +5,10 @@ import numpy as np
 import os
 import pandas as pd
 from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
+from src.utils.misc.scripts_io import load_experiment_config
 from src.utils.misc.type_handling import flatten_listlike
 from src.srv.io.loaders.misc import load_csv
-from src.utils.data.data_format_tools.common import determine_data_format
-from src.utils.misc.io import load_experiment_config
+from src.utils.data.data_format_tools.common import determine_file_format
 from src.utils.misc.numerical import square_matrix_rand
 from src.utils.misc.type_handling import flatten_listlike
 
@@ -39,7 +39,7 @@ class InteractionMatrix():
             self.matrix = self.make_rand_matrix(num_nodes)
 
     def load(self, filepath):
-        filetype = determine_data_format(filepath)
+        filetype = determine_file_format(filepath)
 
         self.name = os.path.basename(filepath).replace('.'+filetype, '').replace(
             'interactions_', '').replace('_interactions', '')

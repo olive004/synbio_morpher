@@ -2,6 +2,7 @@
 import logging
 import numpy as np
 from functools import partial
+from src.utils.misc.helper import vanilla_return
 from src.utils.misc.numerical import SCIENTIFIC
 
 
@@ -47,9 +48,6 @@ class RawSimulationHandling():
 
     def get_postprocessing(self):
 
-        def vanilla(data):
-            return data
-
         def energy_to_rate(energies):
             """ Translate interaction binding energy to binding rate:
             AG = RT ln(K)
@@ -78,7 +76,7 @@ class RawSimulationHandling():
                     energy_to_rate,
                     zero_false_rates])
             else:
-                return vanilla
+                return vanilla_return
 
     def get_simulator(self, allow_self_interaction=True):
 
