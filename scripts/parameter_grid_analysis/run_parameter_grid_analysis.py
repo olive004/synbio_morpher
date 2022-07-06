@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 
 from src.srv.io.loaders.data_loader import DataLoader, GeneCircuitLoader
+from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
 from src.utils.misc.type_handling import flatten_listlike, merge_dicts
 from src.utils.results.analytics.timeseries import Timeseries
 from src.utils.results.experiments import Experiment, Protocol
@@ -20,7 +21,6 @@ from src.utils.misc.scripts_io import get_search_dir, load_experiment_config_ori
 from src.utils.parameter_inference.interpolation_grid import create_parameter_range
 from src.utils.results.results import ResultCollector
 from src.utils.results.visualisation import VisODE
-from src.utils.system_definition.agnostic_system.modelling import Deterministic
 
 
 def main(config=None, data_writer=None):
@@ -107,7 +107,7 @@ def main(config=None, data_writer=None):
             original_parameter_range))[(original_parameter_range >= start_value) == (original_parameter_range <= end_value)]
         if len(selected_parameter_range_idxs) > 1:
             return slice(
-                selected_parameter_range_idxs[0], selected_parameter_range_idxs[-1], step_size)
+                selected_parameter_range_idxs[0], selected_parameter_range_idxs[-1]+1, step_size)
         else:
             # Keep the rest constant - choose constant value for these
             # --> determine the index corresponding to this value
@@ -233,6 +233,10 @@ def main(config=None, data_writer=None):
             selected_species_interactions, slicing_configs['interactions']['strengths'])
         slice_indices = make_slice(selected_species_interactions, unselected_species_interactions,
                                    slicing_configs, num_species, shape_parameter_grid)
+        info_text = '\n'.join(
+            ['Held constant:'] + [f'{n}: {v}' for n, v in zip(
+                unselected_species_interactions.values(), slicing_configs['interactions']['non_varying_strengths'].values())]
+        )
         for analytic_name in selected_analytics:
             data = all_parameter_grids[analytic_name][slice_indices]
             result_collector = ResultCollector()
@@ -248,9 +252,6 @@ def main(config=None, data_writer=None):
                     data=np.squeeze(data_per_species),
                     index=ind,
                     columns=cols)
-                # data_container.head()
-                # data_container = np.expand_dims(data_per_species[0], axis=0)
-                # data_container = np.squeeze(data_per_species)
                 result_collector.add_result(data_container,
                                             name=analytic_name,
                                             category=None,
@@ -259,9 +260,14 @@ def main(config=None, data_writer=None):
                                             save_numerical_vis_data=False,
                                             vis_kwargs={'legend': slicing_configs['species_choices'],
                                                         'out_type': 'png',
-                                                        'xlabel': sorted_species_interactions[0],
-                                                        'ylabel': sorted_species_interactions[1],
-                                                        'title': analytic_name.replace('_', ' ')
+                                                        'xlabel': f'{sorted_species_interactions[0]} interaction strength '\
+                                                        f'({SIMULATOR_UNITS["IntaRNA"]["energy"]})',
+                                                        'ylabel': f'{sorted_species_interactions[1]} interaction strength '\
+                                                        f'({SIMULATOR_UNITS["IntaRNA"]["energy"]})',
+                                                        'title': f'{analytic_name.replace("_", " ")} for {species_name}',
+                                                        'text': {'x': 14.15, 'y': 0.85, 's': info_text,
+                                                                 'fontsize': 8,
+                                                                 'bbox': dict(boxstyle='round', facecolor='wheat', alpha=1)}
                                                         })
             data_writer.write_results(result_collector.results, new_report=False,
                                       no_visualisations=False, only_numerical=False,

@@ -152,8 +152,13 @@ class VisODE():
 
         for plot_kwrg, value in plot_kwrgs.items():
             if value is not None:
-                getattr(plt, plot_kwrg, partial(
-                    warning_call, object=plt, function=plot_kwrg))(value)
+                if type(value) == dict:
+                    # Treat as kwargs
+                    getattr(plt, plot_kwrg, partial(
+                        warning_call, object=plt, function=plot_kwrg))(**value)
+                else:
+                    getattr(plt, plot_kwrg, partial(
+                        warning_call, object=plt, function=plot_kwrg))(value)
 
     def plot(self, data, y=None, new_vis=False, out_path='test_plot', out_type='png',
              **plot_kwrgs) -> None:
