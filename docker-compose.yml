@@ -5,9 +5,5 @@ services:
     image: genecircuitglitchprediction
     build:
       context: .
-      dockerfile: ./docker/vs_code_interface/Dockerfile
-  intarna:
-    image: intarna
-    build:
-      context: .
-      dockerfile: ./docker/intarna/Dockerfile
+      dockerfile: ./docker_unix/Dockerfile
+    command: /bin/sh ./setup/start_docker.sh

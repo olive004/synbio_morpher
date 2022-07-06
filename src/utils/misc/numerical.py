@@ -30,6 +30,25 @@ def binary_arpeggiator(sequence: str, count: int):
         seq[arpeggiation] = 1
 
 
+def calculate_num_decimals(floatlike):
+    return int(np.log10(float(str(floatlike)[::-1]))) + 1
+
+
+def expand_matrix_triangle_idx(flat_triangle_idx):
+    """ Computes the indices of a triangle, or the lower half
+    of a symmetrical square matrix. Assuming that 1D index 
+    traverses columns then rows.
+    For example, a 1D flat input of 5 would index into the 
+    3rd row and 2nd column, returning the 0-based indices (2, 1) """
+
+    # Reverse of the triangle_sequence formula
+    n = (-1 + np.sqrt(1 - 4 * 1 * (-2*flat_triangle_idx))) / 2
+    row = np.floor(n) 
+    col = flat_triangle_idx - triangular_sequence(np.floor(n))
+    
+    return (int(row), int(col))
+
+
 def generate_mixed_binary(length: int, count: int, zeros_to_ones: bool = True):
     # TODO: This could be much better. Generate
     # sequences in a way that
@@ -45,12 +64,6 @@ def generate_mixed_binary(length: int, count: int, zeros_to_ones: bool = True):
         all_sequences[c, idxs] = 1 if zeros_to_ones else 0
 
     return all_sequences
-
-
-def np_delete_axes(array, rowcol: Union[list, int], axes: list):
-    for axis in axes:
-        array = np.delete(array, rowcol, axis=axis)
-    return array
 
 
 def make_dynamic_indexer(desired_axis_index_pairs: dict) -> tuple:
@@ -77,6 +90,12 @@ def make_symmetrical_matrix_from_sequence(arr, side_length: int, total_dimension
     return matrix
 
 
+def np_delete_axes(array, rowcol: Union[list, int], axes: list):
+    for axis in axes:
+        array = np.delete(array, rowcol, axis=axis)
+    return array
+
+
 def round_to_nearest(x, base):
     return base * round(x/base)
 
@@ -94,3 +113,6 @@ def transpose_arraylike(arraylike):
 
 def triangular_sequence(n: int) -> int:
     return int((n*(n+1))/2)
+
+
+pass

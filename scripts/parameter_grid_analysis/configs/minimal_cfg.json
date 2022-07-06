@@ -1,0 +1,45 @@
+{
+    "experiment": {
+        "purpose": "parameter_grid_analysis"
+    },
+    "source_parameter_dir": {
+        "is_source_dir_incomplete": false,
+        "source_dir": "data/stitch_parameter_grid/2022_06_23_215621/",
+        "purpose_of_ensembled_source_dir": null,
+        "source_dir_actually_used_if_incomplete": null
+    },
+    "slicing": {
+        "interactions": {
+            "help": "Can select a maximum of 3 interacting species to visualise against one another (3D). Labels for species interacting are arbitrary and must just match the keys in the 'strengths' field. \nThe strengths are in the form [start, stop, stepsize], where null is default",
+            "interacting_species": {
+                "0": ["RNA_0", "RNA_1"]
+            },
+            "strengths": {
+                "0": {"start_value": 0, "end_value": 0.5, "step_size": null}
+            },
+            "non_varying_species_interactions": {
+                "0": ["RNA_0", "RNA_0"],
+                "1": ["RNA_1", "RNA_1"],
+                "2": ["RNA_2", "RNA_2"],
+                "3": ["RNA_0", "RNA_2"],
+                "4": ["RNA_1", "RNA_2"]
+            },
+            "non_varying_strengths": {
+                "0": 0,
+                "1": 0,
+                "2": 0,
+                "3": 0,
+                "4": 0
+            }
+        },
+        "species_choices": ["RNA_1"],
+        "analytics": {
+            "help": "If you want to analyse all the different analytics generated for the circuits, just make 'names' equal to None (null)",
+            "names": null
+        }
+
+    },
+    "visualisation": {
+        "none": 0
+    }
+}

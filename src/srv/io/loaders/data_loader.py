@@ -12,8 +12,8 @@ class DataLoader():
         pass
 
     def get_loader(self, filepath: str):
-        from src.utils.data.data_format_tools.common import determine_data_format
-        data_type = determine_data_format(filepath)
+        from src.utils.data.data_format_tools.common import determine_file_format
+        data_type = determine_file_format(filepath)
         loader = self.get_loader_by_dtype(data_type)
         return loader
 
@@ -26,12 +26,24 @@ class DataLoader():
         elif data_type == 'csv':
             from src.srv.io.loaders.misc import load_csv
             return load_csv
+        elif data_type == 'numpy':
+            import numpy as np
+            return np.load
         elif data_type == None:
             return none_func
         else:
             raise NotImplementedError(
                 "Other filetypes than fasta not supported yet.")
 
-    def load_data(self, filepath: str, identities: dict = {}):
+    def load_data(self, filepath: str):
         loader = self.get_loader(filepath)
-        return Data(loader(filepath), source_files=filepath, identities=identities)
+        return loader(filepath)
+
+
+class GeneCircuitLoader(DataLoader):
+
+    def __init__(self) -> None:
+        super().__init__()
+
+    def load_data(self, filepath: str, identities: dict = {}):
+        return Data(super().load_data(filepath=filepath), source_files=filepath, identities=identities)

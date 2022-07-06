@@ -6,7 +6,7 @@ import networkx as nx
 import logging
 
 from src.srv.parameter_prediction.interactions import InteractionMatrix
-from src.srv.io.results.results import ResultCollector
+from src.utils.results.results import ResultCollector
 from src.utils.misc.type_handling import extend_int_to_list
 
 

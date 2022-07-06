@@ -5,11 +5,12 @@ import os
 import pandas as pd
 
 
-from src.srv.io.loaders.data_loader import DataLoader
-from src.srv.io.results.writer import DataWriter
+from src.srv.io.loaders.data_loader import GeneCircuitLoader
+from src.utils.results.writer import DataWriter
 from src.srv.parameter_prediction.interactions import InteractionMatrix
-from src.utils.misc.io import get_path_from_output_summary, get_pathnames, get_root_experiment_folder, \
-    get_subdirectories, load_experiment_config, load_experiment_output_summary
+from src.utils.misc.io import get_pathnames, get_subdirectories
+from src.utils.misc.scripts_io import get_path_from_output_summary, get_root_experiment_folder, \
+    load_experiment_config, load_experiment_output_summary
 
 
 def generate_interaction_stats(path_name, writer: DataWriter = None, experiment_dir: str = None, **stat_addons) -> pd.DataFrame:
@@ -40,7 +41,7 @@ def filter_data(data: pd.DataFrame, filters: dict = {}):
 
 def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path') -> list:
 
-    stats = DataLoader().load_data(stats_pathname).data
+    stats = GeneCircuitLoader().load_data(stats_pathname).data
     filt_stats = filter_data(stats, filters)
 
     if filt_stats.empty:
@@ -90,15 +91,12 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
                     f'Name {table[target]} should be in path {table[pathname]}.'
 
     source_config = load_experiment_config(source_dir)
-    # circuit_stats_pathname = get_pathnames(first_only=True, file_key="circuit_stats",
-    #                                        search_dir=source_config['source_species_templates_experiment_dir'])
-    # circuit_stats = DataLoader().load_data(circuit_stats_pathname).data
 
     circuit_dirs = get_subdirectories(source_dir)
     for circuit_dir in circuit_dirs:
         mutations_pathname = get_pathnames(
             first_only=True, file_key='mutations', search_dir=circuit_dir)
-        mutations = DataLoader().load_data(mutations_pathname).data
+        mutations = GeneCircuitLoader().load_data(mutations_pathname).data
         mutation_dirs = sorted(get_subdirectories(circuit_dir))
 
         circuit_name = os.path.basename(circuit_dir)

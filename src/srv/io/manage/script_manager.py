@@ -4,7 +4,7 @@ from copy import deepcopy
 import logging
 import os
 from typing import Union
-from src.srv.io.results.result_writer import ResultWriter
+from src.utils.results.result_writer import ResultWriter
 from src.utils.data.data_format_tools.common import load_json_as_dict, write_json
 from src.utils.misc.io import convert_pathname_to_module
 
