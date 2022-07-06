@@ -19,6 +19,7 @@ from src.utils.misc.numerical import expand_matrix_triangle_idx, triangular_sequ
 from src.utils.misc.scripts_io import get_search_dir, load_experiment_config_original
 from src.utils.parameter_inference.interpolation_grid import create_parameter_range
 from src.utils.results.results import ResultCollector
+from src.utils.results.visualisation import VisODE
 from src.utils.system_definition.agnostic_system.modelling import Deterministic
 
 
@@ -202,18 +203,6 @@ def main(config=None, data_writer=None):
             species_slice, parameters_slices, shape_parameter_grid)
         return tuple(grid_slice)
 
-    # Make visualisations for each analytic chosen
-    def custom_3D_visualisation(data: pd.DataFrame, out_path: str = None, out_type='png', legend=None, heatmap=True, new_vis=False):
-        import seaborn as sns
-        import matplotlib.pyplot as plt
-        sns.set_theme()
-
-        plt.figure()
-        ax = sns.heatmap(data)
-        fig = ax.get_figure()
-        fig.savefig(out_path)
-        plt.clf()
-
     # Convenience table
     def make_species_interaction_ref(species_interactions, parameter_config):
         all_refs = {}
@@ -255,21 +244,24 @@ def main(config=None, data_writer=None):
                     species_interaction_idxs[k] for k in sorted(species_interaction_idxs.keys())]
                 ind, cols = list(map(
                     lambda k: species_interaction_refs[k]['parameter_range'], sorted_species_interactions[:2]))
-                # data_container = pd.DataFrame(
-                #     data=np.squeeze(data_per_species),
-                #     index=ind,
-                #     columns=cols)
+                data_container = pd.DataFrame(
+                    data=np.squeeze(data_per_species),
+                    index=ind,
+                    columns=cols)
                 # data_container.head()
                 # data_container = np.expand_dims(data_per_species[0], axis=0)
-                data_container = np.squeeze(data_per_species)
+                # data_container = np.squeeze(data_per_species)
                 result_collector.add_result(data_container,
                                             name=analytic_name,
                                             category=None,
-                                            # vis_func=Deterministic().plot,
-                                            vis_func=custom_3D_visualisation,
+                                            vis_func=VisODE().heatmap,
+                                            # vis_func=custom_3D_visualisation,
                                             save_numerical_vis_data=False,
                                             vis_kwargs={'legend': slicing_configs['species_choices'],
                                                         'out_type': 'png',
+                                                        'xlabel': sorted_species_interactions[0],
+                                                        'ylabel': sorted_species_interactions[1],
+                                                        'title': analytic_name.replace('_', ' ')
                                                         })
             data_writer.write_results(result_collector.results, new_report=False,
                                       no_visualisations=False, only_numerical=False,

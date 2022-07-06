@@ -145,6 +145,16 @@ class VisODE():
     def __init__(self) -> None:
         pass
 
+    def add_kwrgs(self, plt, **plot_kwrgs):
+        def warning_call(object, function, dummy_value):
+            logging.warn(
+                f'Could not call function {function} in object {object}.')
+
+        for plot_kwrg, value in plot_kwrgs.items():
+            if value is not None:
+                getattr(plt, plot_kwrg, partial(
+                    warning_call, object=plt, function=plot_kwrg))(value)
+
     def plot(self, data, y=None, new_vis=False, out_path='test_plot', out_type='png',
              **plot_kwrgs) -> None:
         from matplotlib import pyplot as plt
@@ -157,15 +167,18 @@ class VisODE():
         plt.savefig(out_path)
         plt.close()
 
-    def add_kwrgs(self, plt, **plot_kwrgs):
-        def dummy_call(object, function, dummy_value):
-            logging.warn(
-                f'Could not call function {function} in object {object}.')
+    # Make visualisations for each analytic chosen
+    def heatmap(self, data: pd.DataFrame, out_path: str = None, out_type='png', new_vis=False, **plot_kwrgs):
+        import seaborn as sns
+        import matplotlib.pyplot as plt
+        sns.set_theme()
 
-        for plot_kwrg, value in plot_kwrgs.items():
-            if value is not None:
-                getattr(plt, plot_kwrg, partial(
-                    dummy_call, object=plt, function=plot_kwrg))(value)
+        plt.figure()
+        ax = sns.heatmap(data)
+        fig = ax.get_figure()
+        self.add_kwrgs(plt, **plot_kwrgs)
+        fig.savefig(out_path)
+        plt.clf()
 
     def histplot(self, data, out_path, bin_count=50,
                  use_sns=False, column: str = None, log_axis: tuple = (False, False), **plot_kwrgs):
