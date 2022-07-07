@@ -1,6 +1,6 @@
 {
     "system_type": "RNA",
-    "data_path": "./data/generate_species_templates/2022_05_10_155621/circuits/toy_mRNA_circuit_208.fasta",
+    "data_path": "./data/generate_species_templates/2022_05_10_155621/circuits/toy_mRNA_circuit_14.fasta",
     "experiment": {
         "purpose": "RNA_circuit_simulation"
     },

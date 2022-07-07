@@ -1,9 +1,9 @@
 {
-    "signal":[1, 0, 1, 0],
+    "signal":[0, 1, 0],
     "signal_spec": "raw",
     "signal_type": "abstract",
-    "total_time":10000,
-    "magnitude":10,
+    "total_time":12000,
+    "magnitude":50,
     "positions":[6, 500],
     "heights":[50, 80],
     "durations":[50, 400]

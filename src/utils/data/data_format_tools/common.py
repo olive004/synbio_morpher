@@ -79,8 +79,6 @@ def process_dict_for_json(dict_like) -> Union[list, dict]:
             dict_like[k] = v.tolist()
         elif type(v) == np.float32 or type(v) == np.int64:
             dict_like[k] = str(v)
-        logging.info(type(dict_like[k]))
-        logging.info(type(k))
     return dict_like
 
 

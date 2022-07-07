@@ -44,8 +44,6 @@ class ResultWriter(DataWriter):
         report = {}
         for writeable in keys:
             report[writeable] = prettify_writeable(source.get(writeable, ''))
-            logging.info(writeable)
-            logging.info(report[writeable])
         self.report = report
 
         return report

@@ -40,16 +40,19 @@ class Timeseries():
         signal_low = np.min(self.data[signal_idx, :])
         signal_high = np.max(self.data[signal_idx, :])
 
-        """ MODIFYING THIS PART A BIT - GETTING DIVIDE BY ZERO ERROR OTHERWISE
-        Original: 
-        return np.absolute(np.divide(
-            (steady_states - starting_states) / starting_states,
-            (signal_high - signal_low) / signal_low
-        )).astype(self.num_dtype) """
-        return np.absolute(np.divide(
-            steady_states - starting_states,
-            signal_high - signal_low
-        )).astype(self.num_dtype)
+        """ MODIFYING THIS PART A BIT - GETTING DIVIDE BY ZERO ERROR OTHERWISE"""
+        if signal_high - signal_low == 0:
+            return self.num_dtype(0)
+        elif signal_low == 0 or any(starting_states == 0):
+            return np.absolute(np.divide(
+                steady_states - starting_states,
+                signal_high - signal_low
+            )).astype(self.num_dtype)
+        else:
+            return np.absolute(np.divide(
+                (steady_states - starting_states) / starting_states,
+                (signal_high - signal_low) / signal_low
+            )).astype(self.num_dtype)
 
     def get_sensitivity(self, signal_idx: int):
         if signal_idx is None:
@@ -59,16 +62,19 @@ class Timeseries():
         signal_low = np.min(self.data[signal_idx, :])
         signal_high = np.max(self.data[signal_idx, :])
 
-        """ MODIFYING THIS PART A BIT - GETTING DIVIDE BY ZERO ERROR OTHERWISE
-        Original: 
-        return np.absolute(np.divide(
-            (peaks - starting_states) / starting_states,
-            (signal_high - signal_low) / signal_low
-        )).astype(self.num_dtype) """
-        return np.expand_dims(np.absolute(np.divide(
-            peaks - starting_states,
-            signal_high - signal_low
-        )).astype(self.num_dtype), axis=1)
+        """ MODIFYING THIS PART A BIT - GETTING DIVIDE BY ZERO ERROR OTHERWISE """
+        if signal_high - signal_low == 0:
+            return self.num_dtype(0)
+        elif signal_low == 0 or any(starting_states == 0):
+            return np.expand_dims(np.absolute(np.divide(
+                peaks - starting_states,
+                signal_high - signal_low
+            )).astype(self.num_dtype), axis=1)
+        else:
+            return np.absolute(np.divide(
+                (peaks - starting_states) / starting_states,
+                (signal_high - signal_low) / signal_low
+            )).astype(self.num_dtype)
 
     def get_response_times(self, steady_states):
         margin_high = 1.05
@@ -117,9 +123,6 @@ class Timeseries():
             'fold_change': self.fold_change(),
             'sensitivity': self.get_sensitivity(signal_idx)
         }
-        logging.info('\n\n generate analytics')
-        logging.info(analytics['sensitivity'])
-        logging.info('\n\n /generate analytics')
         analytics['steady_states'], \
             analytics['is_steady_state_reached'], \
             analytics['final_deriv'] = self.get_steady_state()

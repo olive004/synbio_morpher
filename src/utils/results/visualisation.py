@@ -127,7 +127,7 @@ def visualise_graph_pyvis(graph: nx.DiGraph,
     interactive_graph.from_nx(graph, edge_weight_transf=lambda x: round(x, 4))
     interactive_graph.inherit_edge_colors(True)
     interactive_graph.set_edge_smooth('dynamic')
-    interactive_graph.show(out_path)
+    interactive_graph.save_graph(out_path)
 
     web_filename = 'file:///' + os.getcwd() + '/' + out_path
     webbrowser.open(web_filename, new=1, autoraise=True)

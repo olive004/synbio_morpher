@@ -99,7 +99,7 @@ class CircuitModeller():
 
         circuit.species.copynumbers = self.compute_steady_states(modeller_steady_state,
                                                                  circuit=circuit,
-                                                                 use_solver=self.steady_state_solver)
+                                                                 solver_type=self.steady_state_solver)
 
         circuit.result_collector.add_result(circuit.species.copynumbers,
                                             name='steady_states',
@@ -113,7 +113,7 @@ class CircuitModeller():
         return circuit
 
     def compute_steady_states(self, modeller, circuit: BaseSystem,
-                              use_solver: str = 'naive',
+                              solver_type: str = 'naive',
                               exclude_species_by_idx: Union[int, list] = None):
         copynumbers = circuit.species.copynumbers[:, -1]
         if exclude_species_by_idx is not None:
@@ -127,12 +127,12 @@ class CircuitModeller():
         idxs = make_dynamic_indexer({
             circuit.species.species_axis: slice(0, np.shape(copynumbers)[circuit.species.species_axis], 1),
             circuit.species.time_axis: -1})
-        if use_solver == 'naive':
+        if solver_type == 'naive':
             copynumbers = self.model_circuit(
                 modeller, copynumbers, circuit=circuit, exclude_species_by_idx=exclude_species_by_idx)
             copynumbers = copynumbers
 
-        elif use_solver == 'ivp':
+        elif solver_type == 'ivp':
 
             if circuit.species.interaction_units == SIMULATOR_UNITS['IntaRNA']['energy']:
                 logging.warning(f'Interactions in units of {circuit.species.interaction_units} may not be suitable for '
@@ -205,7 +205,7 @@ class CircuitModeller():
             steady_states = self.compute_steady_states(Deterministic(
                 max_time=50, time_step=1),
                 circuit=circuit,
-                use_solver=self.steady_state_solver,
+                solver_type=self.steady_state_solver,
                 exclude_species_by_idx=signal.identities_idx)
             steady_states = steady_states[make_dynamic_indexer({
                 circuit.species.species_axis: slice(np.shape(steady_states)[circuit.species.species_axis]),
