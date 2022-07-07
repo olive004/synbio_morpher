@@ -18,7 +18,7 @@ from src.utils.system_definition.agnostic_system.system_manager import CircuitMo
 def main(config=None, data_writer=None):
 
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
-        'scripts', 'parameter_based_simulation', 'configs', 'medium_parameter_space.json'))
+        'scripts', 'parameter_based_simulation', 'configs', 'logscale.json'))
     config_file = load_json_as_dict(config)
 
     if config_file.get('experiment').get('parallelise'):
