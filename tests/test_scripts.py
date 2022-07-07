@@ -7,7 +7,6 @@ import inspect
 
 import numpy as np
 from scripts.common.circuit import construct_circuit_from_cfg
-from src.clients.common.setup import ESSENTIAL_KWARGS
 from src.srv.io.manage.sys_interface import make_filename_safely
 from src.utils.results.result_writer import ResultWriter
 from src.utils.data.data_format_tools.common import load_json_as_dict
@@ -77,6 +76,9 @@ class TestScripts(unittest.TestCase):
     def test_circuit_configs(self):
         """ Make sure that the keys required by the circuit composer are present in configs that have a data path. """
         exclude = ['common', '__pycache__']
+        from src.clients.common.setup import ESSENTIAL_KWARGS
+
+        ESSENTIAL_KWARGS = ESSENTIAL_KWARGS + ["experiment"]
 
         for script_home in get_subdirectories(SCRIPT_DIR):
             if os.path.basename(script_home) in exclude:

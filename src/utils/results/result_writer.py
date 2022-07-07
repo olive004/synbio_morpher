@@ -28,7 +28,7 @@ class ResultWriter(DataWriter):
                 self.output(out_name=out_name,
                             write_func=result.vis_func, **result.vis_kwargs)
 
-    def make_report(self, keys, source: dict):
+    def make_report(self, keys: list, source: dict):
 
         def prettify_writeable(writeable):
             if type(writeable) == np.ndarray or type(writeable) == list:
@@ -44,11 +44,13 @@ class ResultWriter(DataWriter):
         report = {}
         for writeable in keys:
             report[writeable] = prettify_writeable(source.get(writeable, ''))
+            logging.info(writeable)
+            logging.info(report[writeable])
         self.report = report
 
         return report
 
-    def write_report(self, writeables, analytics, new_report, out_name='report', out_type='json'):
+    def write_report(self, writeables: list, analytics: dict, new_report: bool, out_name: str='report', out_type: str='json'):
         report = self.make_report(writeables, analytics)
 
         if new_report:
@@ -63,7 +65,7 @@ class ResultWriter(DataWriter):
     def write_analytics(self, result: Result, new_report=False):
         analytics = result.analytics
         writeables = Timeseries(data=None).get_analytics_types()
-        self.write_report(writeables, analytics, new_report)
+        self.write_report(writeables, analytics, new_report, out_name=f'report_{result.name}')
 
     def write_results(self, results: dict, new_report=False, no_visualisations=False,
                       only_numerical=False, no_analytics=False, no_numerical=False):
@@ -87,7 +89,6 @@ class ResultWriter(DataWriter):
 
     def write_all(self, circuit: BaseSystem, new_report: bool, no_visualisations: bool = False,
                   only_numerical: bool = False):
-        logging.info(circuit.name)
         if not no_visualisations:
             self.visualise_graph(circuit)
         self.write_results(circuit.result_collector.results,

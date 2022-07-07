@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from typing import Union
 import numpy as np
 import pandas as pd
 
@@ -62,9 +63,15 @@ def load_json_as_dict(json_pathname: str, process=True) -> dict:
     #     sys.exit()
 
 
-def process_dict_for_json(dict_like):
-    for k, v in dict_like.items():
-        if type(v) == dict:
+def process_dict_for_json(dict_like) -> Union[list, dict]:
+    if type(dict_like) == dict:
+        iterable_like = dict_like.items()
+    elif type(dict_like) == list:
+        iterable_like = enumerate(dict_like)
+    else:
+        raise ValueError(f'Input {dict_like} should be type dict (or list) but was type {type(dict_like)}')
+    for k, v in iterable_like:
+        if type(v) == dict or type(v) == list:
             v = process_dict_for_json(v)
         elif type(v) == np.bool_:
             dict_like[k] = bool(v)
@@ -72,6 +79,8 @@ def process_dict_for_json(dict_like):
             dict_like[k] = v.tolist()
         elif type(v) == np.float32 or type(v) == np.int64:
             dict_like[k] = str(v)
+        logging.info(type(dict_like[k]))
+        logging.info(type(k))
     return dict_like
 
 
@@ -101,11 +110,12 @@ def write_csv(data: pd.DataFrame, out_path: str, overwrite=False):
 def write_json(data: dict, out_path: str, overwrite=False):
     data = process_dict_for_json(data)
     with open(out_path, 'w+') as fn:
-        try:
-            json.dump(data, fp=fn, indent=4)
-        except TypeError:
-            data = str(data)
-            json.dump(data, fp=fn, indent=4)
+        json.dump(data, fp=fn, indent=4)
+        # try:
+        #     json.dump(data, fp=fn, indent=4)
+        # except TypeError:
+        #     data = str(data)
+        #     json.dump(data, fp=fn, indent=4)
 
 
 def write_np(data: np.array, out_path: str, overwrite=False):

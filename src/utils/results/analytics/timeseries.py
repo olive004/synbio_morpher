@@ -117,6 +117,9 @@ class Timeseries():
             'fold_change': self.fold_change(),
             'sensitivity': self.get_sensitivity(signal_idx)
         }
+        logging.info('\n\n generate analytics')
+        logging.info(analytics['sensitivity'])
+        logging.info('\n\n /generate analytics')
         analytics['steady_states'], \
             analytics['is_steady_state_reached'], \
             analytics['final_deriv'] = self.get_steady_state()

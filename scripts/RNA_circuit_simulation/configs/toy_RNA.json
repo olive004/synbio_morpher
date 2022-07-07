@@ -1,6 +1,8 @@
 {
-    "system_type": "RNA",
     "data_path": "./data/example_data/toy_mRNA_circuit.fasta",
+    "experiment": {
+        "purpose": "RNA_circuit_simulation"
+    },
     "interaction_simulator": {
         "name": "IntaRNA",
         "postprocess": "False"
@@ -15,5 +17,6 @@
         "mutation_nums": 0,
         "algorithm": "random"
     },
-    "signal": "./scripts/RNA_circuit_simulation/configs/in_signal.json"
+    "signal": "./scripts/RNA_circuit_simulation/configs/in_signal.json",
+    "system_type": "RNA"
 }

@@ -7,6 +7,9 @@
         "proportion_to_mutate": 0.35
     },
     "data_path": "./scripts/intarna_sandbox/configs/no_binding.fasta",
+    "experiment": {
+        "purpose": "intarna_sandbox"
+    },
     "interaction_simulator": {
         "name": "IntaRNA",
         "postprocess": true

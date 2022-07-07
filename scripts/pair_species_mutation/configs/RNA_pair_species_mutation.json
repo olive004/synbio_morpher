@@ -7,6 +7,9 @@
         "proportion_to_mutate": 0.35
     },
     "data": "./data/example_data/toy_mRNA_circuit.fasta",
+    "experiment": {
+        "purpose": "pair_species_mutation"
+    },
     "interaction_simulator": {
         "name": "IntaRNA",
         "postprocess": false

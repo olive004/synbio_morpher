@@ -141,12 +141,6 @@ class CircuitModeller():
             steady_state_result = integrate.solve_ivp(self.make_modelling_func(modeller, circuit, exclude_species_by_idx),
                                                       (0, modeller.max_time),
                                                       y0=y0)
-            # logging.info(y0)
-            # logging.info(steady_state_result)
-            # logging.info(copynumbers)
-            # logging.info(modeller.max_time)
-            # logging.info(self.make_modelling_func(
-            #     modeller, circuit, exclude_species_by_idx))
             if not steady_state_result.success:
                 raise ValueError(
                     'Steady state could not be found through solve_ivp - possibly because units '
@@ -253,9 +247,6 @@ class CircuitModeller():
                     raise ValueError(
                         'Steady state could not be found through solve_ivp - possibly because units '
                         f'are in {circuit.species.interaction_units}.')
-                logging.info(steady_state_result.y[:, -1])
-                logging.info(np.expand_dims(
-                    steady_state_result.y[:, -1], axis=circuit.species.time_axis))
                 expanded_steady_states = np.concatenate(
                     [steady_state_result.y,
                      np.repeat(np.expand_dims(steady_state_result.y[:, -1], axis=circuit.species.time_axis),
