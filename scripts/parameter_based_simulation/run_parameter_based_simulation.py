@@ -36,7 +36,7 @@ def main(config=None, data_writer=None):
 
 def main_subprocess(config, data_writer, sub_process, total_processes):
     config_file = load_json_as_dict(config)
-    debug_mode = True
+    debug_mode = False
 
     def make_interaction_interpolation_matrices():
         # Parameter space to scan
