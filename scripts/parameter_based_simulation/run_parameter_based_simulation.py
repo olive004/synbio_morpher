@@ -119,7 +119,6 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
                     idxs)] = circuit.result_collector.results['signal'].analytics.get(analytic)
 
             if debug_mode and i==0:
-                logging.info(idxs)
                 modeller.write_results(circuit)
 
             # @time_it
