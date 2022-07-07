@@ -21,15 +21,15 @@
     "parameter_based_simulation": {
         "interaction_min": 0,
         "interaction_max": 1,
-        "interaction_step_size": 0.1,
+        "interaction_step_size": 0.05,
         "log_scale": true
     },
     "signal": {
         "signal":[0, 1],
         "signal_spec": "raw",
         "signal_type": "abstract",
-        "total_time":12000,
-        "magnitude":20,
+        "total_time":15000,
+        "magnitude":50,
         "positions":null,
         "heights":null,
         "durations": null,
