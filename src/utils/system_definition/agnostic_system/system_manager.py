@@ -194,16 +194,20 @@ class CircuitModeller():
     # @time_it
     def simulate_signal(self, circuit: BaseSystem, signal: Signal = None, save_numerical_vis_data: bool = False,
                         use_old_steadystates: bool = False, use_solver: str = 'naive'):
+        time_step = 1
         if signal is None:
+            circuit.signal.update_time_interval(time_step)
             signal = circuit.signal
+        max_time = int(signal.total_time / time_step)
+
         modeller_signal = Deterministic(
-            max_time=signal.total_time, time_step=1
+            max_time=max_time, time_step=time_step
         )
         if use_old_steadystates:
             steady_states = deepcopy(circuit.species.steady_state_copynums)
         else:
             steady_states = self.compute_steady_states(Deterministic(
-                max_time=50, time_step=1),
+                max_time=50/time_step, time_step=time_step),
                 circuit=circuit,
                 solver_type=self.steady_state_solver,
                 exclude_species_by_idx=signal.identities_idx)
