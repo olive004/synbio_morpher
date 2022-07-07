@@ -20,6 +20,7 @@ class Deterministic():
             copynumbers.flatten() * degradation_rates.flatten()
 
         return dxdt
+        # return np.multiply(dxdt, self.time_step)
 
     def plot(self, data, y=None, out_path='test_plot', new_vis=False, out_type='png',
     **plot_kwrgs):

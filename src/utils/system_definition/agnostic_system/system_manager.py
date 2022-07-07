@@ -95,7 +95,7 @@ class CircuitModeller():
 
     def find_steady_states(self, circuit: BaseSystem):
         modeller_steady_state = Deterministic(
-            max_time=50, time_step=1)
+            max_time=50, time_step=0.1)
 
         circuit.species.copynumbers = self.compute_steady_states(modeller_steady_state,
                                                                  circuit=circuit,

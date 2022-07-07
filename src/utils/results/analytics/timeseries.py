@@ -19,8 +19,7 @@ class Timeseries():
         return steady_states, is_steady_state_reached, final_deriv
 
     def fold_change(self):
-        division_vector = self.data[:, -1].clip(1)
-        division_matrix = np.divide(division_vector, division_vector.T)
+        division_matrix = np.divide(self.data[:, -1].clip(1), self.data[:, 0].clip(1))
         if np.ndim(division_matrix) == 1:
             return np.expand_dims(division_matrix, axis=1)
         else:
