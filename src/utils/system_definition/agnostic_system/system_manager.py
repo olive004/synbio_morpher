@@ -33,7 +33,6 @@ class CircuitModeller():
         else:
             self.result_writer = result_writer
 
-    # @time_it
     def init_circuit(self, circuit: BaseSystem):
         circuit = self.compute_interaction_strengths(circuit)
         circuit = self.find_steady_states(circuit)
@@ -148,7 +147,6 @@ class CircuitModeller():
             copynumbers = steady_state_result.y
         return copynumbers
 
-    # @time_it
     def model_circuit(self, modeller, init_copynumbers: np.ndarray, circuit: BaseSystem,
                       signal: np.ndarray = None, signal_identity_idx: int = None,
                       exclude_species_by_idx: Union[list, int] = None):
@@ -170,33 +168,46 @@ class CircuitModeller():
             init_copynumbers[signal_identity_idx] = signal[0]
 
         copynumbers = self.iterate_modelling_func(copynumbers, init_copynumbers, modelling_func,
-                                                  max_time=modeller.max_time, time_step=modeller.time_step,
+                                                  max_time=modeller.max_time,
                                                   signal=signal, signal_idx=signal_identity_idx)
         return copynumbers
 
+    # @time_it
     def iterate_modelling_func(self, copynumbers, init_copynumbers,
-                               modelling_func, max_time, time_step,
+                               modelling_func, max_time,
                                signal=None, signal_idx: int = None):
         current_copynumbers = init_copynumbers.flatten()
-        for tstep in range(0, max_time-1):
-            dxdt = modelling_func(
-                copynumbers=copynumbers[:, tstep]) * time_step
+        if signal is not None:
+            for tstep in range(0, max_time-1):
+                dxdt = modelling_func(
+                    copynumbers=copynumbers[:, tstep])
 
-            current_copynumbers = np.add(dxdt, current_copynumbers).flatten()
+                current_copynumbers = np.add(dxdt, current_copynumbers).flatten()
 
-            if signal is not None:
                 current_copynumbers[signal_idx] = signal[tstep]
-            current_copynumbers = zero_out_negs(current_copynumbers)
-            copynumbers[:, tstep +
-                        1] = current_copynumbers
+                current_copynumbers = zero_out_negs(current_copynumbers)
+                copynumbers[:, tstep +
+                            1] = zero_out_negs(current_copynumbers)
+        else:
+            for tstep in range(0, max_time-1):
+                dxdt = modelling_func(
+                    copynumbers=copynumbers[:, tstep]) * time_step
+
+                current_copynumbers = np.add(dxdt, current_copynumbers).flatten()
+
+                if signal is not None:
+                    current_copynumbers[signal_idx] = signal[tstep]
+                current_copynumbers = zero_out_negs(current_copynumbers)
+                copynumbers[:, tstep +
+                            1] = current_copynumbers
         return copynumbers
 
-    # @time_it
+    @time_it
     def simulate_signal(self, circuit: BaseSystem, signal: Signal = None, save_numerical_vis_data: bool = False,
                         use_old_steadystates: bool = False, use_solver: str = 'naive'):
         time_step = 1
         if signal is None:
-            circuit.signal.update_time_interval(time_step)
+            # circuit.signal.update_time_interval(time_step)
             signal = circuit.signal
         max_time = int(signal.total_time / time_step)
 
