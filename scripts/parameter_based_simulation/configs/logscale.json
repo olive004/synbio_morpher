@@ -3,7 +3,7 @@
     "experiment": {
         "purpose": "parameter_based_simulation",
         "parallelise": true,
-        "num_subprocesses": 10
+        "num_subprocesses": 1
     },
     "identities": {
         "input": "RNA_0",
@@ -17,7 +17,7 @@
     "parameter_based_simulation": {
         "interaction_min": 0,
         "interaction_max": 1,
-        "interaction_step_size": 0.05,
+        "interaction_step_size": 0.1,
         "log_scale": true
     },
     "signal": {

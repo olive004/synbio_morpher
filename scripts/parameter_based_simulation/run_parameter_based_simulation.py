@@ -54,10 +54,10 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
                 make_filename_safely(config_file.get("data_path")), as_type='dict')
             num_species = len(sample_names)
             num_unique_interactions = triangular_sequence(num_species)
-            return sample_names, num_species, num_unique_interactions
+            return num_species, num_unique_interactions
 
         analytic_types = Timeseries(None).get_analytics_types()
-        sample_names, num_species, num_unique_interactions = load_local_data(
+        num_species, num_unique_interactions = load_local_data(
             config_file)
 
         # Create matrices
