@@ -202,7 +202,7 @@ class CircuitModeller():
                             1] = current_copynumbers
         return copynumbers
 
-    @time_it
+    # @time_it
     def simulate_signal(self, circuit: BaseSystem, signal: Signal = None, save_numerical_vis_data: bool = False,
                         use_old_steadystates: bool = False, use_solver: str = 'naive'):
         time_step = 1
