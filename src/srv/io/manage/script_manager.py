@@ -31,12 +31,11 @@ def script_preamble(config, data_writer, alt_cfg_filepath: str, use_resultwriter
 
 class Ensembler():
 
-    def __init__(self, data_writer: ResultWriter, config_filepath: str, subscripts: list = None) -> None:
+    def __init__(self, data_writer: ResultWriter, config: str, subscripts: list = None) -> None:
         self.data_writer = data_writer
         self.subscripts = subscripts
 
-        self.config_filepath = config_filepath
-        self.config = load_json_as_dict(config_filepath)
+        self.config = load_json_as_dict(config)
         self.ensemble_configs = self.config["base_configs_ensemble"]
 
     def run(self):

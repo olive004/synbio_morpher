@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 
 from src.srv.io.loaders.data_loader import DataLoader, GeneCircuitLoader
+from src.srv.io.manage.script_manager import script_preamble
 from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
 from src.utils.misc.type_handling import flatten_listlike, merge_dicts
 from src.utils.results.analytics.timeseries import Timeseries
@@ -25,13 +26,8 @@ from src.utils.results.visualisation import VisODE
 
 def main(config=None, data_writer=None):
 
-    if config is None:
-        config = os.path.join(
-            'scripts', 'parameter_grid_analysis', 'configs', 'heatmap_cfg.json')
-    config_file = load_json_as_dict(config)
-    if data_writer is None:
-        data_writer = ResultWriter(purpose=config_file.get(
-            'experiment').get('purpose', 'parameter_based_simulation'))
+    config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
+        'scripts', 'parameter_grid_analysis', 'configs', 'heatmap_cfg.json'))
 
     # Load in parameter grid
     config_file, source_dir = get_search_dir(
@@ -228,9 +224,12 @@ def main(config=None, data_writer=None):
                     step_size=None)
         return all_refs
 
-    def run_visualisation(all_parameter_grids, data_writer, selected_analytics, selected_species_interactions, slicing_configs):
+    def run_visualisation(all_parameter_grids, data_writer, selected_analytics,
+                          selected_species_interactions, unselected_species_interactions,
+                          slicing_configs, num_species, shape_parameter_grid):
         species_interaction_refs = make_species_interaction_ref(
             selected_species_interactions, slicing_configs['interactions']['strengths'])
+
         slice_indices = make_slice(selected_species_interactions, unselected_species_interactions,
                                    slicing_configs, num_species, shape_parameter_grid)
         info_text = '\n'.join(
@@ -255,19 +254,22 @@ def main(config=None, data_writer=None):
                 result_collector.add_result(data_container,
                                             name=analytic_name,
                                             category=None,
-                                            vis_func=VisODE().heatmap,
+                                            vis_func=VisODE(
+                                                figsize=(13, 8)).heatmap,
                                             # vis_func=custom_3D_visualisation,
                                             save_numerical_vis_data=False,
                                             vis_kwargs={'legend': slicing_configs['species_choices'],
                                                         'out_type': 'png',
+                                                        # '__setattr__': {'figsize': (10, 10)},
                                                         'xlabel': f'{sorted_species_interactions[0]} interaction strength '\
                                                         f'({SIMULATOR_UNITS["IntaRNA"]["energy"]})',
                                                         'ylabel': f'{sorted_species_interactions[1]} interaction strength '\
                                                         f'({SIMULATOR_UNITS["IntaRNA"]["energy"]})',
                                                         'title': f'{analytic_name.replace("_", " ")} for {species_name}',
-                                                        'text': {'x': 14.15, 'y': 0.85, 's': info_text,
-                                                                 'fontsize': 8,
-                                                                 'bbox': dict(boxstyle='round', facecolor='wheat', alpha=1)}
+                                                        'text': {'x': 12.15, 'y': 0.85, 's': info_text,
+                                                                 'fontsize': 10,
+                                                                 'bbox': dict(boxstyle='round', facecolor='wheat', alpha=1)},
+                                                        # 'figure': {'figsize': (15, 15)}
                                                         })
             data_writer.write_results(result_collector.results, new_report=False,
                                       no_visualisations=False, only_numerical=False,
@@ -279,6 +281,11 @@ def main(config=None, data_writer=None):
                          data_writer=data_writer,
                          selected_analytics=selected_analytics,
                          selected_species_interactions=selected_species_interactions,
-                         slicing_configs=slicing_configs))
+                         unselected_species_interactions=unselected_species_interactions,
+                         slicing_configs=slicing_configs,
+                         num_species=num_species,
+                         shape_parameter_grid=shape_parameter_grid))
     ], data_writer=data_writer)
     experiment.run_experiment()
+
+    return config, data_writer

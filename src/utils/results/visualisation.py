@@ -142,11 +142,11 @@ def visualise_graph_pyplot(graph: nx.DiGraph):
 
 
 class VisODE():
-    def __init__(self) -> None:
-        pass
+    def __init__(self, figsize) -> None:
+        self.figsize = figsize
 
     def add_kwrgs(self, plt, **plot_kwrgs):
-        def warning_call(object, function, dummy_value):
+        def warning_call(object, function, dummy_value, **dummy_kwargs):
             logging.warn(
                 f'Could not call function {function} in object {object}.')
 
@@ -155,10 +155,10 @@ class VisODE():
                 if type(value) == dict:
                     # Treat as kwargs
                     getattr(plt, plot_kwrg, partial(
-                        warning_call, object=plt, function=plot_kwrg))(**value)
+                        warning_call, object=plt, dummy_value=None, function=plot_kwrg))(**value)
                 else:
                     getattr(plt, plot_kwrg, partial(
-                        warning_call, object=plt, function=plot_kwrg))(value)
+                        warning_call, dummy_value=None, function=plot_kwrg))(value)
 
     def plot(self, data, y=None, new_vis=False, out_path='test_plot', out_type='png',
              **plot_kwrgs) -> None:
@@ -178,7 +178,7 @@ class VisODE():
         import matplotlib.pyplot as plt
         sns.set_theme()
 
-        plt.figure()
+        plt.figure(figsize=self.figsize)
         ax = sns.heatmap(data)
         fig = ax.get_figure()
         self.add_kwrgs(plt, **plot_kwrgs)
