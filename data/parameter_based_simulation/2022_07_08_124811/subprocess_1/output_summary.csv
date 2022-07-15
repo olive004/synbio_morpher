@@ -1,0 +1,10 @@
+out_name,out_path,filename_addon,out_type,name
+fold_change,data/parameter_based_simulation/2022_07_08_124811/subprocess_1/fold_change.npy,None,npy,fold_change
+is_steady_state_reached,data/parameter_based_simulation/2022_07_08_124811/subprocess_1/is_steady_state_reached.npy,None,npy,is_steady_state_reached
+overshoot,data/parameter_based_simulation/2022_07_08_124811/subprocess_1/overshoot.npy,None,npy,overshoot
+precision,data/parameter_based_simulation/2022_07_08_124811/subprocess_1/precision.npy,None,npy,precision
+response_time,data/parameter_based_simulation/2022_07_08_124811/subprocess_1/response_time.npy,None,npy,response_time
+response_time_high,data/parameter_based_simulation/2022_07_08_124811/subprocess_1/response_time_high.npy,None,npy,response_time_high
+response_time_low,data/parameter_based_simulation/2022_07_08_124811/subprocess_1/response_time_low.npy,None,npy,response_time_low
+sensitivity,data/parameter_based_simulation/2022_07_08_124811/subprocess_1/sensitivity.npy,None,npy,sensitivity
+steady_states,data/parameter_based_simulation/2022_07_08_124811/subprocess_1/steady_states.npy,None,npy,steady_states

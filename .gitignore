@@ -8,4 +8,4 @@ __pycache__
 *.txt
 data/*
 !data/example_data
-!data/parameter_based_simulation/2022_07_08_124811/*
+!data/parameter_based_simulation
