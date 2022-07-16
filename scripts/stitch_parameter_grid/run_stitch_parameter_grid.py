@@ -59,18 +59,34 @@ def main(config=None, data_writer=None):
         num_unique_interactions = triangular_sequence(num_species)
         size_interaction_array = np.shape(a_parameter_grid)[-1]
 
-        total_iterations_correct = np.power(
+        total_iterations = np.power(
             size_interaction_array, num_unique_interactions)
-        total_iterations = matrix_size
-        num_iterations = int(total_iterations / num_subprocesses)
+        total_iterations_incorrect = matrix_size
+        subprocess_iterations = int(total_iterations / num_subprocesses)
+
+
+        logging.info("num_species")
+        logging.info(num_species)
+        logging.info("num_unique_interactions")
+        logging.info(num_unique_interactions)
+        logging.info("num_subprocesses")
+        logging.info(num_subprocesses)
+        logging.info("size_interaction_array")
+        logging.info(size_interaction_array)
+        logging.info("total_iterations")
+        logging.info(total_iterations)
+        logging.info("total_iterations_incorrect")
+        logging.info(total_iterations_incorrect)
+        logging.info("num_iterations")
+        logging.info(subprocess_iterations)
 
         # Iterate through all possible index combinations (corresponding to all possible parameter combinations)
         def make_indices(iteration):
             return tuple([slice(0, num_species)] + [int(np.mod(iteration / np.power(size_interaction_array, unique_interaction),
                                                                size_interaction_array)) for unique_interaction in range(num_unique_interactions)])
 
-        all_iterators = [None] * total_iterations_correct
-        for ite in range(total_iterations_correct):
+        all_iterators = [None] * total_iterations
+        for ite in range(total_iterations):
             all_iterators[ite] = make_indices(ite)
 
         stitched_parameter_grids = {k: np.zeros(
@@ -79,18 +95,26 @@ def main(config=None, data_writer=None):
             logging.info('\n\n')
             logging.info(analytic_name)
 
-            for ite in range(total_iterations_correct):
-                i = int(ite/num_iterations)
+            nonzeros_count = 0
+            next_i = 0
+            for ite in range(total_iterations):
+                i = int(ite/subprocess_iterations)
+                if next_i == i:
+                    nonzeros_count += np.sum(all_parameter_grids[analytic_name][i] != 0)
+                    next_i += 1
                 current_grid = all_parameter_grids[analytic_name][i]
                 idxs = all_iterators[ite]
                 stitched_parameter_grids[analytic_name][idxs] = current_grid[idxs]
+                
 
+            logging.info('Sanity check')
+            zeros_count = np.size(all_parameter_grids[analytic_name][i]) - nonzeros_count
             logging.info(
-                f'Number of zeros in subprocess matrix: {np.sum(all_parameter_grids[analytic_name][i] == 0)}')
+                f'Number of zeros in subprocess matrices: {zeros_count}')
             logging.info(
                 f'Number of zeros in stitched matrix: {np.sum(stitched_parameter_grids[analytic_name] == 0)}')
             logging.info(
-                f'Difference in zeros: {np.absolute(np.sum(all_parameter_grids[analytic_name][i] == 0) - np.sum(stitched_parameter_grids[analytic_name] == 0))}')
+                f'Difference in zeros: {np.absolute(zeros_count - np.sum(stitched_parameter_grids[analytic_name] == 0))}\n')
         return stitched_parameter_grids
 
     # Write full matrices
@@ -99,9 +123,6 @@ def main(config=None, data_writer=None):
             data_writer.output(out_type, out_name=analytic_name,
                                data=grid.astype(np.float32), overwrite=True,
                                write_to_top_dir=True)
-
-    # stitched_parameter_grids = stitch_grids()
-    # write_all(stitched_parameter_grids)
 
     experiment = Experiment(config_filepath=config, protocols=[
         Protocol(stitch_grids, req_output=True, name='Stitching grids together'),
