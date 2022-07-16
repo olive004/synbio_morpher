@@ -1,0 +1,50 @@
+{
+    "total_time": "14:26:35.450308",
+    "protocols": [
+        ""
+    ],
+    "purpose": "parameter_based_simulation",
+    "config_filepath": "scripts/parameter_based_simulation/configs/logscale.json",
+    "config_params": {
+        "data_path": "./scripts/parameter_based_simulation/configs/empty_circuit.fasta",
+        "experiment": {
+            "purpose": "parameter_based_simulation",
+            "parallelise": true,
+            "num_subprocesses": 20
+        },
+        "identities": {
+            "input": "RNA_0",
+            "output": "RNA_2"
+        },
+        "interaction_simulator": {
+            "name": "IntaRNA",
+            "postprocess": "True"
+        },
+        "molecular_params": {
+            "creation_rates": 50,
+            "copynumbers": 5,
+            "degradation_rates": 20
+        },
+        "parameter_based_simulation": {
+            "interaction_min": 0,
+            "interaction_max": 1,
+            "interaction_step_size": 0.1,
+            "log_scale": true
+        },
+        "signal": {
+            "signal": [
+                0,
+                1
+            ],
+            "signal_spec": "raw",
+            "signal_type": "abstract",
+            "total_time": 12000,
+            "magnitude": 50,
+            "positions": null,
+            "heights": null,
+            "durations": null,
+            "use_solver": "naive"
+        },
+        "system_type": "RNA"
+    }
+}
