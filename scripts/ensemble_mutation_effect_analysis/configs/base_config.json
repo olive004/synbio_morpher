@@ -28,8 +28,8 @@
             "source_of_interactions": {
                 "is_source_dir_incomplete": true,
                 "source_dir": "./data/ensemble_mutation_effect_analysis",
-                "purpose_of_ensembled_source_dir": "gather_interaction_stats",
-                "source_dir_actually_used_if_incomplete": null
+                "purpose_to_get_source_dir_from": "gather_interaction_stats",
+                "source_dir_actually_used_POSTERITY": null
             }
         },
         "mutation_effect_on_interactions_signal": {
@@ -68,8 +68,8 @@
             "source_of_interaction_stats": {
                 "is_source_dir_incomplete": true,
                 "source_dir": "./data/ensemble_mutation_effect_analysis",
-                "purpose_of_ensembled_source_dir": "gather_interaction_stats",
-                "source_dir_actually_used_if_incomplete": null
+                "purpose_to_get_source_dir_from": "gather_interaction_stats",
+                "source_dir_actually_used_POSTERITY": null
             }
         }
     }

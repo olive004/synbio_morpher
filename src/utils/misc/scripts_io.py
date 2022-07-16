@@ -46,11 +46,11 @@ def get_search_dir(config_file: dict, config_search_key: str = None,
     if update:
         search_dir = os.path.join(search_config.get("source_dir"),
                                   get_recent_experiment_folder(search_config.get(
-                                      "source_dir")), search_config.get("purpose_of_ensembled_source_dir"))
+                                      "source_dir")), search_config.get("purpose_to_get_source_dir_from"))
         if not os.path.isdir(search_dir):
             raise ConfigError(f'Could not find directory {search_dir}')
         if modify_config_for_posterity:
-            config_file[config_search_key]['source_dir_actually_used_if_incomplete'] = search_dir
+            config_file[config_search_key]['source_dir_actually_used_POSTERITY'] = search_dir
         return config_file, search_dir
     else:
         search_dir = search_config.get('source_dir')
