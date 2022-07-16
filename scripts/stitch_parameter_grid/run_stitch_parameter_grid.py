@@ -47,6 +47,8 @@ def main(config=None, data_writer=None):
                     DataLoader().load_data(parameter_grid))
         return all_parameter_grids
     all_parameter_grids = load_parameter_grids()
+    logging.info(len(all_parameter_grids['fold_change']))
+    logging.info(np.size(all_parameter_grids['fold_change'][0]))
 
     # Stitch grids together
     def stitch_grids():
@@ -62,9 +64,8 @@ def main(config=None, data_writer=None):
         total_iterations = np.power(
             size_interaction_array, num_unique_interactions)
         total_iterations_incorrect = matrix_size
-        subprocess_iterations = int(total_iterations / num_subprocesses)
-
-
+        subprocess_iterations = total_iterations / num_subprocesses
+            
         logging.info("num_species")
         logging.info(num_species)
         logging.info("num_unique_interactions")
@@ -77,7 +78,7 @@ def main(config=None, data_writer=None):
         logging.info(total_iterations)
         logging.info("total_iterations_incorrect")
         logging.info(total_iterations_incorrect)
-        logging.info("num_iterations")
+        logging.info("subprocess_iterations")
         logging.info(subprocess_iterations)
 
         # Iterate through all possible index combinations (corresponding to all possible parameter combinations)
