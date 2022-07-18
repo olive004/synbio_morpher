@@ -1,5 +1,6 @@
+import os
 from run_parameter_grid_analysis import main as parameter_grid_analysis
-from src.srv.io.manage.script_manager import Ensembler, script_preamble
+from src.srv.io.manage.script_manager import script_preamble
 
 
 def main(config=None, data_writer=None):
@@ -30,28 +31,34 @@ def main(config=None, data_writer=None):
         }
     }
 
-    v = {
+    interaction_species_cfgs = {
         ("RNA_0", "RNA_0"): {
-            "strengths": {"start_value": 0, "end_value": 1, "step_size": None}
+            "strength_type": "varying",
+            "strength": {"start_value": 0, "end_value": 1, "step_size": None}
         },
         ("RNA_0", "RNA_1"): {
-            "non_varying_species_interactions": 0
+            "strength_type": "non_varying",
+            "strength": 0
         },
         ("RNA_0", "RNA_2"): {
-            "strengths": {"start_value": 0, "end_value": 1, "step_size": None}
+            "strength_type": "varying",
+            "strength": {"start_value": 0, "end_value": 1, "step_size": None}
         },
         ("RNA_1", "RNA_1"): {
-            "non_varying_species_interactions": 0
+            "strength_type": "non_varying",
+            "strength": 0
         },
         ("RNA_1", "RNA_2"): {
-            "non_varying_species_interactions": 0
+            "strength_type": "non_varying",
+            "strength": 0
         },
         ("RNA_2", "RNA_1"): {
-            "non_varying_species_interactions": 0
+            "strength_type": "non_varying",
+            "strength": 0
         }
     }
 
     config["slicing"]["interactions"]
 
     for species_interaction, interaction_strength_cfg in v.items():
-        
+
