@@ -30,6 +30,7 @@ def main(config=None, data_writer=None):
         'scripts', 'parameter_grid_analysis', 'configs', 'heatmap_cfg.json'))
 
     # Load in parameter grid
+    config_file = load_json_as_dict(config)
     config_file, source_dir = get_search_dir(
         config_search_key='source_parameter_dir', config_file=config_file)
 
@@ -255,7 +256,7 @@ def main(config=None, data_writer=None):
                                             name=analytic_name,
                                             category=None,
                                             vis_func=VisODE(
-                                                figsize=(13, 8)).heatmap,
+                                                figsize=(14, 8)).heatmap,
                                             # vis_func=custom_3D_visualisation,
                                             save_numerical_vis_data=False,
                                             vis_kwargs={'legend': slicing_configs['species_choices'],
@@ -265,10 +266,12 @@ def main(config=None, data_writer=None):
                                                         f'({SIMULATOR_UNITS["IntaRNA"]["energy"]})',
                                                         'ylabel': f'{sorted_species_interactions[1]} interaction strength '\
                                                         f'({SIMULATOR_UNITS["IntaRNA"]["energy"]})',
-                                                        'title': f'{analytic_name.replace("_", " ")} for {species_name}',
-                                                        'text': {'x': 12.15, 'y': 0.85, 's': info_text,
+                                                        'title': f'{analytic_name.replace("_", " ")} for {sorted_species_interactions[0]} and {sorted_species_interactions[1]}',
+                                                        'text': {'x': 12, 'y': 0.85, 's': info_text,
                                                                  'fontsize': 10,
                                                                  'bbox': dict(boxstyle='round', facecolor='wheat', alpha=1)},
+                                                        'vmin': np.min(data_per_species),
+                                                        'vmax': np.max(data_per_species)
                                                         # 'figure': {'figsize': (15, 15)}
                                                         })
             data_writer.write_results(result_collector.results, new_report=False,

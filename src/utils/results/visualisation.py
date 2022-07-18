@@ -95,7 +95,7 @@ def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
 
             data_writer.output(out_type='png', out_name=out_name,
                                write_func=visualiser.histplot, **merge_dicts({'use_sns': use_sns, "log_axis": log_axis},
-                                                                         plot_kwrgs))
+                                                                             plot_kwrgs))
     elif plot_type == 'plot':
         try:
             x, y = cols[0], cols[-1]
@@ -173,13 +173,14 @@ class VisODE():
         plt.close()
 
     # Make visualisations for each analytic chosen
-    def heatmap(self, data: pd.DataFrame, out_path: str = None, out_type='png', new_vis=False, **plot_kwrgs):
+    def heatmap(self, data: pd.DataFrame, out_path: str = None, out_type='png',
+                new_vis=False, vmin=None, vmax=None, **plot_kwrgs):
         import seaborn as sns
         import matplotlib.pyplot as plt
         sns.set_theme()
 
         plt.figure(figsize=self.figsize)
-        ax = sns.heatmap(data)
+        ax = sns.heatmap(data, vmin=vmin, vmax=vmax)
         fig = ax.get_figure()
         self.add_kwrgs(plt, **plot_kwrgs)
         fig.savefig(out_path)
