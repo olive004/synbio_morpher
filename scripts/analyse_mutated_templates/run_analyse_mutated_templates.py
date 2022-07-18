@@ -82,7 +82,7 @@ def main(config=None, data_writer=None):
             skip=config_file.get('only_visualise_circuits', False)
         )
     ]
-    experiment = Experiment(config_filepath=config, protocols=protocols,
+    experiment = Experiment(config=config, protocols=protocols,
                             data_writer=data_writer)
     experiment.run_experiment()
 

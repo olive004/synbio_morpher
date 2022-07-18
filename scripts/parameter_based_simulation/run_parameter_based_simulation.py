@@ -157,7 +157,7 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
         logging.info('Finished: outputting final matrices')
         write_all()
 
-    experiment = Experiment(config_filepath=config, protocols=[Protocol(make_interaction_interpolation_matrices)],
+    experiment = Experiment(config=config, protocols=[Protocol(make_interaction_interpolation_matrices)],
                             data_writer=data_writer)
     experiment.run_experiment()
     return config, data_writer

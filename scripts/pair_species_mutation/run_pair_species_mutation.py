@@ -59,7 +59,7 @@ def main(config=None, data_writer=None):
             name="visualise_signal"
         )
     ]
-    experiment = Experiment(config_filepath=config, protocols=protocols,
+    experiment = Experiment(config=config, protocols=protocols,
                             data_writer=data_writer)
     experiment.run_experiment()
 

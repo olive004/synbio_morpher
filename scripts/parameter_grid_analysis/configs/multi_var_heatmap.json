@@ -30,11 +30,17 @@
                 "0": 0,
                 "1": 0,
                 "2": 0
+            },
+            "multi_varying_species_interactions": {
+                "0": ["RNA_0", "RNA_0"]
+            },
+            "multi_varying_strengths": {
+                "0": {"start_value": 0, "end_value": 0.5, "step_size": 0.1}
             }
         },
         "species_choices": ["RNA_1"],
         "analytics": {
-            "help": "If you want to analyse all the different analytics generated for the circuits, just make 'names' equal to None (null)",
+            "help": "If you want to include all the different analytics generated for the circuits into your analysis, just make 'names' equal to None (null)",
             "names": null
         }
 

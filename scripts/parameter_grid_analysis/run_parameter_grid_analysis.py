@@ -278,7 +278,7 @@ def main(config=None, data_writer=None):
                                       no_visualisations=False, only_numerical=False,
                                       no_analytics=True, no_numerical=True)
 
-    experiment = Experiment(config_filepath=config, protocols=[
+    experiment = Experiment(config=config, protocols=[
         Protocol(partial(run_visualisation,
                          all_parameter_grids=all_parameter_grids,
                          data_writer=data_writer,

@@ -125,7 +125,7 @@ def main(config=None, data_writer=None):
                                data=grid.astype(np.float32), overwrite=True,
                                write_to_top_dir=True)
 
-    experiment = Experiment(config_filepath=config, protocols=[
+    experiment = Experiment(config=config, protocols=[
         Protocol(stitch_grids, req_output=True, name='Stitching grids together'),
         Protocol(write_all, req_input=True, name='Writing stitched grids')],
         data_writer=data_writer)
