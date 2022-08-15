@@ -18,7 +18,7 @@ def main(config=None, data_writer=None):
     #     count=3, slength=25, protocol="template_mix")
 
     config, data_writer = script_preamble(config=config, data_writer=data_writer, alt_cfg_filepath=os.path.join(
-            "scripts", "RNA_circuit_simulation", "configs", "loaded_circuit.json"))
+            "scripts", "RNA_circuit_simulation", "configs", "toy_RNA.json"))
     config_file = load_json_as_dict(config)
 
     circuit = construct_circuit_from_cfg(None, config_filepath=config)

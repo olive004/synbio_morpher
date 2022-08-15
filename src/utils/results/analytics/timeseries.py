@@ -40,18 +40,20 @@ class Timeseries():
         signal_high = np.max(self.data[signal_idx, :])
 
         """ MODIFYING THIS PART A BIT - GETTING DIVIDE BY ZERO ERROR OTHERWISE"""
+        sensitivity = 1
         if signal_high - signal_low == 0:
             return self.num_dtype(0)
         elif signal_low == 0 or any(starting_states == 0):
-            return np.absolute(np.divide(
+            sensitivity = np.absolute(np.divide(
                 steady_states - starting_states,
                 signal_high - signal_low
             )).astype(self.num_dtype)
         else:
-            return np.absolute(np.divide(
+            sensitivity = np.absolute(np.divide(
                 (steady_states - starting_states) / starting_states,
                 (signal_high - signal_low) / signal_low
             )).astype(self.num_dtype)
+        return np.divide(1, sensitivity)
 
     def get_sensitivity(self, signal_idx: int):
         if signal_idx is None:
