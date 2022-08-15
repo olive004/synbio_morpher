@@ -64,7 +64,7 @@ class NetworkCustom(Network):
                     e[2]["color"] = {}
                     e[2]["font"] = {}
                     e[2]["color"]["opacity"] = edge_weight_transf(squashed_w)
-                    e[2]["font"] = 5
+                    e[2]["font"]["size"] = 5
                 self.add_edge(e[0], e[1], **e[2])
 
         for node in nx.isolates(nx_graph):
@@ -112,11 +112,10 @@ def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
 
 def visualise_graph_pyvis(graph: nx.DiGraph,
                           out_path: str,
-                          new_vis=False):
+                          new_vis=False,
+                          out_type='html'):
     import webbrowser
     import os
-
-    out_type = 'html'
 
     if new_vis:
         out_path = f'{out_path}_{make_time_str()}'
@@ -142,7 +141,7 @@ def visualise_graph_pyplot(graph: nx.DiGraph):
 
 
 class VisODE():
-    def __init__(self, figsize) -> None:
+    def __init__(self, figsize=10) -> None:
         self.figsize = figsize
 
     def add_kwrgs(self, plt, **plot_kwrgs):
