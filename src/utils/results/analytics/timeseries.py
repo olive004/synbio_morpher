@@ -36,47 +36,25 @@ class Timeseries():
         if signal_idx is None:
             return None
         starting_states = np.expand_dims(self.data[:, 0], axis=1)
-        signal_low = np.min(self.data[signal_idx, :])
-        signal_high = np.max(self.data[signal_idx, :])
+        signal_start = self.data[signal_idx, 0]
+        signal_end = self.data[signal_idx, -1]
 
         """ MODIFYING THIS PART A BIT - GETTING DIVIDE BY ZERO ERROR OTHERWISE"""
-        sensitivity = 1
-        signal_diff = signal_high - signal_low
+        precision = 1
+        signal_diff = signal_end - signal_start
         output_diff = steady_states - starting_states
 
-        if signal_high - signal_low == 0:
-            return self.num_dtype(0)
-        elif signal_low == 0 and any(starting_states == 0):
-            sensitivity = np.absolute(np.divide(
-                steady_states - starting_states,
-                signal_high - signal_low
-            )).astype(self.num_dtype)
-        elif signal_low == 0:
-            sensitivity = np.absolute(np.divide(
-                (steady_states - starting_states) / starting_states,
-                signal_high - signal_low
-            )).astype(self.num_dtype)
-        elif any(starting_states == 0):
-            sensitivity = np.absolute(np.divide(
-                steady_states - starting_states,
-                (signal_high - signal_low) / signal_low
-            )).astype(self.num_dtype)
-        else:
-            sensitivity = np.absolute(np.divide(
-                (steady_states - starting_states) / starting_states,
-                (signal_high - signal_low) / signal_low
-            )).astype(self.num_dtype)
-        sensitivity = np.absolute(np.divide(
-                (steady_states - starting_states) / starting_states,
-                (signal_high - signal_low) / signal_low
-            )).astype(self.num_dtype)
-        if any(sensitivity == 0):
-            logging.info(sensitivity)
-            logging.info(steady_states)
-            logging.info(starting_states)
-            logging.info(signal_high)
-            logging.info(signal_low)
-        return np.divide(1, sensitivity)
+        if signal_diff == 0:
+            return self.num_dtype(0) 
+        if signal_start == 0:
+            signal_start = 1
+        if any(starting_states == 0):
+            starting_states = 1
+        precision = np.absolute(np.divide(
+            output_diff / starting_states,
+            signal_diff / signal_start
+        )).astype(self.num_dtype)
+        return np.divide(1, precision)
 
     def get_sensitivity(self, signal_idx: int):
         if signal_idx is None:
