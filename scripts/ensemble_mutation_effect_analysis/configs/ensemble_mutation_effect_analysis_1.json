@@ -119,6 +119,17 @@
                 "generator_protocol": "template_mutate",
                 "proportion_to_mutate": 0.5
             }
+        },
+        "analyse_mutated_templates": {
+            "source_dir":  {
+                "is_source_dir_incomplete": true,
+                "source_dir": "./data/ensemble_mutation_effect_analysis",
+                "purpose_to_get_source_dir_from": "mutation_effect_on_interactions_signal",
+                "source_dir_actually_used_POSTERITY": null
+            },
+            "preprocessing_func": null,
+            "only_visualise_circuits": false,
+            "log_scale": false
         }
     }
 }

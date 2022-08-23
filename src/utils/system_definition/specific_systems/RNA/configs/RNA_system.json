@@ -1,5 +1,7 @@
 {
-    "creation_rates": 50,
-    "copynumbers": 5,
-    "degradation_rates": 20
+    "avg_mRNA_per_cell": 100,
+    "cell_doubling_time": 1200,
+    "creation_rates": 1.8,
+    "starting_copynumber": 100,
+    "degradation_rates": 0.0333
 }

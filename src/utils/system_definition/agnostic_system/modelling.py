@@ -74,6 +74,12 @@ class Deterministic():
     def dxdt_RNA(self, t, copynumbers, interactions, creation_rates, degradation_rates,
                  num_samples, signal=None, signal_idx=None):
         """ dx_dt = a - x * I * k * x' - x * ∂   for x=[A, B] 
+        x: the vector of copy numbers of the samples A, B, C...
+        a: the 'creation' rate, or for RNA samples, the transcription rate
+        I: the identity matrix
+        k: a (symnetrical) matrix of interaction rates for the binding rate between each pair 
+            of samples - self-interactions are included
+        ∂: the 'destruction' rate, or for RNA samples, the (uncoupled) degradation rate
         Data in format [sample, timestep] or [sample,]"""
 
         if signal_idx is not None:

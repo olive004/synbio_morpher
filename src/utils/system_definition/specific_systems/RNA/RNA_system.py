@@ -18,17 +18,18 @@ class RNASystem(BaseSystem):
         self.process_species()
 
         # Rates
-        # 2 h^-1 or 30 mins or 1800s - Dilution rate
-        cell_dbl_growth_rate = 2 / 3600
+        # 3 h^-1 or 20 mins or 1200s - Dilution rate
+        cell_dbl_growth_rate = 1 / 1200
         avg_RNA_pcell = 100
-        starting_copynumber = 50
-        self.transcription_rate = cell_dbl_growth_rate * avg_RNA_pcell
+        starting_copynumber = avg_RNA_pcell
+        self.transcription_rate = 1.8
+        self.degradation_rate = (1/300)
 
         self.species.copynumbers, \
             self.species.degradation_rates, \
             self.species.creation_rates = self.species.init_matrices(ndims=1, init_type="uniform",
                                                                      uniform_vals=[starting_copynumber,
-                                                                                   cell_dbl_growth_rate,
+                                                                                   self.degradation_rate,
                                                                                    self.transcription_rate])
 
     def init_species(self, args):

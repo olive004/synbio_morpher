@@ -7,7 +7,7 @@ import numpy as np
 SCIENTIFIC = {
     # R = the gas constant = 8.314 J/mol·K
     # T = 298 K
-    'RT': np.multiply(8.314, 298),  # J/mol
+    'RT': np.multiply(8.314, 310),  # J/mol
     'mole': np.multiply(6.02214076, np.power(10, 23))
 }
 
