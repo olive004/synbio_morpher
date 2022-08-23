@@ -2,6 +2,7 @@ import numpy as np
 from numba import jit
 from numba import cuda
 from numba import float32
+from src.utils.misc.numerical import SCIENTIFIC
 
 
 TPB = 16 # Threads Per Block
@@ -86,9 +87,9 @@ class Deterministic():
             copynumbers[signal_idx] = signal
 
         xI = copynumbers * np.identity(num_samples)
-        # interactions_xI = np.matmul(xI, interactions)
-        # coupling = np.matmul(interactions_xI, copynumbers.T)
+        
         coupling = np.matmul(np.matmul(xI, interactions), copynumbers.T)
+        # coupling = np.matmul(np.matmul(xI, np.divide(interactions, SCIENTIFIC['mole'])), copynumbers.T)
 
         dxdt = creation_rates.flatten() - coupling.flatten() - \
             copynumbers.flatten() * degradation_rates.flatten()

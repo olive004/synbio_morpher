@@ -9,7 +9,11 @@ from src.utils.misc.numerical import SCIENTIFIC
 SIMULATOR_UNITS = {
     'IntaRNA': {
         'energy': 'kJ/mol',
-        'rate': 'rate'
+        'postprocessing': {
+            'energy': 'J/mol',
+            'energy_molecular': 'J/molecule'
+        },
+        'rate': '1/s'
     }
 }
 
@@ -20,6 +24,7 @@ class RawSimulationHandling():
         self.simulator_name = config_args.get('name', 'IntaRNA')
         self.postprocess = config_args.get('postprocess')
         self.sim_kwargs = config_args.get('simulator_kwargs', {})
+        self.convert_to_molecules = False
         self.units = ''
 
     def get_protocol(self, custom_prot: str = None):
@@ -60,7 +65,8 @@ class RawSimulationHandling():
             K = e^(G / RT)
             """
             energies = energies * 1000  # convert kJ/mol to J/mol
-            energies = per_mol_to_per_molecules(energies)
+            if self.convert_to_molecules:
+                energies = per_mol_to_per_molecules(energies)
             K = np.exp(np.divide(energies, SCIENTIFIC['RT']))
             return K
 

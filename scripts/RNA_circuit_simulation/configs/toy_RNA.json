@@ -5,7 +5,7 @@
     },
     "interaction_simulator": {
         "name": "IntaRNA",
-        "postprocess": "False"
+        "postprocess": true
     },
     "identities": {
         "input": "RNA_0",

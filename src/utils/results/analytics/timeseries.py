@@ -137,4 +137,5 @@ class Timeseries():
             analytics['steady_states'])
         analytics['precision'] = self.get_precision(
             analytics['steady_states'], signal_idx)
+
         return analytics
