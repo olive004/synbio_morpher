@@ -48,6 +48,11 @@ class RawSimulationHandling():
 
     def get_postprocessing(self):
 
+        def per_mol_to_per_molecules(jmol):
+            """ Translate a value from the unit of per moles to per molecules """
+            # J/mol to J/molecule
+            return np.divide(jmol, SCIENTIFIC['mole'])
+
         def energy_to_rate(energies):
             """ Translate interaction binding energy to binding rate:
             AG = RT ln(K)
@@ -55,6 +60,7 @@ class RawSimulationHandling():
             K = e^(G / RT)
             """
             energies = energies * 1000  # convert kJ/mol to J/mol
+            energies = per_mol_to_per_molecules(energies)
             K = np.exp(np.divide(energies, SCIENTIFIC['RT']))
             return K
 
