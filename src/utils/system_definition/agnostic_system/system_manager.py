@@ -62,9 +62,6 @@ class CircuitModeller():
                 degradation_rates = np.delete(
                     degradation_rates, exclude, axis=circuit.species.species_axis)
 
-        init_copynumbers = init_copynumbers if init_copynumbers is not None else deepcopy(
-            circuit.species.copynumbers)
-
         return partial(modeller.dxdt_RNA, interactions=interactions,
                        creation_rates=creation_rates,
                        degradation_rates=degradation_rates,
@@ -146,7 +143,6 @@ class CircuitModeller():
                                                                                exclude_species_by_idx),
                                                       (0, modeller.max_time),
                                                       y0=y0)
-            logging.info(steady_state_result)
             if not steady_state_result.success:
                 raise ValueError(
                     'Steady state could not be found through solve_ivp - possibly because units '

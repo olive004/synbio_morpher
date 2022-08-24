@@ -74,7 +74,7 @@ class Deterministic():
         self.time_step = time_step
 
     def dxdt_RNA(self, t, copynumbers, interactions, creation_rates, degradation_rates,
-                 num_samples, signal=None, signal_idx=None, k_a=1):
+                 num_samples, signal=None, signal_idx=None):
         """ dx_dt = a + x * I * k_d * x' - k_a * y - x * ∂   for x=[A, B] 
         x: the vector of copy numbers of the samples A, B, C...
         y: the vector of copy numbers of bound (nonfunctional) samples (AA, AB, AC...)
@@ -86,6 +86,7 @@ class Deterministic():
         ∂: the 'destruction' rate, or for RNA samples, the (uncoupled) degradation rate
         Data in format [sample, timestep] or [sample,]"""
 
+
         if signal_idx is not None:
             copynumbers[signal_idx] = signal
 
@@ -94,7 +95,7 @@ class Deterministic():
         coupling = np.matmul(np.matmul(xI, interactions), copynumbers.T)
         # coupling = np.matmul(np.matmul(xI, np.divide(interactions, SCIENTIFIC['mole'])), copynumbers.T)
 
-        dxdt = creation_rates.flatten() + coupling.flatten() - \
+        dxdt = creation_rates.flatten() - coupling.flatten() - \
             copynumbers.flatten() * degradation_rates.flatten()
 
         return dxdt
