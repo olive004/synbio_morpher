@@ -38,8 +38,10 @@ class CircuitModeller():
         circuit = self.find_steady_states(circuit)
         return circuit
 
-    def make_modelling_func(self, modeller: Deterministic, circuit: BaseSystem, exclude_species_by_idx: Union[int, list] = None,
-                            fixed_value: Timeseries(None).num_dtype = None, fixed_value_idx: int = None):
+    def make_modelling_func(self, modeller: Deterministic, circuit: BaseSystem,
+                            exclude_species_by_idx: Union[int, list] = None,
+                            fixed_value: Timeseries(None).num_dtype = None,
+                            fixed_value_idx: int = None):
         num_samples = circuit.species.data.size
         exclude_species_by_idx = self.process_exclude_species_by_idx(
             exclude_species_by_idx)
@@ -59,6 +61,9 @@ class CircuitModeller():
                     creation_rates, exclude, axis=circuit.species.species_axis)
                 degradation_rates = np.delete(
                     degradation_rates, exclude, axis=circuit.species.species_axis)
+
+        init_copynumbers = init_copynumbers if init_copynumbers is not None else deepcopy(
+            circuit.species.copynumbers)
 
         return partial(modeller.dxdt_RNA, interactions=interactions,
                        creation_rates=creation_rates,
@@ -137,9 +142,11 @@ class CircuitModeller():
                 logging.warning(f'Interactions in units of {circuit.species.interaction_units} may not be suitable for '
                                 'solving with IVP')
             y0 = copynumbers[idxs]
-            steady_state_result = integrate.solve_ivp(self.make_modelling_func(modeller, circuit, exclude_species_by_idx),
+            steady_state_result = integrate.solve_ivp(self.make_modelling_func(modeller, circuit,
+                                                                               exclude_species_by_idx),
                                                       (0, modeller.max_time),
                                                       y0=y0)
+            logging.info(steady_state_result)
             if not steady_state_result.success:
                 raise ValueError(
                     'Steady state could not be found through solve_ivp - possibly because units '
@@ -182,7 +189,8 @@ class CircuitModeller():
                 dxdt = modelling_func(
                     copynumbers=copynumbers[:, tstep])
 
-                current_copynumbers = np.add(dxdt, current_copynumbers).flatten()
+                current_copynumbers = np.add(
+                    dxdt, current_copynumbers).flatten()
 
                 current_copynumbers[signal_idx] = signal[tstep]
                 current_copynumbers = zero_out_negs(current_copynumbers)
@@ -193,7 +201,8 @@ class CircuitModeller():
                 dxdt = modelling_func(
                     copynumbers=copynumbers[:, tstep]) * time_step
 
-                current_copynumbers = np.add(dxdt, current_copynumbers).flatten()
+                current_copynumbers = np.add(
+                    dxdt, current_copynumbers).flatten()
 
                 if signal is not None:
                     current_copynumbers[signal_idx] = signal[tstep]

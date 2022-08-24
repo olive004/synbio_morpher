@@ -1,3 +1,4 @@
+import logging
 import numpy as np
 from numba import jit
 from numba import cuda
@@ -72,12 +73,14 @@ class Deterministic():
         self.max_time = max_time
         self.time_step = time_step
 
-    def dxdt_RNA(self, t, copynumbers, bound_copynumbers, interactions, creation_rates, degradation_rates,
-                 num_samples, signal=None, signal_idx=None):
-        """ dx_dt = a - x * I * k_a * x' - x * ∂   for x=[A, B] 
+    def dxdt_RNA(self, t, copynumbers, interactions, creation_rates, degradation_rates,
+                 num_samples, signal=None, signal_idx=None, k_a=1):
+        """ dx_dt = a + x * I * k_d * x' - k_a * y - x * ∂   for x=[A, B] 
         x: the vector of copy numbers of the samples A, B, C...
+        y: the vector of copy numbers of bound (nonfunctional) samples (AA, AB, AC...)
         a: the 'creation' rate, or for RNA samples, the transcription rate
         I: the identity matrix
+        k_a: fixed binding rate of association between two RNA molecules (fixed at 1 or 1e6)
         k_d: a (symmetrical) matrix of interaction rates for the dissociation binding rate between each pair 
             of samples - self-interactions are included
         ∂: the 'destruction' rate, or for RNA samples, the (uncoupled) degradation rate
@@ -91,7 +94,7 @@ class Deterministic():
         coupling = np.matmul(np.matmul(xI, interactions), copynumbers.T)
         # coupling = np.matmul(np.matmul(xI, np.divide(interactions, SCIENTIFIC['mole'])), copynumbers.T)
 
-        dxdt = creation_rates.flatten() - coupling.flatten() - \
+        dxdt = creation_rates.flatten() + coupling.flatten() - \
             copynumbers.flatten() * degradation_rates.flatten()
 
         return dxdt
