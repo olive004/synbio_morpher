@@ -1,7 +1,7 @@
 {
     "interaction_simulator": {
         "name": "IntaRNA",
-        "postprocess": false
+        "postprocess": true
     },
     "molecular_params": "./scripts/common/configs/RNA_system/molecular_params.json",
     "circuit_generation": {

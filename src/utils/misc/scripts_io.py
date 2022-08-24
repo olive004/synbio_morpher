@@ -38,6 +38,8 @@ def get_search_dir(config_file: dict, config_search_key: str = None,
         return config_search_key
     config_search_key = find_config_search_key(config_search_key)
     search_config = config_file.get(config_search_key, {})
+    if type(search_config) == str:
+        return config_file, search_dir
     if not search_config:
         raise KeyError(
             f'Could not find {config_search_key} in config keys: {config_file.keys()}.')

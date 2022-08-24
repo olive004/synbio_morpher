@@ -44,12 +44,12 @@ def main(config=None, data_writer=None):
             name='get_pathnames'
         ),
         # read in data one at a time
-        Protocol(
-            # Just doing some readout for debugging clarity
-            readout,
-            req_input=True,
-            req_output=True
-        ),
+        # Protocol(
+        #     # Just doing some readout for debugging clarity
+        #     readout,
+        #     req_input=True,
+        #     req_output=True
+        # ),
         [
             # do some analytics
             Protocol(

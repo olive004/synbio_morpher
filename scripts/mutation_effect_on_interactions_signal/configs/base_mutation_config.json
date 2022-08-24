@@ -22,5 +22,10 @@
         "mutate_in_circuit": "single_species_at_a_time"
     },
     "signal": "./scripts/mutation_effect_on_interactions_signal/configs/in_signal.json", 
-    "source_of_interaction_stats": "./data/gather_interaction_stats/2022_05_10_232313"
+    "source_of_interaction_stats": {
+        "is_source_dir_incomplete": false,
+        "source_dir": "./data/gather_interaction_stats/2022_08_24_093957",
+        "purpose_to_get_source_dir_from": null,
+        "source_dir_actually_used_POSTERITY": null
+    }
 }

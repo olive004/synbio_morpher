@@ -72,13 +72,13 @@ class Deterministic():
         self.max_time = max_time
         self.time_step = time_step
 
-    def dxdt_RNA(self, t, copynumbers, interactions, creation_rates, degradation_rates,
+    def dxdt_RNA(self, t, copynumbers, bound_copynumbers, interactions, creation_rates, degradation_rates,
                  num_samples, signal=None, signal_idx=None):
-        """ dx_dt = a - x * I * k * x' - x * ∂   for x=[A, B] 
+        """ dx_dt = a - x * I * k_a * x' - x * ∂   for x=[A, B] 
         x: the vector of copy numbers of the samples A, B, C...
         a: the 'creation' rate, or for RNA samples, the transcription rate
         I: the identity matrix
-        k: a (symnetrical) matrix of interaction rates for the binding rate between each pair 
+        k_d: a (symmetrical) matrix of interaction rates for the dissociation binding rate between each pair 
             of samples - self-interactions are included
         ∂: the 'destruction' rate, or for RNA samples, the (uncoupled) degradation rate
         Data in format [sample, timestep] or [sample,]"""
