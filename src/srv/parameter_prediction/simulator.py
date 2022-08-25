@@ -24,7 +24,7 @@ class RawSimulationHandling():
         self.simulator_name = config_args.get('name', 'IntaRNA')
         self.postprocess = config_args.get('postprocess')
         self.sim_kwargs = config_args.get('simulator_kwargs', {})
-        self.convert_to_molecules = False
+        self.convert_to_molecules = True
         self.units = ''
 
     def get_protocol(self, custom_prot: str = None):
@@ -51,12 +51,17 @@ class RawSimulationHandling():
         energy = energy / 1000
         return energy
 
+    def per_mol_to_per_molecules(jmol):
+        """ Translate a value from the unit of per moles to per molecules.
+        The number of M of mRNA in a cell was calculated using the average 
+        number of mRNA in an E. coli cell (100 molecules) and the average volume of an E.
+        coli cell (1.1e-15 L) to give ca. 1 molecule ~ 1.50958097 nM ~ 1.50958097e-9 M"""
+        # J/mol to J/molecule
+        # return np.divide(jmol, SCIENTIFIC['mole'])
+        return np.divide(jmol, 1.50958097/np.power(10, 9))
+
     def get_postprocessing(self):
 
-        def per_mol_to_per_molecules(jmol):
-            """ Translate a value from the unit of per moles to per molecules """
-            # J/mol to J/molecule
-            return np.divide(jmol, SCIENTIFIC['mole'])
 
         def energy_to_rate(energies):
             """ Translate interaction binding energy to binding rate:
@@ -66,7 +71,7 @@ class RawSimulationHandling():
             """
             energies = energies * 1000  # convert kJ/mol to J/mol
             if self.convert_to_molecules:
-                energies = per_mol_to_per_molecules(energies)
+                energies = self.per_mol_to_per_molecules(energies)
             K = np.exp(np.divide(energies, SCIENTIFIC['RT']))
             return K
 

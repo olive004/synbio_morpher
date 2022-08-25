@@ -9,10 +9,10 @@ from src.utils.misc.type_handling import make_attribute_list
 
 class Protocol():
 
-    def __init__(self, protocol, req_output=False, req_input=False, name='', skip=False) -> None:
+    def __init__(self, protocol_func, req_output=False, req_input=False, name='', skip=False) -> None:
         self.req_output = req_output
         self.req_input = req_input
-        self.protocol = protocol
+        self.protocol = protocol_func
         self.name = name
         self.output = None
         self.skip = skip

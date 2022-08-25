@@ -3,6 +3,7 @@ import numpy as np
 from numba import jit
 from numba import cuda
 from numba import float32
+from src.srv.parameter_prediction.simulator import RawSimulationHandling
 from src.utils.misc.numerical import SCIENTIFIC
 
 
@@ -74,7 +75,7 @@ class Deterministic():
         self.time_step = time_step
 
     def dxdt_RNA(self, t, copynumbers, interactions, creation_rates, degradation_rates,
-                 num_samples, signal=None, signal_idx=None):
+                 num_samples, signal=None, signal_idx=None, k_d=1):
         """ dx_dt = a + x * I * k_d * x' - k_a * y - x * ∂   for x=[A, B] 
         x: the vector of copy numbers of the samples A, B, C...
         y: the vector of copy numbers of bound (nonfunctional) samples (AA, AB, AC...)
@@ -92,7 +93,12 @@ class Deterministic():
 
         xI = copynumbers * np.identity(num_samples)
         
-        coupling = np.matmul(np.matmul(xI, interactions), copynumbers.T)
+        k_a = np.power(10, 6)
+        k_a = RawSimulationHandling().per_mol_to_per_molecules(k_a)
+        k_d = np.divide(k_a, interactions)
+        full_interactions = np.divide(k_a, (k_d + degradation_rates.flatten()))
+        coupling = np.matmul(np.matmul(xI, full_interactions), copynumbers.T)
+        # coupling = np.matmul(np.matmul(xI, interactions), copynumbers.T)
         # coupling = np.matmul(np.matmul(xI, np.divide(interactions, SCIENTIFIC['mole'])), copynumbers.T)
 
         dxdt = creation_rates.flatten() - coupling.flatten() - \
