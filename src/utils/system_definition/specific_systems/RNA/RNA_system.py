@@ -23,10 +23,6 @@ class RNASystem(BaseSystem):
         self.transcription_rate = self.molecular_params['creation_rate']
         self.degradation_rate = self.molecular_params['degradation_rate']
 
-        logging.info([starting_copynumbers,
-                      self.degradation_rate,
-                      self.transcription_rate])
-
         self.species.copynumbers, \
             self.species.degradation_rates, \
             self.species.creation_rates = self.species.init_matrices(ndims=1, init_type="uniform",

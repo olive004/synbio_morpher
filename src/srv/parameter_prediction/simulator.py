@@ -73,13 +73,17 @@ class RawSimulationHandling():
             k_a: binding rate per Ms 
             eqconstants: unitless but in terms of mol
             k_d: unbinding rate per s"""
-            k_d = np.divide(self.fixed_rate_k_a, eqconstants)
+            k_a = per_mol_to_per_molecules(self.fixed_rate_k_a)
+            k_d = np.divide(k_a, eqconstants)
             return k_d
+
+        def return_both_eqconstants_and_rates(eqconstants):
+            return eqconstants, eqconstant_to_rate(eqconstants)
 
         def zero_false_eqconstants(rates):
             """ Exponential of e^0 is equal to 1, but IntaRNA sets energies 
             equal to 0 for non-interactions. """
-            rates[rates == 1] = 0
+            rates[rates == 1] = 0.000000001
             return rates
 
         def processor(input, funcs):
@@ -93,7 +97,7 @@ class RawSimulationHandling():
                 return partial(processor, funcs=[
                     energy_to_eqconstant,
                     zero_false_eqconstants,
-                    eqconstant_to_rate])
+                    return_both_eqconstants_and_rates])
             else:
                 return vanilla_return
 
@@ -170,22 +174,22 @@ class InteractionData():
         self.simulation_protocol = simulation_handler.get_protocol()
         self.simulation_postproc = simulation_handler.get_postprocessing()
         if not test_mode:
-            self.data, self.matrix = self.parse(data)
+            self.data, self.eqconstants, self.binding_rates = self.parse(data)
         else:
             self.data = self.simulation_protocol()
         self.units = simulation_handler.units
 
     def parse(self, data):
-        matrix = self.make_matrix(data)
-        return data, matrix
+        matrix, rates = self.make_matrix(data)
+        return data, matrix, rates
 
     def make_matrix(self, data):
         matrix = np.zeros((len(data), len(data)))
         for i, (sample_i, sample_interactions) in enumerate(data.items()):
             for j, (sample_j, raw_sample) in enumerate(sample_interactions.items()):
                 matrix[i, j] = self.get_interaction(raw_sample)
-        matrix = self.simulation_postproc(matrix)
-        return matrix
+        matrix, rates = self.simulation_postproc(matrix)
+        return matrix, rates
 
     def get_interaction(self, sample):
         if sample == False:

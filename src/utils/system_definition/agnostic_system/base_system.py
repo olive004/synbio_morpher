@@ -126,14 +126,14 @@ class BaseSpecies():
             raise ValueError('Cannot set interactions to' +
                              f' type {type(new_interactions)}.')
 
-    def interactions_to_df(self):
-        interactions_df = pd.DataFrame.from_dict(self.interactions_to_dict())
+    def interactions_to_df(self, interactions):
+        interactions_df = pd.DataFrame.from_dict(self.interactions_to_dict(interactions))
         return interactions_df
 
-    def interactions_to_dict(self):
+    def interactions_to_dict(self, interactions):
         interactions_dict = {}
         for i, sample in enumerate(self.data.sample_names):
-            interactions_dict[sample] = {s: self.interactions[i, j]
+            interactions_dict[sample] = {s: interactions[i, j]
                                          for j, s in enumerate(self.data.sample_names)}
         return interactions_dict
 

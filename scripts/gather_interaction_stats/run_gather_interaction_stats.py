@@ -36,9 +36,9 @@ def main(config=None, data_writer=None):
         Protocol(
             # get list of all interaction paths
             partial(get_pathnames,
-                    file_key='interactions',
+                    file_key=config['interaction_file_keyword'],
                     search_dir=search_dir,
-                    optional_subdir='interactions'
+                    optional_subdir=config['interaction_file_keyword']
                     ),
             req_output=True,
             name='get_pathnames'

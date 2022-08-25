@@ -5,7 +5,6 @@ import logging
 import os
 import numpy as np
 from scipy import integrate
-from src.utils.misc.units import per_mol_to_per_molecules
 from src.utils.results.analytics.timeseries import Timeseries
 from src.utils.results.result_writer import ResultWriter
 
@@ -39,15 +38,13 @@ class CircuitModeller():
         circuit = self.find_steady_states(circuit)
         return circuit
 
-    def make_modelling_func(self, modeller: Deterministic, circuit: BaseSystem,
-                            exclude_species_by_idx: Union[int, list] = None,
-                            fixed_value: Timeseries(None).num_dtype = None,
-                            fixed_value_idx: int = None):
+    def make_modelling_func(self, modeller: Deterministic, circuit: BaseSystem, exclude_species_by_idx: Union[int, list] = None,
+                            fixed_value: Timeseries(None).num_dtype = None, fixed_value_idx: int = None):
         num_samples = circuit.species.data.size
         exclude_species_by_idx = self.process_exclude_species_by_idx(
             exclude_species_by_idx)
 
-        interaction_binding_rates = circuit.species.interactions
+        interactions = circuit.species.interactions
         creation_rates = circuit.species.creation_rates
         degradation_rates = circuit.species.degradation_rates
 
@@ -56,15 +53,14 @@ class CircuitModeller():
             for exclude in exclude_species_by_idx:
                 if exclude is None:
                     continue
-                interaction_binding_rates = np_delete_axes(
-                    interaction_binding_rates, exclude, axes=[circuit.species.species_axis, circuit.species.time_axis])
+                interactions = np_delete_axes(
+                    interactions, exclude, axes=[circuit.species.species_axis, circuit.species.time_axis])
                 creation_rates = np.delete(
                     creation_rates, exclude, axis=circuit.species.species_axis)
                 degradation_rates = np.delete(
                     degradation_rates, exclude, axis=circuit.species.species_axis)
 
-        return partial(modeller.dxdt_RNA, k_d=interaction_binding_rates,
-                       k_a=circuit.molecular_params['association_binding_rate'],
+        return partial(modeller.dxdt_RNA, interactions=interactions,
                        creation_rates=creation_rates,
                        degradation_rates=degradation_rates,
                        num_samples=num_samples,
@@ -83,20 +79,13 @@ class CircuitModeller():
         if not circuit.species.loaded_interactions:
             interactions = self.run_interaction_simulator(circuit,
                                                           circuit.species.data.data)
-            circuit.species.interactions = interactions.binding_rates
-            circuit.species.eqconstants = interactions.eqconstants
+            circuit.species.interactions = interactions.eqconstants
             circuit.species.interaction_units = interactions.units
 
-            filename_addon_eqconstants = 'interactions'
-            filename_addon_rates = 'eqconstants'
+            filename_addon = 'interactions'
             self.result_writer.output(
-                out_type='csv', out_name=circuit.name, data=circuit.species.interactions_to_df(
-                    circuit.species.interactions), overwrite=False,
-                new_file=True, filename_addon=filename_addon_eqconstants, subfolder=filename_addon_eqconstants)
-            self.result_writer.output(
-                out_type='csv', out_name=circuit.name, data=circuit.species.interactions_to_df(
-                    circuit.species.eqconstants), overwrite=False,
-                new_file=True, filename_addon=filename_addon_rates, subfolder=filename_addon_rates)
+                out_type='csv', out_name=circuit.name, data=circuit.species.interactions_to_df(), overwrite=False,
+                new_file=True, filename_addon=filename_addon, subfolder=filename_addon)
         return circuit
 
     def run_interaction_simulator(self, circuit: BaseSystem, data):
@@ -148,8 +137,7 @@ class CircuitModeller():
                 logging.warning(f'Interactions in units of {circuit.species.interaction_units} may not be suitable for '
                                 'solving with IVP')
             y0 = copynumbers[idxs]
-            steady_state_result = integrate.solve_ivp(self.make_modelling_func(modeller, circuit,
-                                                                               exclude_species_by_idx),
+            steady_state_result = integrate.solve_ivp(self.make_modelling_func(modeller, circuit, exclude_species_by_idx),
                                                       (0, modeller.max_time),
                                                       y0=y0)
             if not steady_state_result.success:
@@ -194,8 +182,7 @@ class CircuitModeller():
                 dxdt = modelling_func(
                     copynumbers=copynumbers[:, tstep])
 
-                current_copynumbers = np.add(
-                    dxdt, current_copynumbers).flatten()
+                current_copynumbers = np.add(dxdt, current_copynumbers).flatten()
 
                 current_copynumbers[signal_idx] = signal[tstep]
                 current_copynumbers = zero_out_negs(current_copynumbers)
@@ -206,8 +193,7 @@ class CircuitModeller():
                 dxdt = modelling_func(
                     copynumbers=copynumbers[:, tstep]) * time_step
 
-                current_copynumbers = np.add(
-                    dxdt, current_copynumbers).flatten()
+                current_copynumbers = np.add(dxdt, current_copynumbers).flatten()
 
                 if signal is not None:
                     current_copynumbers[signal_idx] = signal[tstep]
