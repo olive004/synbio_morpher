@@ -25,13 +25,19 @@ def main(config=None, data_writer=None):
     logging.info(config)
     logging.info(config_file)
 
+    def readout(inp):
+        logging.info('\n\n\n\nReadout')
+        logging.info(inp)
+        return inp
+
     protocols = [
         Protocol(partial(
             construct_circuit_from_cfg,
             extra_configs=None, config_filepath=config),
             req_output=True, name='construct_circuit_from_cfg'),
+        Protocol(readout, req_output=True, req_input=True),
         Protocol(partial(
-            CircuitModeller(result_writer=data_writer).apply_to_circuit,
+            CircuitModeller(result_writer=data_writer, config=config_file).apply_to_circuit,
             methods={
                 'init_circuit': {},
                 'simulate_signal': {

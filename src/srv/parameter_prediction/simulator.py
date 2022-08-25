@@ -25,7 +25,7 @@ class RawSimulationHandling():
         self.simulator_name = config_args.get('name', 'IntaRNA')
         self.postprocess = config_args.get('postprocess')
         self.sim_kwargs = config_args.get('simulator_kwargs', {})
-        self.convert_to_molecules = False
+        self.fixed_rate_k_a = config_args.get('molecular_params').get('association_binding_rate')
         self.units = ''
 
     def get_protocol(self, custom_prot: str = None):
@@ -55,19 +55,28 @@ class RawSimulationHandling():
     def get_postprocessing(self):
 
 
-        def energy_to_rate(energies):
-            """ Translate interaction binding energy to binding rate:
+        def energy_to_eqconstant(energies):
+            """ Translate interaction binding energy to the
+            equilibrium rate of binding. Output in mol:
             AG = RT ln(K)
             AG = RT ln(kb/kd)
             K = e^(G / RT)
             """
             energies = energies * 1000  # convert kJ/mol to J/mol
-            if self.convert_to_molecules:
-                energies = per_mol_to_per_molecules(energies)
             K = np.exp(np.divide(energies, SCIENTIFIC['RT']))
             return K
 
-        def zero_false_rates(rates):
+        def eqconstant_to_rate(eqconstants):
+            """ Translate the equilibrium rate of binding to
+            the rate of binding (either association or dissociation
+            rate - in this case dissociation). Input in mol, output in molecules:
+            k_a: binding rate per Ms 
+            eqconstants: unitless but in terms of mol
+            k_d: unbinding rate per s"""
+            k_d = np.divide(self.fixed_rate_k_a, eqconstants)
+            return k_d
+
+        def zero_false_eqconstants(rates):
             """ Exponential of e^0 is equal to 1, but IntaRNA sets energies 
             equal to 0 for non-interactions. """
             rates[rates == 1] = 0
@@ -82,8 +91,9 @@ class RawSimulationHandling():
             if self.postprocess:
                 self.units = SIMULATOR_UNITS[self.simulator_name]['rate']
                 return partial(processor, funcs=[
-                    energy_to_rate,
-                    zero_false_rates])
+                    energy_to_eqconstant,
+                    zero_false_eqconstants,
+                    eqconstant_to_rate])
             else:
                 return vanilla_return
 

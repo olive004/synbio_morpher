@@ -184,6 +184,7 @@ class BaseSystem():
     def __init__(self, config_args):
 
         self.name = config_args.get("name")
+        self.molecular_params = config_args['molecular_params']
 
         if config_args is None:
             config_args = {}

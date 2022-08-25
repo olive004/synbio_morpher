@@ -5,6 +5,7 @@ import logging
 import os
 import numpy as np
 from scipy import integrate
+from src.utils.misc.units import per_mol_to_per_molecules
 from src.utils.results.analytics.timeseries import Timeseries
 from src.utils.results.result_writer import ResultWriter
 
@@ -63,6 +64,7 @@ class CircuitModeller():
                     degradation_rates, exclude, axis=circuit.species.species_axis)
 
         return partial(modeller.dxdt_RNA, interactions=interactions,
+                       k_a=circuit.molecular_params['association_binding_rate'],
                        creation_rates=creation_rates,
                        degradation_rates=degradation_rates,
                        num_samples=num_samples,
