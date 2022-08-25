@@ -74,7 +74,7 @@ class Deterministic():
         self.max_time = max_time
         self.time_step = time_step
 
-    def dxdt_RNA(self, t, copynumbers, interactions, creation_rates, degradation_rates,
+    def dxdt_RNA(self, t, copynumbers, k_d, creation_rates, degradation_rates,
                  num_samples, k_a, signal=None, signal_idx=None):
         """ dx_dt = a + x * I * k_d * x' - k_a * y - x * ∂   for x=[A, B] 
         x: the vector of copy numbers of the samples A, B, C...
@@ -93,7 +93,6 @@ class Deterministic():
 
         xI = copynumbers * np.identity(num_samples)
         
-        k_d = interactions
         full_interactions = np.divide(k_a, (k_d + degradation_rates.flatten()))
         coupling = np.matmul(np.matmul(xI, full_interactions), copynumbers.T)
         # coupling = np.matmul(np.matmul(xI, interactions), copynumbers.T)
