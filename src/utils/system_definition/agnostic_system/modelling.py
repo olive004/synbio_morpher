@@ -5,6 +5,7 @@ from numba import cuda
 from numba import float32
 from src.srv.parameter_prediction.simulator import RawSimulationHandling
 from src.utils.misc.numerical import SCIENTIFIC
+from src.utils.misc.units import per_mol_to_per_molecules
 
 
 TPB = 16 # Threads Per Block
@@ -94,8 +95,8 @@ class Deterministic():
         xI = copynumbers * np.identity(num_samples)
         
         k_a = np.power(10, 6)
-        k_a = RawSimulationHandling().per_mol_to_per_molecules(k_a)
-        k_d = np.divide(k_a, interactions)
+        k_a = per_mol_to_per_molecules(k_a)
+        k_d = np.divide(interactions, k_a)
         full_interactions = np.divide(k_a, (k_d + degradation_rates.flatten()))
         coupling = np.matmul(np.matmul(xI, full_interactions), copynumbers.T)
         # coupling = np.matmul(np.matmul(xI, interactions), copynumbers.T)

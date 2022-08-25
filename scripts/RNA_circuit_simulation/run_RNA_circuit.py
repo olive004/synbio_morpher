@@ -22,6 +22,8 @@ def main(config=None, data_writer=None):
     config, data_writer = script_preamble(config=config, data_writer=data_writer, alt_cfg_filepath=os.path.join(
         "scripts", "RNA_circuit_simulation", "configs", "toy_RNA.json"))
     config_file = load_json_as_dict(config)
+    logging.info(config)
+    logging.info(config_file)
 
     protocols = [
         Protocol(partial(
@@ -31,12 +33,14 @@ def main(config=None, data_writer=None):
         Protocol(partial(
             CircuitModeller(result_writer=data_writer).apply_to_circuit,
             methods={
-                'init_circuit': None,
+                'init_circuit': {},
                 'simulate_signal': {
-                    'use_solver': config_file.get('signal').get('use_solver', 'naive')},
-                'write_results': None}))
+                    'use_solver': load_json_as_dict(
+                        config_file.get('signal')).get('use_solver', 'naive')},
+                'write_results': {}}),
+            req_input=True, name='model circuit and write results')
     ]
-    experiment = Experiment(config=config, protocols=protocols)
+    experiment = Experiment(config=config, protocols=protocols, data_writer=data_writer)
     experiment.run_experiment()
 
     # circuit = construct_circuit_from_cfg(None, config_filepath=config)
