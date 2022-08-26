@@ -2,10 +2,12 @@
 
 import logging
 import os
+import sys
 import pandas as pd
 
 
 from src.srv.io.loaders.data_loader import GeneCircuitLoader
+from src.utils.misc.string_handling import prettify_logging_info, remove_element_from_list_by_substring
 from src.utils.results.writer import DataWriter
 from src.srv.parameter_prediction.interactions import InteractionMatrix
 from src.utils.misc.io import get_pathnames, get_subdirectories
@@ -45,11 +47,13 @@ def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path
     filt_stats = filter_data(stats, filters)
 
     if filt_stats.empty:
-        logging.warning(f'No circuits were found matching the selected filters {filters}')
+        logging.warning(
+            f'No circuits were found matching the selected filters {filters}')
         logging.warning(stats)
         return []
 
-    experiment_folder = get_root_experiment_folder(filt_stats['interactions_path'].to_list()[0])
+    experiment_folder = get_root_experiment_folder(
+        filt_stats['interactions_path'].to_list()[0])
     experiment_summary = load_experiment_output_summary(experiment_folder)
 
     extra_configs = []
@@ -95,12 +99,14 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
 
     circuit_dirs = get_subdirectories(source_dir)
     for circuit_dir in circuit_dirs:
+        circuit_name = os.path.basename(circuit_dir)
         mutations_pathname = get_pathnames(
             first_only=True, file_key='mutations', search_dir=circuit_dir)
         mutations = GeneCircuitLoader().load_data(mutations_pathname).data
         mutation_dirs = sorted(get_subdirectories(circuit_dir))
-
-        circuit_name = os.path.basename(circuit_dir)
+        # TODO: need a better way of getting the mutation directories - maybe just create mutations in a subfolder
+        for exclude_dir in ['binding_rates', 'eqconstants', '/interactions']:
+            mutation_dirs = remove_element_from_list_by_substring(mutation_dirs, exclude=exclude_dir)
 
         # Unmutated circuit
         interaction_dir = os.path.join(
@@ -120,7 +126,7 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
             'mutation_num': 0,
             'mutation_type': '',
             'path_to_steady_state_data': get_pathnames(first_only=True,
-                                                       file_key='steady_state_data',
+                                                       file_key='steady_states_data',
                                                        search_dir=circuit_dir),
             'path_to_signal_data': get_pathnames(first_only=True,
                                                  file_key='signal_data',
@@ -148,7 +154,7 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
                 'mutation_num': source_config['mutations']['mutation_nums'],
                 'mutation_type': curr_mutation['mutation_types'].values[0],
                 'path_to_steady_state_data': get_pathnames(first_only=True,
-                                                           file_key='steady_state_data',
+                                                           file_key='steady_states_data',
                                                            search_dir=mutation_dir),
                 'path_to_signal_data': get_pathnames(first_only=True,
                                                      file_key='signal_data',

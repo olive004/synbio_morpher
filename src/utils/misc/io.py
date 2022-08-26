@@ -20,8 +20,9 @@ def create_location(pathname):
         os.makedirs(pathname, mode=0o777)
 
 
-def get_pathnames(search_dir: str, file_key: Union[List, str] = '', first_only: bool = False, allow_empty: bool = False,
-                  optional_subdir: str = '', conditional: Union[str, None] = 'filenames'):
+def get_pathnames(search_dir: str, file_key: Union[List, str] = '', first_only: bool = False,
+                  allow_empty: bool = False, optional_subdir: str = '',
+                  conditional: Union[str, None] = 'filenames'):
     """ Get the pathnames in a folder given a keyword. 
 
     Args:
@@ -39,7 +40,7 @@ def get_pathnames(search_dir: str, file_key: Union[List, str] = '', first_only: 
         for fk in file_key:
             all_path_names.append(
                 set(sorted([f for f in glob.glob(os.path.join(
-                    search_dir, '*' + file_key + '*')) if path_condition(f)]))
+                    search_dir, '*' + fk + '*')) if path_condition(f)]))
             )
         path_names = list(all_path_names[0].intersection(*all_path_names[1:]))
     elif not file_key:

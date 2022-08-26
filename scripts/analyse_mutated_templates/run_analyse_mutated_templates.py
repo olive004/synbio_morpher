@@ -18,7 +18,8 @@ def main(config=None, data_writer=None):
         config = os.path.join(
             # "scripts", "analyse_mutated_templates", "configs", "logscale", "analyse_templates.json")
             # "scripts", "analyse_mutated_templates", "configs", "logscale", "analyse_mutated_templates_1.json")
-            "scripts", "analyse_mutated_templates", "configs", "logscale", "analyse_mutated_templates_2.json")
+            # "scripts", "analyse_mutated_templates", "configs", "logscale", "analyse_mutated_templates_2.json")
+            "scripts", "analyse_mutated_templates", "configs", "base_config.json")
     config_file = load_json_as_dict(config)
 
     # Start_experiment
@@ -50,7 +51,7 @@ def main(config=None, data_writer=None):
                     plot_type='histplot', out_name='interaction_strength_freqs',
                     preprocessor_func=preprocessing_func,
                     exclude_rows_nonempty_in_cols=['mutation_name'],
-                    log_axis=config_file.get('log_scale', False),
+                    log_axis=config_file.get('log_scale', (False, False)),
                     use_sns=True,
                     title='Maximum interaction strength, unmutated circuits',
                     xlabel='Interaction strength', ylabel='Frequency count'),
@@ -62,7 +63,7 @@ def main(config=None, data_writer=None):
                     plot_type='histplot', out_name='interaction_strength_freqs',
                     preprocessor_func=preprocessing_func,
                     exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
-                    log_axis=config_file.get('log_scale', False),
+                    log_axis=config_file.get('log_scale', (False, False)),
                     use_sns=True,
                     title=f'Maximum interaction strength, {num_mutations} mutation{plot_grammar}',
                     xlabel='Interaction strength', ylabel='Frequency count'),
@@ -74,8 +75,8 @@ def main(config=None, data_writer=None):
                     plot_type='histplot', out_name='interaction_strength_diffs',
                     preprocessor_func=preprocessing_func,
                     exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
-                    log_axis=config_file.get('log_scale', False),
-                    title=f'Difference btwn circuit and mutated interaction strengths, {num_mutations} mutation{plot_grammar}',
+                    log_axis=config_file.get('log_scale', (False, False)),
+                    title=f'Difference between circuit\nand mutated interaction strengths, {num_mutations} mutation{plot_grammar}',
                     xlabel='Interaction strength difference', ylabel='Frequency count'),
             req_input=True,
             name='visualise_interactions_difference',

@@ -44,12 +44,24 @@ def ordered_merge(list1, list2, mask) -> list:
     return merged
 
 
+def prettify_logging_info(loggin):
+    str_out = loggin
+    if type(loggin) == list:
+        logging.info('Printing list more legibly:')
+        str_out = '\n'.join(f'{elem}' for elem in loggin)
+    return str_out
+
+
 def remove_file_extension(filename: str) -> str:
     return '.'.join(filename.split('.')[:-1])
 
 
 def remove_special_py_functions(string_list: list) -> list:
     return [s for s in string_list if '__' not in s]
+
+
+def remove_element_from_list_by_substring(string_list, exclude):
+    return [ x for x in string_list if exclude not in x ]
 
 
 def sort_by_ordinal_number(string_list: list) -> list:

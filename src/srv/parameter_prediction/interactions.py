@@ -5,7 +5,7 @@ import numpy as np
 import os
 import pandas as pd
 from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
-from src.utils.misc.scripts_io import load_experiment_config
+from src.utils.misc.scripts_io import get_root_experiment_folder, load_experiment_config
 from src.utils.misc.type_handling import flatten_listlike
 from src.srv.io.loaders.misc import load_csv
 from src.utils.data.data_format_tools.common import determine_file_format
@@ -53,13 +53,14 @@ class InteractionMatrix():
         else:
             raise TypeError(
                 f'Unsupported filetype {filetype} for loading {filepath}')
-        self.units = self.load_units()
+        self.units = self.load_units(filepath)
         return matrix, self.units
 
-    def load_units(self):
+    def load_units(self, filepath):
+        
         try:
             experiment_config = load_experiment_config(
-                experiment_folder=self.experiment_dir)
+                experiment_folder=get_root_experiment_folder(filepath))
         except ValueError:
             raise ValueError(f'For loading units into {self}, supply a valid '
                              f'experiment directory instead of {self.experiment_dir}')

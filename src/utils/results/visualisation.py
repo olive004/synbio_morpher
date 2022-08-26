@@ -94,8 +94,9 @@ def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
                 plot_kwrgs.update({'data': data[col]})
 
             data_writer.output(out_type='png', out_name=out_name,
-                               write_func=visualiser.histplot, **merge_dicts({'use_sns': use_sns, "log_axis": log_axis},
-                                                                             plot_kwrgs))
+                               write_func=visualiser.histplot,
+                               **merge_dicts({'use_sns': use_sns, "log_axis": log_axis},
+                                             plot_kwrgs))
     elif plot_type == 'plot':
         try:
             x, y = cols[0], cols[-1]
@@ -186,7 +187,9 @@ class VisODE():
         plt.clf()
 
     def histplot(self, data, out_path, bin_count=50,
-                 use_sns=False, column: str = None, log_axis: tuple = (False, False), **plot_kwrgs):
+                 use_sns=False, column: str = None,
+                 log_axis: tuple = (False, False), **plot_kwrgs):
+        """ log_axis: use logarithmic axes in (x-axis, y-axis) """
         from matplotlib import pyplot as plt
         if use_sns:
             import seaborn as sns
