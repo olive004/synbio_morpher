@@ -121,6 +121,11 @@ class RawSimulationHandling():
             from src.srv.parameter_prediction.simulator import simulate_vanilla
             return simulate_vanilla
 
+    def calculate_full_coupling_of_rates(self, k_d, degradation_rates):
+        k_a = per_mol_to_per_molecules(self.fixed_rate_k_a)
+        full_interactions = np.divide(k_a, (k_d + degradation_rates.flatten()))
+        return full_interactions
+
 
 class InteractionSimulator():
     def __init__(self, sim_args: dict = None):
@@ -172,6 +177,7 @@ class InteractionData():
 
     def __init__(self, data, simulation_handler: RawSimulationHandling,
                  test_mode=False):
+        self.simulation_handler = simulation_handler
         self.simulation_protocol = simulation_handler.get_protocol()
         self.simulation_postproc = simulation_handler.get_postprocessing()
         if not test_mode:
@@ -179,6 +185,12 @@ class InteractionData():
         else:
             self.data = self.simulation_protocol()
         self.units = simulation_handler.units
+
+    def calculate_full_coupling_of_rates(self, degradation_rates):
+        self.coupled_binding_rates = self.simulation_handler.calculate_full_coupling_of_rates(
+                k_d=self.binding_rates, degradation_rates=degradation_rates
+            )
+        return self.coupled_binding_rates
 
     def parse(self, data):
         matrix, rates = self.make_matrix(data)

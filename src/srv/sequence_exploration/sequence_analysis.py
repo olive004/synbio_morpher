@@ -54,7 +54,6 @@ def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path
 
     extra_configs = []
     for index, row in filt_stats.iterrows():
-        logging.info(row["name"])
         extra_config = {write_key: get_path_from_output_summary(
             name=row["name"], output_summary=experiment_summary)}
         extra_config.update(

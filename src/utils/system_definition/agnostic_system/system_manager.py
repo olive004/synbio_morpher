@@ -13,7 +13,7 @@ from src.utils.misc.decorators import time_it
 from src.utils.misc.numerical import make_dynamic_indexer, np_delete_axes, zero_out_negs
 from src.utils.misc.type_handling import flatten_nested_dict
 from src.utils.signal.inputs import Signal
-from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS, InteractionSimulator
+from src.srv.parameter_prediction.simulator import MIN_INTERACTION_EQCONSTANT, SIMULATOR_UNITS, InteractionSimulator
 from src.utils.system_definition.agnostic_system.base_system import BaseSystem
 from src.utils.system_definition.agnostic_system.modelling import Deterministic
 
@@ -36,7 +36,9 @@ class CircuitModeller():
 
     def init_circuit(self, circuit: BaseSystem):
         circuit = self.compute_interaction_strengths(circuit)
+        logging.info('steady states')
         circuit = self.find_steady_states(circuit)
+        logging.info('doen w init circuit')
         return circuit
 
     def make_modelling_func(self, modeller: Deterministic, circuit: BaseSystem,
@@ -48,6 +50,7 @@ class CircuitModeller():
             exclude_species_by_idx)
 
         interaction_binding_rates = circuit.species.interactions
+        interaction_binding_rates[interaction_binding_rates < MIN_INTERACTION_EQCONSTANT] = 0
         creation_rates = circuit.species.creation_rates
         degradation_rates = circuit.species.degradation_rates
 
@@ -83,20 +86,28 @@ class CircuitModeller():
         if not circuit.species.loaded_interactions:
             interactions = self.run_interaction_simulator(circuit,
                                                           circuit.species.data.data)
-            circuit.species.interactions = interactions.binding_rates
             circuit.species.eqconstants = interactions.eqconstants
+            circuit.species.binding_rates_dissociation = interactions.binding_rates
+            circuit.species.interactions = interactions.calculate_full_coupling_of_rates(
+                degradation_rates=circuit.species.degradation_rates.flatten()
+            )
+            logging.info(circuit.species.interactions)
             circuit.species.interaction_units = interactions.units
 
-            filename_addon_eqconstants = 'interactions'
-            filename_addon_rates = 'eqconstants'
-            self.result_writer.output(
-                out_type='csv', out_name=circuit.name, data=circuit.species.interactions_to_df(
-                    circuit.species.interactions), overwrite=False,
-                new_file=True, filename_addon=filename_addon_eqconstants, subfolder=filename_addon_eqconstants)
-            self.result_writer.output(
-                out_type='csv', out_name=circuit.name, data=circuit.species.interactions_to_df(
-                    circuit.species.eqconstants), overwrite=False,
-                new_file=True, filename_addon=filename_addon_rates, subfolder=filename_addon_rates)
+            # TODO: In the InteractionMatrix, put these addons better somehow
+            filename_addon_eqconstants = 'eqconstants'
+            filename_addon_binding_rates = 'binding_rates'
+            filename_addon_coupled_rates = 'interactions'
+            for interaction_matrix, filename_addon in zip(
+                [circuit.species.eqconstants, circuit.species.binding_rates_dissociation, 
+                circuit.species.interactions],
+                [filename_addon_eqconstants, filename_addon_binding_rates,
+                filename_addon_coupled_rates]
+            ):
+                self.result_writer.output(
+                    out_type='csv', out_name=circuit.name, data=circuit.species.interactions_to_df(
+                        interaction_matrix), overwrite=False,
+                    new_file=True, filename_addon=filename_addon, subfolder=filename_addon)
         return circuit
 
     def run_interaction_simulator(self, circuit: BaseSystem, data):
@@ -107,9 +118,11 @@ class CircuitModeller():
         modeller_steady_state = Deterministic(
             max_time=50, time_step=0.1)
 
+        logging.info('compute_steady_states')
         circuit.species.copynumbers = self.compute_steady_states(modeller_steady_state,
                                                                  circuit=circuit,
                                                                  solver_type=self.steady_state_solver)
+        logging.info('add_result')
 
         circuit.result_collector.add_result(circuit.species.copynumbers,
                                             name='steady_states',
@@ -137,6 +150,8 @@ class CircuitModeller():
         idxs = make_dynamic_indexer({
             circuit.species.species_axis: slice(0, np.shape(copynumbers)[circuit.species.species_axis], 1),
             circuit.species.time_axis: -1})
+
+        logging.info(solver_type)
         if solver_type == 'naive':
             copynumbers = self.model_circuit(
                 modeller, copynumbers, circuit=circuit, exclude_species_by_idx=exclude_species_by_idx)
@@ -148,6 +163,13 @@ class CircuitModeller():
                 logging.warning(f'Interactions in units of {circuit.species.interaction_units} may not be suitable for '
                                 'solving with IVP')
             y0 = copynumbers[idxs]
+            logging.info(y0)
+            logging.info(modeller)
+            logging.info(modeller.max_time)
+            logging.info(circuit)
+            logging.info(exclude_species_by_idx)
+            logging.info(self.make_modelling_func(modeller, circuit,
+                                                  exclude_species_by_idx))
             steady_state_result = integrate.solve_ivp(self.make_modelling_func(modeller, circuit,
                                                                                exclude_species_by_idx),
                                                       (0, modeller.max_time),
@@ -308,10 +330,11 @@ class CircuitModeller():
         logging.info(
             f'Running functions {methods} on circuit with {len(mutation_dict)} items.')
         for i, (name, mutation) in enumerate(mutation_dict.items()):
-            # logging.info(f'Running methods on mutation {name}')
+            logging.info(f'Running methods on mutation {name} ({i})')
             if include_normal_run and i == 0:
                 self.apply_to_circuit(circuit, methods)
             subcircuit = circuit.make_subsystem(name, mutation)
+            logging.info(f'subcircuit made {subcircuit}')
             self.result_writer.subdivide_writing(name, safe_dir_change=False)
             self.apply_to_circuit(subcircuit, methods)
             self.result_writer.unsubdivide_last_dir()
@@ -319,6 +342,7 @@ class CircuitModeller():
 
     def apply_to_circuit(self, circuit: BaseSystem, methods: dict):
         for method, kwargs in methods.items():
+            logging.info(f'Applying method {method}')
             if hasattr(self, method):
                 circuit = getattr(self, method)(circuit, **kwargs)
             else:

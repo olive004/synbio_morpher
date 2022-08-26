@@ -31,6 +31,7 @@ class InteractionMatrix():
 
         self.interaction_file_addons = [
             'interactions',
+            'binding_rates',
             'eqconstants'
         ]
 
