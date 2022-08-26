@@ -74,8 +74,8 @@ class Deterministic():
         self.max_time = max_time
         self.time_step = time_step
 
-    def dxdt_RNA(self, t, copynumbers, k_d, creation_rates, degradation_rates,
-                 num_samples, k_a, signal=None, signal_idx=None):
+    def dxdt_RNA(self, t, copynumbers, full_interactions, creation_rates, degradation_rates,
+                 signal=None, signal_idx=None, identity_matrix=None):
         """ dx_dt = a + x * I * k_d * x' - x * ∂   for x=[A, B] 
         x: the vector of copy numbers of the samples A, B, C...
         y: the vector of copy numbers of bound (nonfunctional) samples (AA, AB, AC...)
@@ -91,15 +91,15 @@ class Deterministic():
         if signal_idx is not None:
             copynumbers[signal_idx] = signal
 
-        xI = copynumbers * np.identity(num_samples)
+        xI = copynumbers * identity_matrix
         
-        full_interactions = np.divide(k_a, (k_d + degradation_rates.flatten()))
+        # full_interactions = np.divide(k_a, (k_d + degradation_rates.flatten()))
         coupling = np.matmul(np.matmul(xI, full_interactions), copynumbers.T)
         # coupling = np.matmul(np.matmul(xI, interactions), copynumbers.T)
         # coupling = np.matmul(np.matmul(xI, np.divide(interactions, SCIENTIFIC['mole'])), copynumbers.T)
 
-        dxdt = creation_rates.flatten() - coupling.flatten() - \
-            copynumbers.flatten() * degradation_rates.flatten()
+        dxdt = creation_rates - coupling.flatten() - \
+            copynumbers.flatten() * degradation_rates
 
         return dxdt
         # return np.multiply(dxdt, self.time_step)

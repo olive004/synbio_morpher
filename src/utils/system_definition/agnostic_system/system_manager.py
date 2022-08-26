@@ -36,9 +36,7 @@ class CircuitModeller():
 
     def init_circuit(self, circuit: BaseSystem):
         circuit = self.compute_interaction_strengths(circuit)
-        logging.info('steady states')
         circuit = self.find_steady_states(circuit)
-        logging.info('doen w init circuit')
         return circuit
 
     def make_modelling_func(self, modeller: Deterministic, circuit: BaseSystem,
@@ -66,13 +64,12 @@ class CircuitModeller():
                 degradation_rates = np.delete(
                     degradation_rates, exclude, axis=circuit.species.species_axis)
 
-        return partial(modeller.dxdt_RNA, k_d=interaction_binding_rates,
-                       k_a=circuit.molecular_params['association_binding_rate'],
-                       creation_rates=creation_rates,
-                       degradation_rates=degradation_rates,
-                       num_samples=num_samples,
+        return partial(modeller.dxdt_RNA, full_interactions=interaction_binding_rates,
+                       creation_rates=creation_rates.flatten(),
+                       degradation_rates=degradation_rates.flatten(),
                        signal=fixed_value,
-                       signal_idx=fixed_value_idx
+                       signal_idx=fixed_value_idx,
+                       identity_matrix=np.identity(num_samples)
                        )
 
     @staticmethod
@@ -91,7 +88,6 @@ class CircuitModeller():
             circuit.species.interactions = interactions.calculate_full_coupling_of_rates(
                 degradation_rates=circuit.species.degradation_rates.flatten()
             )
-            logging.info(circuit.species.interactions)
             circuit.species.interaction_units = interactions.units
 
             # TODO: In the InteractionMatrix, put these addons better somehow
@@ -118,11 +114,9 @@ class CircuitModeller():
         modeller_steady_state = Deterministic(
             max_time=50, time_step=0.1)
 
-        logging.info('compute_steady_states')
         circuit.species.copynumbers = self.compute_steady_states(modeller_steady_state,
                                                                  circuit=circuit,
                                                                  solver_type=self.steady_state_solver)
-        logging.info('add_result')
 
         circuit.result_collector.add_result(circuit.species.copynumbers,
                                             name='steady_states',
@@ -151,7 +145,6 @@ class CircuitModeller():
             circuit.species.species_axis: slice(0, np.shape(copynumbers)[circuit.species.species_axis], 1),
             circuit.species.time_axis: -1})
 
-        logging.info(solver_type)
         if solver_type == 'naive':
             copynumbers = self.model_circuit(
                 modeller, copynumbers, circuit=circuit, exclude_species_by_idx=exclude_species_by_idx)
@@ -163,13 +156,6 @@ class CircuitModeller():
                 logging.warning(f'Interactions in units of {circuit.species.interaction_units} may not be suitable for '
                                 'solving with IVP')
             y0 = copynumbers[idxs]
-            logging.info(y0)
-            logging.info(modeller)
-            logging.info(modeller.max_time)
-            logging.info(circuit)
-            logging.info(exclude_species_by_idx)
-            logging.info(self.make_modelling_func(modeller, circuit,
-                                                  exclude_species_by_idx))
             steady_state_result = integrate.solve_ivp(self.make_modelling_func(modeller, circuit,
                                                                                exclude_species_by_idx),
                                                       (0, modeller.max_time),
@@ -330,11 +316,10 @@ class CircuitModeller():
         logging.info(
             f'Running functions {methods} on circuit with {len(mutation_dict)} items.')
         for i, (name, mutation) in enumerate(mutation_dict.items()):
-            logging.info(f'Running methods on mutation {name} ({i})')
+            # logging.info(f'Running methods on mutation {name} ({i})')
             if include_normal_run and i == 0:
                 self.apply_to_circuit(circuit, methods)
             subcircuit = circuit.make_subsystem(name, mutation)
-            logging.info(f'subcircuit made {subcircuit}')
             self.result_writer.subdivide_writing(name, safe_dir_change=False)
             self.apply_to_circuit(subcircuit, methods)
             self.result_writer.unsubdivide_last_dir()
@@ -342,7 +327,6 @@ class CircuitModeller():
 
     def apply_to_circuit(self, circuit: BaseSystem, methods: dict):
         for method, kwargs in methods.items():
-            logging.info(f'Applying method {method}')
             if hasattr(self, method):
                 circuit = getattr(self, method)(circuit, **kwargs)
             else:

@@ -21,7 +21,16 @@
         "mutation_nums": 10,
         "concurrent_species_to_mutate": "single_species_at_a_time"
     },
-    "signal": "./scripts/mutation_effect_on_interactions_signal/configs/in_signal.json", 
+    "signal": {
+        "signal":[0, 1],
+        "signal_spec": "raw",
+        "signal_type": "abstract",
+        "total_time":15000,
+        "magnitude":100,
+        "positions":[6, 500],
+        "heights":[50, 80],
+        "durations":[50, 400]
+    },
     "source_of_interaction_stats": {
         "is_source_dir_incomplete": false,
         "source_dir": "./data/gather_interaction_stats/2022_08_26_153401",
