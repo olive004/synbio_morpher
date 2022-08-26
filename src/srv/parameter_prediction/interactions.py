@@ -111,10 +111,10 @@ class InteractionMatrix():
 
     def get_unique_interacting_idxs(self):
         if self.units == SIMULATOR_UNITS['IntaRNA']['energy']:
-            idxs_interacting = np.argwhere(self.matrix > 0)
+            idxs_interacting = np.argwhere(self.matrix < 0)
             idxs_interacting = sorted([tuple(sorted(i)) for i in idxs_interacting])
         elif self.units == SIMULATOR_UNITS['IntaRNA']['rate']:
-            idxs_interacting = np.argwhere(self.matrix < 0)
+            idxs_interacting = np.argwhere(self.matrix > 0.000000001)
             idxs_interacting = sorted([tuple(sorted(i)) for i in idxs_interacting])
         else:
             raise ValueError(f'Cannot determine interaction properties from units "{self.units}"')
