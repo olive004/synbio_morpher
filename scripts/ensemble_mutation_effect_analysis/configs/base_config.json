@@ -52,7 +52,7 @@
             },
             "mutations": {
                 "mutation_counts": 6,
-                "mutation_nums": 1,
+                "mutation_nums_within_sequence": 1,
                 "concurrent_species_to_mutate": "single_species_at_a_time"
             },
             "signal": {

@@ -25,7 +25,7 @@
     },
     "mutations": {
         "mutation_counts": 10,
-        "mutation_nums": 1,
+        "mutation_nums_within_sequence": 1,
         "algorithm": "random"
     },
     "signal": {

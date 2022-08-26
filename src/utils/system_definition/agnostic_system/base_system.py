@@ -44,8 +44,8 @@ class BaseSpecies():
 
         self.mutations = {}
         # Nums: mutations within a sequence
-        self.mutation_nums = config_args.get(
-            "mutations", {}).get("mutation_nums")
+        self.mutation_nums_within_sequence = config_args.get(
+            "mutations", {}).get("mutation_nums_within_sequence")
         # Counts: mutated iterations of a sequence
         self.mutation_counts = config_args.get(
             "mutations", {}).get("mutation_counts")
@@ -96,7 +96,7 @@ class BaseSpecies():
     def process_mutations(self):
         self.mutation_counts = extend_int_to_list(
             self.mutation_counts, self.count)
-        self.mutation_nums = extend_int_to_list(self.mutation_nums, self.count)
+        self.mutation_nums_within_sequence = extend_int_to_list(self.mutation_nums_within_sequence, self.count)
 
     def mutate(self, mutation):
 

@@ -97,6 +97,8 @@ def load_experiment_report(experiment_folder: str) -> dict:
 
 
 def load_experiment_config_original(starting_experiment_folder: str, target_purpose: str) -> dict:
+    """ Load the experiment config from a previous experiment that led
+    to the current (starting) experiment folder"""
     original_config = load_experiment_config(starting_experiment_folder)
     while not original_config['experiment']['purpose'] == target_purpose:
         try:
@@ -119,7 +121,7 @@ def load_experiment_config(experiment_folder: str) -> dict:
         raise ValueError('If trying to load something from the experiment config, please supply '
                          f'a valid directory for the source experiment instead of {experiment_folder}')
     experiment_report = load_experiment_report(experiment_folder)
-    return load_json_as_dict(experiment_report.get('config_filepath'))
+    return experiment_report.get('config_params')
 
 
 def get_recent_experiment_folder(purpose_folder: str) -> str:

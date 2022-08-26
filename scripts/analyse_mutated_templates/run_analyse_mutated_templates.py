@@ -2,6 +2,7 @@ from functools import partial
 import os
 
 from fire import Fire
+from src.utils.misc.scripts_io import load_experiment_config
 
 from src.utils.results.experiments import Experiment, Protocol
 from src.utils.results.result_writer import ResultWriter
@@ -13,7 +14,6 @@ from src.utils.data.data_format_tools.common import load_json_as_dict
 
 def main(config=None, data_writer=None):
     # Set configs
-    num_mutations = 2
     if config is None:
         config = os.path.join(
             # "scripts", "analyse_mutated_templates", "configs", "logscale", "analyse_templates.json")
@@ -27,6 +27,7 @@ def main(config=None, data_writer=None):
         data_writer = ResultWriter(purpose='analyse_mutated_templates')
 
     source_dir = config_file.get('source_dir')
+    source_config = load_experiment_config(source_dir)
     if config_file.get('preprocessing_func') == 'rate_to_energy':
         preprocessing_func = RawSimulationHandling().rate_to_energy,
     else:
@@ -37,6 +38,7 @@ def main(config=None, data_writer=None):
     else:
         exclude_rows_via_cols = []
 
+    num_mutations = source_config['mutations']['mutation_nums_within_sequence']
     plot_grammar = 's' if num_mutations > 1 else ''
 
     protocols = [

@@ -21,7 +21,7 @@
     "molecular_params": "./scripts/common/configs/RNA_system/molecular_params.json",
     "mutations": {
         "mutation_counts": 10,
-        "mutation_nums": 1,
+        "mutation_nums_within_sequence": 1,
         "algorithm": "random"
     },
     "signal": "./scripts/pair_species_mutation/configs/params/in_signal.json",

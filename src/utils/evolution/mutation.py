@@ -95,7 +95,7 @@ class Evolver():
         self.out_type = 'csv'
 
     def is_mutation_possible(self, system: BaseSystem):
-        if system.species.mutation_counts is None or system.species.mutation_nums is None:
+        if system.species.mutation_counts is None or system.species.mutation_nums_within_sequence is None:
             return False
         return True
 
@@ -120,7 +120,7 @@ class Evolver():
                           mutation_idx=None) -> Mutations:
             sequence = species.data.get_data_by_idx(sample_idx)
             positions = position_generator(
-                sequence, species.mutation_nums[sample_idx])
+                sequence, species.mutation_nums_within_sequence[sample_idx])
 
             mutations = Mutations(
                 mutation_name=species.data.sample_names[sample_idx]+'_'+str(
