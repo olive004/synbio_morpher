@@ -29,6 +29,11 @@ class InteractionMatrix():
         self.units = units
         self.experiment_dir = experiment_dir
 
+        self.interaction_file_addons = [
+            'interactions',
+            'eqconstants'
+        ]
+
         if matrix is not None:
             self.matrix = matrix
         elif matrix_path is not None:
@@ -41,8 +46,7 @@ class InteractionMatrix():
     def load(self, filepath):
         filetype = determine_file_format(filepath)
 
-        self.name = os.path.basename(filepath).replace('.'+filetype, '').replace(
-            'interactions_', '').replace('_interactions', '')
+        self.name = self.isolate_circuit_name(filepath, filetype)
         if filetype == 'csv':
             matrix = load_csv(filepath, load_as='numpy')
         else:
@@ -66,6 +70,12 @@ class InteractionMatrix():
                 return SIMULATOR_UNITS['IntaRNA']['energy']
         else:
             return 'unknown'
+
+    def isolate_circuit_name(self, circuit_filepath, filetype):
+        for faddon in self.interaction_file_addons:
+            circuit_name = os.path.basename(circuit_filepath).replace('.'+filetype, '').replace(
+                faddon+'_', '').replace('_'+faddon, '')
+        return circuit_name
 
     def make_rand_matrix(self, num_nodes):
         if num_nodes is None or num_nodes == 0:

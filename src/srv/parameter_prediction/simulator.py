@@ -17,6 +17,7 @@ SIMULATOR_UNITS = {
         'rate': '1/s'
     }
 }
+MIN_INTERACTION_EQCONSTANT = 0.000000001
 
 
 class RawSimulationHandling():
@@ -83,7 +84,7 @@ class RawSimulationHandling():
         def zero_false_eqconstants(rates):
             """ Exponential of e^0 is equal to 1, but IntaRNA sets energies 
             equal to 0 for non-interactions. """
-            rates[rates == 1] = 0.000000001
+            rates[rates == 1] = MIN_INTERACTION_EQCONSTANT
             return rates
 
         def processor(input, funcs):

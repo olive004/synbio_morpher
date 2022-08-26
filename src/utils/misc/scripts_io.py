@@ -132,4 +132,7 @@ def get_path_from_output_summary(name, output_summary: pd.DataFrame = None, expe
         output_summary = load_experiment_output_summary(experiment_folder)
     pathname = output_summary.loc[output_summary['out_name']
                                   == name]['out_path'].values[0]
+    logging.info(name)
+    logging.info(output_summary['out_name'])
+    logging.info(pathname)
     return pathname

@@ -139,7 +139,7 @@ class Evolver():
                 species.mutations[sample] = {}
                 for c in range(species.mutation_counts[sample_idx]):
                     mutation = sample_mutator_func(
-                        species, sample_idx=sample_idx, mutation_idx=c)
+                        species=species, sample_idx=sample_idx, mutation_idx=c)
                     species.mutations[sample][mutation.mutation_name] = mutation
             return species
 
