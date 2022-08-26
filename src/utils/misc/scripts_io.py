@@ -90,6 +90,11 @@ def load_experiment_output_summary(experiment_folder) -> pd.DataFrame:
     return load_csv(summary_path)
 
 
+def load_result_report(local_experiment_folder: str, result_type: str = 'signal'):
+    report_path = get_pathnames(local_experiment_folder, file_key=['result', result_type])
+    return load_json_as_dict(report_path)
+
+
 def load_experiment_report(experiment_folder: str) -> dict:
     experiment_folder = get_root_experiment_folder(experiment_folder)
     report_path = os.path.join(experiment_folder, 'experiment.json')

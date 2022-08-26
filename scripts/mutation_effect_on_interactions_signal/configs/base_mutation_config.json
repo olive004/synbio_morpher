@@ -18,7 +18,7 @@
     },
     "mutations": {
         "mutation_counts": 10,
-        "mutation_nums_within_sequence": 1,
+        "mutation_nums_within_sequence": 2,
         "concurrent_species_to_mutate": "single_species_at_a_time"
     },
     "signal": {
@@ -33,7 +33,7 @@
     },
     "source_of_interaction_stats": {
         "is_source_dir_incomplete": false,
-        "source_dir": "./data/gather_interaction_stats/2022_08_26_153432",
+        "source_dir": "./data/gather_interaction_stats/2022_08_26_153419",
         "purpose_to_get_source_dir_from": null,
         "source_dir_actually_used_POSTERITY": null
     }
