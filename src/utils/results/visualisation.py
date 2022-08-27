@@ -101,7 +101,15 @@ def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
                 data, preprocessor_func, threshold_value_max, col)
 
             if use_sns:
-                plot_kwrgs.update({'column': col, 'data': data})
+                # Rename x label manually
+                data = data.reset_index()
+                if log_axis[0]:
+                    new_col = 'Log of ' + plot_kwrgs.get('xlabel', col)
+                else:
+                    new_col = plot_kwrgs.get('xlabel', col)
+                data = data.rename(columns={col: new_col})
+
+                plot_kwrgs.update({'column': new_col, 'data': data})
             else:
                 plot_kwrgs.update({'data': data[col]})
 
@@ -206,17 +214,6 @@ class VisODE():
         if use_sns:
             import seaborn as sns
             sns.set_context('paper')
-
-            data = data.reset_index()
-            if log_axis[0]:
-                new_col = 'Log of ' + plot_kwrgs.get('x_label', column)
-            else:
-                new_col = plot_kwrgs.get('x_label', column)
-            logging.info(new_col)
-            logging.info(data.columns)
-            data = data.rename(columns={column: new_col})
-            logging.info(data.columns)
-            column = new_col
 
             if column is None:
                 logging.warn(

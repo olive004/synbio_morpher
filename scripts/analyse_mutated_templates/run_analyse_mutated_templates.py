@@ -157,6 +157,12 @@ def main(config=None, data_writer=None):
             name='visualise_interactions_difference',
             skip=config_file.get('only_visualise_circuits', False)
         ),
+
+
+
+
+
+        
         # eqconstants max int's og
         Protocol(
             partial(visualise_data, data_writer=data_writer, cols=['eqconstants_max_interaction'],
@@ -228,7 +234,15 @@ def main(config=None, data_writer=None):
             req_input=True,
             name='visualise_interactions_difference',
             skip=config_file.get('only_visualise_circuits', False)
-        )
+        ),
+
+
+
+
+
+
+        # Analyse results reports
+        Protocol()
     ]
     experiment = Experiment(config=config, config_file=config_file, protocols=protocols,
                             data_writer=data_writer)
