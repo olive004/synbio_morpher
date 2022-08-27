@@ -29,7 +29,7 @@ class BaseSpecies():
         # for each
 
         self.data = config_args.get("data")  # Data common class
-        self.identities = config_args.get("identities")
+        self.identities = self.process_identities(config_args.get("identities"))
 
         self.loaded_interactions = False
         self.interactions, self.interaction_units = self.make_interactions(
@@ -52,6 +52,13 @@ class BaseSpecies():
 
         self.process_mutations()
         self.initial_values = self.save_initial_values()
+
+    def process_identities(self, identities: dict):
+        """ Make sure identities are indices of the sample names list """
+        for category, identity in identities.items():
+            if identity in self.data.sample_names:
+                identities[category] = self.data.sample_names.index(identity)
+        return identities
 
     def make_interactions(self, config_args):
         cfg_interactions = config_args.get("interactions")
