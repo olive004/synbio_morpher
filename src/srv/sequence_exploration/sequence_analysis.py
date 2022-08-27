@@ -87,6 +87,7 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
         'source_species',
         'mutation_num',
         'mutation_type',
+        'mutation_positions',
         'path_to_steady_state_data',
         'path_to_signal_data',
         'path_to_template_circuit'
@@ -133,8 +134,10 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
             reference_v = reference_table[k]
             if type(reference_v) == bool:
                 continue
-            table[f'{k}_diff_to_base_circuit'] = np.asarray(
-                table[k]) - np.asarray(reference_v)
+            diff = np.asarray(table[k]) - np.asarray(reference_v)
+            if np.size(diff) == 1:
+                diff = diff[0]
+            table[f'{k}_diff_to_base_circuit'] = diff
         return table
 
     def update_diff_to_base_circuit(curr_table: dict, int_stats: pd.DataFrame,
@@ -143,15 +146,15 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
             for col in cols:
                 current_stat = np.asarray(list(int_stats[i_type][col]))
                 ref_stat = np.asarray(list(ref_stats[i_type][col]))
-                curr_table[f'{i_type}_{col}'] = np.asarray(current_stat)
+                curr_table[f'{i_type}_{col}'] = np.asarray(current_stat)[0]
                 if type(current_stat) == list or type(ref_stat) == list:
                     diff = np.asarray(current_stat) - np.asarray(ref_stat)
-                    if np.size(diff) == 1:
-                        diff = diff[0]
                     curr_table[f'{i_type}_{col}_diff_to_base_circuit'] = diff
                 else:
-                    curr_table[f'{i_type}_{col}_diff_to_base_circuit'] = \
-                        current_stat - ref_stat
+                    diff = current_stat - ref_stat
+                if np.size(diff) == 1:
+                    diff = diff[0]
+                curr_table[f'{i_type}_{col}_diff_to_base_circuit'] = diff
         return curr_table
 
     def update_info_table(info_table: pd.DataFrame, curr_table: dict, int_stats: pd.DataFrame,
@@ -197,6 +200,7 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
             'source_species': '',
             'mutation_num': 0,
             'mutation_type': '',
+            'mutation_positions': '',
             'path_to_steady_state_data': get_pathnames(first_only=True,
                                                        file_key='steady_states_data',
                                                        search_dir=circuit_dir),
@@ -223,7 +227,8 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
                 'mutation_name': mutation_name,
                 'source_species': curr_mutation['template_name'].values[0],
                 'mutation_num': source_config['mutations']['mutation_nums_within_sequence'],
-                'mutation_type': curr_mutation['mutation_types'].values[0],
+                'mutation_type': curr_mutation['mutation_types'].values,
+                'mutation_positions': curr_mutation['positions'].values,
                 'path_to_steady_state_data': get_pathnames(first_only=True,
                                                            file_key='steady_states_data',
                                                            search_dir=mutation_dir),

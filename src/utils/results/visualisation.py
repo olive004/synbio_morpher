@@ -75,10 +75,20 @@ class NetworkCustom(Network):
 
 def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
                    cols: list = None, plot_type='histplot', out_name='test_plot',
-                   preprocessor_func=None, exclude_rows_nonempty_in_cols: list = None,
+                   preprocessor_func=None,
+                   exclude_rows_nonempty_in_cols: list = None,
+                   threshold_value_max=None,
                    use_sns=False, log_axis=False,
                    **plot_kwrgs):
     """ Plot type can be any attributes of VisODE() """
+    def preprocess_data(data: pd.DataFrame, preprocessor_func, threshold_value_max, column):
+        new_data = data
+        if threshold_value_max:
+            new_data = data[data[column] <= threshold_value_max]
+        if preprocessor_func:
+            new_data[column] = preprocessor_func(new_data[column].values)
+        return new_data
+
     if exclude_rows_nonempty_in_cols is not None:
         for exc_col in exclude_rows_nonempty_in_cols:
             data = data[data[exc_col] == '']
@@ -86,8 +96,10 @@ def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
     visualiser = VisODE()
     if plot_type == 'histplot':
         for col in cols:
-            if preprocessor_func:
-                data[col] = preprocessor_func(data[col].values)
+            logging.info(col)
+            data = preprocess_data(
+                data, preprocessor_func, threshold_value_max, col)
+
             if use_sns:
                 plot_kwrgs.update({'column': col, 'data': data})
             else:
@@ -186,18 +198,25 @@ class VisODE():
         fig.savefig(out_path)
         plt.clf()
 
-    def histplot(self, data, out_path, bin_count=50,
+    def histplot(self, data: pd.DataFrame, out_path, bin_count=50,
                  use_sns=False, column: str = None,
                  log_axis: tuple = (False, False), **plot_kwrgs):
         """ log_axis: use logarithmic axes in (x-axis, y-axis) """
         from matplotlib import pyplot as plt
         if use_sns:
             import seaborn as sns
+            sns.set_context('paper')
+
             data = data.reset_index()
             if log_axis[0]:
-                new_col = 'Log of ' + column
-                data = data.rename(columns={column: new_col})
-                column = new_col
+                new_col = 'Log of ' + plot_kwrgs.get('x_label', column)
+            else:
+                new_col = plot_kwrgs.get('x_label', column)
+            logging.info(new_col)
+            logging.info(data.columns)
+            data = data.rename(columns={column: new_col})
+            logging.info(data.columns)
+            column = new_col
 
             if column is None:
                 logging.warn(
@@ -214,7 +233,7 @@ class VisODE():
                 edgecolor=".3",
                 linewidth=.5,
                 log_scale=log_axis,
-            )
+            ).set(title=plot_kwrgs.get('title', None))
             f.savefig(out_path)
         else:
             plt.figure()

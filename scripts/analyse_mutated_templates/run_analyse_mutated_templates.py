@@ -2,6 +2,8 @@ from functools import partial
 import logging
 import os
 
+import numpy as np
+
 from fire import Fire
 from src.utils.misc.scripts_io import load_experiment_config, load_experiment_config_original
 
@@ -42,6 +44,8 @@ def main(config=None, data_writer=None):
     num_mutations = source_config['mutations']['mutation_nums_within_sequence']
     plot_grammar = 's' if num_mutations > 1 else ''
 
+    binding_rates_threshold_upper = np.power(10,6)
+    binding_rates_threshold_upper_text = f', with cutoff at {binding_rates_threshold_upper}' if binding_rates_threshold_upper else ''
     protocols = [
         Protocol(
             partial(tabulate_mutation_info, source_dir=source_dir,
@@ -49,42 +53,178 @@ def main(config=None, data_writer=None):
             req_output=True,
             name='tabulate_mutation_info'
         ),
+        # Binding rates max int's og
         Protocol(
             partial(visualise_data, data_writer=data_writer, cols=['binding_rates_max_interaction'],
                     plot_type='histplot',
                     out_name='binding_rates_max_freqs',
                     preprocessor_func=preprocessing_func,
                     exclude_rows_nonempty_in_cols=['mutation_name'],
+                    threshold_value_max=binding_rates_threshold_upper,
                     log_axis=config_file.get('log_scale', (False, False)),
                     use_sns=True,
                     title='Maximum k_d strength, unmutated circuits',
-                    xlabel='Dissociation rate k_d, ' +
-                    f'{SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]}',
-                    ylabel='Frequency count'),
+                    xlabel='Dissociation rate k_d (' +
+                    f'{SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]})' +
+                    f'{binding_rates_threshold_upper_text}'),
             req_input=True,
             name='visualise_circuit_interactions'
         ),
+        # Binding rates max int's mutations
         Protocol(
             partial(visualise_data, data_writer=data_writer, cols=['binding_rates_max_interaction'],
-                    plot_type='histplot', out_name='interaction_max_freqs_mutations',
+                    plot_type='histplot',
+                    out_name='binding_rates_max_freqs_mutations',
+                    preprocessor_func=preprocessing_func,
+                    exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
+                    threshold_value_max=binding_rates_threshold_upper,
+                    log_axis=config_file.get('log_scale', (False, False)),
+                    use_sns=True,
+                    title=f'Maximum k_d strength, {num_mutations} mutation{plot_grammar}',
+                    xlabel='Dissociation rate k_d (' +
+                    f'{SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]})' +
+                    f'{binding_rates_threshold_upper_text}'),
+            req_input=True,
+            name='visualise_mutated_interactions'
+        ),
+        # Binding rates max int's diff
+        Protocol(
+            partial(visualise_data, data_writer=data_writer, cols=['binding_rates_max_interaction_diff_to_base_circuit'],
+                    plot_type='histplot',
+                    out_name='binding_rates_max_freqs_diffs',
                     preprocessor_func=preprocessing_func,
                     exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
                     log_axis=config_file.get('log_scale', (False, False)),
                     use_sns=True,
-                    title=f'Maximum k_d strength, {num_mutations} mutation{plot_grammar}',
-                    xlabel=f'Dissociation rate k_d, {SIMULATOR_UNITS["IntaRNA"]["rate"]}',
-                    ylabel='Frequency count'),
+                    title=f'Difference between circuit\nand mutated (minimum k_d), {num_mutations} mutation{plot_grammar}',
+                    xlabel='Difference in k_d (' +
+                    f'{SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]})' +
+                    f'{binding_rates_threshold_upper_text}'),
+            req_input=True,
+            name='visualise_interactions_difference',
+            skip=config_file.get('only_visualise_circuits', False)
+        ),
+        # Binding rates min int's og
+        Protocol(
+            partial(visualise_data, data_writer=data_writer, cols=['binding_rates_min_interaction'],
+                    plot_type='histplot',
+                    out_name='binding_rates_min_freqs',
+                    preprocessor_func=preprocessing_func,
+                    exclude_rows_nonempty_in_cols=['mutation_name'],
+                    threshold_value_max=binding_rates_threshold_upper,
+                    log_axis=config_file.get('log_scale', (False, False)),
+                    use_sns=True,
+                    title='Minimum k_d strength, unmutated circuits',
+                    # xlabel='bbb'),
+                    xlabel='Dissociation rate k_d (' +
+                    f'{SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]})' +
+                    f'{binding_rates_threshold_upper_text}'),
+            req_input=True,
+            name='visualise_circuit_interactions'
+        ),
+        # Binding rates min int's mutations
+        Protocol(
+            partial(visualise_data, data_writer=data_writer, cols=['binding_rates_min_interaction'],
+                    plot_type='histplot',
+                    out_name='binding_rates_min_freqs_mutations',
+                    preprocessor_func=preprocessing_func,
+                    exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
+                    threshold_value_max=binding_rates_threshold_upper,
+                    log_axis=config_file.get('log_scale', (False, False)),
+                    use_sns=True,
+                    title=f'Minimum k_d strength, {num_mutations} mutation{plot_grammar}',
+                    xlabel='Dissociation rate k_d (' +
+                    f'{SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]})' +
+                    f'{binding_rates_threshold_upper_text}'),
             req_input=True,
             name='visualise_mutated_interactions'
         ),
+        # Binding rates min int's diff
         Protocol(
-            partial(visualise_data, data_writer=data_writer, cols=['interaction_strength_diff_to_base_circuit'],
-                    plot_type='histplot', out_name='interaction_strength_diffs',
+            partial(visualise_data, data_writer=data_writer, cols=['binding_rates_min_interaction_diff_to_base_circuit'],
+                    plot_type='histplot',
+                    out_name='binding_rates_min_freqs_diffs',
+                    preprocessor_func=preprocessing_func,
+                    exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
+                    threshold_value_max=binding_rates_threshold_upper,
+                    log_axis=config_file.get('log_scale', (False, False)),
+                    use_sns=True,
+                    title=f'Difference between circuit\nand mutated (minimum k_d), {num_mutations} mutation{plot_grammar}',
+                    xlabel='Difference in k_d (' +
+                    f'{SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]})' +
+                    f'{binding_rates_threshold_upper_text}'),
+            req_input=True,
+            name='visualise_interactions_difference',
+            skip=config_file.get('only_visualise_circuits', False)
+        ),
+        # eqconstants max int's og
+        Protocol(
+            partial(visualise_data, data_writer=data_writer, cols=['eqconstants_max_interaction'],
+                    plot_type='histplot',
+                    out_name='eqconstants_max_freqs',
+                    preprocessor_func=preprocessing_func,
+                    exclude_rows_nonempty_in_cols=['mutation_name'],
+                    log_axis=config_file.get('log_scale', (False, False)),
+                    use_sns=True,
+                    title='Maximum equilibrium constant, unmutated circuits',
+                    xlabel='Equilibrium constant'),
+            req_input=True,
+            name='visualise_circuit_interactions'
+        ),
+        # eqconstants max int's mutations
+        Protocol(
+            partial(visualise_data, data_writer=data_writer, cols=['eqconstants_max_interaction'],
+                    plot_type='histplot',
+                    out_name='eqconstants_max_freqs_mutations',
+                    preprocessor_func=preprocessing_func,
+                    exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
+                    log_axis=(False, False),
+                    use_sns=True,
+                    title=f'Maximum equilibrium constant, {num_mutations} mutation{plot_grammar}',
+                    xlabel=f'Equilibrium constant'),
+            req_input=True,
+            name='visualise_mutated_interactions'
+        ),
+        # Log 0f ^eqconstants max int's mutations
+        Protocol(
+            partial(visualise_data, data_writer=data_writer, cols=['eqconstants_max_interaction'],
+                    plot_type='histplot',
+                    out_name='eqconstants_max_freqs_mutations_logarithm',
+                    preprocessor_func=preprocessing_func,
+                    exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
+                    log_axis=(True, False),
+                    use_sns=True,
+                    title=f'Maximum equilibrium constant, {num_mutations} mutation{plot_grammar}',
+                    xlabel=f'Equilibrium constant'),
+            req_input=True,
+            name='visualise_mutated_interactions'
+        ),
+        # eqconstants max int's diff
+        Protocol(
+            partial(visualise_data, data_writer=data_writer, cols=['eqconstants_max_interaction_diff_to_base_circuit'],
+                    plot_type='histplot',
+                    out_name='eqconstants_max_freqs_diffs',
                     preprocessor_func=preprocessing_func,
                     exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
                     log_axis=config_file.get('log_scale', (False, False)),
-                    title=f'Difference between circuit\nand mutated interaction strengths, {num_mutations} mutation{plot_grammar}',
-                    xlabel='Interaction strength difference', ylabel='Frequency count'),
+                    use_sns=True,
+                    title=f'Difference between circuit\nand mutated equilibrium constant, {num_mutations} mutation{plot_grammar}',
+                    xlabel='Equilibrium constant difference'),
+            req_input=True,
+            name='visualise_interactions_difference',
+            skip=config_file.get('only_visualise_circuits', False)
+        ),
+        # Log of ^eqconstants max int's diff
+        Protocol(
+            partial(visualise_data, data_writer=data_writer, cols=['eqconstants_max_interaction_diff_to_base_circuit'],
+                    plot_type='histplot',
+                    out_name='eqconstants_max_freqs_diffs_logarithm',
+                    preprocessor_func=preprocessing_func,
+                    exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
+                    log_axis=(True, False),
+                    use_sns=True,
+                    title=f'Difference between circuit\nand mutated equilibrium constant, {num_mutations} mutation{plot_grammar}',
+                    xlabel='Equilibrium constant difference'),
             req_input=True,
             name='visualise_interactions_difference',
             skip=config_file.get('only_visualise_circuits', False)
