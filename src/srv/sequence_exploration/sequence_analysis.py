@@ -10,6 +10,7 @@ import pandas as pd
 
 from src.srv.io.loaders.data_loader import GeneCircuitLoader
 from src.utils.misc.string_handling import prettify_logging_info, remove_element_from_list_by_substring
+from src.utils.misc.type_handling import flatten_nested_listlike
 from src.utils.results.writer import DataWriter
 from src.srv.parameter_prediction.interactions import InteractionMatrix
 from src.utils.misc.io import get_pathnames, get_subdirectories
@@ -75,6 +76,11 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
 
     interaction_types = ['binding_rates', 'eqconstants', 'interactions']
 
+    interaction_stats_chosen = ['num_self_interacting',
+                                'num_interacting',
+                                'max_interaction',
+                                'min_interaction']
+
     info_column_names = [
         'circuit_name',
         'mutation_name',
@@ -85,14 +91,15 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
         'path_to_signal_data',
         'path_to_template_circuit'
     ]
-    info_column_names_interactions = [[f'{i}_self_interacting',
-                                       f'{i}_self_interacting_diff_to_base_circuit',
-                                       f'{i}_num_interacting',
-                                       f'{i}_num_interacting_diff_to_base_circuit',
-                                       f'{i}_max_interaction',
-                                       f'{i}_max_interaction_diff_to_base_circuit'] for i in interaction_types]
-    info_column_names_interactions = list(
-        itertools.chain(*info_column_names_interactions))
+    info_column_names_interactions = [[[f'{i}_{s}',
+                                       f'{i}_{s}_diff_to_base_circuit'] for s in interaction_stats_chosen] for i in interaction_types]
+    # info_column_names_interactions = [[f'{i}_num_self_interacting',
+    #                                    f'{i}_num_self_interacting_diff_to_base_circuit',
+    #                                    f'{i}_num_interacting',
+    #                                    f'{i}_num_interacting_diff_to_base_circuit',
+    #                                    f'{i}_max_interaction',
+    #                                    f'{i}_max_interaction_diff_to_base_circuit'] for i in interaction_types]
+    info_column_names_interactions = flatten_nested_listlike(info_column_names_interactions)
     info_column_names = info_column_names + info_column_names_interactions
 
     info_table = pd.DataFrame(columns=info_column_names)
@@ -114,9 +121,10 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
                 source_interaction_dir, interaction_type)
             file_key = [
                 interaction_type, circuit_name] if include_circuit_in_filekey else interaction_type
-            interaction_stats[interaction_type] = InteractionMatrix(matrix_path=get_pathnames(first_only=True,
-                                                                                              file_key=file_key,
-                                                                                              search_dir=interaction_dir)).get_stats()
+            interaction_stats[interaction_type] = InteractionMatrix(
+                matrix_path=get_pathnames(first_only=True,
+                                          file_key=file_key,
+                                          search_dir=interaction_dir)).get_stats()
         return interaction_stats
 
     def upate_table_with_results(table: dict, reference_table: dict, results: dict):
@@ -137,8 +145,10 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
                 ref_stat = np.asarray(list(ref_stats[i_type][col]))
                 curr_table[f'{i_type}_{col}'] = np.asarray(current_stat)
                 if type(current_stat) == list or type(ref_stat) == list:
-                    curr_table[f'{i_type}_{col}_diff_to_base_circuit'] = np.asarray(
-                        current_stat) - np.asarray(ref_stat)
+                    diff = np.asarray(current_stat) - np.asarray(ref_stat)
+                    if np.size(diff) == 1:
+                        diff = diff[0]
+                    curr_table[f'{i_type}_{col}_diff_to_base_circuit'] = diff
                 else:
                     curr_table[f'{i_type}_{col}_diff_to_base_circuit'] = \
                         current_stat - ref_stat
@@ -146,9 +156,10 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
 
     def update_info_table(info_table: pd.DataFrame, curr_table: dict, int_stats: pd.DataFrame,
                           ref_stats: pd.DataFrame, ref_table: dict, source_dir: str, check_coherent: bool = False):
-        cols = ['self_interacting',
+        cols = ['num_self_interacting',
                 'num_interacting',
-                'max_interaction']
+                'max_interaction',
+                'min_interaction']
         curr_table = update_diff_to_base_circuit(curr_table, int_stats,
                                                  ref_stats, cols=cols)
         result_report = load_result_report(source_dir)
