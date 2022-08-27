@@ -91,7 +91,8 @@ def load_experiment_output_summary(experiment_folder) -> pd.DataFrame:
 
 
 def load_result_report(local_experiment_folder: str, result_type: str = 'signal'):
-    report_path = get_pathnames(local_experiment_folder, file_key=['result', result_type])
+    report_path = get_pathnames(local_experiment_folder, file_key=['report', result_type],
+                                first_only=True)
     return load_json_as_dict(report_path)
 
 

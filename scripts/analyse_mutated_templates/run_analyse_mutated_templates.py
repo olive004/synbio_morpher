@@ -1,4 +1,5 @@
 from functools import partial
+import logging
 import os
 
 from fire import Fire
@@ -56,7 +57,6 @@ def main(config=None, data_writer=None):
                     exclude_rows_nonempty_in_cols=['mutation_name'],
                     log_axis=config_file.get('log_scale', (False, False)),
                     use_sns=True,
-                    repeat_for_all_with_key
                     title='Maximum interaction strength, unmutated circuits',
                     xlabel='Interaction strength', ylabel='Frequency count'),
             req_input=True,
