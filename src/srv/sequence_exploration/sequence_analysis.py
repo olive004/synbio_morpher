@@ -1,5 +1,6 @@
 
 
+import itertools
 import logging
 import os
 import sys
@@ -71,19 +72,29 @@ def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path
 
 def tabulate_mutation_info(source_dir, data_writer: DataWriter):
 
-    info_table = pd.DataFrame(columns=[
+    interaction_types = ['binding_rates', 'eqconstants', 'interactions']
+
+    info_column_names = [
         'circuit_name',
         'mutation_name',
         'source_species',
-        'interaction_count',
-        'interaction_strength',
-        'interaction_strength_diff_to_base_circuit',
         'mutation_num',
         'mutation_type',
         'path_to_steady_state_data',
         'path_to_signal_data',
         'path_to_template_circuit'
-    ])
+    ]
+    info_column_names_interactions = [[f'{i}_self_interacting',
+                                       f'{i}_self_interacting_diff_to_base_circuit',
+                                       f'{i}_num_interacting',
+                                       f'{i}_num_interacting_diff_to_base_circuit',
+                                       f'{i}_max',
+                                       f'{i}_max_diff_to_base_circuit'] for i in interaction_types]
+    info_column_names_interactions = itertools.chain(*info_column_names_interactions)
+    info_column_names = info_column_names + info_column_names_interactions
+
+    logging.info(prettify_logging_info(info_column_names))
+    info_table = pd.DataFrame(columns=info_column_names)
 
     def check_coherency(table):
         for (target, pathname) in [('circuit_name', 'path_to_template_circuit'),
@@ -95,22 +106,23 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
                 assert table[target] in table[pathname], \
                     f'Name {table[target]} should be in path {table[pathname]}.'
 
-    interaction_types = ['binding_rates', 'eqconstants', 'interactions']
     def make_interaction_stats(source_interaction_dir, include_circuit_in_filekey=False):
         interaction_stats = {}
         for interaction_type in interaction_types:
             interaction_dir = os.path.join(
                 source_interaction_dir, interaction_type)
-            file_key = [interaction_type, circuit_name] if include_circuit_in_filekey else interaction_type
+            file_key = [
+                interaction_type, circuit_name] if include_circuit_in_filekey else interaction_type
             interaction_stats[interaction_type] = InteractionMatrix(matrix_path=get_pathnames(first_only=True,
-                                                                                                file_key=file_key,
-                                                                                                search_dir=interaction_dir)).get_stats()
+                                                                                              file_key=file_key,
+                                                                                              search_dir=interaction_dir)).get_stats()
 
     def upate_table_with_results(table: dict, reference_table: dict, results: dict):
         table.update(results)
         for k in results.keys():
             reference_v = reference_table[k]
-            table[k] = table[k] - reference_v
+            table[f'{k}_diff_to_base_circuit'] = table[k] - reference_v
+        return table
 
     source_config = load_experiment_config(source_dir)
 
@@ -127,11 +139,13 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
                 mutation_dirs, exclude=exclude_dir)
 
         # Unmutated circuit
-        interaction_dir = os.path.dirname(os.path.dirname(mutations['template_file'].values[0]))
-        interaction_stats = make_interaction_stats(interaction_dir, include_circuit_in_filekey=True)
+        interaction_dir = os.path.dirname(
+            os.path.dirname(mutations['template_file'].values[0]))
+        interaction_stats = make_interaction_stats(
+            interaction_dir, include_circuit_in_filekey=True)
         result_report = load_result_report(interaction_dir)
 
-        current_table = pd.DataFrame.from_dict({
+        current_og_table = pd.DataFrame.from_dict({
             'circuit_name': circuit_name,
             'mutation_name': '',
             'source_species': '',
@@ -147,13 +161,15 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
         })
         # Expand the interaction keys in the table
         for interaction_type in interaction_types:
-            current_table[f'{interaction_type}_self_interacting'] = interaction_stats[interaction_type]['self_interacting']
-            current_table[f'{interaction_type}_self_interacting_diff_to_base_circuit'] = 0
-            current_table[f'{interaction_type}_num_interacting'] = interaction_stats[interaction_type]['num_interacting']
-            current_table[f'{interaction_type}_num_interacting_diff_to_base_circuit'] = 0
-            current_table[f'{interaction_type}_max'] = interaction_stats[interaction_type]['max_interaction']
-            current_table[f'{interaction_type}_max_diff_to_base_circuit'] = 0
-        info_table = pd.concat([info_table, current_table])
+            current_og_table[f'{interaction_type}_self_interacting'] = interaction_stats[interaction_type]['self_interacting']
+            current_og_table[f'{interaction_type}_self_interacting_diff_to_base_circuit'] = 0
+            current_og_table[f'{interaction_type}_num_interacting'] = interaction_stats[interaction_type]['num_interacting']
+            current_og_table[f'{interaction_type}_num_interacting_diff_to_base_circuit'] = 0
+            current_og_table[f'{interaction_type}_max'] = interaction_stats[interaction_type]['max_interaction']
+            current_og_table[f'{interaction_type}_max_diff_to_base_circuit'] = 0
+        current_og_table = upate_table_with_results(
+            current_og_table, reference_table=current_og_table, results=result_report)
+        info_table = pd.concat([info_table, current_og_table])
 
         # Mutated circuits
         for mutation_dir in mutation_dirs:
@@ -161,8 +177,9 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
                 mutation_dir)]
             mutation_name = curr_mutation['mutation_name'].values[0]
 
-            interaction_stats_current = make_interaction_stats(mutation_dir, include_circuit_in_filekey=False)
-            
+            interaction_stats_current = make_interaction_stats(
+                mutation_dir, include_circuit_in_filekey=False)
+
             current_table = pd.DataFrame.from_dict({
                 'circuit_name': circuit_name,
                 'mutation_name': mutation_name,
@@ -188,7 +205,9 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
                 current_table[f'{interaction_type}_strength'] = interaction_stats_current[interaction_type]['max_interaction']
                 current_table[f'{interaction_type}_strength_diff_to_base_circuit'] = interaction_stats_current[interaction_type]['max_interaction'] - \
                     interaction_stats[interaction_type]['max_interaction']
-
+            result_report = load_result_report(mutation_dir)
+            current_table = upate_table_with_results(
+                current_table, reference_table=current_og_table, results=result_report)
             check_coherency(current_table)
             info_table = pd.concat([info_table, current_table])
     data_writer.output(

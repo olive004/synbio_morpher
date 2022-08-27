@@ -80,7 +80,7 @@ def main(config=None, data_writer=None):
             )
         ]
     ]
-    experiment = Experiment(config=config, protocols=protocols,
+    experiment = Experiment(config=config, config_file=config_file, protocols=protocols,
                             data_writer=data_writer, debug_inputs=False)
     experiment.run_experiment()
 

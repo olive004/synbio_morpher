@@ -30,10 +30,11 @@ class Protocol():
 
 class Experiment():
 
-    def __init__(self, config: str, protocols: List[Protocol], data_writer: DataWriter, debug_inputs=False) -> None:
+    def __init__(self, config: str, config_file: dict, protocols: List[Protocol], data_writer: DataWriter, debug_inputs=False) -> None:
 
         self.name = 'experiment'
         self.config = config
+        self.config_file = config_file
         self.start_time = datetime.now()
         self.protocols = protocols
         self.total_time = 0
@@ -81,5 +82,5 @@ class Experiment():
             "protocols": make_attribute_list(self.protocols, Protocol, 'name'),
             "purpose": self.data_writer.purpose,
             "config_filepath": self.config,
-            "config_params": load_json_as_dict(self.config)
+            "config_params": self.config_file
         }

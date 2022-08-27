@@ -123,12 +123,12 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
 
             idxs = [slice(0, num_species)] + [[strength_idx]
                                               for strength_idx in interaction_strength_choices]
-            
+
             for j, analytic in enumerate(analytic_types):
                 all_analytic_matrices[j][tuple(
                     idxs)] = circuit.result_collector.results['signal'].analytics.get(analytic)
 
-            if debug_mode and i==0:
+            if debug_mode and i == 0:
                 modeller.write_results(circuit)
 
             # @time_it
@@ -157,7 +157,9 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
         logging.info('Finished: outputting final matrices')
         write_all()
 
-    experiment = Experiment(config=config, protocols=[Protocol(make_interaction_interpolation_matrices)],
+    experiment = Experiment(config=config, config_file=config_file,
+                            protocols=[
+                                Protocol(make_interaction_interpolation_matrices)],
                             data_writer=data_writer)
     experiment.run_experiment()
     return config, data_writer

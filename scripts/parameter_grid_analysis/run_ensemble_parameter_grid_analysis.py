@@ -38,9 +38,10 @@ def main(config=None, data_writer=None):
             else:
                 arbitrary_species_key = int(max(list(
                     mod_config["slicing"]["interactions"]["non_varying_species_interactions"].keys()))) + 1
-            non_varying_strengths = create_parameter_range(mod_config["slicing"]["interactions"]['multi_varying_strengths'][label])
+            non_varying_strengths = create_parameter_range(
+                mod_config["slicing"]["interactions"]['multi_varying_strengths'][label])
             for non_varying_strength in non_varying_strengths:
-            
+
                 logging.info(arbitrary_species_key)
                 logging.info(non_varying_species)
                 logging.info(non_varying_strength)
@@ -49,8 +50,8 @@ def main(config=None, data_writer=None):
                 config["slicing"]["interactions"]["non_varying_strengths"][arbitrary_species_key] = non_varying_strength
                 parameter_grid_analysis(config, data_writer)
                 data_writer.unsubdivide()
-        
-    experiment = Experiment(config=config, protocols=[
+
+    experiment = Experiment(config=config, config_file=config_file, protocols=[
         Protocol(partial(loop_parameter_grid_analysis, config=config_file))
     ], data_writer=data_writer)
     experiment.run_experiment()

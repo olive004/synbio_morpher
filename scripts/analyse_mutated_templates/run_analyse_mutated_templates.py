@@ -50,11 +50,13 @@ def main(config=None, data_writer=None):
         ),
         Protocol(
             partial(visualise_data, data_writer=data_writer, cols=['interaction_strength'],
-                    plot_type='histplot', out_name='interaction_strength_freqs',
+                    plot_type='histplot', 
+                    out_name='interaction_strength_freqs',
                     preprocessor_func=preprocessing_func,
                     exclude_rows_nonempty_in_cols=['mutation_name'],
                     log_axis=config_file.get('log_scale', (False, False)),
                     use_sns=True,
+                    repeat_for_all_with_key
                     title='Maximum interaction strength, unmutated circuits',
                     xlabel='Interaction strength', ylabel='Frequency count'),
             req_input=True,
@@ -85,7 +87,7 @@ def main(config=None, data_writer=None):
             skip=config_file.get('only_visualise_circuits', False)
         )
     ]
-    experiment = Experiment(config=config, protocols=protocols,
+    experiment = Experiment(config=config, config_file=config_file, protocols=protocols,
                             data_writer=data_writer)
     experiment.run_experiment()
 

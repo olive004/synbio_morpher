@@ -65,7 +65,7 @@ def main(config=None, data_writer=None):
             size_interaction_array, num_unique_interactions)
         total_iterations_incorrect = matrix_size
         subprocess_iterations = total_iterations / num_subprocesses
-            
+
         logging.info("num_species")
         logging.info(num_species)
         logging.info("num_unique_interactions")
@@ -101,15 +101,16 @@ def main(config=None, data_writer=None):
             for ite in range(total_iterations):
                 i = int(ite/subprocess_iterations)
                 if next_i == i:
-                    nonzeros_count += np.sum(all_parameter_grids[analytic_name][i] != 0)
+                    nonzeros_count += np.sum(
+                        all_parameter_grids[analytic_name][i] != 0)
                     next_i += 1
                 current_grid = all_parameter_grids[analytic_name][i]
                 idxs = all_iterators[ite]
                 stitched_parameter_grids[analytic_name][idxs] = current_grid[idxs]
-                
 
             logging.info('Sanity check')
-            zeros_count = np.size(all_parameter_grids[analytic_name][i]) - nonzeros_count
+            zeros_count = np.size(
+                all_parameter_grids[analytic_name][i]) - nonzeros_count
             logging.info(
                 f'Number of zeros in subprocess matrices: {zeros_count}')
             logging.info(
@@ -125,10 +126,11 @@ def main(config=None, data_writer=None):
                                data=grid.astype(np.float32), overwrite=True,
                                write_to_top_dir=True)
 
-    experiment = Experiment(config=config, protocols=[
-        Protocol(stitch_grids, req_output=True, name='Stitching grids together'),
+    experiment = Experiment(config=config, config_file=config_file, protocols=[
+        Protocol(stitch_grids, req_output=True,
+                 name='Stitching grids together'),
         Protocol(write_all, req_input=True, name='Writing stitched grids')],
         data_writer=data_writer)
     experiment.run_experiment()
-    
+
     return config, data_writer
