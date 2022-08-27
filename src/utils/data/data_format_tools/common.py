@@ -63,16 +63,21 @@ def load_json_as_dict(json_pathname: str, process=True) -> dict:
     #     sys.exit()
 
 
-def process_dict_for_json(dict_like) -> Union[list, dict]:
+def make_iterable_like(dict_like):
     if type(dict_like) == dict:
         iterable_like = dict_like.items()
     elif type(dict_like) == list:
         iterable_like = enumerate(dict_like)
     else:
         raise ValueError(f'Input {dict_like} should be type dict (or list) but was type {type(dict_like)}')
+    return iterable_like
+
+
+def process_dict_for_json(dict_like) -> Union[list, dict]:
+    iterable_like = make_iterable_like(dict_like)
     for k, v in iterable_like:
         if type(v) == dict or type(v) == list:
-            v = process_dict_for_json(v)
+            dict_like[k] = process_dict_for_json(v)
         elif type(v) == np.bool_:
             dict_like[k] = bool(v)
         elif type(v) == np.ndarray:

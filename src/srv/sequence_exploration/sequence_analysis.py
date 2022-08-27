@@ -4,6 +4,7 @@ import itertools
 import logging
 import os
 import sys
+import numpy as np
 import pandas as pd
 
 
@@ -122,7 +123,13 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
         table.update(results)
         for k in results.keys():
             reference_v = reference_table[k]
-            table[f'{k}_diff_to_base_circuit'] = table[k] - reference_v
+            logging.info(k)
+            logging.info(np.asarray(table[k]))
+            logging.info(np.asarray(reference_v))
+            logging.info(reference_v)
+            if type(reference_v) == bool:
+                continue
+            table[f'{k}_diff_to_base_circuit'] = np.asarray(table[k]) - np.asarray(reference_v)
         return table
 
     source_config = load_experiment_config(source_dir)
@@ -148,7 +155,7 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
             
         result_report = load_result_report(interaction_dir)
 
-        current_og_table = pd.DataFrame([{
+        current_og_table = {
             'circuit_name': circuit_name,
             'mutation_name': '',
             'source_species': '',
@@ -161,7 +168,7 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
                                                  file_key='signal_data',
                                                  search_dir=circuit_dir),
             'path_to_template_circuit': ''
-        }])
+        }
         # Expand the interaction keys in the table
         for interaction_type in interaction_types:
             current_og_table[f'{interaction_type}_self_interacting'] = interaction_stats[interaction_type]['self_interacting']
@@ -170,9 +177,10 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
             current_og_table[f'{interaction_type}_num_interacting_diff_to_base_circuit'] = 0
             current_og_table[f'{interaction_type}_max'] = interaction_stats[interaction_type]['max_interaction']
             current_og_table[f'{interaction_type}_max_diff_to_base_circuit'] = 0
+        # current_og_table.update(result_report)
         current_og_table = upate_table_with_results(
             current_og_table, reference_table=current_og_table, results=result_report)
-        info_table = pd.concat([info_table, current_og_table])
+        info_table = pd.concat([info_table, pd.DataFrame([current_og_table])])
 
         # Mutated circuits
         for mutation_dir in mutation_dirs:
@@ -183,7 +191,7 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
             interaction_stats_current = make_interaction_stats(
                 mutation_dir, include_circuit_in_filekey=False)
 
-            current_table = pd.DataFrame.from_dict({
+            current_table = {
                 'circuit_name': circuit_name,
                 'mutation_name': mutation_name,
                 'source_species': curr_mutation['template_name'].values[0],
@@ -196,7 +204,7 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
                                                      file_key='signal_data',
                                                      search_dir=mutation_dir),
                 'path_to_template_circuit': curr_mutation['template_file'].values[0]
-            })
+            }
             # Expand the interaction keys in the table
             for interaction_type in interaction_types:
                 current_table[f'{interaction_type}_self_interacting'] = interaction_stats_current[interaction_type]['self_interacting']
@@ -212,7 +220,7 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
             current_table = upate_table_with_results(
                 current_table, reference_table=current_og_table, results=result_report)
             check_coherency(current_table)
-            info_table = pd.concat([info_table, current_table])
+            info_table = pd.concat([info_table, pd.DataFrame([current_table])])
     data_writer.output(
         out_type='csv', out_name='tabulated_mutation_info', **{'data': info_table})
     return info_table

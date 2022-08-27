@@ -7,10 +7,11 @@ import logging
 import os
 from tracemalloc import start
 from typing import Tuple
+import numpy as np
 import pandas as pd
 
 from src.srv.io.loaders.misc import load_csv
-from src.utils.data.data_format_tools.common import load_json_as_dict
+from src.utils.data.data_format_tools.common import load_json_as_dict, make_iterable_like
 from src.utils.misc.errors import ConfigError
 from src.utils.misc.io import get_pathnames, get_subdirectories
 
@@ -91,9 +92,17 @@ def load_experiment_output_summary(experiment_folder) -> pd.DataFrame:
 
 
 def load_result_report(local_experiment_folder: str, result_type: str = 'signal'):
+    def process_pre_result_report(jdict):
+        iterable_like = make_iterable_like(jdict)
+        for k, v in iterable_like:
+            if type(v) == list:
+                jdict[k] = process_pre_result_report(v)
+            if type(v) == str:
+                jdict[k] = np.float32(v)
+        return jdict
     report_path = get_pathnames(local_experiment_folder, file_key=['report', result_type],
                                 first_only=True)
-    return load_json_as_dict(report_path)
+    return process_pre_result_report(load_json_as_dict(report_path))
 
 
 def load_experiment_report(experiment_folder: str) -> dict:

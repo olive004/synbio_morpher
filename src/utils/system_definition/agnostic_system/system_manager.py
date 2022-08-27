@@ -315,10 +315,14 @@ class CircuitModeller():
         mutation_dict = flatten_nested_dict(circuit.species.mutations.items())
         # logging.info(
         #     f'Running functions {methods} on circuit with {len(mutation_dict)} items.')
+
+        self.result_writer.subdivide_writing('mutations', safe_dir_change=False)
         for i, (name, mutation) in enumerate(mutation_dict.items()):
             # logging.info(f'Running methods on mutation {name} ({i})')
             if include_normal_run and i == 0:
+                self.result_writer.unsubdivide_last_dir()
                 self.apply_to_circuit(circuit, methods)
+                self.result_writer.subdivide_writing('mutations', safe_dir_change=False)
             subcircuit = circuit.make_subsystem(name, mutation)
             self.result_writer.subdivide_writing(name, safe_dir_change=False)
             self.apply_to_circuit(subcircuit, methods)
