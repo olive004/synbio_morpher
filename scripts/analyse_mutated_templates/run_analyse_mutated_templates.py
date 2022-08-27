@@ -8,7 +8,7 @@ from src.utils.misc.scripts_io import load_experiment_config
 from src.utils.results.experiments import Experiment, Protocol
 from src.utils.results.result_writer import ResultWriter
 from src.utils.results.visualisation import visualise_data
-from src.srv.parameter_prediction.simulator import RawSimulationHandling
+from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS, RawSimulationHandling
 from src.srv.sequence_exploration.sequence_analysis import tabulate_mutation_info
 from src.utils.data.data_format_tools.common import load_json_as_dict
 
@@ -50,27 +50,30 @@ def main(config=None, data_writer=None):
             name='tabulate_mutation_info'
         ),
         Protocol(
-            partial(visualise_data, data_writer=data_writer, cols=['interaction_strength'],
-                    plot_type='histplot', 
-                    out_name='interaction_strength_freqs',
+            partial(visualise_data, data_writer=data_writer, cols=['binding_rates_max_interaction'],
+                    plot_type='histplot',
+                    out_name='binding_rates_max_freqs',
                     preprocessor_func=preprocessing_func,
                     exclude_rows_nonempty_in_cols=['mutation_name'],
                     log_axis=config_file.get('log_scale', (False, False)),
                     use_sns=True,
-                    title='Maximum interaction strength, unmutated circuits',
-                    xlabel='Interaction strength', ylabel='Frequency count'),
+                    title='Maximum k_d strength, unmutated circuits',
+                    xlabel='Dissociation rate k_d, ' +
+                    f'{SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]}',
+                    ylabel='Frequency count'),
             req_input=True,
             name='visualise_circuit_interactions'
         ),
         Protocol(
-            partial(visualise_data, data_writer=data_writer, cols=['interaction_strength'],
-                    plot_type='histplot', out_name='interaction_strength_freqs',
+            partial(visualise_data, data_writer=data_writer, cols=['binding_rates_max_interaction'],
+                    plot_type='histplot', out_name='interaction_max_freqs_mutations',
                     preprocessor_func=preprocessing_func,
                     exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
                     log_axis=config_file.get('log_scale', (False, False)),
                     use_sns=True,
-                    title=f'Maximum interaction strength, {num_mutations} mutation{plot_grammar}',
-                    xlabel='Interaction strength', ylabel='Frequency count'),
+                    title=f'Maximum k_d strength, {num_mutations} mutation{plot_grammar}',
+                    xlabel=f'Dissociation rate k_d, {SIMULATOR_UNITS["IntaRNA"]["rate"]}',
+                    ylabel='Frequency count'),
             req_input=True,
             name='visualise_mutated_interactions'
         ),

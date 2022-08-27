@@ -89,15 +89,15 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
                                        f'{i}_self_interacting_diff_to_base_circuit',
                                        f'{i}_num_interacting',
                                        f'{i}_num_interacting_diff_to_base_circuit',
-                                       f'{i}_max',
-                                       f'{i}_max_diff_to_base_circuit'] for i in interaction_types]
-    info_column_names_interactions = list(itertools.chain(*info_column_names_interactions))
+                                       f'{i}_max_interaction',
+                                       f'{i}_max_interaction_diff_to_base_circuit'] for i in interaction_types]
+    info_column_names_interactions = list(
+        itertools.chain(*info_column_names_interactions))
     info_column_names = info_column_names + info_column_names_interactions
 
-    logging.info(prettify_logging_info(info_column_names))
     info_table = pd.DataFrame(columns=info_column_names)
 
-    def check_coherency(table):
+    def check_coherency(table: pd.DataFrame):
         for (target, pathname) in [('circuit_name', 'path_to_template_circuit'),
                                    ('mutation_name', 'path_to_steady_state_data'), ('mutation_name', 'path_to_signal_data')]:
             if type(table) == pd.DataFrame:
@@ -107,7 +107,7 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
                 assert table[target] in table[pathname], \
                     f'Name {table[target]} should be in path {table[pathname]}.'
 
-    def make_interaction_stats(source_interaction_dir, include_circuit_in_filekey=False):
+    def make_interaction_stats(source_interaction_dir: str, include_circuit_in_filekey=False):
         interaction_stats = {}
         for interaction_type in interaction_types:
             interaction_dir = os.path.join(
@@ -123,14 +123,41 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
         table.update(results)
         for k in results.keys():
             reference_v = reference_table[k]
-            logging.info(k)
-            logging.info(np.asarray(table[k]))
-            logging.info(np.asarray(reference_v))
-            logging.info(reference_v)
             if type(reference_v) == bool:
                 continue
-            table[f'{k}_diff_to_base_circuit'] = np.asarray(table[k]) - np.asarray(reference_v)
+            table[f'{k}_diff_to_base_circuit'] = np.asarray(
+                table[k]) - np.asarray(reference_v)
         return table
+
+    def update_diff_to_base_circuit(curr_table: dict, int_stats: pd.DataFrame,
+                                    ref_stats: pd.DataFrame, cols: list):
+        for i_type in interaction_types:
+            for col in cols:
+                current_stat = np.asarray(list(int_stats[i_type][col]))
+                ref_stat = np.asarray(list(ref_stats[i_type][col]))
+                curr_table[f'{i_type}_{col}'] = np.asarray(current_stat)
+                if type(current_stat) == list or type(ref_stat) == list:
+                    curr_table[f'{i_type}_{col}_diff_to_base_circuit'] = np.asarray(
+                        current_stat) - np.asarray(ref_stat)
+                else:
+                    curr_table[f'{i_type}_{col}_diff_to_base_circuit'] = \
+                        current_stat - ref_stat
+        return curr_table
+
+    def update_info_table(info_table: pd.DataFrame, curr_table: dict, int_stats: pd.DataFrame,
+                          ref_stats: pd.DataFrame, ref_table: dict, source_dir: str, check_coherent: bool = False):
+        cols = ['self_interacting',
+                'num_interacting',
+                'max_interaction']
+        curr_table = update_diff_to_base_circuit(curr_table, int_stats,
+                                                 ref_stats, cols=cols)
+        result_report = load_result_report(source_dir)
+        curr_table = upate_table_with_results(
+            curr_table, reference_table=ref_table, results=result_report)
+        if check_coherent:
+            check_coherency(curr_table)
+        info_table = pd.concat([info_table, pd.DataFrame([curr_table])])
+        return info_table
 
     source_config = load_experiment_config(source_dir)
 
@@ -152,8 +179,6 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
         interaction_dir = circuit_dir
         interaction_stats = make_interaction_stats(
             interaction_dir, include_circuit_in_filekey=True)
-            
-        result_report = load_result_report(interaction_dir)
 
         current_og_table = {
             'circuit_name': circuit_name,
@@ -170,17 +195,8 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
             'path_to_template_circuit': ''
         }
         # Expand the interaction keys in the table
-        for interaction_type in interaction_types:
-            current_og_table[f'{interaction_type}_self_interacting'] = interaction_stats[interaction_type]['self_interacting']
-            current_og_table[f'{interaction_type}_self_interacting_diff_to_base_circuit'] = 0
-            current_og_table[f'{interaction_type}_num_interacting'] = interaction_stats[interaction_type]['num_interacting']
-            current_og_table[f'{interaction_type}_num_interacting_diff_to_base_circuit'] = 0
-            current_og_table[f'{interaction_type}_max'] = interaction_stats[interaction_type]['max_interaction']
-            current_og_table[f'{interaction_type}_max_diff_to_base_circuit'] = 0
-        # current_og_table.update(result_report)
-        current_og_table = upate_table_with_results(
-            current_og_table, reference_table=current_og_table, results=result_report)
-        info_table = pd.concat([info_table, pd.DataFrame([current_og_table])])
+        info_table = update_info_table(info_table, curr_table=current_og_table, int_stats=interaction_stats,
+                                       ref_stats=interaction_stats, ref_table=current_og_table, source_dir=interaction_dir)
 
         # Mutated circuits
         for mutation_dir in mutation_dirs:
@@ -206,21 +222,10 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
                 'path_to_template_circuit': curr_mutation['template_file'].values[0]
             }
             # Expand the interaction keys in the table
-            for interaction_type in interaction_types:
-                current_table[f'{interaction_type}_self_interacting'] = interaction_stats_current[interaction_type]['self_interacting']
-                current_table[f'{interaction_type}_self_interacting_diff_to_base_circuit'] = interaction_stats_current[interaction_type]['self_interacting'] - \
-                    interaction_stats[interaction_type]['self_interacting']
-                current_table[f'{interaction_type}_count'] = interaction_stats_current[interaction_type]['num_interacting']
-                current_table[f'{interaction_type}_count_diff_to_base_circuit'] = interaction_stats_current[interaction_type]['num_interacting'] - \
-                    interaction_stats[interaction_type]['num_interacting']
-                current_table[f'{interaction_type}_strength'] = interaction_stats_current[interaction_type]['max_interaction']
-                current_table[f'{interaction_type}_strength_diff_to_base_circuit'] = interaction_stats_current[interaction_type]['max_interaction'] - \
-                    interaction_stats[interaction_type]['max_interaction']
-            result_report = load_result_report(mutation_dir)
-            current_table = upate_table_with_results(
-                current_table, reference_table=current_og_table, results=result_report)
-            check_coherency(current_table)
-            info_table = pd.concat([info_table, pd.DataFrame([current_table])])
+            info_table = update_info_table(info_table, curr_table=current_table,
+                                           int_stats=interaction_stats_current,
+                                           ref_stats=interaction_stats, ref_table=current_og_table,
+                                           source_dir=mutation_dir, check_coherent=True)
     data_writer.output(
         out_type='csv', out_name='tabulated_mutation_info', **{'data': info_table})
     return info_table
