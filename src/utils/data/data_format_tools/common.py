@@ -52,15 +52,20 @@ def load_json_as_dict(json_pathname: str, process=True) -> dict:
     if process:
         return process_json(jdict)
     return jdict
-    # try:
-    #     jdict = json.load(open(json_pathname))
-    #     if process:
-    #         return process_json(jdict)
-    #     return jdict
-    # except FileNotFoundError:
-    #     logging.error(f'JSON path {json_pathname} not found')
-    #     import sys
-    #     sys.exit()
+
+
+def load_multiple_as_list(inputs_list, load_func, **kwargs):
+    collection_list = []
+    for inp in inputs_list:
+        collection_list.append(load_func(inp, **kwargs))
+    return collection_list
+
+def load_csv_mult(file_paths):
+    return load_multiple_as_list(file_paths, load_csv)
+    
+
+def load_csv(file_path):
+    return pd.read_csv(file_path)
 
 
 def make_iterable_like(dict_like):

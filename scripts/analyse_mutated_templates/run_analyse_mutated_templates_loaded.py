@@ -5,30 +5,43 @@ import os
 import numpy as np
 
 from fire import Fire
-from src.utils.misc.scripts_io import load_experiment_config, load_experiment_config_original
+from src.utils.misc.io import get_pathnames_from_mult_dirs
+from src.utils.misc.scripts_io import load_experiment_config
 
 from src.utils.results.experiments import Experiment, Protocol
 from src.utils.results.result_writer import ResultWriter
 from src.utils.results.visualisation import visualise_data
 from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS, RawSimulationHandling
 from src.srv.sequence_exploration.sequence_analysis import tabulate_mutation_info
-from src.utils.data.data_format_tools.common import load_json_as_dict
+from src.utils.data.data_format_tools.common import load_csv, load_json_as_dict
 
 
 def main(config=None, data_writer=None):
     # Set configs
     if config is None:
         config = os.path.join(
-            # "scripts", "analyse_mutated_templates", "configs", "logscale", "analyse_templates.json")
-            # "scripts", "analyse_mutated_templates", "configs", "logscale", "analyse_mutated_templates_1.json")
-            # "scripts", "analyse_mutated_templates", "configs", "logscale", "analyse_mutated_templates_2.json")
-            # "scripts", "analyse_mutated_templates", "configs", "base_config_testing.json")
             "scripts", "analyse_mutated_templates", "configs", "base_config.json")
     config_file = load_json_as_dict(config)
 
     # Start_experiment
     if data_writer is None:
         data_writer = ResultWriter(purpose='analyse_mutated_templates')
+
+    source_dirs = config_file.get('source_dirs', [])
+
+    protocols = [
+        Protocol(
+            partial(
+                get_pathnames_from_mult_dirs,
+                search_dirs=source_dirs,
+                file_key='tabulated_mutation_info.csv',
+                first_only=True),
+            req_output=True
+        ),
+        Protocol(
+            load_csv
+        )
+    ]
 
     source_dir = config_file.get('source_dir')
     source_config = load_experiment_config(source_dir)
@@ -45,7 +58,7 @@ def main(config=None, data_writer=None):
     num_mutations = source_config['mutations']['mutation_nums_within_sequence']
     plot_grammar = 's' if num_mutations > 1 else ''
 
-    binding_rates_threshold_upper = np.power(10,6)
+    binding_rates_threshold_upper = np.power(10, 6)
     binding_rates_threshold_upper_text = f', with cutoff at {binding_rates_threshold_upper}' if binding_rates_threshold_upper else ''
     protocols = [
         Protocol(
@@ -81,7 +94,8 @@ def main(config=None, data_writer=None):
                     threshold_value_max=binding_rates_threshold_upper,
                     log_axis=(False, False),
                     use_sns=True,
-                    title=f'Maximum ' + r'$k_d$' + ' strength, {num_mutations} mutation{plot_grammar}',
+                    title=f'Maximum ' + r'$k_d$' + \
+                    ' strength, {num_mutations} mutation{plot_grammar}',
                     xlabel='Dissociation rate' + r'$k_d$' + '(' +
                     f'{SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]})' +
                     f'{binding_rates_threshold_upper_text}'),
@@ -97,7 +111,8 @@ def main(config=None, data_writer=None):
                     exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
                     log_axis=(False, False),
                     use_sns=True,
-                    title=f'Difference between circuit\nand mutated (maximum ' + r'$k_d$' + '), {num_mutations} mutation{plot_grammar}',
+                    title=f'Difference between circuit\nand mutated (maximum ' + \
+                    r'$k_d$' + '), {num_mutations} mutation{plot_grammar}',
                     xlabel='Difference in ' + r'$k_d$' + ' (' +
                     f'{SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]})' +
                     f'{binding_rates_threshold_upper_text}'),
@@ -141,7 +156,8 @@ def main(config=None, data_writer=None):
                     threshold_value_max=binding_rates_threshold_upper,
                     log_axis=(False, False),
                     use_sns=True,
-                    title=f'Minimum ' + r'$k_d$' + ' strength, {num_mutations} mutation{plot_grammar}',
+                    title=f'Minimum ' + r'$k_d$' + \
+                    ' strength, {num_mutations} mutation{plot_grammar}',
                     xlabel='Dissociation rate ' + r'$k_d$' + ' (' +
                     f'{SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]})' +
                     f'{binding_rates_threshold_upper_text}'),
@@ -158,7 +174,8 @@ def main(config=None, data_writer=None):
                     threshold_value_max=binding_rates_threshold_upper,
                     log_axis=(False, False),
                     use_sns=True,
-                    title=f'Difference between circuit\nand mutated (minimum ' + r'$k_d$' + '), {num_mutations} mutation{plot_grammar}',
+                    title=f'Difference between circuit\nand mutated (minimum ' + \
+                    r'$k_d$' + '), {num_mutations} mutation{plot_grammar}',
                     xlabel='Difference in ' + r'$k_d$' + ' (' +
                     f'{SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]})' +
                     f'{binding_rates_threshold_upper_text}'),
@@ -194,7 +211,8 @@ def main(config=None, data_writer=None):
                     threshold_value_max=binding_rates_threshold_upper,
                     log_axis=(True, False),
                     use_sns=True,
-                    title=f'Minimum ' + r'$k_d$' + ' strength, {num_mutations} mutation{plot_grammar}',
+                    title=f'Minimum ' + r'$k_d$' + \
+                    ' strength, {num_mutations} mutation{plot_grammar}',
                     xlabel='Dissociation rate ' + r'$k_d$' + ' (' +
                     f'{SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]})' +
                     f'{binding_rates_threshold_upper_text}'),
@@ -211,7 +229,8 @@ def main(config=None, data_writer=None):
                     threshold_value_max=binding_rates_threshold_upper,
                     log_axis=(True, False),
                     use_sns=True,
-                    title=f'Difference between circuit\nand mutated (minimum ' + r'$k_d$' + '), {num_mutations} mutation{plot_grammar}',
+                    title=f'Difference between circuit\nand mutated (minimum ' + \
+                    r'$k_d$' + '), {num_mutations} mutation{plot_grammar}',
                     xlabel='Difference in ' + r'$k_d$' + ' (' +
                     f'{SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]})' +
                     f'{binding_rates_threshold_upper_text}'),
@@ -224,7 +243,7 @@ def main(config=None, data_writer=None):
 
 
 
-        
+
         # eqconstants max int's og
         Protocol(
             partial(visualise_data, data_writer=data_writer, cols=['eqconstants_max_interaction'],
@@ -391,7 +410,8 @@ def main(config=None, data_writer=None):
         # response_time
         Protocol(partial(
             visualise_data,
-            data_writer=data_writer, cols=['response_time_diff_to_base_circuit'],
+            data_writer=data_writer, cols=[
+                'response_time_diff_to_base_circuit'],
             plot_type='histplot',
             out_name='response_time_diff',
             preprocessor_func=preprocessing_func,
@@ -410,7 +430,8 @@ def main(config=None, data_writer=None):
         # response_time log
         Protocol(partial(
             visualise_data,
-            data_writer=data_writer, cols=['response_time_diff_to_base_circuit'],
+            data_writer=data_writer, cols=[
+                'response_time_diff_to_base_circuit'],
             plot_type='histplot',
             out_name='response_time_diff_log',
             preprocessor_func=preprocessing_func,
