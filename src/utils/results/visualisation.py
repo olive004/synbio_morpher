@@ -1,4 +1,7 @@
+from cmath import log
+from copy import deepcopy
 from functools import partial
+import sys
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -73,21 +76,46 @@ class NetworkCustom(Network):
             self.add_node(node, **nodes[node])
 
 
-def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
+def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                    cols: list = None, plot_type='histplot', out_name='test_plot',
                    preprocessor_func=None,
                    exclude_rows_nonempty_in_cols: list = None,
                    threshold_value_max=None,
                    use_sns=False, log_axis=False,
+                   bin_count=100,
+                   expand_coldata_using_col: bool = False,
+                   column_name_for_expanding_labels: str = None,
+                   idx_for_expanding_labels: int = None,
+                   plot_cols_on_same_graph=False,
                    **plot_kwrgs):
     """ Plot type can be any attributes of VisODE() """
-    def preprocess_data(data: pd.DataFrame, preprocessor_func, threshold_value_max, column):
-        new_data = data
-        if threshold_value_max:
-            new_data = data[data[column] <= threshold_value_max]
+    data = og_data
+
+    def expand_data_by_col(data: pd.DataFrame, column):
+        df_lists = data[[column]].unstack().apply(pd.Series)
+        col_names = list(
+            data[column_name_for_expanding_labels].iloc[idx_for_expanding_labels])
+        df_lists = df_lists.rename(columns=dict(
+            zip(df_lists.columns.values, col_names)))
+
+        df_lists = pd.concat(axis=0, ignore_index=True, objs=[
+            pd.DataFrame.from_dict({column: df_lists[c], column_name_for_expanding_labels: c})
+            for c in col_names])
+        return df_lists
+
+    def preprocess_data_histplot(data: pd.DataFrame, preprocessor_func, threshold_value_max,
+                        expand_coldata_using_col, column):
+        new_data = deepcopy(data)
         if preprocessor_func:
             new_data[column] = preprocessor_func(new_data[column].values)
-        return new_data
+        if expand_coldata_using_col:
+            new_data = expand_data_by_col(
+                new_data, column)
+            # column = None
+        if threshold_value_max:
+            new_data = new_data[new_data[column] <= threshold_value_max]
+
+        return new_data, column
 
     if exclude_rows_nonempty_in_cols is not None:
         for exc_col in exclude_rows_nonempty_in_cols:
@@ -96,17 +124,19 @@ def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
     visualiser = VisODE()
     if plot_type == 'histplot':
         for col in cols:
-            logging.info(col)
-            data = preprocess_data(
-                data, preprocessor_func, threshold_value_max, col)
+            data, new_col = preprocess_data_histplot(
+                data, preprocessor_func, threshold_value_max,
+                expand_coldata_using_col, col)
 
             if use_sns:
                 # Rename x label manually
                 data = data.reset_index()
-                if log_axis[0]:
-                    new_col = 'Log of ' + plot_kwrgs.get('xlabel', col)
-                else:
-                    new_col = plot_kwrgs.get('xlabel', col)
+                if new_col is not None:
+                    if log_axis[0]:
+                        new_col = 'Log of ' + plot_kwrgs.get('xlabel', col)
+                        data = data[data[col] != 0]
+                    else:
+                        new_col = plot_kwrgs.get('xlabel', col)
                 data = data.rename(columns={col: new_col})
 
                 plot_kwrgs.update({'column': new_col, 'data': data})
@@ -115,7 +145,9 @@ def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
 
             data_writer.output(out_type='png', out_name=out_name,
                                write_func=visualiser.histplot,
-                               **merge_dicts({'use_sns': use_sns, "log_axis": log_axis},
+                               **merge_dicts({'use_sns': use_sns, "log_axis": log_axis,
+                                              'hue': column_name_for_expanding_labels,
+                                              'bin_count': bin_count},
                                              plot_kwrgs))
     elif plot_type == 'plot':
         try:
@@ -206,8 +238,9 @@ class VisODE():
         fig.savefig(out_path)
         plt.clf()
 
-    def histplot(self, data: pd.DataFrame, out_path, bin_count=50,
+    def histplot(self, data: pd.DataFrame, out_path, bin_count=100,
                  use_sns=False, column: str = None,
+                 hue=None,
                  log_axis: tuple = (False, False), **plot_kwrgs):
         """ log_axis: use logarithmic axes in (x-axis, y-axis) """
         from matplotlib import pyplot as plt
@@ -222,16 +255,20 @@ class VisODE():
             f, ax = plt.subplots(figsize=(7, 5))
             sns.despine(f)
             sns.histplot(
-                data[data[column] != 0],
-                x=column,  # hue="cut",
+                data,
+                x=column,
+                hue=hue,
                 bins=bin_count,
                 multiple="stack",
-                palette="light:m_r",
+                # palette="light:m_r",
+                palette="deep",
                 edgecolor=".3",
                 linewidth=.5,
-                log_scale=log_axis,
+                log_scale=log_axis
+                # element='poly'
             ).set(title=plot_kwrgs.get('title', None))
             f.savefig(out_path)
+            plt.close()
         else:
             plt.figure()
             plt.hist(data, range=(min(data), max(data)), bins=bin_count)

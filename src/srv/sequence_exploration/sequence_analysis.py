@@ -85,6 +85,7 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
         'circuit_name',
         'mutation_name',
         'source_species',
+        'sample_names',
         'mutation_num',
         'mutation_type',
         'mutation_positions',
@@ -115,18 +116,19 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
                 assert table[target] in table[pathname], \
                     f'Name {table[target]} should be in path {table[pathname]}.'
 
-    def make_interaction_stats(source_interaction_dir: str, include_circuit_in_filekey=False):
+    def make_interaction_stats_and_sample_names(source_interaction_dir: str, include_circuit_in_filekey=False):
         interaction_stats = {}
         for interaction_type in interaction_types:
             interaction_dir = os.path.join(
                 source_interaction_dir, interaction_type)
             file_key = [
                 interaction_type, circuit_name] if include_circuit_in_filekey else interaction_type
-            interaction_stats[interaction_type] = InteractionMatrix(
+            interactions = InteractionMatrix(
                 matrix_path=get_pathnames(first_only=True,
                                           file_key=file_key,
-                                          search_dir=interaction_dir)).get_stats()
-        return interaction_stats
+                                          search_dir=interaction_dir))
+            interaction_stats[interaction_type] = interactions.get_stats()
+        return interaction_stats, interactions.sample_names
 
     def upate_table_with_results(table: dict, reference_table: dict, results: dict):
         table.update(results)
@@ -176,12 +178,15 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
     source_config = load_experiment_config(source_dir)
 
     circuit_dirs = get_subdirectories(source_dir)
-    for circuit_dir in circuit_dirs:
+    for circ_idx, circuit_dir in enumerate(circuit_dirs):
         circuit_name = os.path.basename(circuit_dir)
         mutations_pathname = get_pathnames(
             first_only=True, file_key='mutations', search_dir=circuit_dir)
         mutations = GeneCircuitLoader().load_data(mutations_pathname).data
-        mutation_dirs = sorted(get_subdirectories(circuit_dir))
+        if os.path.isdir(os.path.join(circuit_dir, 'mutations')):
+            mutation_dirs = sorted(get_subdirectories(os.path.join(circuit_dir, 'mutations')))
+        else:
+            mutation_dirs = sorted(get_subdirectories(circuit_dir))
         # TODO: need a better way of getting the mutation directories - maybe just create mutations in a subfolder
         for exclude_dir in ['binding_rates', 'eqconstants', '/interactions']:
             mutation_dirs = remove_element_from_list_by_substring(
@@ -191,13 +196,14 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
         # interaction_dir = os.path.dirname(
         #     os.path.dirname(mutations['template_file'].values[0]))
         interaction_dir = circuit_dir
-        interaction_stats = make_interaction_stats(
+        interaction_stats, sample_names = make_interaction_stats_and_sample_names(
             interaction_dir, include_circuit_in_filekey=True)
 
         current_og_table = {
             'circuit_name': circuit_name,
             'mutation_name': '',
             'source_species': '',
+            'sample_names': sample_names,
             'mutation_num': 0,
             'mutation_type': '',
             'mutation_positions': '',
@@ -219,13 +225,14 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
                 mutation_dir)]
             mutation_name = curr_mutation['mutation_name'].values[0]
 
-            interaction_stats_current = make_interaction_stats(
+            interaction_stats_current, curr_sample_names = make_interaction_stats_and_sample_names(
                 mutation_dir, include_circuit_in_filekey=False)
 
             current_table = {
                 'circuit_name': circuit_name,
                 'mutation_name': mutation_name,
                 'source_species': curr_mutation['template_name'].values[0],
+                'sample_names': curr_sample_names,
                 'mutation_num': source_config['mutations']['mutation_nums_within_sequence'],
                 'mutation_type': curr_mutation['mutation_types'].values,
                 'mutation_positions': curr_mutation['positions'].values,
@@ -242,6 +249,10 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
                                            int_stats=interaction_stats_current,
                                            ref_stats=interaction_stats, ref_table=current_og_table,
                                            source_dir=mutation_dir, check_coherent=True)
+        if circ_idx != 0 and np.mod(circ_idx, 100) == 0:
+            data_writer.output(
+                out_type='csv', out_name='tabulated_mutation_info', **{'data': info_table})
+    
     data_writer.output(
         out_type='csv', out_name='tabulated_mutation_info', **{'data': info_table})
     return info_table

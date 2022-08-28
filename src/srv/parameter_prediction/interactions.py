@@ -35,10 +35,12 @@ class InteractionMatrix():
             'eqconstants'
         ]
 
+        self.sample_names = None
+
         if matrix is not None:
             self.matrix = matrix
         elif matrix_path is not None:
-            self.matrix, self.units = self.load(matrix_path)
+            self.matrix, self.units, self.sample_names = self.load(matrix_path)
         elif toy:
             self.matrix = self.make_toy_matrix(num_nodes)
         else:
@@ -49,12 +51,12 @@ class InteractionMatrix():
 
         self.name = self.isolate_circuit_name(filepath, filetype)
         if filetype == 'csv':
-            matrix = load_csv(filepath, load_as='numpy')
+            matrix, sample_names = load_csv(filepath, load_as='numpy', return_header=True)
         else:
             raise TypeError(
                 f'Unsupported filetype {filetype} for loading {filepath}')
-        self.units = self.load_units(filepath)
-        return matrix, self.units
+        units = self.load_units(filepath)
+        return matrix, units, sample_names
 
     def load_units(self, filepath):
         
