@@ -76,7 +76,8 @@ class NetworkCustom(Network):
             self.add_node(node, **nodes[node])
 
 
-def visualise_
+def visualise_():
+    pass
 
 
 def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,

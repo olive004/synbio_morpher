@@ -22,13 +22,21 @@ def get_purposes(script_dir=None):
 
 
 def get_purpose_from_pathname(pathname):
-    split_path = os.path.split(pathname)
+    split_path = pathname.split(os.sep)
+    if 'data' in split_path:
+        top_dir = 'data'
+    elif 'script' in split_path:
+        top_dir = 'script'
+    else:
+        logging.warning(f'The supplied pathname {pathname} most likely does not '
+                        'point to a purpose.')
+        top_dir = None
     try:
-        purpose_idx = split_path.index('script') + 1
+        purpose_idx = split_path.index(top_dir) + 1
         return split_path[purpose_idx]
     except ValueError:
-        logging.warning(f'Could not find purpose for script path {pathname}, returning None.')
-        return None
+        raise ValueError(f'Could not find purpose for script path {pathname}.')
+
 
 def get_purpose_from_cfg(cfg, experiment_folder):
     if cfg.get('experiment') is None:
@@ -140,7 +148,8 @@ def load_experiment_config_original(starting_experiment_folder: str, target_purp
     """ Load the experiment config from a previous experiment that led
     to the current (starting) experiment folder"""
     original_config = load_experiment_config(starting_experiment_folder)
-    current_purpose = get_purpose_from_cfg(original_config, starting_experiment_folder)
+    current_purpose = get_purpose_from_cfg(
+        original_config, starting_experiment_folder)
     while not current_purpose == target_purpose:
         try:
             original_config, original_source_dir = get_search_dir(
@@ -151,10 +160,11 @@ def load_experiment_config_original(starting_experiment_folder: str, target_purp
                               f'experiment folder {starting_experiment_folder}.')
         original_config = load_experiment_config(
             original_source_dir)
-        current_purpose = get_purpose_from_cfg(original_config, starting_experiment_folder)
-    if not original_config['experiment']['purpose'] == 'parameter_based_simulation':
+        current_purpose = get_purpose_from_cfg(
+            original_config, starting_experiment_folder)
+    if not current_purpose == target_purpose:
         logging.warning(f'Loaded wrong config from {original_source_dir} with purpose '
-                        f'{original_config["experiment"]["purpose"]}')
+                        f'{current_purpose}')
     return original_config
 
 
@@ -163,7 +173,9 @@ def load_experiment_config(experiment_folder: str) -> dict:
         raise ValueError('If trying to load something from the experiment config, please supply '
                          f'a valid directory for the source experiment instead of {experiment_folder}')
     experiment_report = load_experiment_report(experiment_folder)
-    return experiment_report.get('config_params')
+    experiment_config = experiment_report.get('config_params')
+    logging.info(experiment_config)
+    return experiment_config
 
 
 def get_recent_experiment_folder(purpose_folder: str) -> str:
