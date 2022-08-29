@@ -59,7 +59,7 @@ def main(config=None, data_writer=None):
     ]
 
     source_dir = source_dirs[0]
-    source_config = load_experiment_config_original(source_dir, 'analyse_mutated_templates')
+    source_config = load_experiment_config_original(source_dir, 'mutation_effect_on_interactions_signal')
     # source_config = load_experiment_config(source_dir)
 
     if config_file.get('only_visualise_circuits', False):

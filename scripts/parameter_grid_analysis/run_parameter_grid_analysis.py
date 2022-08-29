@@ -32,7 +32,7 @@ def main(config=None, data_writer=None):
     # Load in parameter grid
     config_file = load_json_as_dict(config)
     config_file, source_dir = get_search_dir(
-        config_search_key='source_parameter_dir', config_file=config_file)
+        config_searchdir_key='source_parameter_dir', config_file=config_file)
 
     def load_parameter_grids():
         all_parameter_grids = {}

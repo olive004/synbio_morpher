@@ -54,43 +54,54 @@ def get_most_likely_purpose(starting_experiment_dir):
     return get_purpose_from_pathname(experiment_folder)
 
 
-# retrieve_search_dir
-def get_search_dir(config_file: dict, config_search_key: str = None,
+def find_config_searchdir_key(config: dict, config_searchdir_key: str, source_dir_key: str):
+    if config_searchdir_key is None:
+        if source_dir_key in list(config.values()):
+            return source_dir_key
+        config_searchdir_key = [k for k, v in config.items() if type(
+            v) == dict and source_dir_key in v.keys()]
+        if len(config_searchdir_key) > 1:
+            logging.warning(f'Detected multiple candidate search directories as keys: {config_searchdir_key}'
+                            f'\nFor config file {config}')
+        elif not config_searchdir_key:
+            raise KeyError(
+                f'Could not find search directory with {source_dir_key} for config {config}.')
+        else:
+            config_searchdir_key = config_searchdir_key[0]
+    else:
+        if config_searchdir_key in list(config.values()):
+            return config_searchdir_key
+    return config_searchdir_key
+
+
+def get_search_dir(config_file: dict, config_searchdir_key: str = None,
                    modify_config_for_posterity: bool = True) -> Tuple[dict, str]:
-    def find_config_search_key(config_search_key):
-        if config_search_key is None:
-            config_search_key = [k for k, v in config_file.items() if type(
-                v) == dict and 'source_dir' in v.keys()]
-            if len(config_search_key) > 1:
-                logging.warning(f'Detected multiple candidate search directories as keys: {config_search_key}'
-                                f'\nFor config file {config_file}')
-            elif not config_search_key:
-                raise KeyError(
-                    f'Could not find search directory with "source_dir" for config {config_file}.')
-            else:
-                config_search_key = config_search_key[0]
-        return config_search_key
-    config_search_key = find_config_search_key(config_search_key)
-    search_config = config_file.get(config_search_key, {})
-    if type(search_config) == str:
-        return config_file, search_dir
-    if not search_config:
+    """ When a specific data folder is to be loaded, this can be specified
+    explicitly in the config, even if the exact data folder is not known at 
+    the start of runtime. This function helps retrieve the data folder in both cases. """
+    source_dir_key = 'source_dir'
+    config_searchdir_key = find_config_searchdir_key(
+        config_file, config_searchdir_key, source_dir_key)
+    sourcing_config = config_file.get(config_searchdir_key, {})
+    if type(sourcing_config) == str:
+        return config_file, sourcing_config
+    if not sourcing_config:
         raise KeyError(
-            f'Could not find {config_search_key} in config keys: {config_file.keys()}.')
-    update = search_config.get(
+            f'Could not find {config_searchdir_key} in config keys: {config_file.keys()}.')
+    update = sourcing_config.get(
         "is_source_dir_incomplete", None)
     if update:
-        search_dir = os.path.join(search_config.get("source_dir"),
-                                  get_recent_experiment_folder(search_config.get(
-                                      "source_dir")), search_config.get("purpose_to_get_source_dir_from"))
-        if not os.path.isdir(search_dir):
-            raise ConfigError(f'Could not find directory {search_dir}')
+        source_dir = os.path.join(sourcing_config.get(source_dir_key),
+                                  get_recent_experiment_folder(sourcing_config.get(
+                                      source_dir_key)), sourcing_config.get("purpose_to_get_source_dir_from"))
+        if not os.path.isdir(source_dir):
+            raise ConfigError(f'Could not find directory {source_dir}')
         if modify_config_for_posterity:
-            config_file[config_search_key]['source_dir_actually_used_POSTERITY'] = search_dir
-        return config_file, search_dir
+            config_file[config_searchdir_key]['source_dir_actually_used_POSTERITY'] = source_dir
+        return config_file, source_dir
     else:
-        search_dir = search_config.get('source_dir')
-        return config_file, search_dir
+        source_dir = sourcing_config[source_dir_key]
+        return config_file, source_dir
 
 
 def get_root_experiment_folder(miscpath):
