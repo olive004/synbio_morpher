@@ -56,7 +56,7 @@ def main(config=None, data_writer=None):
         ),
         # Binding rates max int's og
         Protocol(
-            partial(visualise_data, data_writer=data_writer, cols=['binding_rates_max_interaction'],
+            partial(visualise_data, data_writer=data_writer, cols_x=['binding_rates_max_interaction'],
                     plot_type='histplot',
                     out_name='binding_rates_max_freqs',
                     preprocessor_func=preprocessing_func,
@@ -73,7 +73,7 @@ def main(config=None, data_writer=None):
         ),
         # Binding rates max int's mutations
         Protocol(
-            partial(visualise_data, data_writer=data_writer, cols=['binding_rates_max_interaction'],
+            partial(visualise_data, data_writer=data_writer, cols_x=['binding_rates_max_interaction'],
                     plot_type='histplot',
                     out_name='binding_rates_max_freqs_mutations',
                     preprocessor_func=preprocessing_func,
@@ -90,7 +90,7 @@ def main(config=None, data_writer=None):
         ),
         # Binding rates max int's diff
         Protocol(
-            partial(visualise_data, data_writer=data_writer, cols=['binding_rates_max_interaction_diff_to_base_circuit'],
+            partial(visualise_data, data_writer=data_writer, cols_x=['binding_rates_max_interaction_diff_to_base_circuit'],
                     plot_type='histplot',
                     out_name='binding_rates_max_freqs_diffs',
                     preprocessor_func=preprocessing_func,
@@ -116,7 +116,7 @@ def main(config=None, data_writer=None):
 
         # Binding rates min int's og
         Protocol(
-            partial(visualise_data, data_writer=data_writer, cols=['binding_rates_min_interaction'],
+            partial(visualise_data, data_writer=data_writer, cols_x=['binding_rates_min_interaction'],
                     plot_type='histplot',
                     out_name='binding_rates_min_freqs',
                     preprocessor_func=preprocessing_func,
@@ -133,7 +133,7 @@ def main(config=None, data_writer=None):
         ),
         # Binding rates min int's mutations
         Protocol(
-            partial(visualise_data, data_writer=data_writer, cols=['binding_rates_min_interaction'],
+            partial(visualise_data, data_writer=data_writer, cols_x=['binding_rates_min_interaction'],
                     plot_type='histplot',
                     out_name='binding_rates_min_freqs_mutations',
                     preprocessor_func=preprocessing_func,
@@ -150,7 +150,7 @@ def main(config=None, data_writer=None):
         ),
         # Binding rates min int's diff
         Protocol(
-            partial(visualise_data, data_writer=data_writer, cols=['binding_rates_min_interaction_diff_to_base_circuit'],
+            partial(visualise_data, data_writer=data_writer, cols_x=['binding_rates_min_interaction_diff_to_base_circuit'],
                     plot_type='histplot',
                     out_name='binding_rates_min_freqs_diffs',
                     preprocessor_func=preprocessing_func,
@@ -169,7 +169,7 @@ def main(config=None, data_writer=None):
         # Log versions
         # Binding rates min int's og
         Protocol(
-            partial(visualise_data, data_writer=data_writer, cols=['binding_rates_min_interaction'],
+            partial(visualise_data, data_writer=data_writer, cols_x=['binding_rates_min_interaction'],
                     plot_type='histplot',
                     out_name='binding_rates_min_freqs_logs',
                     preprocessor_func=preprocessing_func,
@@ -186,7 +186,7 @@ def main(config=None, data_writer=None):
         ),
         # Binding rates min int's mutations
         Protocol(
-            partial(visualise_data, data_writer=data_writer, cols=['binding_rates_min_interaction'],
+            partial(visualise_data, data_writer=data_writer, cols_x=['binding_rates_min_interaction'],
                     plot_type='histplot',
                     out_name='binding_rates_min_freqs_mutations_logs',
                     preprocessor_func=preprocessing_func,
@@ -203,7 +203,7 @@ def main(config=None, data_writer=None):
         ),
         # Binding rates min int's diff
         Protocol(
-            partial(visualise_data, data_writer=data_writer, cols=['binding_rates_min_interaction_diff_to_base_circuit'],
+            partial(visualise_data, data_writer=data_writer, cols_x=['binding_rates_min_interaction_diff_to_base_circuit'],
                     plot_type='histplot',
                     out_name='binding_rates_min_freqs_diffs_logs',
                     preprocessor_func=preprocessing_func,
@@ -227,7 +227,7 @@ def main(config=None, data_writer=None):
         
         # eqconstants max int's og
         Protocol(
-            partial(visualise_data, data_writer=data_writer, cols=['eqconstants_max_interaction'],
+            partial(visualise_data, data_writer=data_writer, cols_x=['eqconstants_max_interaction'],
                     plot_type='histplot',
                     out_name='eqconstants_max_freqs',
                     preprocessor_func=preprocessing_func,
@@ -241,7 +241,7 @@ def main(config=None, data_writer=None):
         ),
         # eqconstants max int's mutations
         Protocol(
-            partial(visualise_data, data_writer=data_writer, cols=['eqconstants_max_interaction'],
+            partial(visualise_data, data_writer=data_writer, cols_x=['eqconstants_max_interaction'],
                     plot_type='histplot',
                     out_name='eqconstants_max_freqs_mutations',
                     preprocessor_func=preprocessing_func,
@@ -255,7 +255,7 @@ def main(config=None, data_writer=None):
         ),
         # Log 0f ^eqconstants max int's mutations
         Protocol(
-            partial(visualise_data, data_writer=data_writer, cols=['eqconstants_max_interaction'],
+            partial(visualise_data, data_writer=data_writer, cols_x=['eqconstants_max_interaction'],
                     plot_type='histplot',
                     out_name='eqconstants_max_freqs_mutations_log',
                     preprocessor_func=preprocessing_func,
@@ -269,7 +269,7 @@ def main(config=None, data_writer=None):
         ),
         # eqconstants max int's diff
         Protocol(
-            partial(visualise_data, data_writer=data_writer, cols=['eqconstants_max_interaction_diff_to_base_circuit'],
+            partial(visualise_data, data_writer=data_writer, cols_x=['eqconstants_max_interaction_diff_to_base_circuit'],
                     plot_type='histplot',
                     out_name='eqconstants_max_freqs_diffs',
                     preprocessor_func=preprocessing_func,
@@ -284,7 +284,7 @@ def main(config=None, data_writer=None):
         ),
         # Log of ^eqconstants max int's diff
         Protocol(
-            partial(visualise_data, data_writer=data_writer, cols=['eqconstants_max_interaction_diff_to_base_circuit'],
+            partial(visualise_data, data_writer=data_writer, cols_x=['eqconstants_max_interaction_diff_to_base_circuit'],
                     plot_type='histplot',
                     out_name='eqconstants_max_freqs_diffs_log',
                     preprocessor_func=preprocessing_func,
@@ -315,14 +315,14 @@ def main(config=None, data_writer=None):
         # fold_change
         Protocol(partial(
             visualise_data,
-            data_writer=data_writer, cols=['fold_change_diff_to_base_circuit'],
+            data_writer=data_writer, cols_x=['fold_change_diff_to_base_circuit'],
             plot_type='histplot',
             out_name='fold_change_diff',
             preprocessor_func=preprocessing_func,
             exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
             log_axis=(False, False),
             use_sns=True,
-            expand_coldata_using_col=True,
+            expand_coldata_using_col_x=True,
             column_name_for_expanding_labels='sample_names',
             idx_for_expanding_labels=0,
             title=f'Fold change difference between circuit\nand mutated counterparts, {num_mutations} mutation{plot_grammar}',
@@ -334,14 +334,14 @@ def main(config=None, data_writer=None):
         # fold_change log
         Protocol(partial(
             visualise_data,
-            data_writer=data_writer, cols=['fold_change_diff_to_base_circuit'],
+            data_writer=data_writer, cols_x=['fold_change_diff_to_base_circuit'],
             plot_type='histplot',
             out_name='fold_change_diff_log',
             preprocessor_func=preprocessing_func,
             exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
             log_axis=(True, False),
             use_sns=True,
-            expand_coldata_using_col=True,
+            expand_coldata_using_col_x=True,
             column_name_for_expanding_labels='sample_names',
             idx_for_expanding_labels=0,
             title=f'Fold change difference between circuit\nand mutated counterparts, {num_mutations} mutation{plot_grammar}',
@@ -353,14 +353,14 @@ def main(config=None, data_writer=None):
         # overshoot
         Protocol(partial(
             visualise_data,
-            data_writer=data_writer, cols=['overshoot_diff_to_base_circuit'],
+            data_writer=data_writer, cols_x=['overshoot_diff_to_base_circuit'],
             plot_type='histplot',
             out_name='overshoot_diff',
             preprocessor_func=preprocessing_func,
             exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
             log_axis=(False, False),
             use_sns=True,
-            expand_coldata_using_col=True,
+            expand_coldata_using_col_x=True,
             column_name_for_expanding_labels='sample_names',
             idx_for_expanding_labels=0,
             title=f'Overshoot difference between circuit\nand mutated counterparts, {num_mutations} mutation{plot_grammar}',
@@ -372,14 +372,14 @@ def main(config=None, data_writer=None):
         # overshoot log
         Protocol(partial(
             visualise_data,
-            data_writer=data_writer, cols=['overshoot_diff_to_base_circuit'],
+            data_writer=data_writer, cols_x=['overshoot_diff_to_base_circuit'],
             plot_type='histplot',
             out_name='overshoot_diff_log',
             preprocessor_func=preprocessing_func,
             exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
             log_axis=(True, False),
             use_sns=True,
-            expand_coldata_using_col=True,
+            expand_coldata_using_col_x=True,
             column_name_for_expanding_labels='sample_names',
             idx_for_expanding_labels=0,
             title=f'Overshoot difference between circuit\nand mutated counterparts, {num_mutations} mutation{plot_grammar}',
@@ -391,14 +391,14 @@ def main(config=None, data_writer=None):
         # response_time
         Protocol(partial(
             visualise_data,
-            data_writer=data_writer, cols=['response_time_diff_to_base_circuit'],
+            data_writer=data_writer, cols_x=['response_time_diff_to_base_circuit'],
             plot_type='histplot',
             out_name='response_time_diff',
             preprocessor_func=preprocessing_func,
             exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
             log_axis=(False, False),
             use_sns=True,
-            expand_coldata_using_col=True,
+            expand_coldata_using_col_x=True,
             column_name_for_expanding_labels='sample_names',
             idx_for_expanding_labels=0,
             title=f'Response time difference between circuit\nand mutated counterparts, {num_mutations} mutation{plot_grammar}',
@@ -410,14 +410,14 @@ def main(config=None, data_writer=None):
         # response_time log
         Protocol(partial(
             visualise_data,
-            data_writer=data_writer, cols=['response_time_diff_to_base_circuit'],
+            data_writer=data_writer, cols_x=['response_time_diff_to_base_circuit'],
             plot_type='histplot',
             out_name='response_time_diff_log',
             preprocessor_func=preprocessing_func,
             exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
             log_axis=(True, False),
             use_sns=True,
-            expand_coldata_using_col=True,
+            expand_coldata_using_col_x=True,
             column_name_for_expanding_labels='sample_names',
             idx_for_expanding_labels=0,
             title=f'Response time difference between circuit\nand mutated counterparts, {num_mutations} mutation{plot_grammar}',
@@ -429,14 +429,14 @@ def main(config=None, data_writer=None):
         # precision
         Protocol(partial(
             visualise_data,
-            data_writer=data_writer, cols=['precision_diff_to_base_circuit'],
+            data_writer=data_writer, cols_x=['precision_diff_to_base_circuit'],
             plot_type='histplot',
             out_name='precision_diff',
             preprocessor_func=preprocessing_func,
             exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
             log_axis=(False, False),
             use_sns=True,
-            expand_coldata_using_col=True,
+            expand_coldata_using_col_x=True,
             column_name_for_expanding_labels='sample_names',
             idx_for_expanding_labels=0,
             title=f'Precision difference between circuit\nand mutated counterparts, {num_mutations} mutation{plot_grammar}',
@@ -448,14 +448,14 @@ def main(config=None, data_writer=None):
         # precision log
         Protocol(partial(
             visualise_data,
-            data_writer=data_writer, cols=['precision_diff_to_base_circuit'],
+            data_writer=data_writer, cols_x=['precision_diff_to_base_circuit'],
             plot_type='histplot',
             out_name='precision_diff_log',
             preprocessor_func=preprocessing_func,
             exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
             log_axis=(True, False),
             use_sns=True,
-            expand_coldata_using_col=True,
+            expand_coldata_using_col_x=True,
             column_name_for_expanding_labels='sample_names',
             idx_for_expanding_labels=0,
             title=f'Precision difference between circuit\nand mutated counterparts, {num_mutations} mutation{plot_grammar}',
@@ -467,14 +467,14 @@ def main(config=None, data_writer=None):
         # sensitivity
         Protocol(partial(
             visualise_data,
-            data_writer=data_writer, cols=['sensitivity_diff_to_base_circuit'],
+            data_writer=data_writer, cols_x=['sensitivity_diff_to_base_circuit'],
             plot_type='histplot',
             out_name='sensitivity_diff',
             preprocessor_func=preprocessing_func,
             exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
             log_axis=(False, False),
             use_sns=True,
-            expand_coldata_using_col=True,
+            expand_coldata_using_col_x=True,
             column_name_for_expanding_labels='sample_names',
             idx_for_expanding_labels=0,
             title=f'Sensitivity difference between circuit\nand mutated counterparts, {num_mutations} mutation{plot_grammar}',
@@ -486,14 +486,14 @@ def main(config=None, data_writer=None):
         # sensitivity log
         Protocol(partial(
             visualise_data,
-            data_writer=data_writer, cols=['sensitivity_diff_to_base_circuit'],
+            data_writer=data_writer, cols_x=['sensitivity_diff_to_base_circuit'],
             plot_type='histplot',
             out_name='sensitivity_diff_log',
             preprocessor_func=preprocessing_func,
             exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
             log_axis=(True, False),
             use_sns=True,
-            expand_coldata_using_col=True,
+            expand_coldata_using_col_x=True,
             column_name_for_expanding_labels='sample_names',
             idx_for_expanding_labels=0,
             title=f'Sensitivity difference between circuit\nand mutated counterparts, {num_mutations} mutation{plot_grammar}',

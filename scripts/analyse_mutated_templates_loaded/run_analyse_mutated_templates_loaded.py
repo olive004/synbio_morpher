@@ -51,11 +51,34 @@ def main(config=None, data_writer=None):
             req_input=True,
             req_output=True,
             name='concatenate_csvs'
-        )
-        # ),
-        # Protocol(
-        #     visualise_data
-        # )
+        ),
+        Protocol(
+            partial(
+                visualise_data,
+
+            )
+        ),
+        Protocol(
+            partial(
+                visualise_data,
+                data_writer=data_writer, cols_x=['precision_diff_to_base_circuit'],
+                plot_type='histplot',
+                out_name='precision_diff_log',
+                exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
+                exclude_rows_zero_in_cols='mutation_num',
+                hue='mutation_num',
+                log_axis=(True, False),
+                use_sns=True,
+                expand_coldata_using_col_x=True,
+                column_name_for_expanding_labels='sample_names',
+                idx_for_expanding_labels=0,
+                title=f'Precision difference between circuit\nand mutated counterparts, {num_mutations} mutation{plot_grammar}',
+                xlabel='Precision difference'
+            ),
+            req_input=True,
+            name='visualise_interactions_difference',
+            skip=config_file.get('only_visualise_circuits', False)
+        ),
     ]
 
     source_dir = source_dirs[0]

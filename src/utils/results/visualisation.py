@@ -81,19 +81,28 @@ def visualise_():
 
 
 def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
-                   cols: list = None, plot_type='histplot', out_name='test_plot',
+                   cols_x: list = None, cols_y: list = None,
+                   expand_coldata_using_col_x: bool = False,
+                   expand_coldata_using_col_y: bool = False,
+                   normalise_data_x=False,
+                   normalise_data_y=False,
+                   plot_type='histplot', out_name='test_plot',
+                   hue: str = None,
                    preprocessor_func=None,
-                   exclude_rows_nonempty_in_cols: list = None,
+                   use_sns=False,
+                   log_axis=[False, False],
                    threshold_value_max=None,
-                   use_sns=False, log_axis=False,
                    bin_count=100,
-                   expand_coldata_using_col: bool = False,
+                   exclude_rows_nonempty_in_cols: list = None,
+                   exclude_rows_zero_in_cols: list = None,
                    column_name_for_expanding_labels: str = None,
                    idx_for_expanding_labels: int = None,
                    plot_cols_on_same_graph=False,
                    **plot_kwrgs):
     """ Plot type can be any attributes of VisODE() """
-    data = og_data
+    data = deepcopy(og_data)
+
+    hue = hue if hue is not None else column_name_for_expanding_labels
 
     def expand_data_by_col(data: pd.DataFrame, column):
         df_lists = data[[column]].unstack().apply(pd.Series)
@@ -103,66 +112,97 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
             zip(df_lists.columns.values, col_names)))
 
         df_lists = pd.concat(axis=0, ignore_index=True, objs=[
-            pd.DataFrame.from_dict({column: df_lists[c], column_name_for_expanding_labels: c})
+            pd.DataFrame.from_dict(
+                {column: df_lists[c], column_name_for_expanding_labels: c})
             for c in col_names])
         return df_lists
 
+    def process_log_sns(data: pd.DataFrame, column_x: str, column_y: str,
+                        plot_kwrgs: dict, log_axis: list):
+        def process_log(data, col, log_option, col_label):
+            if log_option:
+                col = 'Log of ' + plot_kwrgs.get(col_label, col)
+            else:
+                col = plot_kwrgs.get(col_label, col)
+            data = data.rename(columns={col: col})
+            data = data[data[col] != 0]
+            return data, col
+
+        data, column_x = process_log(data, column_x, log_axis[0], 'xlabel')
+        data, column_y = process_log(data, column_y, log_axis[0], 'ylabel')
+        data = data.abs()
+        return data, column_x, column_y
+
     def preprocess_data_histplot(data: pd.DataFrame, preprocessor_func, threshold_value_max,
-                        expand_coldata_using_col, column):
-        new_data = deepcopy(data)
-        if preprocessor_func:
-            new_data[column] = preprocessor_func(new_data[column].values)
-        if expand_coldata_using_col:
-            new_data = expand_data_by_col(
-                new_data, column)
-            # column = None
-        if threshold_value_max:
-            new_data = new_data[new_data[column] <= threshold_value_max]
+                                 expand_coldata_using_col_x, expand_coldata_using_col_y,
+                                 column_x, column_y, normalise_data_x, normalise_data_y):
+        def preprocess(data, column, expand_coldata_using_col, normalise_data):
+            if column is not None:
+                if preprocessor_func:
+                    data[column] = preprocessor_func(data[column].values)
+                if expand_coldata_using_col:
+                    data = expand_data_by_col(
+                        data, column)
+                if threshold_value_max:
+                    data = data[data[column] <= threshold_value_max]
+                if normalise_data:
+                    df = data[column]
+                    data[column] = (df - df.mean()) / df.std()
 
-        return new_data, column
+            return data, column
+        data, column_x = preprocess(
+            data, column_x, expand_coldata_using_col_x, normalise_data_x)
+        data, column_y = preprocess(
+            data, column_y, expand_coldata_using_col_y, normalise_data_y)
+        return data, column_x, column_y
 
-    if exclude_rows_nonempty_in_cols is not None:
-        for exc_col in exclude_rows_nonempty_in_cols:
-            data = data[data[exc_col] == '']
+    def exclude_rows_by_cols(data, cols: list, condition):
+        if cols is not None:
+            for exc_col in cols:
+                data = data[data[exc_col] == condition]
+        return data
+    
+    for exc_cols, condition in zip(
+        [exclude_rows_nonempty_in_cols, exclude_rows_zero_in_cols],
+        ['', 0]):
+        data = exclude_rows_by_cols(data, exc_cols, condition)
 
     visualiser = VisODE()
     if plot_type == 'histplot':
-        for col in cols:
-            data, new_col = preprocess_data_histplot(
-                data, preprocessor_func, threshold_value_max,
-                expand_coldata_using_col, col)
+        for col_x in cols_x:
+            for col_y in cols_y:
+                data, col_x, col_y = preprocess_data_histplot(
+                    data, preprocessor_func, threshold_value_max,
+                    expand_coldata_using_col_x, expand_coldata_using_col_y,
+                    col_x, col_y,
+                    normalise_data_x, normalise_data_y)
 
-            if use_sns:
-                # Rename x label manually
-                data = data.reset_index()
-                if new_col is not None:
-                    if log_axis[0]:
-                        new_col = 'Log of ' + plot_kwrgs.get('xlabel', col)
-                        data = data[data[col] != 0]
-                    else:
-                        new_col = plot_kwrgs.get('xlabel', col)
-                data = data.rename(columns={col: new_col})
+                if use_sns:
+                    data = data.reset_index()
+                    data, col_x, col_y = process_log_sns(
+                        data, col_x, col_y, plot_kwrgs, log_axis)
 
-                plot_kwrgs.update({'column': new_col, 'data': data})
-            else:
-                plot_kwrgs.update({'data': data[col]})
+                    plot_kwrgs.update({'column': col_x, 'data': data})
+                    plot_kwrgs.update({'column_y': col_y, 'data': data})
+                else:
+                    plot_kwrgs.update({'data': data[col_x]})
 
-            data_writer.output(out_type='png', out_name=out_name,
-                               write_func=visualiser.histplot,
-                               **merge_dicts({'use_sns': use_sns, "log_axis": log_axis,
-                                              'hue': column_name_for_expanding_labels,
-                                              'bin_count': bin_count},
-                                             plot_kwrgs))
+                data_writer.output(out_type='png', out_name=out_name,
+                                   write_func=visualiser.histplot,
+                                   **merge_dicts({'use_sns': use_sns, "log_axis": log_axis,
+                                                  'hue': hue,
+                                                  'bin_count': bin_count},
+                                                 plot_kwrgs))
     elif plot_type == 'plot':
         try:
-            x, y = cols[0], cols[-1]
+            x, y = cols_x[0], cols_x[-1]
             if preprocessor_func:
                 x, y = preprocessor_func(x.values), preprocessor_func(y.values)
             data_writer.output(out_type='png', out_name=out_name,
                                write_func=visualiser.plot, **merge_dicts({'data': x, 'y': y}, plot_kwrgs))
         except IndexError:
             assert len(
-                cols) == 2, 'For visualising a plot from a table, please only provide 2 columns as variables.'
+                cols_x) == 2, 'For visualising a plot from a table, please only provide 2 columns as variables.'
     else:
         logging.warn(f'Could not find visualiser function {plot_type}')
 
@@ -243,7 +283,8 @@ class VisODE():
         plt.clf()
 
     def histplot(self, data: pd.DataFrame, out_path, bin_count=100,
-                 use_sns=False, column: str = None,
+                 use_sns=False,
+                 column_x: str = None, column_y: str = None,
                  hue=None,
                  log_axis: tuple = (False, False), **plot_kwrgs):
         """ log_axis: use logarithmic axes in (x-axis, y-axis) """
@@ -252,7 +293,7 @@ class VisODE():
             import seaborn as sns
             sns.set_context('paper')
 
-            if column is None:
+            if column_x is None:
                 logging.warn(
                     'Make sure a column is specified for visualising with seaborn')
             sns.set_theme(style="ticks")
@@ -260,7 +301,8 @@ class VisODE():
             sns.despine(f)
             sns.histplot(
                 data,
-                x=column,
+                x=column_x,
+                y=column_y,
                 hue=hue,
                 bins=bin_count,
                 multiple="stack",
