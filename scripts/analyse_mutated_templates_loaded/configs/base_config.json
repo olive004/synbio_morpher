@@ -1,4 +1,7 @@
 {
+    "experiment": {
+        "purpose": "analyse_mutated_templates_loaded"
+    },
     "source_dirs": [
         "data/analyse_mutated_templates/2022_08_28_004057",
         "data/analyse_mutated_templates/2022_08_28_010006",

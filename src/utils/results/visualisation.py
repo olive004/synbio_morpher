@@ -76,6 +76,9 @@ class NetworkCustom(Network):
             self.add_node(node, **nodes[node])
 
 
+def visualise_
+
+
 def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                    cols: list = None, plot_type='histplot', out_name='test_plot',
                    preprocessor_func=None,
