@@ -56,7 +56,7 @@ def get_most_likely_purpose(starting_experiment_dir):
 
 def find_config_searchdir_key(config: dict, config_searchdir_key: str, source_dir_key: str):
     if config_searchdir_key is None:
-        if source_dir_key in list(config.values()):
+        if source_dir_key in list(config.keys()):
             return source_dir_key
         config_searchdir_key = [k for k, v in config.items() if type(
             v) == dict and source_dir_key in v.keys()]

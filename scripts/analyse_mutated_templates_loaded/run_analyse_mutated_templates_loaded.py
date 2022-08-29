@@ -29,6 +29,17 @@ def main(config=None, data_writer=None):
         data_writer = ResultWriter(purpose=config_file.get('experiment', {}).get('purpose', 'analyse_mutated_templates_loaded'))
 
     source_dirs = config_file.get('source_dirs', [])
+    source_dir = source_dirs[0]
+    source_config = load_experiment_config_original(source_dir, 'mutation_effect_on_interactions_signal')
+    
+    # binding_rates_threshold_upper = np.power(10, 6)
+    binding_rates_threshold_upper = None
+    binding_rates_threshold_upper_text = f', with cutoff at {binding_rates_threshold_upper}' if binding_rates_threshold_upper else ''
+
+    if config_file.get('only_visualise_circuits', False):
+        exclude_rows_via_cols = ['mutation_name']
+    else:
+        exclude_rows_via_cols = []
 
     protocols = [
         Protocol(
@@ -52,12 +63,7 @@ def main(config=None, data_writer=None):
             req_output=True,
             name='concatenate_csvs'
         ),
-        Protocol(
-            partial(
-                visualise_data,
-
-            )
-        ),
+        # precision log
         Protocol(
             partial(
                 visualise_data,
@@ -72,30 +78,32 @@ def main(config=None, data_writer=None):
                 expand_coldata_using_col_x=True,
                 column_name_for_expanding_labels='sample_names',
                 idx_for_expanding_labels=0,
-                title=f'Precision difference between circuit\nand mutated counterparts, {num_mutations} mutation{plot_grammar}',
+                title=f'Precision difference between circuit\nand mutated counterparts',
                 xlabel='Precision difference'
             ),
             req_input=True,
             name='visualise_interactions_difference',
             skip=config_file.get('only_visualise_circuits', False)
         ),
+        # Binding rates min int's mutations
+        Protocol(
+            partial(visualise_data, data_writer=data_writer, cols_x=['binding_rates_min_interaction'],
+                    plot_type='histplot',
+                    out_name='binding_rates_min_freqs_mutations_logs',
+                    exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
+                    threshold_value_max=binding_rates_threshold_upper,
+                    hue='mutation_num',
+                    log_axis=(True, False),
+                    use_sns=True,
+                    title=f'Minimum ' + r'$k_d$' + ' strength',
+                    xlabel='Dissociation rate ' + r'$k_d$' + ' (' +
+                    f'{SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]})' +
+                    f'{binding_rates_threshold_upper_text}'),
+            req_input=True,
+            name='visualise_mutated_interactions'
+        ),
     ]
 
-    source_dir = source_dirs[0]
-    source_config = load_experiment_config_original(source_dir, 'mutation_effect_on_interactions_signal')
-    # source_config = load_experiment_config(source_dir)
-
-    if config_file.get('only_visualise_circuits', False):
-        exclude_rows_via_cols = ['mutation_name']
-    else:
-        exclude_rows_via_cols = []
-
-    num_mutations = source_config['mutations']['mutation_nums_within_sequence']
-    plot_grammar = 's' if num_mutations > 1 else ''
-
-    binding_rates_threshold_upper = np.power(10, 6)
-    binding_rates_threshold_upper_text = f', with cutoff at {binding_rates_threshold_upper}' if binding_rates_threshold_upper else ''
-    
     experiment = Experiment(config=config, config_file=config_file, protocols=protocols,
                             data_writer=data_writer)
     experiment.run_experiment()

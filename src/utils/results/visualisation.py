@@ -161,10 +161,10 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
             for exc_col in cols:
                 data = data[data[exc_col] == condition]
         return data
-    
+
     for exc_cols, condition in zip(
         [exclude_rows_nonempty_in_cols, exclude_rows_zero_in_cols],
-        ['', 0]):
+            ['', 0]):
         data = exclude_rows_by_cols(data, exc_cols, condition)
 
     visualiser = VisODE()
