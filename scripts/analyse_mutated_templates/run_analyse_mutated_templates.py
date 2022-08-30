@@ -166,6 +166,24 @@ def main(config=None, data_writer=None):
             name='visualise_interactions_difference',
             skip=config_file.get('only_visualise_circuits', False)
         ),
+        # Binding rates min int's ratio
+        Protocol(
+            partial(visualise_data, data_writer=data_writer, cols_x=['binding_rates_min_interaction_ratio_from_mutation_to_base'],
+                    plot_type='histplot',
+                    out_name='binding_rates_min_freqs_ratios',
+                    preprocessor_func=preprocessing_func,
+                    exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
+                    threshold_value_max=binding_rates_threshold_upper,
+                    log_axis=(False, False),
+                    use_sns=True,
+                    title=f'Ratio between mutated and \noriginal circuit (minimum ' + r'$k_d$' + f'), {num_mutations} mutation{plot_grammar}',
+                    xlabel='Ratio of ' + r'$k_d$' + ' (' +
+                    f'{SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]})' +
+                    f'{binding_rates_threshold_upper_text}'),
+            req_input=True,
+            name='visualise_interactions_difference',
+            skip=config_file.get('only_visualise_circuits', False)
+        ),
         # Log versions
         # Binding rates min int's og
         Protocol(
@@ -213,6 +231,24 @@ def main(config=None, data_writer=None):
                     use_sns=True,
                     title=f'Difference between circuit\nand mutated (minimum ' + r'$k_d$' + f'), {num_mutations} mutation{plot_grammar}',
                     xlabel='Difference in ' + r'$k_d$' + ' (' +
+                    f'{SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]})' +
+                    f'{binding_rates_threshold_upper_text}'),
+            req_input=True,
+            name='visualise_interactions_difference',
+            skip=config_file.get('only_visualise_circuits', False)
+        ),
+        # Binding rates min int's ratio
+        Protocol(
+            partial(visualise_data, data_writer=data_writer, cols_x=['binding_rates_min_interaction_ratio_from_mutation_to_base'],
+                    plot_type='histplot',
+                    out_name='binding_rates_min_freqs_ratios_logs',
+                    preprocessor_func=preprocessing_func,
+                    exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
+                    threshold_value_max=binding_rates_threshold_upper,
+                    log_axis=(True, False),
+                    use_sns=True,
+                    title=f'Ratio between mutated and \noriginal circuit (minimum ' + r'$k_d$' + f'), {num_mutations} mutation{plot_grammar}',
+                    xlabel='Ratio of ' + r'$k_d$' + ' (' +
                     f'{SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]})' +
                     f'{binding_rates_threshold_upper_text}'),
             req_input=True,
