@@ -52,7 +52,10 @@ def main(config=None, data_writer=None):
             name='get_pathnames_from_mult_dirs'
         ),
         Protocol(
-            load_csv_mult,
+            partial(
+                load_csv_mult,
+                
+            ),
             req_input=True,
             req_output=True,
             name='load_csv'
@@ -71,8 +74,8 @@ def main(config=None, data_writer=None):
                 plot_type='histplot',
                 out_name='precision_diff_log',
                 exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
-                exclude_rows_zero_in_cols='mutation_num',
-                hue='mutation_num',
+                exclude_rows_zero_in_cols=['mutation_num'],
+                hue=['mutation_num'],
                 log_axis=(True, False),
                 use_sns=True,
                 expand_coldata_using_col_x=True,
@@ -92,7 +95,9 @@ def main(config=None, data_writer=None):
                     out_name='binding_rates_min_freqs_mutations_logs',
                     exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
                     threshold_value_max=binding_rates_threshold_upper,
-                    hue='mutation_num',
+                    misc_histplot_kwargs={
+                        "hue": ['mutation_num'],
+                        "multiple": "stacked"},
                     log_axis=(True, False),
                     use_sns=True,
                     title=f'Minimum ' + r'$k_d$' + ' strength',

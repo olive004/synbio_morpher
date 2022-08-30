@@ -1,3 +1,4 @@
+import ast
 import json
 import logging
 import os
@@ -65,7 +66,32 @@ def load_csv_mult(file_paths):
     
 
 def load_csv(file_path):
-    return pd.read_csv(file_path)
+    loaded = pd.read_csv(file_path)
+    # for col in loaded.columns:
+    #     logging.info(loaded[col])
+    #     # try: 
+    #     #     str_loaded = loaded[col].str
+    #     # except AttributeError:
+    #     #     str_loaded = None
+    #     # try:
+    #     #     if str_loaded is None:
+    #     #         continue
+    #     #     logging.info(str_loaded.contains('['))
+    #     #     if any(list(str_loaded.contains('['))):
+    #     #         logging.info(col)
+    #     #         loaded[col] = loaded[col].apply(lambda x: ast.literal_eval(x))
+    #     # except:
+    #     #     continue
+
+    #     logging.info(loaded[col].unique())
+    #     logging.info(loaded[col].unique()[0])
+    #     logging.info(list(loaded[col].unique()[0]))
+
+    #     if '[' in list(loaded[col].unique()[0]):
+    #         loaded[col] = loaded[col].apply(lambda x: ast.literal_eval(x))
+
+    # logging.info(loaded['sample_names'])
+    return loaded
 
 
 def make_iterable_like(dict_like):

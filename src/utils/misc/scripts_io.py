@@ -185,7 +185,6 @@ def load_experiment_config(experiment_folder: str) -> dict:
                          f'a valid directory for the source experiment instead of {experiment_folder}')
     experiment_report = load_experiment_report(experiment_folder)
     experiment_config = experiment_report.get('config_params')
-    logging.info(experiment_config)
     return experiment_config
 
 

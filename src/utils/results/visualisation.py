@@ -84,8 +84,8 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                    cols_x: list = None, cols_y: list = None,
                    expand_coldata_using_col_x: bool = False,
                    expand_coldata_using_col_y: bool = False,
-                   normalise_data_x=False,
-                   normalise_data_y=False,
+                   normalise_data_x: bool = False,
+                   normalise_data_y: bool = False,
                    plot_type='histplot', out_name='test_plot',
                    hue: str = None,
                    preprocessor_func=None,
@@ -98,19 +98,32 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                    column_name_for_expanding_labels: str = None,
                    idx_for_expanding_labels: int = None,
                    plot_cols_on_same_graph=False,
+                   misc_histplot_kwargs=None,
                    **plot_kwrgs):
     """ Plot type can be any attributes of VisODE() """
     data = deepcopy(og_data)
 
     hue = hue if hue is not None else column_name_for_expanding_labels
 
-    def expand_data_by_col(data: pd.DataFrame, column):
+    cols_x = cols_x if cols_x is not None else [None]
+    cols_y = cols_y if cols_y is not None else [None]
+
+    def expand_data_by_col(data: pd.DataFrame, column, column_name_for_expanding_labels):
         df_lists = data[[column]].unstack().apply(pd.Series)
-        col_names = list(
-            data[column_name_for_expanding_labels].iloc[idx_for_expanding_labels])
+        col_names = data[column_name_for_expanding_labels].iloc[idx_for_expanding_labels]
+        logging.info(col_names)
+        logging.info(type(col_names))
+        logging.info(data[column_name_for_expanding_labels])
+        logging.info(data[column_name_for_expanding_labels].iloc[idx_for_expanding_labels])
         df_lists = df_lists.rename(columns=dict(
             zip(df_lists.columns.values, col_names)))
 
+        logging.info(col_names)
+        logging.info(column)
+        logging.info(col_names[0])
+        logging.info(data[column_name_for_expanding_labels])
+        logging.info(pd.DataFrame.from_dict(
+            {column: df_lists[col_names[0]], column_name_for_expanding_labels: col_names[0]}))
         df_lists = pd.concat(axis=0, ignore_index=True, objs=[
             pd.DataFrame.from_dict(
                 {column: df_lists[c], column_name_for_expanding_labels: c})
@@ -135,14 +148,17 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
 
     def preprocess_data_histplot(data: pd.DataFrame, preprocessor_func, threshold_value_max,
                                  expand_coldata_using_col_x, expand_coldata_using_col_y,
-                                 column_x, column_y, normalise_data_x, normalise_data_y):
+                                 column_x: str, column_y: str,
+                                 normalise_data_x, normalise_data_y,
+                                 column_name_for_expanding_labels):
         def preprocess(data, column, expand_coldata_using_col, normalise_data):
             if column is not None:
                 if preprocessor_func:
                     data[column] = preprocessor_func(data[column].values)
                 if expand_coldata_using_col:
                     data = expand_data_by_col(
-                        data, column)
+                        data=data, column=column,
+                        column_name_for_expanding_labels=column_name_for_expanding_labels)
                 if threshold_value_max:
                     data = data[data[column] <= threshold_value_max]
                 if normalise_data:
@@ -175,7 +191,8 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                     data, preprocessor_func, threshold_value_max,
                     expand_coldata_using_col_x, expand_coldata_using_col_y,
                     col_x, col_y,
-                    normalise_data_x, normalise_data_y)
+                    normalise_data_x, normalise_data_y,
+                    column_name_for_expanding_labels)
 
                 if use_sns:
                     data = data.reset_index()
@@ -191,7 +208,9 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                                    write_func=visualiser.histplot,
                                    **merge_dicts({'use_sns': use_sns, "log_axis": log_axis,
                                                   'hue': hue,
-                                                  'bin_count': bin_count},
+                                                  'bin_count': bin_count,
+                                                  'misc_histplot_kwargs': misc_histplot_kwargs
+                                                  },
                                                  plot_kwrgs))
     elif plot_type == 'plot':
         try:
@@ -286,12 +305,22 @@ class VisODE():
                  use_sns=False,
                  column_x: str = None, column_y: str = None,
                  hue=None,
-                 log_axis: tuple = (False, False), **plot_kwrgs):
+                 log_axis: tuple = (False, False),
+                 histplot_kwargs: dict = None,
+                 **plot_kwrgs):
         """ log_axis: use logarithmic axes in (x-axis, y-axis) """
         from matplotlib import pyplot as plt
         if use_sns:
             import seaborn as sns
             sns.set_context('paper')
+
+            histplot_kwargs = {
+                "multiple": "stack",
+                "palette": "deep",
+                # palette="light:m_r",
+                "edgecolor": ".3",
+                "linewidth": .5
+            }.update(histplot_kwargs)
 
             if column_x is None:
                 logging.warn(
@@ -303,15 +332,10 @@ class VisODE():
                 data,
                 x=column_x,
                 y=column_y,
-                hue=hue,
                 bins=bin_count,
-                multiple="stack",
-                # palette="light:m_r",
-                palette="deep",
-                edgecolor=".3",
-                linewidth=.5,
                 log_scale=log_axis
                 # element='poly'
+                **histplot_kwargs
             ).set(title=plot_kwrgs.get('title', None))
             f.savefig(out_path)
             plt.close()
