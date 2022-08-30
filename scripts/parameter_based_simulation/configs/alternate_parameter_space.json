@@ -9,6 +9,10 @@
         "input": "RNA_0",
         "output": "RNA_2"
     },
+    "interaction_simulator": {
+        "name": "IntaRNA",
+        "postprocess": "True"
+    },
     "molecular_params": {
         "creation_rates": 50,
         "copynumbers": 5,
@@ -17,7 +21,8 @@
     "parameter_based_simulation": {
         "interaction_min": 0.05,
         "interaction_max": 1,
-        "interaction_step_size": 0.1
+        "interaction_step_size": 0.1,
+        "log_scale": false
     },
     "signal": {
         "signal":[0, 1],

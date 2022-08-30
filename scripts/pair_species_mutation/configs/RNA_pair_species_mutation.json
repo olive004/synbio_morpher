@@ -7,6 +7,9 @@
         "proportion_to_mutate": 0.35
     },
     "data": "./data/example_data/toy_mRNA_circuit.fasta",
+    "experiment": {
+        "purpose": "pair_species_mutation"
+    },
     "interaction_simulator": {
         "name": "IntaRNA",
         "postprocess": false
@@ -18,7 +21,7 @@
     "molecular_params": "./scripts/common/configs/RNA_system/molecular_params.json",
     "mutations": {
         "mutation_counts": 10,
-        "mutation_nums": 1,
+        "mutation_nums_within_sequence": 1,
         "algorithm": "random"
     },
     "signal": "./scripts/pair_species_mutation/configs/params/in_signal.json",

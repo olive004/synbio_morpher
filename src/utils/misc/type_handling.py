@@ -39,6 +39,15 @@ def flatten_listlike(listlike, safe=False):
         return [item for sublist in listlike for item in sublist]
 
 
+def flatten_nested_listlike(listlike):
+    for v in listlike:
+        if type(v) == list:
+            listlike = flatten_listlike(listlike)
+            listlike = flatten_nested_listlike(listlike)
+            return listlike
+    return listlike
+
+
 def find_sublist_max(list_like):
     list_list_sizes = [len(l) for l in list_like if type(l) == list]
     return max(list_list_sizes)

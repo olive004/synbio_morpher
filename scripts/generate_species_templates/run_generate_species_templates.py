@@ -17,7 +17,7 @@ def main(config=None, data_writer=None):
     # set configs
     if config is None:
         config = os.path.join(
-            "scripts", "generate_species_templates", "configs", "generate_species_templates_2.json")
+            "scripts", "generate_species_templates", "configs", "base_config.json")
     config_file = load_json_as_dict(config)
     exp_configs = config_file.get("circuit_generation")
 
@@ -53,7 +53,7 @@ def main(config=None, data_writer=None):
             )
         ]
     ]
-    experiment = Experiment(config_filepath=config, protocols=protocols,
+    experiment = Experiment(config=config, config_file=config_file, protocols=protocols,
                             data_writer=data_writer)
     experiment.run_experiment()
 

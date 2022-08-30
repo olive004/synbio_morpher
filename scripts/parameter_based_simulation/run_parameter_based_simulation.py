@@ -1,15 +1,16 @@
 import logging
 from multiprocessing import Process
 import os
+from typing import List
 import numpy as np
 from scripts.common.circuit import construct_circuit_from_cfg
+from src.srv.io.manage.script_manager import script_preamble
 from src.srv.io.manage.sys_interface import make_filename_safely
+from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
+from src.utils.misc.decorators import time_it
 from src.utils.results.analytics.timeseries import Timeseries
 from src.utils.results.experiments import Experiment, Protocol
-from src.utils.results.result_writer import ResultWriter
-from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
 from src.utils.data.data_format_tools.common import load_json_as_dict
-from src.utils.misc.decorators import time_it
 from src.utils.misc.numerical import make_symmetrical_matrix_from_sequence, triangular_sequence
 from src.utils.parameter_inference.interpolation_grid import create_parameter_range
 from src.utils.system_definition.agnostic_system.system_manager import CircuitModeller
@@ -17,13 +18,9 @@ from src.utils.system_definition.agnostic_system.system_manager import CircuitMo
 
 def main(config=None, data_writer=None):
 
-    if config is None:
-        config = os.path.join(
-            'scripts', 'parameter_based_simulation', 'configs', 'medium_parameter_space.json')
+    config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
+        'scripts', 'parameter_based_simulation', 'configs', 'logscale.json'))
     config_file = load_json_as_dict(config)
-    if data_writer is None:
-        data_writer = ResultWriter(purpose=config_file.get(
-            'experiment').get('purpose', 'parameter_based_simulation'))
 
     if config_file.get('experiment').get('parallelise'):
         num_subprocesses = config_file.get(
@@ -36,53 +33,63 @@ def main(config=None, data_writer=None):
         p = Process(target=main_subprocess, args=(
             config, data_writer, subprocess, num_subprocesses))
         p.start()
-    # p.join()
 
 
 def main_subprocess(config, data_writer, sub_process, total_processes):
     config_file = load_json_as_dict(config)
+    debug_mode = False
 
     def make_interaction_interpolation_matrices():
         # Parameter space to scan
-        interaction_min = config_file['parameter_based_simulation']['interaction_min']
-        interaction_max = config_file['parameter_based_simulation']['interaction_max']
-        interaction_step_size = config_file['parameter_based_simulation']['interaction_step_size']
-        interaction_strengths = create_parameter_range(config_file['parameter_based_simulation'])
+        # interaction_min = config_file['parameter_based_simulation']['interaction_min']
+        # interaction_max = config_file['parameter_based_simulation']['interaction_max']
+        # interaction_step_size = config_file['parameter_based_simulation']['interaction_step_size']
+        interaction_strengths = create_parameter_range(
+            config_file['parameter_based_simulation'])
         size_interaction_array = np.size(interaction_strengths)
 
         # Load data names
-        from src.utils.data.data_format_tools.manipulate_fasta import load_seq_from_FASTA
-        sample_names = load_seq_from_FASTA(
-            make_filename_safely(config_file.get("data_path")), as_type='dict')
-        num_species = len(sample_names)
-        num_unique_interactions = triangular_sequence(num_species)
+        def load_local_data(config_file):
+            from src.utils.data.data_format_tools.manipulate_fasta import load_seq_from_FASTA
+            sample_names = load_seq_from_FASTA(
+                make_filename_safely(config_file.get("data_path")), as_type='dict')
+            num_species = len(sample_names)
+            num_unique_interactions = triangular_sequence(num_species)
+            return num_species, num_unique_interactions
+
+        analytic_types = Timeseries(None).get_analytics_types()
+        num_species, num_unique_interactions = load_local_data(
+            config_file)
 
         # Create matrices
-        matrix_dimensions = tuple(
-            [num_species] + [size_interaction_array]*num_unique_interactions)
-        matrix_size = num_species * \
-            np.power(size_interaction_array, num_unique_interactions)
-        assert matrix_size == np.prod(list(
-            matrix_dimensions)), 'Something is off about the intended size of the matrix'
+        def define_matrices(num_species, size_interaction_array, num_unique_interactions, analytic_types) -> List[np.ndarray]:
+            matrix_dimensions = tuple(
+                [num_species] + [size_interaction_array]*num_unique_interactions)
+            matrix_size = num_species * \
+                np.power(size_interaction_array, num_unique_interactions)
+            assert matrix_size == np.prod(list(
+                matrix_dimensions)), 'Something is off about the intended size of the matrix'
 
-        all_analytic_matrices = []
-        analytic_types = Timeseries(None).get_analytics_types()
-        for analytic in analytic_types:
-            all_analytic_matrices.append(np.zeros(
-                matrix_dimensions, dtype=np.float32))
+            all_analytic_matrices = []
+            for _analytic in analytic_types:
+                all_analytic_matrices.append(np.zeros(
+                    matrix_dimensions, dtype=np.float32))
+            return all_analytic_matrices
+
+        all_analytic_matrices = define_matrices(
+            num_species, size_interaction_array, num_unique_interactions, analytic_types)
 
         # Set loop vars
-        total_iterations = np.power(size_interaction_array, num_unique_interactions)
+        total_iterations = np.power(
+            size_interaction_array, num_unique_interactions)
+        logging.info(total_iterations)
+        logging.info(np.size(all_analytic_matrices) / len(analytic_types))
+        logging.info(np.shape(all_analytic_matrices))
         num_iterations = int(total_iterations / total_processes)
         starting_iteration = int(num_iterations * sub_process)
         end_iteration = int(num_iterations * (sub_process + 1))
 
         logging.info('-----------------------')
-        # logging.info('Rate: ca. 8000 / min')
-        # logging.info('Total estimated time (steady state):')
-        # logging.info(f'\t{193000/(13*60)} or {10000/24} in mins')
-        # logging.info(f'\t{193000/(13*60)/60} or {10000/24/60} in hours')
-        # logging.info(f'\t{193000/(13*60)/60 /24} or {10000/24/60/24} in days')
         logging.info(f'Total data: {total_iterations}')
         logging.info(f'Projected size (inc signal writing):')
         logging.info('\t12 * 108Mb = 1.3Gb')
@@ -90,7 +97,12 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
             f'\t{np.round(100.7/500*num_iterations/1000, decimals=3)}Gb')
         modeller = CircuitModeller(result_writer=data_writer)
 
-        # @time_it
+        """ Slow: 0.2938s with 1 subprocess and signal length = 15000. """
+        """ Slow: 0.2343s with 1 subprocess and signal length = 12000. """
+        """ Slow: 0.2264s with 1 subprocess and signal length = 12000 with use_old_steadystates=True. """
+        """ ????: 0.5561s medium cfg with 12 subprocess and with use_old_steadystates=True. """
+        """ ????: 0.5613s logscale cfg with 12 subprocess and with use_old_steadystates=True. """
+
         def loop_iter(i):
             interaction_strength_choices = [int(np.mod(i / np.power(size_interaction_array, unique_interaction),
                                                        size_interaction_array)) for unique_interaction in range(num_unique_interactions)]
@@ -107,13 +119,17 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
                 extra_configs=cfg, config_file=config_file)
             circuit = modeller.init_circuit(circuit)
             circuit = modeller.simulate_signal(
-                circuit, use_solver=config_file.get('signal').get('use_solver', 'naive'))
+                circuit, use_solver=config_file.get('signal').get('use_solver', 'naive'), use_old_steadystates=True)
 
             idxs = [slice(0, num_species)] + [[strength_idx]
                                               for strength_idx in interaction_strength_choices]
+
             for j, analytic in enumerate(analytic_types):
                 all_analytic_matrices[j][tuple(
                     idxs)] = circuit.result_collector.results['signal'].analytics.get(analytic)
+
+            if debug_mode and i == 0:
+                modeller.write_results(circuit)
 
             # @time_it
             if np.mod(i, 100) == 0:
@@ -141,7 +157,9 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
         logging.info('Finished: outputting final matrices')
         write_all()
 
-    experiment = Experiment(config_filepath=config, protocols=[Protocol(make_interaction_interpolation_matrices)],
+    experiment = Experiment(config=config, config_file=config_file,
+                            protocols=[
+                                Protocol(make_interaction_interpolation_matrices)],
                             data_writer=data_writer)
     experiment.run_experiment()
     return config, data_writer

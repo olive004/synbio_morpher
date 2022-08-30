@@ -7,10 +7,11 @@ import logging
 import os
 from tracemalloc import start
 from typing import Tuple
+import numpy as np
 import pandas as pd
 
 from src.srv.io.loaders.misc import load_csv
-from src.utils.data.data_format_tools.common import load_json_as_dict
+from src.utils.data.data_format_tools.common import load_json_as_dict, make_iterable_like
 from src.utils.misc.errors import ConfigError
 from src.utils.misc.io import get_pathnames, get_subdirectories
 
@@ -20,41 +21,87 @@ def get_purposes(script_dir=None):
     return get_subdirectories(script_dir, only_basedir=True)
 
 
-# retrieve_search_dir
-def get_search_dir(config_file: dict, config_search_key: str = None,
+def get_purpose_from_pathname(pathname):
+    split_path = pathname.split(os.sep)
+    if 'data' in split_path:
+        top_dir = 'data'
+    elif 'script' in split_path:
+        top_dir = 'script'
+    else:
+        logging.warning(f'The supplied pathname {pathname} most likely does not '
+                        'point to a purpose.')
+        top_dir = None
+    try:
+        purpose_idx = split_path.index(top_dir) + 1
+        return split_path[purpose_idx]
+    except ValueError:
+        raise ValueError(f'Could not find purpose for script path {pathname}.')
+
+
+def get_purpose_from_cfg(cfg, experiment_folder):
+    if cfg.get('experiment') is None:
+        try:
+            purpose = cfg['purpose']
+        except KeyError:
+            purpose = get_most_likely_purpose(experiment_folder)
+    else:
+        purpose = cfg['experiment']['purpose']
+    return purpose
+
+
+def get_most_likely_purpose(starting_experiment_dir):
+    experiment_folder = get_root_experiment_folder(starting_experiment_dir)
+    return get_purpose_from_pathname(experiment_folder)
+
+
+def find_config_searchdir_key(config: dict, config_searchdir_key: str, source_dir_key: str):
+    if config_searchdir_key is None:
+        if source_dir_key in list(config.keys()):
+            return source_dir_key
+        config_searchdir_key = [k for k, v in config.items() if type(
+            v) == dict and source_dir_key in v.keys()]
+        if len(config_searchdir_key) > 1:
+            logging.warning(f'Detected multiple candidate search directories as keys: {config_searchdir_key}'
+                            f'\nFor config file {config}')
+        elif not config_searchdir_key:
+            raise KeyError(
+                f'Could not find search directory with {source_dir_key} for config {config}.')
+        else:
+            config_searchdir_key = config_searchdir_key[0]
+    else:
+        if config_searchdir_key in list(config.values()):
+            return config_searchdir_key
+    return config_searchdir_key
+
+
+def get_search_dir(config_file: dict, config_searchdir_key: str = None,
                    modify_config_for_posterity: bool = True) -> Tuple[dict, str]:
-    def find_config_search_key(config_search_key):
-        if config_search_key is None:
-            config_search_key = [k for k, v in config_file.items() if type(
-                v) == dict and 'source_dir' in v.keys()]
-            if len(config_search_key) > 1:
-                logging.warning(f'Detected multiple candidate search directories as keys: {config_search_key}'
-                                f'\nFor config file {config_file}')
-            elif not config_search_key:
-                raise KeyError(
-                    f'Could not find search directory with "source_dir" for config {config_file}.')
-            else:
-                config_search_key = config_search_key[0]
-        return config_search_key
-    config_search_key = find_config_search_key(config_search_key)
-    search_config = config_file.get(config_search_key, {})
-    if not search_config:
+    """ When a specific data folder is to be loaded, this can be specified
+    explicitly in the config, even if the exact data folder is not known at 
+    the start of runtime. This function helps retrieve the data folder in both cases. """
+    source_dir_key = 'source_dir'
+    config_searchdir_key = find_config_searchdir_key(
+        config_file, config_searchdir_key, source_dir_key)
+    sourcing_config = config_file.get(config_searchdir_key, {})
+    if type(sourcing_config) == str:
+        return config_file, sourcing_config
+    if not sourcing_config:
         raise KeyError(
-            f'Could not find {config_search_key} in config keys: {config_file.keys()}.')
-    update = search_config.get(
+            f'Could not find {config_searchdir_key} in config keys: {config_file.keys()}.')
+    update = sourcing_config.get(
         "is_source_dir_incomplete", None)
     if update:
-        search_dir = os.path.join(search_config.get("source_dir"),
-                                  get_recent_experiment_folder(search_config.get(
-                                      "source_dir")), search_config.get("purpose_of_ensembled_source_dir"))
-        if not os.path.isdir(search_dir):
-            raise ConfigError(f'Could not find directory {search_dir}')
+        source_dir = os.path.join(sourcing_config.get(source_dir_key),
+                                  get_recent_experiment_folder(sourcing_config.get(
+                                      source_dir_key)), sourcing_config.get("purpose_to_get_source_dir_from"))
+        if not os.path.isdir(source_dir):
+            raise ConfigError(f'Could not find directory {source_dir}')
         if modify_config_for_posterity:
-            config_file[config_search_key]['source_dir_actually_used_if_incomplete'] = search_dir
-        return config_file, search_dir
+            config_file[config_searchdir_key]['source_dir_actually_used_POSTERITY'] = source_dir
+        return config_file, source_dir
     else:
-        search_dir = search_config.get('source_dir')
-        return config_file, search_dir
+        source_dir = sourcing_config[source_dir_key]
+        return config_file, source_dir
 
 
 def get_root_experiment_folder(miscpath):
@@ -88,6 +135,20 @@ def load_experiment_output_summary(experiment_folder) -> pd.DataFrame:
     return load_csv(summary_path)
 
 
+def load_result_report(local_experiment_folder: str, result_type: str = 'signal'):
+    def process_pre_result_report(jdict):
+        iterable_like = make_iterable_like(jdict)
+        for k, v in iterable_like:
+            if type(v) == list:
+                jdict[k] = process_pre_result_report(v)
+            if type(v) == str:
+                jdict[k] = np.float32(v)
+        return jdict
+    report_path = get_pathnames(local_experiment_folder, file_key=['report', result_type],
+                                first_only=True)
+    return process_pre_result_report(load_json_as_dict(report_path))
+
+
 def load_experiment_report(experiment_folder: str) -> dict:
     experiment_folder = get_root_experiment_folder(experiment_folder)
     report_path = os.path.join(experiment_folder, 'experiment.json')
@@ -95,8 +156,12 @@ def load_experiment_report(experiment_folder: str) -> dict:
 
 
 def load_experiment_config_original(starting_experiment_folder: str, target_purpose: str) -> dict:
+    """ Load the experiment config from a previous experiment that led
+    to the current (starting) experiment folder"""
     original_config = load_experiment_config(starting_experiment_folder)
-    while not original_config['experiment']['purpose'] == target_purpose:
+    current_purpose = get_purpose_from_cfg(
+        original_config, starting_experiment_folder)
+    while not current_purpose == target_purpose:
         try:
             original_config, original_source_dir = get_search_dir(
                 config_file=original_config)
@@ -106,9 +171,11 @@ def load_experiment_config_original(starting_experiment_folder: str, target_purp
                               f'experiment folder {starting_experiment_folder}.')
         original_config = load_experiment_config(
             original_source_dir)
-    if not original_config['experiment']['purpose'] == 'parameter_based_simulation':
+        current_purpose = get_purpose_from_cfg(
+            original_config, starting_experiment_folder)
+    if not current_purpose == target_purpose:
         logging.warning(f'Loaded wrong config from {original_source_dir} with purpose '
-                        f'{original_config["experiment"]["purpose"]}')
+                        f'{current_purpose}')
     return original_config
 
 
@@ -117,7 +184,8 @@ def load_experiment_config(experiment_folder: str) -> dict:
         raise ValueError('If trying to load something from the experiment config, please supply '
                          f'a valid directory for the source experiment instead of {experiment_folder}')
     experiment_report = load_experiment_report(experiment_folder)
-    return load_json_as_dict(experiment_report.get('config_filepath'))
+    experiment_config = experiment_report.get('config_params')
+    return experiment_config
 
 
 def get_recent_experiment_folder(purpose_folder: str) -> str:

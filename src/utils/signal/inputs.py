@@ -1,4 +1,5 @@
 from functools import partial
+import logging
 from typing import List
 import numpy as np
 
@@ -13,9 +14,7 @@ class Signal():
         self.total_time = total_time
         self.magnitude = magnitude
         self.time_interval = time_interval
-        self.time_steps = time_interval * total_time
-        self.time_dilation_func = partial(
-            np.repeat, repeats=total_time / len(self.abstract_signal))
+        self.time_steps = total_time / time_interval
 
     @property
     def abstract_signal(self):
@@ -26,14 +25,23 @@ class Signal():
         self._abstract_signal = value
 
     @property
+    def time_dilation_func(self):
+        return partial(
+            np.repeat, repeats=self.time_steps / len(self.abstract_signal))
+
+    def update_time_interval(self, new_time_interval):
+        self.time_interval = new_time_interval
+        self.time_steps = self.total_time / new_time_interval
+
+    @property
     def real_signal(self) -> np.ndarray:
         """ Signal is 1-d np matrix """
         signal = self.time_dilation_func(self.abstract_signal) * self.magnitude
-        if len(signal) < self.total_time:
+        if len(signal) < self.time_steps:
             signal = np.concatenate((signal, np.repeat(
-                signal[-1], self.total_time - len(signal))))
+                signal[-1], self.time_steps - len(signal))))
         assert len(
-            signal) == self.total_time, f'The signal length {len(signal)} does not equal its intended length {self.total_time}'
+            signal) == self.time_steps, f'The signal length {len(signal)} does not equal its intended length {self.time_steps}'
         return signal
 
     @property

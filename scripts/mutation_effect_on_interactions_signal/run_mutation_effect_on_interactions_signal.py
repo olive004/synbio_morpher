@@ -18,7 +18,7 @@ def main(config=None, data_writer=None):
     # Set configs
     if config is None:
         config = os.path.join(
-            "scripts", "mutation_effect_on_interactions_signal", "configs", "fixed", "mutations_1_config.json")
+            "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config.json")
     config_file = load_json_as_dict(config)
 
     # Start_experiment
@@ -28,7 +28,7 @@ def main(config=None, data_writer=None):
         data_writer = ResultWriter(**data_writer_kwargs)
 
     config_file, source_experiment_dir = get_search_dir(
-        config_search_key='source_of_interaction_stats', config_file=config_file)
+        config_searchdir_key='source_of_interaction_stats', config_file=config_file)
     protocols = [
         # Load in templates: pathname for circuit stats is in config
         Protocol(
@@ -80,8 +80,8 @@ def main(config=None, data_writer=None):
             )
         ]
     ]
-    experiment = Experiment(config_filepath=config, protocols=protocols,
-                            data_writer=data_writer, debug_inputs=True)
+    experiment = Experiment(config=config, config_file=config_file, protocols=protocols,
+                            data_writer=data_writer, debug_inputs=False)
     experiment.run_experiment()
 
     return config_file, data_writer

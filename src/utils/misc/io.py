@@ -1,8 +1,10 @@
 
 
 import glob
+import logging
 import os
 from typing import List, Union
+from src.utils.data.data_format_tools.common import load_multiple_as_list
 
 from src.utils.misc.helper import vanilla_return
 from src.utils.misc.string_handling import get_intersecting_string, remove_file_extension
@@ -20,8 +22,17 @@ def create_location(pathname):
         os.makedirs(pathname, mode=0o777)
 
 
-def get_pathnames(search_dir: str, file_key: Union[List, str] = '', first_only: bool = False, allow_empty: bool = False,
-                  optional_subdir: str = '', conditional: Union[str, None] = 'filenames'):
+def get_pathnames_from_mult_dirs(search_dirs: List[str], **get_pathnames_kwargs):
+    # all_pathnames = []
+    # for s in search_dirs:
+    #     all_pathnames.append(get_pathnames(s, **get_pathnames_kwargs))
+    # return all_pathnames
+    return load_multiple_as_list(search_dirs, get_pathnames, **get_pathnames_kwargs)
+
+
+def get_pathnames(search_dir: str, file_key: Union[List, str] = '', first_only: bool = False,
+                  allow_empty: bool = False, optional_subdir: str = '',
+                  conditional: Union[str, None] = 'filenames'):
     """ Get the pathnames in a folder given a keyword. 
 
     Args:
@@ -39,7 +50,7 @@ def get_pathnames(search_dir: str, file_key: Union[List, str] = '', first_only: 
         for fk in file_key:
             all_path_names.append(
                 set(sorted([f for f in glob.glob(os.path.join(
-                    search_dir, '*' + file_key + '*')) if path_condition(f)]))
+                    search_dir, '*' + fk + '*')) if path_condition(f)]))
             )
         path_names = list(all_path_names[0].intersection(*all_path_names[1:]))
     elif not file_key:

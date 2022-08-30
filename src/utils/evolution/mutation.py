@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 from src.srv.io.loaders.misc import load_csv
 from src.utils.results.writer import DataWriter, Tabulated
-from src.utils.misc.string_handling import add_outtype
+from src.utils.misc.string_handling import add_outtype, prettify_logging_info
 
 
 from src.utils.system_definition.agnostic_system.base_system import BaseSpecies, BaseSystem
@@ -95,7 +95,7 @@ class Evolver():
         self.out_type = 'csv'
 
     def is_mutation_possible(self, system: BaseSystem):
-        if system.species.mutation_counts is None or system.species.mutation_nums is None:
+        if system.species.mutation_counts is None or system.species.mutation_nums_within_sequence is None:
             return False
         return True
 
@@ -120,7 +120,7 @@ class Evolver():
                           mutation_idx=None) -> Mutations:
             sequence = species.data.get_data_by_idx(sample_idx)
             positions = position_generator(
-                sequence, species.mutation_nums[sample_idx])
+                sequence, species.mutation_nums_within_sequence[sample_idx])
 
             mutations = Mutations(
                 mutation_name=species.data.sample_names[sample_idx]+'_'+str(
@@ -139,7 +139,7 @@ class Evolver():
                 species.mutations[sample] = {}
                 for c in range(species.mutation_counts[sample_idx]):
                     mutation = sample_mutator_func(
-                        species, sample_idx=sample_idx, mutation_idx=c)
+                        species=species, sample_idx=sample_idx, mutation_idx=c)
                     species.mutations[sample][mutation.mutation_name] = mutation
             return species
 

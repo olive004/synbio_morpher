@@ -1,5 +1,4 @@
 import argparse
-import json
 import logging
 import os
 from typing import Dict, List
@@ -39,15 +38,21 @@ def parse_cfg_args(config_args: dict = None, default_args: Dict = None) -> Dict:
 
     if default_args is None:
         default_args = retrieve_default_arg_filenames()
-    simulator_kwargs = load_simulator_kwargs(default_args, config_args['interaction_simulator']['name'])
+    simulator_kwargs = load_simulator_kwargs(default_args, config_args)
     config_args['interaction_simulator']['simulator_kwargs'] = simulator_kwargs
+    config_args['interaction_simulator']['molecular_params'] = config_args['molecular_params']
 
     return config_args
 
 
-def load_simulator_kwargs(default_args: dict, target_simulator_name: str) -> Dict:
+def load_simulator_kwargs(default_args: dict, config_args: str = None) -> Dict:
+    target_simulator_name = config_args.get('interaction_simulator', {}).get('name')
+    simulator_kwargs = None
     for simulator_name in get_simulator_names():
-        if simulator_name in default_args and simulator_name == target_simulator_name:
+        kwarg_condition = simulator_name in default_args
+        if not target_simulator_name is None:
+            kwarg_condition = kwarg_condition and simulator_name == target_simulator_name
+        if kwarg_condition:
             simulator_kwargs = handle_simulator_cfgs(
                 simulator_name, default_args[simulator_name])
     return simulator_kwargs
