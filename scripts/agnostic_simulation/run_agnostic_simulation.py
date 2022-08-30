@@ -1,7 +1,7 @@
 from fire import Fire
 
 from src.utils.misc.decorators import time_it
-from src.utils.system_definition.agnostic_system.base_system import BaseSystem
+from src.utils.circuit.agnostic_circuits.base_circuit import BaseSystem
 
 
 @time_it

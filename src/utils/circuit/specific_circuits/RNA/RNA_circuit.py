@@ -1,5 +1,5 @@
 import logging
-from src.utils.system_definition.agnostic_system.base_system import BaseSystem, BaseSpecies
+from src.utils.circuit.agnostic_circuits.base_circuit import BaseSystem, BaseSpecies
 
 FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
 FORMAT = "%(filename)s:%(funcName)s():%(lineno)i: %(message)s %(levelname)s"

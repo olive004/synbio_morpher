@@ -14,8 +14,8 @@ from src.utils.misc.numerical import make_dynamic_indexer, np_delete_axes, zero_
 from src.utils.misc.type_handling import flatten_nested_dict
 from src.utils.signal.inputs import Signal
 from src.srv.parameter_prediction.simulator import MIN_INTERACTION_EQCONSTANT, SIMULATOR_UNITS, InteractionSimulator
-from src.utils.system_definition.agnostic_system.base_system import BaseSystem
-from src.utils.system_definition.agnostic_system.modelling import Deterministic
+from src.utils.circuit.agnostic_circuits.base_circuit import BaseSystem
+from src.utils.circuit.agnostic_circuits.modelling import Deterministic
 
 
 class SystemManager():

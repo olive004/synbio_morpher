@@ -10,7 +10,7 @@ from src.utils.results.writer import DataWriter, Tabulated
 from src.utils.misc.string_handling import add_outtype, prettify_logging_info
 
 
-from src.utils.system_definition.agnostic_system.base_system import BaseSpecies, BaseSystem
+from src.utils.circuit.agnostic_circuits.base_circuit import BaseSpecies, BaseSystem
 
 
 mapping = {

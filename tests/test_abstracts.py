@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from src.utils.system_definition.agnostic_system.base_system import BaseSystem
+from src.utils.circuit.agnostic_circuits.base_circuit import BaseSystem
 
 
 class TestBaseSystem(unittest.TestCase):

@@ -10,7 +10,7 @@ from src.utils.misc.io import get_pathnames
 from src.utils.results.experiments import Experiment, Protocol
 from src.utils.results.result_writer import ResultWriter
 from src.utils.data.data_format_tools.common import load_json_as_dict
-from src.utils.system_definition.agnostic_system.system_manager import CircuitModeller
+from src.utils.circuit.agnostic_circuits.circuit_manager import CircuitModeller
 
 
 def main(config=None, data_writer=None):
