@@ -93,16 +93,16 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
         'path_to_signal_data',
         'path_to_template_circuit'
     ]
-    info_column_names_interactions = [[[f'{i}_{s}',
+    # Difference
+    info_column_names_interactions_diff = [[[f'{i}_{s}',
                                        f'{i}_{s}_diff_to_base_circuit'] for s in interaction_stats_chosen] for i in interaction_types]
-    # info_column_names_interactions = [[f'{i}_num_self_interacting',
-    #                                    f'{i}_num_self_interacting_diff_to_base_circuit',
-    #                                    f'{i}_num_interacting',
-    #                                    f'{i}_num_interacting_diff_to_base_circuit',
-    #                                    f'{i}_max_interaction',
-    #                                    f'{i}_max_interaction_diff_to_base_circuit'] for i in interaction_types]
-    info_column_names_interactions = flatten_nested_listlike(info_column_names_interactions)
-    info_column_names = info_column_names + info_column_names_interactions
+    info_column_names_interactions_diff = flatten_nested_listlike(info_column_names_interactions_diff)
+    # info_column_names = info_column_names + info_column_names_interactions
+    
+    # # Ratio
+    info_column_names_interactions_ratio = [[[f'{i}_{s}_ratio_from_mutation_to_base'] for s in interaction_stats_chosen] for i in interaction_types]
+    info_column_names_interactions_ratio = flatten_nested_listlike(info_column_names_interactions_ratio)
+    info_column_names = info_column_names + info_column_names_interactions_diff + info_column_names_interactions_ratio
 
     info_table = pd.DataFrame(columns=info_column_names)
 
@@ -140,6 +140,16 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
             if np.size(diff) == 1:
                 diff = diff[0]
             table[f'{k}_diff_to_base_circuit'] = diff
+
+            reference_v_zerod = reference_v == 0
+            reference_v[reference_v_zerod] = 1
+            ratio = np.divide(np.asarray(table[k]), np.asarray(reference_v))
+            ratio[reference_v_zerod] = 0
+            if np.size(ratio) == 1:
+                ratio = ratio[0]
+            # ratio[np.asarray(reference_v) == 0] = 
+            table[f'{k}_ratio_from_mutation_to_base'] = ratio
+            
         return table
 
     def update_diff_to_base_circuit(curr_table: dict, int_stats: pd.DataFrame,
@@ -152,11 +162,17 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
                 if type(current_stat) == list or type(ref_stat) == list:
                     diff = np.asarray(current_stat) - np.asarray(ref_stat)
                     curr_table[f'{i_type}_{col}_diff_to_base_circuit'] = diff
+
+                    ratio = np.divide(np.asarray(current_stat), np.asarray(ref_stat))
+                    curr_table[f'{i_type}_{col}_ratio_from_mutation_to_base'] = ratio
                 else:
                     diff = current_stat - ref_stat
+                    ratio = np.divide(np.asarray(current_stat), np.asarray(ref_stat))
                 if np.size(diff) == 1:
                     diff = diff[0]
+                    ratio = ratio[0]
                 curr_table[f'{i_type}_{col}_diff_to_base_circuit'] = diff
+                curr_table[f'{i_type}_{col}_ratio_from_mutation_to_base'] = ratio
         return curr_table
 
     def update_info_table(info_table: pd.DataFrame, curr_table: dict, int_stats: pd.DataFrame,

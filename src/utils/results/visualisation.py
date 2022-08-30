@@ -111,19 +111,9 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
     def expand_data_by_col(data: pd.DataFrame, column, column_name_for_expanding_labels):
         df_lists = data[[column]].unstack().apply(pd.Series)
         col_names = data[column_name_for_expanding_labels].iloc[idx_for_expanding_labels]
-        logging.info(col_names)
-        logging.info(type(col_names))
-        logging.info(data[column_name_for_expanding_labels])
-        logging.info(data[column_name_for_expanding_labels].iloc[idx_for_expanding_labels])
         df_lists = df_lists.rename(columns=dict(
             zip(df_lists.columns.values, col_names)))
 
-        logging.info(col_names)
-        logging.info(column)
-        logging.info(col_names[0])
-        logging.info(data[column_name_for_expanding_labels])
-        logging.info(pd.DataFrame.from_dict(
-            {column: df_lists[col_names[0]], column_name_for_expanding_labels: col_names[0]}))
         df_lists = pd.concat(axis=0, ignore_index=True, objs=[
             pd.DataFrame.from_dict(
                 {column: df_lists[c], column_name_for_expanding_labels: c})
@@ -133,23 +123,28 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
     def process_log_sns(data: pd.DataFrame, column_x: str, column_y: str,
                         plot_kwrgs: dict, log_axis: list):
         def process_log(data, col, log_option, col_label):
-            if log_option:
-                col = 'Log of ' + plot_kwrgs.get(col_label, col)
-            else:
-                col = plot_kwrgs.get(col_label, col)
-            data = data.rename(columns={col: col})
-            data = data[data[col] != 0]
-            return data, col
+            if col is not None:
+                if log_option:
+                    new_col = 'Log of ' + plot_kwrgs.get(col_label, col)
+                else:
+                    new_col = plot_kwrgs.get(col_label, col)
+                data = data.rename(columns={col: new_col})
+                data = data[data[new_col] != 0]
+                data[new_col] = data[new_col].abs()
+            return data, new_col
 
-        data, column_x = process_log(data, column_x, log_axis[0], 'xlabel')
-        data, column_y = process_log(data, column_y, log_axis[0], 'ylabel')
-        data = data.abs()
+        if column_x is not None:
+            data, column_x = process_log(data, column_x, log_axis[0], 'xlabel')
+        if column_y is not None:
+            data, column_y = process_log(data, column_y, log_axis[0], 'ylabel')
+        if column_x is None and column_y is None:
+            logging.warning('No columns given as input to histplot.')
         return data, column_x, column_y
 
     def preprocess_data_histplot(data: pd.DataFrame, preprocessor_func, threshold_value_max,
                                  expand_coldata_using_col_x, expand_coldata_using_col_y,
                                  column_x: str, column_y: str,
-                                 normalise_data_x, normalise_data_y,
+                                 normalise_data_x: bool, normalise_data_y: bool,
                                  column_name_for_expanding_labels):
         def preprocess(data, column, expand_coldata_using_col, normalise_data):
             if column is not None:
@@ -199,7 +194,7 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                     data, col_x, col_y = process_log_sns(
                         data, col_x, col_y, plot_kwrgs, log_axis)
 
-                    plot_kwrgs.update({'column': col_x, 'data': data})
+                    plot_kwrgs.update({'column_x': col_x, 'data': data})
                     plot_kwrgs.update({'column_y': col_y, 'data': data})
                 else:
                     plot_kwrgs.update({'data': data[col_x]})
@@ -306,7 +301,7 @@ class VisODE():
                  column_x: str = None, column_y: str = None,
                  hue=None,
                  log_axis: tuple = (False, False),
-                 histplot_kwargs: dict = None,
+                 histplot_kwargs: dict = {},
                  **plot_kwrgs):
         """ log_axis: use logarithmic axes in (x-axis, y-axis) """
         from matplotlib import pyplot as plt
@@ -314,13 +309,15 @@ class VisODE():
             import seaborn as sns
             sns.set_context('paper')
 
-            histplot_kwargs = {
+            default_kwargs = {
                 "multiple": "stack",
                 "palette": "deep",
                 # palette="light:m_r",
                 "edgecolor": ".3",
                 "linewidth": .5
-            }.update(histplot_kwargs)
+            }
+            
+            default_kwargs.update(histplot_kwargs)
 
             if column_x is None:
                 logging.warn(
@@ -333,9 +330,9 @@ class VisODE():
                 x=column_x,
                 y=column_y,
                 bins=bin_count,
-                log_scale=log_axis
+                log_scale=log_axis,
                 # element='poly'
-                **histplot_kwargs
+                **default_kwargs
             ).set(title=plot_kwrgs.get('title', None))
             f.savefig(out_path)
             plt.close()

@@ -81,7 +81,7 @@ def main(config=None, data_writer=None):
                     threshold_value_max=binding_rates_threshold_upper,
                     log_axis=(False, False),
                     use_sns=True,
-                    title=f'Maximum ' + r'$k_d$' + ' strength, {num_mutations} mutation{plot_grammar}',
+                    title=f'Maximum ' + r'$k_d$' + f' strength, {num_mutations} mutation{plot_grammar}',
                     xlabel='Dissociation rate' + r'$k_d$' + '(' +
                     f'{SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]})' +
                     f'{binding_rates_threshold_upper_text}'),
@@ -97,7 +97,7 @@ def main(config=None, data_writer=None):
                     exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
                     log_axis=(False, False),
                     use_sns=True,
-                    title=f'Difference between circuit\nand mutated (maximum ' + r'$k_d$' + '), {num_mutations} mutation{plot_grammar}',
+                    title=f'Difference between circuit\nand mutated (maximum ' + r'$k_d$' + f'), {num_mutations} mutation{plot_grammar}',
                     xlabel='Difference in ' + r'$k_d$' + ' (' +
                     f'{SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]})' +
                     f'{binding_rates_threshold_upper_text}'),
@@ -141,7 +141,7 @@ def main(config=None, data_writer=None):
                     threshold_value_max=binding_rates_threshold_upper,
                     log_axis=(False, False),
                     use_sns=True,
-                    title=f'Minimum ' + r'$k_d$' + ' strength, {num_mutations} mutation{plot_grammar}',
+                    title=f'Minimum ' + r'$k_d$' + f' strength, {num_mutations} mutation{plot_grammar}',
                     xlabel='Dissociation rate ' + r'$k_d$' + ' (' +
                     f'{SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]})' +
                     f'{binding_rates_threshold_upper_text}'),
@@ -158,7 +158,7 @@ def main(config=None, data_writer=None):
                     threshold_value_max=binding_rates_threshold_upper,
                     log_axis=(False, False),
                     use_sns=True,
-                    title=f'Difference between circuit\nand mutated (minimum ' + r'$k_d$' + '), {num_mutations} mutation{plot_grammar}',
+                    title=f'Difference between circuit\nand mutated (minimum ' + r'$k_d$' + f'), {num_mutations} mutation{plot_grammar}',
                     xlabel='Difference in ' + r'$k_d$' + ' (' +
                     f'{SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]})' +
                     f'{binding_rates_threshold_upper_text}'),
@@ -194,7 +194,7 @@ def main(config=None, data_writer=None):
                     threshold_value_max=binding_rates_threshold_upper,
                     log_axis=(True, False),
                     use_sns=True,
-                    title=f'Minimum ' + r'$k_d$' + ' strength, {num_mutations} mutation{plot_grammar}',
+                    title=f'Minimum ' + r'$k_d$' + f' strength, {num_mutations} mutation{plot_grammar}',
                     xlabel='Dissociation rate ' + r'$k_d$' + ' (' +
                     f'{SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]})' +
                     f'{binding_rates_threshold_upper_text}'),
@@ -211,7 +211,7 @@ def main(config=None, data_writer=None):
                     threshold_value_max=binding_rates_threshold_upper,
                     log_axis=(True, False),
                     use_sns=True,
-                    title=f'Difference between circuit\nand mutated (minimum ' + r'$k_d$' + '), {num_mutations} mutation{plot_grammar}',
+                    title=f'Difference between circuit\nand mutated (minimum ' + r'$k_d$' + f'), {num_mutations} mutation{plot_grammar}',
                     xlabel='Difference in ' + r'$k_d$' + ' (' +
                     f'{SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]})' +
                     f'{binding_rates_threshold_upper_text}'),
