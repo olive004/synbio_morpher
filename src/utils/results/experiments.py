@@ -9,10 +9,10 @@ from src.utils.misc.type_handling import make_attribute_list
 
 class Protocol():
 
-    def __init__(self, protocol, req_output=False, req_input=False, name='', skip=False) -> None:
+    def __init__(self, protocol_func, req_output=False, req_input=False, name='', skip=False) -> None:
         self.req_output = req_output
         self.req_input = req_input
-        self.protocol = protocol
+        self.protocol = protocol_func
         self.name = name
         self.output = None
         self.skip = skip
@@ -30,10 +30,11 @@ class Protocol():
 
 class Experiment():
 
-    def __init__(self, config_filepath: str, protocols: List[Protocol], data_writer: DataWriter, debug_inputs=False) -> None:
+    def __init__(self, config: str, config_file: dict, protocols: List[Protocol], data_writer: DataWriter, debug_inputs=False) -> None:
 
         self.name = 'experiment'
-        self.config_filepath = config_filepath
+        self.config = config
+        self.config_file = config_file
         self.start_time = datetime.now()
         self.protocols = protocols
         self.total_time = 0
@@ -80,6 +81,6 @@ class Experiment():
             "total_time": str(self.total_time),
             "protocols": make_attribute_list(self.protocols, Protocol, 'name'),
             "purpose": self.data_writer.purpose,
-            "config_filepath": self.config_filepath,
-            "config_params": load_json_as_dict(self.config_filepath)
+            "config_filepath": self.config,
+            "config_params": self.config_file
         }

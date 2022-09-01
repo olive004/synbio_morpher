@@ -9,12 +9,11 @@ import numpy as np
 from scripts.common.circuit import construct_circuit_from_cfg
 from src.srv.io.manage.sys_interface import make_filename_safely
 from src.utils.results.result_writer import ResultWriter
-from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
 from src.utils.data.data_format_tools.common import load_json_as_dict
 
 from src.utils.misc.io import convert_pathname_to_module, get_pathnames, get_subdirectories
 from src.utils.misc.numerical import make_symmetrical_matrix_from_sequence, triangular_sequence
-from src.utils.system_definition.agnostic_system.system_manager import CircuitModeller
+from src.utils.circuit.agnostic_circuits.circuit_manager import CircuitModeller
 
 
 SCRIPT_DIR = 'scripts'
@@ -74,11 +73,36 @@ class TestScripts(unittest.TestCase):
                 #                 f'could not be found in base_config {base_config.keys()}')
                 # all(item in superset.items() for item in subset.items())
 
+    def test_circuit_configs(self):
+        """ Make sure that the keys required by the circuit composer are present in configs that have a data path. """
+        exclude = ['common', '__pycache__']
+        from src.clients.common.setup import ESSENTIAL_KWARGS
+
+        ESSENTIAL_KWARGS = ESSENTIAL_KWARGS + ["experiment"]
+
+        for script_home in get_subdirectories(SCRIPT_DIR):
+            if os.path.basename(script_home) in exclude:
+                continue
+            for config_path in get_all_config_files(os.path.join(script_home, 'configs')):
+                config = load_json_as_dict(config_path)
+                if config.get("data") or config.get("data_path"):
+                    self.assertTrue(all(k in config.keys() for k in ESSENTIAL_KWARGS), msg=f'Config file {config_path} '
+                                    f'is missing some essential keys ({ESSENTIAL_KWARGS}) if a circuit is '
+                                    f'meant to be constructed with this config: {dict({k: k in config.keys() for k in ESSENTIAL_KWARGS})}')
+
+            base_config = get_pathnames(file_key='base_config', search_dir=os.path.join(
+                script_home, 'configs'), first_only=True, allow_empty=True)
+            base_config = load_json_as_dict(base_config) if base_config else {}
+
     def test_parameter_based_simulation(self):
         config = {
             "data_path": make_filename_safely("./scripts/parameter_based_simulation/configs/empty_circuit.fasta"),
             "experiment": {
                 "purpose": "parameter_based_simulation"
+            },
+            "interaction_simulator": {
+                "name": "IntaRNA",
+                "postprocess": True
             },
             "molecular_params": {
                 "creation_rates": 50,
@@ -141,7 +165,7 @@ class TestScripts(unittest.TestCase):
         self.assertEquals(all_species_steady_states[:, 11, 4, 0, 0, 0, 0][1],
                           circuit.species.steady_state_copynums[1])
         self.assertEquals(all_species_steady_states[:, 11, 4, 0, 0, 0, 0][2],
-                          circuit.species.steady_state_copynums[2])
+                          circuit.species.steady_state_copynums[2])        
 
 
 if __name__ == '__main__':

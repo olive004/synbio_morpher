@@ -5,7 +5,7 @@ import numpy as np
 import os
 import pandas as pd
 from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
-from src.utils.misc.scripts_io import load_experiment_config
+from src.utils.misc.scripts_io import get_root_experiment_folder, load_experiment_config
 from src.utils.misc.type_handling import flatten_listlike
 from src.srv.io.loaders.misc import load_csv
 from src.utils.data.data_format_tools.common import determine_file_format
@@ -29,10 +29,18 @@ class InteractionMatrix():
         self.units = units
         self.experiment_dir = experiment_dir
 
+        self.interaction_file_addons = [
+            'interactions',
+            'binding_rates',
+            'eqconstants'
+        ]
+
+        self.sample_names = None
+
         if matrix is not None:
             self.matrix = matrix
         elif matrix_path is not None:
-            self.matrix, self.units = self.load(matrix_path)
+            self.matrix, self.units, self.sample_names = self.load(matrix_path)
         elif toy:
             self.matrix = self.make_toy_matrix(num_nodes)
         else:
@@ -41,20 +49,20 @@ class InteractionMatrix():
     def load(self, filepath):
         filetype = determine_file_format(filepath)
 
-        self.name = os.path.basename(filepath).replace('.'+filetype, '').replace(
-            'interactions_', '').replace('_interactions', '')
+        self.name = self.isolate_circuit_name(filepath, filetype)
         if filetype == 'csv':
-            matrix = load_csv(filepath, load_as='numpy')
+            matrix, sample_names = load_csv(filepath, load_as='numpy', return_header=True)
         else:
             raise TypeError(
                 f'Unsupported filetype {filetype} for loading {filepath}')
-        self.units = self.load_units()
-        return matrix, self.units
+        units = self.load_units(filepath)
+        return matrix, units, sample_names
 
-    def load_units(self):
+    def load_units(self, filepath):
+        
         try:
             experiment_config = load_experiment_config(
-                experiment_folder=self.experiment_dir)
+                experiment_folder=get_root_experiment_folder(filepath))
         except ValueError:
             raise ValueError(f'For loading units into {self}, supply a valid '
                              f'experiment directory instead of {self.experiment_dir}')
@@ -66,6 +74,12 @@ class InteractionMatrix():
                 return SIMULATOR_UNITS['IntaRNA']['energy']
         else:
             return 'unknown'
+
+    def isolate_circuit_name(self, circuit_filepath, filetype):
+        for faddon in self.interaction_file_addons:
+            circuit_name = os.path.basename(circuit_filepath).replace('.'+filetype, '').replace(
+                faddon+'_', '').replace('_'+faddon, '')
+        return circuit_name
 
     def make_rand_matrix(self, num_nodes):
         if num_nodes is None or num_nodes == 0:
@@ -111,10 +125,10 @@ class InteractionMatrix():
 
     def get_unique_interacting_idxs(self):
         if self.units == SIMULATOR_UNITS['IntaRNA']['energy']:
-            idxs_interacting = np.argwhere(self.matrix > 0)
+            idxs_interacting = np.argwhere(self.matrix < 0)
             idxs_interacting = sorted([tuple(sorted(i)) for i in idxs_interacting])
         elif self.units == SIMULATOR_UNITS['IntaRNA']['rate']:
-            idxs_interacting = np.argwhere(self.matrix < 0)
+            idxs_interacting = np.argwhere(self.matrix > 0.000000001)
             idxs_interacting = sorted([tuple(sorted(i)) for i in idxs_interacting])
         else:
             raise ValueError(f'Cannot determine interaction properties from units "{self.units}"')

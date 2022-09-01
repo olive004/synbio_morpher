@@ -31,25 +31,25 @@ def main(config=None, data_writer=None):
         data_writer = DataWriter(**data_writer_kwargs)
 
     config_file, search_dir = get_search_dir(
-        config_search_key="source_of_interactions", config_file=config_file)
+        config_searchdir_key="source_of_interactions", config_file=config_file)
     protocols = [
         Protocol(
             # get list of all interaction paths
             partial(get_pathnames,
-                    file_key='interactions',
+                    file_key=config_file['interaction_file_keyword'],
                     search_dir=search_dir,
-                    optional_subdir='interactions'
+                    subdir=config_file['interaction_file_keyword']
                     ),
             req_output=True,
             name='get_pathnames'
         ),
         # read in data one at a time
-        Protocol(
-            # Just doing some readout for debugging clarity
-            readout,
-            req_input=True,
-            req_output=True
-        ),
+        # Protocol(
+        #     # Just doing some readout for debugging clarity
+        #     readout,
+        #     req_input=True,
+        #     req_output=True
+        # ),
         [
             # do some analytics
             Protocol(
@@ -61,7 +61,7 @@ def main(config=None, data_writer=None):
             )
         ]
     ]
-    experiment = Experiment(config_filepath=config, protocols=protocols,
+    experiment = Experiment(config=config, config_file=config_file, protocols=protocols,
                             data_writer=data_writer)
     experiment.run_experiment()
 

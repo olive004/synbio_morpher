@@ -3,7 +3,7 @@
 from copy import deepcopy
 import logging
 import os
-from typing import Union
+from src.utils.results.writer import DataWriter
 from src.utils.results.result_writer import ResultWriter
 from src.utils.data.data_format_tools.common import load_json_as_dict, write_json
 from src.utils.misc.io import convert_pathname_to_module
@@ -19,14 +19,23 @@ def import_script_func(script_name):
     return getattr(script_module, 'main')
 
 
+def script_preamble(config, data_writer, alt_cfg_filepath: str, use_resultwriter=True):
+    writer_class = ResultWriter if use_resultwriter else DataWriter
+    if config is None:
+        config = alt_cfg_filepath
+    config_file = load_json_as_dict(config)
+    if data_writer is None:
+        data_writer = writer_class(purpose=config_file['experiment']['purpose'])
+    return config, data_writer
+
+
 class Ensembler():
 
-    def __init__(self, data_writer: ResultWriter, config_filepath: str, subscripts: list = None) -> None:
+    def __init__(self, data_writer: ResultWriter, config: str, subscripts: list = None) -> None:
         self.data_writer = data_writer
         self.subscripts = subscripts
 
-        self.config_filepath = config_filepath
-        self.config = load_json_as_dict(config_filepath)
+        self.config = load_json_as_dict(config)
         self.ensemble_configs = self.config["base_configs_ensemble"]
 
     def run(self):

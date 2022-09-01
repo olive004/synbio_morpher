@@ -9,7 +9,7 @@ from src.utils.results.results import Result
 from src.utils.results.writer import DataWriter
 from src.utils.misc.numerical import transpose_arraylike
 from src.utils.misc.string_handling import make_time_str
-from src.utils.system_definition.agnostic_system.base_system import BaseSystem
+from src.utils.circuit.agnostic_circuits.base_circuit import BaseCircuit
 
 
 class ResultWriter(DataWriter):
@@ -28,7 +28,7 @@ class ResultWriter(DataWriter):
                 self.output(out_name=out_name,
                             write_func=result.vis_func, **result.vis_kwargs)
 
-    def make_report(self, keys, source: dict):
+    def make_report(self, keys: list, source: dict):
 
         def prettify_writeable(writeable):
             if type(writeable) == np.ndarray or type(writeable) == list:
@@ -48,7 +48,7 @@ class ResultWriter(DataWriter):
 
         return report
 
-    def write_report(self, writeables, analytics, new_report, out_name='report', out_type='json'):
+    def write_report(self, writeables: list, analytics: dict, new_report: bool, out_name: str='report', out_type: str='json'):
         report = self.make_report(writeables, analytics)
 
         if new_report:
@@ -63,7 +63,7 @@ class ResultWriter(DataWriter):
     def write_analytics(self, result: Result, new_report=False):
         analytics = result.analytics
         writeables = Timeseries(data=None).get_analytics_types()
-        self.write_report(writeables, analytics, new_report)
+        self.write_report(writeables, analytics, new_report, out_name=f'report_{result.name}')
 
     def write_results(self, results: dict, new_report=False, no_visualisations=False,
                       only_numerical=False, no_analytics=False, no_numerical=False):
@@ -85,9 +85,8 @@ class ResultWriter(DataWriter):
                 if not no_analytics:
                     self.write_analytics(result, new_report=new_report)
 
-    def write_all(self, circuit: BaseSystem, new_report: bool, no_visualisations: bool = False,
+    def write_all(self, circuit: BaseCircuit, new_report: bool, no_visualisations: bool = False,
                   only_numerical: bool = False):
-        logging.info(circuit.name)
         if not no_visualisations:
             self.visualise_graph(circuit)
         self.write_results(circuit.result_collector.results,
@@ -97,7 +96,7 @@ class ResultWriter(DataWriter):
     def visualise(self, out_name, writer, vis_kwargs):
         self.output(out_name=out_name, write_func=writer, **vis_kwargs)
 
-    def visualise_graph(self, circuit: BaseSystem, mode="pyvis", new_vis=False):
+    def visualise_graph(self, circuit: BaseCircuit, mode="pyvis", new_vis=False):
         circuit.refresh_graph()
 
         out_path = os.path.join(self.write_dir, 'graph')
