@@ -9,7 +9,8 @@ FROM quay.io/biocontainers/intarna:3.3.1--pl5321h7ff8a90_0
 ################################################################################
 WORKDIR /usr/lib
 RUN pwd
-RUN ls
+RUN ls -R
+RUN cd locale
 COPY ./requirements.txt /usr/lib/install_requirements/requirements.txt
 RUN cd /usr/lib/install_requirements && \
     pip install -r ./requirements.txt
