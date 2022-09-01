@@ -9,8 +9,8 @@ FROM quay.io/biocontainers/intarna:3.3.1--pl5321h7ff8a90_0
 ################################################################################
 WORKDIR /usr/lib
 RUN pwd
-RUN ls -R
-RUN cd ..
+RUN ls -R /usr 
+RUN ls /
 RUN pwd
 RUN ls /usr/lib
 RUN ls -R docker_unix
