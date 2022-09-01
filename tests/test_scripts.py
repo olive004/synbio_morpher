@@ -13,7 +13,7 @@ from src.utils.data.data_format_tools.common import load_json_as_dict
 
 from src.utils.misc.io import convert_pathname_to_module, get_pathnames, get_subdirectories
 from src.utils.misc.numerical import make_symmetrical_matrix_from_sequence, triangular_sequence
-from src.utils.system_definition.agnostic_system.system_manager import CircuitModeller
+from src.utils.circuit.agnostic_circuits.circuit_manager import CircuitModeller
 
 
 SCRIPT_DIR = 'scripts'
@@ -165,7 +165,7 @@ class TestScripts(unittest.TestCase):
         self.assertEquals(all_species_steady_states[:, 11, 4, 0, 0, 0, 0][1],
                           circuit.species.steady_state_copynums[1])
         self.assertEquals(all_species_steady_states[:, 11, 4, 0, 0, 0, 0][2],
-                          circuit.species.steady_state_copynums[2])
+                          circuit.species.steady_state_copynums[2])        
 
 
 if __name__ == '__main__':

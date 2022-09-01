@@ -38,7 +38,7 @@ def main(config=None, data_writer=None):
             partial(get_pathnames,
                     file_key=config_file['interaction_file_keyword'],
                     search_dir=search_dir,
-                    optional_subdir=config_file['interaction_file_keyword']
+                    subdir=config_file['interaction_file_keyword']
                     ),
             req_output=True,
             name='get_pathnames'

@@ -9,7 +9,7 @@ from src.utils.results.results import Result
 from src.utils.results.writer import DataWriter
 from src.utils.misc.numerical import transpose_arraylike
 from src.utils.misc.string_handling import make_time_str
-from src.utils.system_definition.agnostic_system.base_system import BaseSystem
+from src.utils.circuit.agnostic_circuits.base_circuit import BaseCircuit
 
 
 class ResultWriter(DataWriter):
@@ -85,7 +85,7 @@ class ResultWriter(DataWriter):
                 if not no_analytics:
                     self.write_analytics(result, new_report=new_report)
 
-    def write_all(self, circuit: BaseSystem, new_report: bool, no_visualisations: bool = False,
+    def write_all(self, circuit: BaseCircuit, new_report: bool, no_visualisations: bool = False,
                   only_numerical: bool = False):
         if not no_visualisations:
             self.visualise_graph(circuit)
@@ -96,7 +96,7 @@ class ResultWriter(DataWriter):
     def visualise(self, out_name, writer, vis_kwargs):
         self.output(out_name=out_name, write_func=writer, **vis_kwargs)
 
-    def visualise_graph(self, circuit: BaseSystem, mode="pyvis", new_vis=False):
+    def visualise_graph(self, circuit: BaseCircuit, mode="pyvis", new_vis=False):
         circuit.refresh_graph()
 
         out_path = os.path.join(self.write_dir, 'graph')

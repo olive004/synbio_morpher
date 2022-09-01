@@ -6,8 +6,8 @@ from src.utils.misc.io import isolate_filename
 from src.utils.misc.type_handling import cast_all_values_as_list
 from src.utils.signal.configs import get_signal_type, parse_sig_args
 from src.utils.signal.inputs import Signal
-from src.utils.system_definition.config import parse_cfg_args
-from src.utils.system_definition.setup import get_system_type
+from src.utils.circuit.config import parse_cfg_args
+from src.utils.circuit.setup import get_system_type
 
 
 ESSENTIAL_KWARGS = [

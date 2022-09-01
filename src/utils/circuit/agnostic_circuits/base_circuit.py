@@ -187,7 +187,7 @@ class BaseSpecies():
         return self.data.size
 
 
-class BaseSystem():
+class BaseCircuit():
     def __init__(self, config_args):
 
         self.name = config_args.get("name")
