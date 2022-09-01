@@ -22,7 +22,10 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: "3.10"
-    - name: Start Docker
+    - name: Pull docker images
+      run: |
+        docker pull quay.io/biocontainers/intarna
+    - name: Setup Docker
       run: |
         source setup/start_docker.sh
     - name: Install dependencies
