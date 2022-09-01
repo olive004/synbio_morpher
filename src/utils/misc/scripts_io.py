@@ -1,11 +1,8 @@
 
 
 from copy import deepcopy
-from ctypes import Union
-import glob
 import logging
 import os
-from tracemalloc import start
 from typing import Tuple
 import numpy as np
 import pandas as pd
@@ -16,17 +13,21 @@ from src.utils.misc.errors import ConfigError
 from src.utils.misc.io import get_pathnames, get_subdirectories
 
 
+DATADIR = 'data'
+SCRIPTSDIR = 'scripts'
+
+
 def get_purposes(script_dir=None):
-    script_dir = 'scripts' if script_dir is None else script_dir
+    script_dir = SCRIPTSDIR if script_dir is None else script_dir
     return get_subdirectories(script_dir, only_basedir=True)
 
 
 def get_purpose_from_pathname(pathname):
     split_path = pathname.split(os.sep)
-    if 'data' in split_path:
-        top_dir = 'data'
-    elif 'script' in split_path:
-        top_dir = 'script'
+    if DATADIR in split_path:
+        top_dir = DATADIR
+    elif SCRIPTSDIR in split_path:
+        top_dir = SCRIPTSDIR
     else:
         logging.warning(f'The supplied pathname {pathname} most likely does not '
                         'point to a purpose.')

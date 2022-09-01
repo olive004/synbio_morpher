@@ -23,15 +23,11 @@ def create_location(pathname):
 
 
 def get_pathnames_from_mult_dirs(search_dirs: List[str], **get_pathnames_kwargs):
-    # all_pathnames = []
-    # for s in search_dirs:
-    #     all_pathnames.append(get_pathnames(s, **get_pathnames_kwargs))
-    # return all_pathnames
     return load_multiple_as_list(search_dirs, get_pathnames, **get_pathnames_kwargs)
 
 
 def get_pathnames(search_dir: str, file_key: Union[List, str] = '', first_only: bool = False,
-                  allow_empty: bool = False, optional_subdir: str = '',
+                  allow_empty: bool = False, subdir: str = '',
                   conditional: Union[str, None] = 'filenames'):
     """ Get the pathnames in a folder given a keyword. 
 
@@ -61,8 +57,8 @@ def get_pathnames(search_dir: str, file_key: Union[List, str] = '', first_only: 
             search_dir, '*' + file_key + '*')) if path_condition(f)])
     if first_only and path_names:
         path_names = path_names[0]
-    if not path_names and optional_subdir:
-        path_names = get_pathnames(os.path.join(search_dir, optional_subdir), file_key=file_key,
+    if not path_names and subdir:
+        path_names = get_pathnames(os.path.join(search_dir, subdir), file_key=file_key,
                                    first_only=first_only, allow_empty=allow_empty, conditional=conditional)
     if not path_names and not allow_empty:
         raise ValueError(
