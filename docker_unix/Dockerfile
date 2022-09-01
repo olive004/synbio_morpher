@@ -10,6 +10,7 @@ FROM quay.io/biocontainers/intarna:3.3.1--pl5321h7ff8a90_0
 WORKDIR /usr/lib
 RUN pwd
 RUN ls /
+RUN ls /mnt
 RUN ls /usr 
 RUN ls /usr/bin
 RUN pwd
