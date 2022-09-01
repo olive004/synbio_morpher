@@ -1,4 +1,7 @@
+from cmath import log
+from copy import deepcopy
 from functools import partial
+import sys
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -64,7 +67,7 @@ class NetworkCustom(Network):
                     e[2]["color"] = {}
                     e[2]["font"] = {}
                     e[2]["color"]["opacity"] = edge_weight_transf(squashed_w)
-                    e[2]["font"] = 5
+                    e[2]["font"]["size"] = 5
                 self.add_edge(e[0], e[1], **e[2])
 
         for node in nx.isolates(nx_graph):
@@ -73,50 +76,157 @@ class NetworkCustom(Network):
             self.add_node(node, **nodes[node])
 
 
-def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
-                   cols: list = None, plot_type='histplot', out_name='test_plot',
-                   preprocessor_func=None, exclude_rows_nonempty_in_cols: list = None,
-                   use_sns=False, log_axis=False,
+def visualise_():
+    pass
+
+
+def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
+                   cols_x: list = None, cols_y: list = None,
+                   expand_coldata_using_col_x: bool = False,
+                   expand_coldata_using_col_y: bool = False,
+                   normalise_data_x: bool = False,
+                   normalise_data_y: bool = False,
+                   plot_type='histplot', out_name='test_plot',
+                   hue: str = None,
+                   preprocessor_func=None,
+                   use_sns=False,
+                   log_axis=[False, False],
+                   threshold_value_max=None,
+                   bin_count=100,
+                   exclude_rows_nonempty_in_cols: list = None,
+                   exclude_rows_zero_in_cols: list = None,
+                   column_name_for_expanding_labels: str = None,
+                   idx_for_expanding_labels: int = None,
+                   plot_cols_on_same_graph=False,
+                   misc_histplot_kwargs=None,
                    **plot_kwrgs):
     """ Plot type can be any attributes of VisODE() """
-    if exclude_rows_nonempty_in_cols is not None:
-        for exc_col in exclude_rows_nonempty_in_cols:
-            data = data[data[exc_col] == '']
+    data = deepcopy(og_data)
+
+    hue = hue if hue is not None else column_name_for_expanding_labels
+
+    cols_x = cols_x if cols_x is not None else [None]
+    cols_y = cols_y if cols_y is not None else [None]
+
+    def expand_data_by_col(data: pd.DataFrame, column, column_name_for_expanding_labels):
+        df_lists = data[[column]].unstack().apply(pd.Series)
+        col_names = data[column_name_for_expanding_labels].iloc[idx_for_expanding_labels]
+        df_lists = df_lists.rename(columns=dict(
+            zip(df_lists.columns.values, col_names)))
+
+        df_lists = pd.concat(axis=0, ignore_index=True, objs=[
+            pd.DataFrame.from_dict(
+                {column: df_lists[c], column_name_for_expanding_labels: c})
+            for c in col_names])
+        return df_lists
+
+    def process_log_sns(data: pd.DataFrame, column_x: str, column_y: str,
+                        plot_kwrgs: dict, log_axis: list):
+        def process_log(data, col, log_option, col_label):
+            if col is not None:
+                if log_option:
+                    new_col = 'Log of ' + plot_kwrgs.get(col_label, col)
+                else:
+                    new_col = plot_kwrgs.get(col_label, col)
+                data = data.rename(columns={col: new_col})
+                data = data[data[new_col] != 0]
+                data[new_col] = data[new_col].abs()
+            return data, new_col
+
+        if column_x is not None:
+            data, column_x = process_log(data, column_x, log_axis[0], 'xlabel')
+        if column_y is not None:
+            data, column_y = process_log(data, column_y, log_axis[0], 'ylabel')
+        if column_x is None and column_y is None:
+            logging.warning('No columns given as input to histplot.')
+        return data, column_x, column_y
+
+    def preprocess_data_histplot(data: pd.DataFrame, preprocessor_func, threshold_value_max,
+                                 expand_coldata_using_col_x, expand_coldata_using_col_y,
+                                 column_x: str, column_y: str,
+                                 normalise_data_x: bool, normalise_data_y: bool,
+                                 column_name_for_expanding_labels):
+        def preprocess(data, column, expand_coldata_using_col, normalise_data):
+            if column is not None:
+                if preprocessor_func:
+                    data[column] = preprocessor_func(data[column].values)
+                if expand_coldata_using_col:
+                    data = expand_data_by_col(
+                        data=data, column=column,
+                        column_name_for_expanding_labels=column_name_for_expanding_labels)
+                if threshold_value_max:
+                    data = data[data[column] <= threshold_value_max]
+                if normalise_data:
+                    df = data[column]
+                    data[column] = (df - df.mean()) / df.std()
+
+            return data, column
+        data, column_x = preprocess(
+            data, column_x, expand_coldata_using_col_x, normalise_data_x)
+        data, column_y = preprocess(
+            data, column_y, expand_coldata_using_col_y, normalise_data_y)
+        return data, column_x, column_y
+
+    def exclude_rows_by_cols(data, cols: list, condition):
+        if cols is not None:
+            for exc_col in cols:
+                data = data[data[exc_col] == condition]
+        return data
+
+    for exc_cols, condition in zip(
+        [exclude_rows_nonempty_in_cols, exclude_rows_zero_in_cols],
+            ['', 0]):
+        data = exclude_rows_by_cols(data, exc_cols, condition)
 
     visualiser = VisODE()
     if plot_type == 'histplot':
-        for col in cols:
-            if preprocessor_func:
-                data[col] = preprocessor_func(data[col].values)
-            if use_sns:
-                plot_kwrgs.update({'column': col, 'data': data})
-            else:
-                plot_kwrgs.update({'data': data[col]})
+        for col_x in cols_x:
+            for col_y in cols_y:
+                data, col_x, col_y = preprocess_data_histplot(
+                    data, preprocessor_func, threshold_value_max,
+                    expand_coldata_using_col_x, expand_coldata_using_col_y,
+                    col_x, col_y,
+                    normalise_data_x, normalise_data_y,
+                    column_name_for_expanding_labels)
 
-            data_writer.output(out_type='png', out_name=out_name,
-                               write_func=visualiser.histplot, **merge_dicts({'use_sns': use_sns, "log_axis": log_axis},
-                                                                         plot_kwrgs))
+                if use_sns:
+                    data = data.reset_index()
+                    data, col_x, col_y = process_log_sns(
+                        data, col_x, col_y, plot_kwrgs, log_axis)
+
+                    plot_kwrgs.update({'column_x': col_x, 'data': data})
+                    plot_kwrgs.update({'column_y': col_y, 'data': data})
+                else:
+                    plot_kwrgs.update({'data': data[col_x]})
+
+                data_writer.output(out_type='png', out_name=out_name,
+                                   write_func=visualiser.histplot,
+                                   **merge_dicts({'use_sns': use_sns, "log_axis": log_axis,
+                                                  'hue': hue,
+                                                  'bin_count': bin_count,
+                                                  'misc_histplot_kwargs': misc_histplot_kwargs
+                                                  },
+                                                 plot_kwrgs))
     elif plot_type == 'plot':
         try:
-            x, y = cols[0], cols[-1]
+            x, y = cols_x[0], cols_x[-1]
             if preprocessor_func:
                 x, y = preprocessor_func(x.values), preprocessor_func(y.values)
             data_writer.output(out_type='png', out_name=out_name,
                                write_func=visualiser.plot, **merge_dicts({'data': x, 'y': y}, plot_kwrgs))
         except IndexError:
             assert len(
-                cols) == 2, 'For visualising a plot from a table, please only provide 2 columns as variables.'
+                cols_x) == 2, 'For visualising a plot from a table, please only provide 2 columns as variables.'
     else:
         logging.warn(f'Could not find visualiser function {plot_type}')
 
 
 def visualise_graph_pyvis(graph: nx.DiGraph,
                           out_path: str,
-                          new_vis=False):
+                          new_vis=False,
+                          out_type='html'):
     import webbrowser
     import os
-
-    out_type = 'html'
 
     if new_vis:
         out_path = f'{out_path}_{make_time_str()}'
@@ -142,11 +252,11 @@ def visualise_graph_pyplot(graph: nx.DiGraph):
 
 
 class VisODE():
-    def __init__(self) -> None:
-        pass
+    def __init__(self, figsize=10) -> None:
+        self.figsize = figsize
 
     def add_kwrgs(self, plt, **plot_kwrgs):
-        def warning_call(object, function, dummy_value):
+        def warning_call(object, function, dummy_value, **dummy_kwargs):
             logging.warn(
                 f'Could not call function {function} in object {object}.')
 
@@ -155,10 +265,10 @@ class VisODE():
                 if type(value) == dict:
                     # Treat as kwargs
                     getattr(plt, plot_kwrg, partial(
-                        warning_call, object=plt, function=plot_kwrg))(**value)
+                        warning_call, object=plt, dummy_value=None, function=plot_kwrg))(**value)
                 else:
                     getattr(plt, plot_kwrg, partial(
-                        warning_call, object=plt, function=plot_kwrg))(value)
+                        warning_call, dummy_value=None, function=plot_kwrg))(value)
 
     def plot(self, data, y=None, new_vis=False, out_path='test_plot', out_type='png',
              **plot_kwrgs) -> None:
@@ -173,46 +283,59 @@ class VisODE():
         plt.close()
 
     # Make visualisations for each analytic chosen
-    def heatmap(self, data: pd.DataFrame, out_path: str = None, out_type='png', new_vis=False, **plot_kwrgs):
+    def heatmap(self, data: pd.DataFrame, out_path: str = None, out_type='png',
+                new_vis=False, vmin=None, vmax=None, **plot_kwrgs):
         import seaborn as sns
         import matplotlib.pyplot as plt
         sns.set_theme()
 
-        plt.figure()
-        ax = sns.heatmap(data)
+        plt.figure(figsize=self.figsize)
+        ax = sns.heatmap(data, vmin=vmin, vmax=vmax)
         fig = ax.get_figure()
         self.add_kwrgs(plt, **plot_kwrgs)
         fig.savefig(out_path)
         plt.clf()
 
-    def histplot(self, data, out_path, bin_count=50,
-                 use_sns=False, column: str = None, log_axis: tuple = (False, False), **plot_kwrgs):
+    def histplot(self, data: pd.DataFrame, out_path, bin_count=100,
+                 use_sns=False,
+                 column_x: str = None, column_y: str = None,
+                 hue=None,
+                 log_axis: tuple = (False, False),
+                 histplot_kwargs: dict = {},
+                 **plot_kwrgs):
+        """ log_axis: use logarithmic axes in (x-axis, y-axis) """
         from matplotlib import pyplot as plt
         if use_sns:
             import seaborn as sns
-            data = data.reset_index()
-            if log_axis[0]:
-                new_col = 'Log of ' + column
-                data = data.rename(columns={column: new_col})
-                column = new_col
+            sns.set_context('paper')
 
-            if column is None:
+            default_kwargs = {
+                "multiple": "stack",
+                "palette": "deep",
+                # palette="light:m_r",
+                "edgecolor": ".3",
+                "linewidth": .5
+            }
+            
+            default_kwargs.update(histplot_kwargs)
+
+            if column_x is None:
                 logging.warn(
                     'Make sure a column is specified for visualising with seaborn')
             sns.set_theme(style="ticks")
             f, ax = plt.subplots(figsize=(7, 5))
             sns.despine(f)
             sns.histplot(
-                data[data[column] != 0],
-                x=column,  # hue="cut",
+                data,
+                x=column_x,
+                y=column_y,
                 bins=bin_count,
-                multiple="stack",
-                palette="light:m_r",
-                edgecolor=".3",
-                linewidth=.5,
                 log_scale=log_axis,
-            )
+                # element='poly'
+                **default_kwargs
+            ).set(title=plot_kwrgs.get('title', None))
             f.savefig(out_path)
+            plt.close()
         else:
             plt.figure()
             plt.hist(data, range=(min(data), max(data)), bins=bin_count)

@@ -39,8 +39,8 @@
             "source_of_interactions": {
                 "is_source_dir_incomplete": true,
                 "source_dir": "./data/ensemble_mutation_effect_analysis",
-                "purpose_of_ensembled_source_dir": "generate_species_templates",
-                "source_dir_actually_used_if_incomplete": "./data/ensemble_mutation_effect_analysis/2022_06_20_234516/generate_species_templates"
+                "purpose_to_get_source_dir_from": "generate_species_templates",
+                "source_dir_actually_used_POSTERITY": "./data/ensemble_mutation_effect_analysis/2022_06_20_234516/generate_species_templates"
             }
         },
         "mutation_effect_on_interactions_signal": {
@@ -73,8 +73,8 @@
             },
             "mutations": {
                 "mutation_counts": 6,
-                "mutation_nums": 1,
-                "mutate_in_circuit": "single_species_at_a_time"
+                "mutation_nums_within_sequence": 1,
+                "concurrent_species_to_mutate": "single_species_at_a_time"
             },
             "signal": {
                 "signal": [
@@ -104,8 +104,8 @@
             "source_of_interaction_stats": {
                 "is_source_dir_incomplete": true,
                 "source_dir": "./data/ensemble_mutation_effect_analysis",
-                "purpose_of_ensembled_source_dir": "gather_interaction_stats",
-                "source_dir_actually_used_if_incomplete": "./data/ensemble_mutation_effect_analysis/2022_06_20_234516/gather_interaction_stats"
+                "purpose_to_get_source_dir_from": "gather_interaction_stats",
+                "source_dir_actually_used_POSTERITY": "./data/ensemble_mutation_effect_analysis/2022_06_20_234516/gather_interaction_stats"
             },
             "interactions_path": "./data/ensemble_mutation_effect_analysis/2022_06_20_234516/generate_species_templates/interactions/toy_mRNA_circuit_2_interactions.csv",
             "molecular_params": {
@@ -119,6 +119,17 @@
                 "generator_protocol": "template_mutate",
                 "proportion_to_mutate": 0.5
             }
+        },
+        "analyse_mutated_templates": {
+            "source_dir":  {
+                "is_source_dir_incomplete": true,
+                "source_dir": "./data/ensemble_mutation_effect_analysis",
+                "purpose_to_get_source_dir_from": "mutation_effect_on_interactions_signal",
+                "source_dir_actually_used_POSTERITY": null
+            },
+            "preprocessing_func": null,
+            "only_visualise_circuits": false,
+            "log_scale": false
         }
     }
 }

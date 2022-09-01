@@ -1,17 +1,18 @@
 {
     "interaction_simulator": {
         "name": "IntaRNA",
-        "postprocess": false
+        "postprocess": true
     },
-    "molecular_params": "./scripts/common/configs/RNA_system/molecular_params.json",
+    "interaction_file_keyword": "eqconstants",
+    "molecular_params": "./scripts/common/configs/RNA_circuit/molecular_params.json",
     "experiment": {
         "purpose": "gather_interaction_stats"
     },    
     "system_type": "RNA",
     "source_of_interactions": {
         "is_source_dir_incomplete": false,
-        "source_dir": "./data/gather_interaction_stats",
-        "purpose_of_ensembled_source_dir": "gather_interaction_stats",
-        "source_dir_actually_used_if_incomplete": null
+        "source_dir": "./data/generate_species_templates/2022_08_27_092044",
+        "purpose_to_get_source_dir_from": null,
+        "source_dir_actually_used_POSTERITY": null
     }
 }

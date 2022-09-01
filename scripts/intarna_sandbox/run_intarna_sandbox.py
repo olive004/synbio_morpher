@@ -12,8 +12,8 @@ from src.utils.results.writer import DataWriter
 from src.srv.parameter_prediction.IntaRNA.bin.copomus.IntaRNA import IntaRNA
 from src.srv.parameter_prediction.simulator import simulate_intaRNA_data
 from src.utils.evolution.mutation import Evolver
-from src.utils.system_definition.agnostic_system.base_system import BaseSpecies
-from src.utils.system_definition.agnostic_system.system_manager import CircuitModeller
+from src.utils.circuit.agnostic_circuits.base_circuit import BaseSpecies
+from src.utils.circuit.agnostic_circuits.circuit_manager import CircuitModeller
 
 
 # Test non-binding of IntaRNA

@@ -29,7 +29,7 @@ class BaseSpecies():
         # for each
 
         self.data = config_args.get("data")  # Data common class
-        self.identities = config_args.get("identities")
+        self.identities = self.process_identities(config_args.get("identities"))
 
         self.loaded_interactions = False
         self.interactions, self.interaction_units = self.make_interactions(
@@ -44,14 +44,21 @@ class BaseSpecies():
 
         self.mutations = {}
         # Nums: mutations within a sequence
-        self.mutation_nums = config_args.get(
-            "mutations", {}).get("mutation_nums")
+        self.mutation_nums_within_sequence = config_args.get(
+            "mutations", {}).get("mutation_nums_within_sequence")
         # Counts: mutated iterations of a sequence
         self.mutation_counts = config_args.get(
             "mutations", {}).get("mutation_counts")
 
         self.process_mutations()
         self.initial_values = self.save_initial_values()
+
+    def process_identities(self, identities: dict):
+        """ Make sure identities are indices of the sample names list """
+        for category, identity in identities.items():
+            if identity in self.data.sample_names:
+                identities[category] = self.data.sample_names.index(identity)
+        return identities
 
     def make_interactions(self, config_args):
         cfg_interactions = config_args.get("interactions")
@@ -96,7 +103,7 @@ class BaseSpecies():
     def process_mutations(self):
         self.mutation_counts = extend_int_to_list(
             self.mutation_counts, self.count)
-        self.mutation_nums = extend_int_to_list(self.mutation_nums, self.count)
+        self.mutation_nums_within_sequence = extend_int_to_list(self.mutation_nums_within_sequence, self.count)
 
     def mutate(self, mutation):
 
@@ -126,14 +133,14 @@ class BaseSpecies():
             raise ValueError('Cannot set interactions to' +
                              f' type {type(new_interactions)}.')
 
-    def interactions_to_df(self):
-        interactions_df = pd.DataFrame.from_dict(self.interactions_to_dict())
+    def interactions_to_df(self, interactions):
+        interactions_df = pd.DataFrame.from_dict(self.interactions_to_dict(interactions))
         return interactions_df
 
-    def interactions_to_dict(self):
+    def interactions_to_dict(self, interactions):
         interactions_dict = {}
         for i, sample in enumerate(self.data.sample_names):
-            interactions_dict[sample] = {s: self.interactions[i, j]
+            interactions_dict[sample] = {s: interactions[i, j]
                                          for j, s in enumerate(self.data.sample_names)}
         return interactions_dict
 
@@ -180,10 +187,11 @@ class BaseSpecies():
         return self.data.size
 
 
-class BaseSystem():
+class BaseCircuit():
     def __init__(self, config_args):
 
         self.name = config_args.get("name")
+        self.molecular_params = config_args['molecular_params']
 
         if config_args is None:
             config_args = {}

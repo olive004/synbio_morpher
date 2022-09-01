@@ -9,7 +9,7 @@ from src.utils.results.result_writer import ResultWriter
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.data.fake_data_generation.seq_generator import RNAGenerator
 from src.utils.evolution.mutation import Evolver
-from src.utils.system_definition.agnostic_system.system_manager import CircuitModeller
+from src.utils.circuit.agnostic_circuits.circuit_manager import CircuitModeller
 
 
 def main(config=None, data_writer=None):
@@ -59,7 +59,7 @@ def main(config=None, data_writer=None):
             name="visualise_signal"
         )
     ]
-    experiment = Experiment(config_filepath=config, protocols=protocols,
+    experiment = Experiment(config=config, config_file=config_file, protocols=protocols,
                             data_writer=data_writer)
     experiment.run_experiment()
 

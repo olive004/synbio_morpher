@@ -1,9 +1,9 @@
-from src.utils.system_definition.specific_systems.RNA.RNA_system import RNASystem
+from src.utils.circuit.specific_circuits.RNA.RNA_circuit import RNACircuit
 
 
 def get_system_type(sys_type):
     if sys_type == "RNA":
-        return RNASystem
+        return RNACircuit
     else:
         raise NotImplementedError(
             f"Desired system type {sys_type} not supported.")

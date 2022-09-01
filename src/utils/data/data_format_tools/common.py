@@ -1,3 +1,4 @@
+import ast
 import json
 import logging
 import os
@@ -52,27 +53,62 @@ def load_json_as_dict(json_pathname: str, process=True) -> dict:
     if process:
         return process_json(jdict)
     return jdict
-    # try:
-    #     jdict = json.load(open(json_pathname))
-    #     if process:
-    #         return process_json(jdict)
-    #     return jdict
-    # except FileNotFoundError:
-    #     logging.error(f'JSON path {json_pathname} not found')
-    #     import sys
-    #     sys.exit()
 
 
-def process_dict_for_json(dict_like) -> Union[list, dict]:
+def load_multiple_as_list(inputs_list, load_func, **kwargs):
+    collection_list = []
+    for inp in inputs_list:
+        collection_list.append(load_func(inp, **kwargs))
+    return collection_list
+
+def load_csv_mult(file_paths):
+    return load_multiple_as_list(file_paths, load_csv)
+    
+
+def load_csv(file_path):
+    loaded = pd.read_csv(file_path)
+    # for col in loaded.columns:
+    #     logging.info(loaded[col])
+    #     # try: 
+    #     #     str_loaded = loaded[col].str
+    #     # except AttributeError:
+    #     #     str_loaded = None
+    #     # try:
+    #     #     if str_loaded is None:
+    #     #         continue
+    #     #     logging.info(str_loaded.contains('['))
+    #     #     if any(list(str_loaded.contains('['))):
+    #     #         logging.info(col)
+    #     #         loaded[col] = loaded[col].apply(lambda x: ast.literal_eval(x))
+    #     # except:
+    #     #     continue
+
+    #     logging.info(loaded[col].unique())
+    #     logging.info(loaded[col].unique()[0])
+    #     logging.info(list(loaded[col].unique()[0]))
+
+    #     if '[' in list(loaded[col].unique()[0]):
+    #         loaded[col] = loaded[col].apply(lambda x: ast.literal_eval(x))
+
+    # logging.info(loaded['sample_names'])
+    return loaded
+
+
+def make_iterable_like(dict_like):
     if type(dict_like) == dict:
         iterable_like = dict_like.items()
     elif type(dict_like) == list:
         iterable_like = enumerate(dict_like)
     else:
         raise ValueError(f'Input {dict_like} should be type dict (or list) but was type {type(dict_like)}')
+    return iterable_like
+
+
+def process_dict_for_json(dict_like) -> Union[list, dict]:
+    iterable_like = make_iterable_like(dict_like)
     for k, v in iterable_like:
         if type(v) == dict or type(v) == list:
-            v = process_dict_for_json(v)
+            dict_like[k] = process_dict_for_json(v)
         elif type(v) == np.bool_:
             dict_like[k] = bool(v)
         elif type(v) == np.ndarray:

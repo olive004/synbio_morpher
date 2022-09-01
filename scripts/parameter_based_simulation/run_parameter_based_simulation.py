@@ -13,7 +13,7 @@ from src.utils.results.experiments import Experiment, Protocol
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.misc.numerical import make_symmetrical_matrix_from_sequence, triangular_sequence
 from src.utils.parameter_inference.interpolation_grid import create_parameter_range
-from src.utils.system_definition.agnostic_system.system_manager import CircuitModeller
+from src.utils.circuit.agnostic_circuits.circuit_manager import CircuitModeller
 
 
 def main(config=None, data_writer=None):
@@ -123,12 +123,12 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
 
             idxs = [slice(0, num_species)] + [[strength_idx]
                                               for strength_idx in interaction_strength_choices]
-            
+
             for j, analytic in enumerate(analytic_types):
                 all_analytic_matrices[j][tuple(
                     idxs)] = circuit.result_collector.results['signal'].analytics.get(analytic)
 
-            if debug_mode and i==0:
+            if debug_mode and i == 0:
                 modeller.write_results(circuit)
 
             # @time_it
@@ -157,7 +157,9 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
         logging.info('Finished: outputting final matrices')
         write_all()
 
-    experiment = Experiment(config_filepath=config, protocols=[Protocol(make_interaction_interpolation_matrices)],
+    experiment = Experiment(config=config, config_file=config_file,
+                            protocols=[
+                                Protocol(make_interaction_interpolation_matrices)],
                             data_writer=data_writer)
     experiment.run_experiment()
     return config, data_writer
