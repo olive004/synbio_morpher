@@ -11,7 +11,9 @@ WORKDIR /usr/lib
 RUN pwd
 RUN ls -R
 RUN cd ..
-RUN ls -R
+RUN pwd
+RUN ls /usr/lib
+RUN ls -R docker_unix
 COPY ./requirements.txt /usr/lib/install_requirements/requirements.txt
 RUN cd /usr/lib/install_requirements && \
     pip install -r ./requirements.txt
