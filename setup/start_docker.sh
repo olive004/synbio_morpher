@@ -1,10 +1,10 @@
 docker pull docker/dockerfile:1
 docker pull quay.io/biocontainers/intarna:3.3.1--pl5321h7ff8a90_1
 
+pwd
 # If image not built yet
 docker build -t genetic_glitch:latest docker_unix
 
-pwd
 
 docker create -it \
 --rm \
