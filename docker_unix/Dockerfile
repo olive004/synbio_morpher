@@ -12,9 +12,7 @@ RUN pwd
 RUN ls /
 RUN ls /mnt
 RUN ls /usr 
-RUN ls /usr/bin
 RUN pwd
-RUN ls /usr/lib
 RUN ls -R docker_unix
 COPY ./requirements.txt /usr/lib/install_requirements/requirements.txt
 RUN cd /usr/lib/install_requirements && \
