@@ -165,7 +165,7 @@ class TestScripts(unittest.TestCase):
         self.assertEquals(all_species_steady_states[:, 11, 4, 0, 0, 0, 0][1],
                           circuit.species.steady_state_copynums[1])
         self.assertEquals(all_species_steady_states[:, 11, 4, 0, 0, 0, 0][2],
-                          circuit.species.steady_state_copynums[2])
+                          circuit.species.steady_state_copynums[2])        
 
 
 if __name__ == '__main__':
