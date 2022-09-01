@@ -3,7 +3,7 @@
         "name": "IntaRNA",
         "postprocess": false
     },
-    "molecular_params": "./scripts/common/configs/RNA_system/molecular_params.json",
+    "molecular_params": "./scripts/common/configs/RNA_circuit/molecular_params.json",
     "circuit_generation": {
         "repetitions": 2000,
         "sequence_length": 25,

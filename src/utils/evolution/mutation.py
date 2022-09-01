@@ -10,7 +10,7 @@ from src.utils.results.writer import DataWriter, Tabulated
 from src.utils.misc.string_handling import add_outtype, prettify_logging_info
 
 
-from src.utils.circuit.agnostic_circuits.base_circuit import BaseSpecies, BaseSystem
+from src.utils.circuit.agnostic_circuits.base_circuit import BaseSpecies, BaseCircuit
 
 
 mapping = {
@@ -94,12 +94,12 @@ class Evolver():
         self.out_name = 'mutations'
         self.out_type = 'csv'
 
-    def is_mutation_possible(self, system: BaseSystem):
+    def is_mutation_possible(self, system: BaseCircuit):
         if system.species.mutation_counts is None or system.species.mutation_nums_within_sequence is None:
             return False
         return True
 
-    def mutate(self, system: BaseSystem, algorithm="random", write_to_subsystem=False):
+    def mutate(self, system: BaseCircuit, algorithm="random", write_to_subsystem=False):
         if write_to_subsystem:
             self.data_writer.subdivide_writing(system.name)
         if self.is_mutation_possible(system):

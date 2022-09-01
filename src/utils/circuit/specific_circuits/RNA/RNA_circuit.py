@@ -1,5 +1,5 @@
 import logging
-from src.utils.circuit.agnostic_circuits.base_circuit import BaseSystem, BaseSpecies
+from src.utils.circuit.agnostic_circuits.base_circuit import BaseCircuit, BaseSpecies
 
 FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
 FORMAT = "%(filename)s:%(funcName)s():%(lineno)i: %(message)s %(levelname)s"
@@ -8,9 +8,9 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-class RNASystem(BaseSystem):
+class RNACircuit(BaseCircuit):
     def __init__(self, config_args):
-        super(RNASystem, self).__init__(config_args)
+        super(RNACircuit, self).__init__(config_args)
 
         self.simulator_args = config_args['interaction_simulator']
 

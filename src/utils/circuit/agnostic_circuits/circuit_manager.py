@@ -14,7 +14,7 @@ from src.utils.misc.numerical import make_dynamic_indexer, np_delete_axes, zero_
 from src.utils.misc.type_handling import flatten_nested_dict
 from src.utils.signal.inputs import Signal
 from src.srv.parameter_prediction.simulator import MIN_INTERACTION_EQCONSTANT, SIMULATOR_UNITS, InteractionSimulator
-from src.utils.circuit.agnostic_circuits.base_circuit import BaseSystem
+from src.utils.circuit.agnostic_circuits.base_circuit import BaseCircuit
 from src.utils.circuit.agnostic_circuits.modelling import Deterministic
 
 
@@ -34,12 +34,12 @@ class CircuitModeller():
         else:
             self.result_writer = result_writer
 
-    def init_circuit(self, circuit: BaseSystem):
+    def init_circuit(self, circuit: BaseCircuit):
         circuit = self.compute_interaction_strengths(circuit)
         circuit = self.find_steady_states(circuit)
         return circuit
 
-    def make_modelling_func(self, modeller: Deterministic, circuit: BaseSystem,
+    def make_modelling_func(self, modeller: Deterministic, circuit: BaseCircuit,
                             exclude_species_by_idx: Union[int, list] = None,
                             fixed_value: Timeseries(None).num_dtype = None,
                             fixed_value_idx: int = None):
@@ -79,7 +79,7 @@ class CircuitModeller():
         return exclude_species_by_idx
 
     # @time_it
-    def compute_interaction_strengths(self, circuit: BaseSystem):
+    def compute_interaction_strengths(self, circuit: BaseCircuit):
         if not circuit.species.loaded_interactions:
             interactions = self.run_interaction_simulator(circuit,
                                                           circuit.species.data.data)
@@ -106,11 +106,11 @@ class CircuitModeller():
                     new_file=True, filename_addon=filename_addon, subfolder=filename_addon)
         return circuit
 
-    def run_interaction_simulator(self, circuit: BaseSystem, data):
+    def run_interaction_simulator(self, circuit: BaseCircuit, data):
         simulator = InteractionSimulator(circuit.simulator_args)
         return simulator.run(data)
 
-    def find_steady_states(self, circuit: BaseSystem):
+    def find_steady_states(self, circuit: BaseCircuit):
         modeller_steady_state = Deterministic(
             max_time=50, time_step=0.1)
 
@@ -129,7 +129,7 @@ class CircuitModeller():
         circuit.species.steady_state_copynums = steady_state_analytics['steady_states']
         return circuit
 
-    def compute_steady_states(self, modeller, circuit: BaseSystem,
+    def compute_steady_states(self, modeller, circuit: BaseCircuit,
                               solver_type: str = 'naive',
                               exclude_species_by_idx: Union[int, list] = None):
         copynumbers = circuit.species.copynumbers[:, -1]
@@ -167,7 +167,7 @@ class CircuitModeller():
             copynumbers = steady_state_result.y
         return copynumbers
 
-    def model_circuit(self, modeller, init_copynumbers: np.ndarray, circuit: BaseSystem,
+    def model_circuit(self, modeller, init_copynumbers: np.ndarray, circuit: BaseCircuit,
                       signal: np.ndarray = None, signal_identity_idx: int = None,
                       exclude_species_by_idx: Union[list, int] = None):
         assert np.shape(init_copynumbers)[circuit.species.species_axis] == np.shape(
@@ -225,7 +225,7 @@ class CircuitModeller():
         return copynumbers
 
     # @time_it
-    def simulate_signal(self, circuit: BaseSystem, signal: Signal = None, save_numerical_vis_data: bool = False,
+    def simulate_signal(self, circuit: BaseCircuit, signal: Signal = None, save_numerical_vis_data: bool = False,
                         use_old_steadystates: bool = False, use_solver: str = 'naive'):
         time_step = 1
         if signal is None:
@@ -308,7 +308,7 @@ class CircuitModeller():
         return circuit
 
     # @time_it
-    def wrap_mutations(self, circuit: BaseSystem, methods: dict, include_normal_run=True,
+    def wrap_mutations(self, circuit: BaseCircuit, methods: dict, include_normal_run=True,
                        write_to_subsystem=False):
         if write_to_subsystem:
             self.result_writer.subdivide_writing(circuit.name)
@@ -329,7 +329,7 @@ class CircuitModeller():
             self.result_writer.unsubdivide_last_dir()
         self.result_writer.unsubdivide()
 
-    def apply_to_circuit(self, circuit: BaseSystem, methods: dict):
+    def apply_to_circuit(self, circuit: BaseCircuit, methods: dict):
         for method, kwargs in methods.items():
             if hasattr(self, method):
                 circuit = getattr(self, method)(circuit, **kwargs)
@@ -337,7 +337,7 @@ class CircuitModeller():
                 logging.warning(
                     f'Could not find method @{method} in class {self}')
 
-    def visualise_graph(self, circuit: BaseSystem, mode="pyvis", new_vis=False):
+    def visualise_graph(self, circuit: BaseCircuit, mode="pyvis", new_vis=False):
         self.result_writer.visualise_graph(circuit, mode, new_vis)
 
     def write_results(self, circuit, new_report: bool = False, no_visualisations: bool = False,
