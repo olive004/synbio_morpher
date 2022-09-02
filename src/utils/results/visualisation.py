@@ -114,6 +114,11 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
         df_lists = df_lists.rename(columns=dict(
             zip(df_lists.columns.values, col_names)))
 
+        logging.info(col_names)
+        logging.info([c for c in col_names])
+        logging.info([type(c) for c in col_names])
+        logging.info(df_lists)
+
         df_lists = pd.concat(axis=0, ignore_index=True, objs=[
             pd.DataFrame.from_dict(
                 {column: df_lists[c], column_name_for_expanding_labels: c})

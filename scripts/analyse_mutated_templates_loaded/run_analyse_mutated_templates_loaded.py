@@ -13,8 +13,8 @@ from src.utils.results.experiments import Experiment, Protocol
 from src.utils.results.result_writer import ResultWriter
 from src.utils.results.visualisation import visualise_data
 from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS, RawSimulationHandling
-from src.srv.sequence_exploration.sequence_analysis import tabulate_mutation_info
-from src.utils.data.data_format_tools.common import load_csv_mult, load_json_as_dict
+from src.srv.sequence_exploration.sequence_analysis import get_mutation_info_columns, tabulate_mutation_info
+from src.utils.data.data_format_tools.common import load_csv_mult, load_json_as_dict, load_json_mult
 
 
 def main(config=None, data_writer=None):
@@ -46,15 +46,15 @@ def main(config=None, data_writer=None):
             partial(
                 get_pathnames_from_mult_dirs,
                 search_dirs=source_dirs,
-                file_key='tabulated_mutation_info.csv',
+                file_key='tabulated_mutation_info.json',
                 first_only=True),
             req_output=True,
             name='get_pathnames_from_mult_dirs'
         ),
         Protocol(
             partial(
-                load_csv_mult,
-                
+                load_json_mult,
+                as_type=pd.DataFrame
             ),
             req_input=True,
             req_output=True,
