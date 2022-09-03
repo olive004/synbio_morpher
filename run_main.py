@@ -8,8 +8,8 @@ from fire import Fire
 # from scripts.generate_species_templates.run_generate_species_templates_from_existing_circuits import main
 # from scripts.gather_interaction_stats.run_gather_interaction_stats import main
 # from scripts.mutation_effect_on_interactions_signal.run_mutation_effect_on_interactions_signal import main
-from scripts.analyse_mutated_templates.run_analyse_mutated_templates import main
-# from scripts.analyse_mutated_templates_loaded.run_analyse_mutated_templates_loaded import main
+# from scripts.analyse_mutated_templates.run_analyse_mutated_templates import main
+from scripts.analyse_mutated_templates_loaded.run_analyse_mutated_templates_loaded import main
 # from scripts.intarna_sandbox.run_intarna_sandbox import main
 # from scripts.ensemble_mutation_effect_analysis.run_ensemble_mutation_effect_analysis import main
 # from scripts.parameter_based_simulation.run_parameter_based_simulation import main

@@ -14,7 +14,7 @@ from src.utils.results.result_writer import ResultWriter
 from src.utils.results.visualisation import visualise_data
 from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS, RawSimulationHandling
 from src.srv.sequence_exploration.sequence_analysis import get_mutation_info_columns, tabulate_mutation_info
-from src.utils.data.data_format_tools.common import load_csv_mult, load_json_as_dict, load_json_mult
+from src.utils.data.data_format_tools.common import concatenate_dfs_from_list, load_csv_mult, load_json_as_dict, load_json_mult
 
 
 def main(config=None, data_writer=None):
@@ -41,6 +41,10 @@ def main(config=None, data_writer=None):
     else:
         exclude_rows_via_cols = []
 
+    def readout(v):
+        logging.info(v)
+        return v
+
     protocols = [
         Protocol(
             partial(
@@ -61,10 +65,20 @@ def main(config=None, data_writer=None):
             name='load_csv'
         ), 
         Protocol(
-            pd.concat,
+            readout,
+            req_input=True,
+            req_output=True
+        ),
+        Protocol(
+            concatenate_dfs_from_list,
             req_input=True,
             req_output=True,
             name='concatenate_csvs'
+        ),
+        Protocol(
+            readout,
+            req_input=True,
+            req_output=True
         ),
         # precision log
         Protocol(
@@ -102,7 +116,7 @@ def main(config=None, data_writer=None):
                     use_sns=True,
                     title=f'Minimum ' + r'$k_d$' + ' strength',
                     xlabel='Dissociation rate ' + r'$k_d$' + ' (' +
-                    f'{SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]})' +
+                    fr'{SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]})' +
                     f'{binding_rates_threshold_upper_text}'),
             req_input=True,
             name='visualise_mutated_interactions'

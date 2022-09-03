@@ -35,6 +35,10 @@ def determine_file_format(filepath: str) -> str:
                 f'Attempted to determine file format of an object that is not a file: {filepath}')
 
 
+def concatenate_dfs_from_list(listlike: list):
+    return pd.concat(objs=listlike, axis=0, ignore_index=True)
+
+
 def load_json_as_dict(json_pathname: str, process=True) -> dict:
     if not json_pathname:
         return {}
@@ -59,7 +63,7 @@ def load_json_as_df(json_pathname: str) -> pd.DataFrame:
     return pd.read_json(json_pathname)
 
 
-def load_multiple_as_list(inputs_list, load_func, **kwargs):
+def load_multiple_as_list(inputs_list: list, load_func, **kwargs):
     collection_list = []
     for inp in inputs_list:
         collection_list.append(load_func(inp, **kwargs))
@@ -70,7 +74,7 @@ def load_csv_mult(file_paths):
     return load_multiple_as_list(file_paths, load_csv)
 
 
-def load_json_mult(file_paths, as_type=dict):
+def load_json_mult(file_paths: list, as_type=dict):
     if as_type == dict:
         return load_multiple_as_list(file_paths, load_json_as_dict)
     elif as_type == pd.DataFrame:

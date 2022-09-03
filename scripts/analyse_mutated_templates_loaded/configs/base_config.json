@@ -3,9 +3,9 @@
         "purpose": "analyse_mutated_templates_loaded"
     },
     "source_dirs": [
-        "data/analyse_mutated_templates/2022_08_28_004057",
-        "data/analyse_mutated_templates/2022_08_28_010006",
-        "data/analyse_mutated_templates/2022_08_28_010041"
+        "data/analyse_mutated_templates/2022_09_03_220605",
+        "data/analyse_mutated_templates/2022_09_03_220620",
+        "data/analyse_mutated_templates/2022_09_03_221044"
     ],
     "tabulated_info_differentiator": "mutation_num",
     "preprocessing_func": null,
