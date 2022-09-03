@@ -55,42 +55,30 @@ def load_json_as_dict(json_pathname: str, process=True) -> dict:
     return jdict
 
 
+def load_json_as_df(json_pathname: str) -> pd.DataFrame:
+    return pd.read_json(json_pathname)
+
+
 def load_multiple_as_list(inputs_list, load_func, **kwargs):
     collection_list = []
     for inp in inputs_list:
         collection_list.append(load_func(inp, **kwargs))
     return collection_list
 
+
 def load_csv_mult(file_paths):
     return load_multiple_as_list(file_paths, load_csv)
-    
 
-def load_csv(file_path):
-    loaded = pd.read_csv(file_path)
-    # for col in loaded.columns:
-    #     logging.info(loaded[col])
-    #     # try: 
-    #     #     str_loaded = loaded[col].str
-    #     # except AttributeError:
-    #     #     str_loaded = None
-    #     # try:
-    #     #     if str_loaded is None:
-    #     #         continue
-    #     #     logging.info(str_loaded.contains('['))
-    #     #     if any(list(str_loaded.contains('['))):
-    #     #         logging.info(col)
-    #     #         loaded[col] = loaded[col].apply(lambda x: ast.literal_eval(x))
-    #     # except:
-    #     #     continue
 
-    #     logging.info(loaded[col].unique())
-    #     logging.info(loaded[col].unique()[0])
-    #     logging.info(list(loaded[col].unique()[0]))
+def load_json_mult(file_paths, as_type=dict):
+    if as_type == dict:
+        return load_multiple_as_list(file_paths, load_json_as_dict)
+    elif as_type == pd.DataFrame:
+        return load_multiple_as_list(file_paths, load_json_as_df)
 
-    #     if '[' in list(loaded[col].unique()[0]):
-    #         loaded[col] = loaded[col].apply(lambda x: ast.literal_eval(x))
 
-    # logging.info(loaded['sample_names'])
+def load_csv(file_path, **kwargs):
+    loaded = pd.read_csv(file_path, **kwargs)
     return loaded
 
 
@@ -100,7 +88,8 @@ def make_iterable_like(dict_like):
     elif type(dict_like) == list:
         iterable_like = enumerate(dict_like)
     else:
-        raise ValueError(f'Input {dict_like} should be type dict (or list) but was type {type(dict_like)}')
+        raise ValueError(
+            f'Input {dict_like} should be type dict (or list) but was type {type(dict_like)}')
     return iterable_like
 
 
@@ -141,15 +130,14 @@ def write_csv(data: pd.DataFrame, out_path: str, overwrite=False):
             f'Unsupported: cannot output data of type {type(data)} to csv.')
 
 
-def write_json(data: dict, out_path: str, overwrite=False):
-    data = process_dict_for_json(data)
-    with open(out_path, 'w+') as fn:
-        json.dump(data, fp=fn, indent=4)
-        # try:
-        #     json.dump(data, fp=fn, indent=4)
-        # except TypeError:
-        #     data = str(data)
-        #     json.dump(data, fp=fn, indent=4)
+def write_json(data: Union[dict, pd.DataFrame], out_path: str, overwrite=False):
+    if type(data) == pd.DataFrame:
+        data = data.reset_index()
+        data.to_json(out_path)
+    else:
+        data = process_dict_for_json(data)
+        with open(out_path, 'w+') as fn:
+            json.dump(data, fp=fn, indent=4)
 
 
 def write_np(data: np.array, out_path: str, overwrite=False):

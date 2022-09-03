@@ -20,5 +20,3 @@ ENV PYTHONPATH=/workdir
 ENV MNT ./..
 WORKDIR /workdir
 # ENTRYPOINT ["/bin/bash"]
-
-

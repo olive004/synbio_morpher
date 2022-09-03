@@ -5,7 +5,7 @@ import os
 import numpy as np
 
 from fire import Fire
-from src.utils.misc.scripts_io import load_experiment_config, load_experiment_config_original
+from src.utils.misc.scripts_io import load_experiment_config
 
 from src.utils.results.experiments import Experiment, Protocol
 from src.utils.results.result_writer import ResultWriter

@@ -18,6 +18,25 @@ from src.utils.misc.scripts_io import get_path_from_output_summary, get_root_exp
     load_experiment_config, load_experiment_output_summary, load_result_report
 
 
+INTERACTION_TYPES = ['binding_rates', 'eqconstants', 'interactions']
+INTERACTION_STATS = ['num_self_interacting',
+                     'num_interacting',
+                     'max_interaction',
+                     'min_interaction']
+MUTATION_INFO_COLUMN_NAMES = [
+    'circuit_name',
+    'mutation_name',
+    'source_species',
+    'sample_names',
+    'mutation_num',
+    'mutation_type',
+    'mutation_positions',
+    'path_to_steady_state_data',
+    'path_to_signal_data',
+    'path_to_template_circuit'
+]
+
+
 def generate_interaction_stats(path_name, writer: DataWriter = None, experiment_dir: str = None, **stat_addons) -> pd.DataFrame:
 
     interactions = InteractionMatrix(
@@ -72,37 +91,27 @@ def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path
     return extra_configs
 
 
-def tabulate_mutation_info(source_dir, data_writer: DataWriter):
+def get_mutation_info_columns():
 
-    interaction_types = ['binding_rates', 'eqconstants', 'interactions']
-
-    interaction_stats_chosen = ['num_self_interacting',
-                                'num_interacting',
-                                'max_interaction',
-                                'min_interaction']
-
-    info_column_names = [
-        'circuit_name',
-        'mutation_name',
-        'source_species',
-        'sample_names',
-        'mutation_num',
-        'mutation_type',
-        'mutation_positions',
-        'path_to_steady_state_data',
-        'path_to_signal_data',
-        'path_to_template_circuit'
-    ]
     # Difference
     info_column_names_interactions_diff = [[[f'{i}_{s}',
-                                       f'{i}_{s}_diff_to_base_circuit'] for s in interaction_stats_chosen] for i in interaction_types]
-    info_column_names_interactions_diff = flatten_nested_listlike(info_column_names_interactions_diff)
-    # info_column_names = info_column_names + info_column_names_interactions
-    
-    # # Ratio
-    info_column_names_interactions_ratio = [[[f'{i}_{s}_ratio_from_mutation_to_base'] for s in interaction_stats_chosen] for i in interaction_types]
-    info_column_names_interactions_ratio = flatten_nested_listlike(info_column_names_interactions_ratio)
-    info_column_names = info_column_names + info_column_names_interactions_diff + info_column_names_interactions_ratio
+                                             f'{i}_{s}_diff_to_base_circuit'] for s in INTERACTION_STATS] for i in INTERACTION_TYPES]
+    info_column_names_interactions_diff = flatten_nested_listlike(
+        info_column_names_interactions_diff)
+
+    # Ratio
+    info_column_names_interactions_ratio = [
+        [[f'{i}_{s}_ratio_from_mutation_to_base'] for s in INTERACTION_STATS] for i in INTERACTION_TYPES]
+    info_column_names_interactions_ratio = flatten_nested_listlike(
+        info_column_names_interactions_ratio)
+    info_column_names = MUTATION_INFO_COLUMN_NAMES + \
+        info_column_names_interactions_diff + info_column_names_interactions_ratio
+    return info_column_names
+
+
+def tabulate_mutation_info(source_dir, data_writer: DataWriter):
+
+    info_column_names = get_mutation_info_columns()
 
     info_table = pd.DataFrame(columns=info_column_names)
 
@@ -118,7 +127,7 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
 
     def make_interaction_stats_and_sample_names(source_interaction_dir: str, include_circuit_in_filekey=False):
         interaction_stats = {}
-        for interaction_type in interaction_types:
+        for interaction_type in INTERACTION_TYPES:
             interaction_dir = os.path.join(
                 source_interaction_dir, interaction_type)
             file_key = [
@@ -147,14 +156,14 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
             ratio[reference_v_zerod] = 0
             if np.size(ratio) == 1:
                 ratio = ratio[0]
-            # ratio[np.asarray(reference_v) == 0] = 
+            # ratio[np.asarray(reference_v) == 0] =
             table[f'{k}_ratio_from_mutation_to_base'] = ratio
-            
+
         return table
 
     def update_diff_to_base_circuit(curr_table: dict, int_stats: pd.DataFrame,
                                     ref_stats: pd.DataFrame, cols: list):
-        for i_type in interaction_types:
+        for i_type in INTERACTION_TYPES:
             for col in cols:
                 current_stat = np.asarray(list(int_stats[i_type][col]))
                 ref_stat = np.asarray(list(ref_stats[i_type][col]))
@@ -163,11 +172,13 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
                     diff = np.asarray(current_stat) - np.asarray(ref_stat)
                     curr_table[f'{i_type}_{col}_diff_to_base_circuit'] = diff
 
-                    ratio = np.divide(np.asarray(current_stat), np.asarray(ref_stat))
+                    ratio = np.divide(np.asarray(
+                        current_stat), np.asarray(ref_stat))
                     curr_table[f'{i_type}_{col}_ratio_from_mutation_to_base'] = ratio
                 else:
                     diff = current_stat - ref_stat
-                    ratio = np.divide(np.asarray(current_stat), np.asarray(ref_stat))
+                    ratio = np.divide(np.asarray(
+                        current_stat), np.asarray(ref_stat))
                 if np.size(diff) == 1:
                     diff = diff[0]
                     ratio = ratio[0]
@@ -177,12 +188,12 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
 
     def update_info_table(info_table: pd.DataFrame, curr_table: dict, int_stats: pd.DataFrame,
                           ref_stats: pd.DataFrame, ref_table: dict, source_dir: str, check_coherent: bool = False):
-        cols = ['num_self_interacting',
-                'num_interacting',
-                'max_interaction',
-                'min_interaction']
+        diff_cols = ['num_self_interacting',
+                     'num_interacting',
+                     'max_interaction',
+                     'min_interaction']
         curr_table = update_diff_to_base_circuit(curr_table, int_stats,
-                                                 ref_stats, cols=cols)
+                                                 ref_stats, cols=diff_cols)
         result_report = load_result_report(source_dir)
         curr_table = upate_table_with_results(
             curr_table, reference_table=ref_table, results=result_report)
@@ -190,6 +201,12 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
             check_coherency(curr_table)
         info_table = pd.concat([info_table, pd.DataFrame([curr_table])])
         return info_table
+
+    def write_results(info_table):
+        data_writer.output(
+            out_type='csv', out_name='tabulated_mutation_info', **{'data': info_table})
+        data_writer.output(
+            out_type='json', out_name='tabulated_mutation_info', **{'data': info_table})
 
     source_config = load_experiment_config(source_dir)
 
@@ -200,7 +217,8 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
             first_only=True, file_key='mutations', search_dir=circuit_dir)
         mutations = GeneCircuitLoader().load_data(mutations_pathname).data
         if os.path.isdir(os.path.join(circuit_dir, 'mutations')):
-            mutation_dirs = sorted(get_subdirectories(os.path.join(circuit_dir, 'mutations')))
+            mutation_dirs = sorted(get_subdirectories(
+                os.path.join(circuit_dir, 'mutations')))
         else:
             mutation_dirs = sorted(get_subdirectories(circuit_dir))
         # TODO: need a better way of getting the mutation directories - maybe just create mutations in a subfolder
@@ -266,9 +284,7 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
                                            ref_stats=interaction_stats, ref_table=current_og_table,
                                            source_dir=mutation_dir, check_coherent=True)
         if circ_idx != 0 and np.mod(circ_idx, 100) == 0:
-            data_writer.output(
-                out_type='csv', out_name='tabulated_mutation_info', **{'data': info_table})
-    
-    data_writer.output(
-        out_type='csv', out_name='tabulated_mutation_info', **{'data': info_table})
+            write_results(info_table)
+
+    write_results(info_table)
     return info_table

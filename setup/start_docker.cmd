@@ -1,6 +1,6 @@
 @REM # See README.md in the root project directory for docker setup instructions
 docker pull docker/dockerfile:1
-docker pull quay.io/biocontainers/intarna:3.3.1--pl5321h7ff8a90_0
+docker pull quay.io/biocontainers/intarna:3.3.1--pl5321h7ff8a90_1
 
 @REM # If image not built yet
 docker build -t genetic_glitch:latest .\docker_windows
