@@ -5,7 +5,7 @@ import os
 import numpy as np
 
 from fire import Fire
-from src.utils.misc.scripts_io import load_experiment_config, load_experiment_config_original
+from src.utils.misc.scripts_io import load_experiment_config
 
 from src.utils.results.experiments import Experiment, Protocol
 from src.utils.results.result_writer import ResultWriter
@@ -22,8 +22,8 @@ def main(config=None, data_writer=None):
             # "scripts", "analyse_mutated_templates", "configs", "logscale", "analyse_templates.json")
             # "scripts", "analyse_mutated_templates", "configs", "logscale", "analyse_mutated_templates_1.json")
             # "scripts", "analyse_mutated_templates", "configs", "logscale", "analyse_mutated_templates_2.json")
-            "scripts", "analyse_mutated_templates", "configs", "base_config_testing.json")
-            # "scripts", "analyse_mutated_templates", "configs", "base_config.json")
+            # "scripts", "analyse_mutated_templates", "configs", "base_config_testing.json")
+            "scripts", "analyse_mutated_templates", "configs", "base_config.json")
     config_file = load_json_as_dict(config)
 
     # Start_experiment
