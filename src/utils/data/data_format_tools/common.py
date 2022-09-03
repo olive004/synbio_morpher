@@ -36,7 +36,7 @@ def determine_file_format(filepath: str) -> str:
 
 
 def concatenate_dfs_from_list(listlike: list):
-    return pd.concat(objs=listlike, axis=0, ignore_index=True)
+    return pd.concat(listlike, axis=0, ignore_index=True)
 
 
 def load_json_as_dict(json_pathname: str, process=True) -> dict:

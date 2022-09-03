@@ -65,11 +65,6 @@ def main(config=None, data_writer=None):
             name='load_csv'
         ), 
         Protocol(
-            readout,
-            req_input=True,
-            req_output=True
-        ),
-        Protocol(
             concatenate_dfs_from_list,
             req_input=True,
             req_output=True,
