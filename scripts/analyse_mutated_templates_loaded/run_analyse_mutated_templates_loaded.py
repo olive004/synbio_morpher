@@ -72,29 +72,6 @@ def main(config=None, data_writer=None):
             req_output=True,
             name='concatenate_dfs'
         ),
-        Protocol(
-            partial(
-                visualise_data,
-                data_writer=data_writer, cols_x=[
-                    'precision_diff_to_base_circuit'],
-                plot_type='histplot',
-                out_name='precision_diff',
-                exclude_rows_zero_in_cols=['mutation_num'],
-                misc_histplot_kwargs={
-                    "hue": 'mutation_num',
-                },
-                log_axis=(False, False),
-                use_sns=True,
-                expand_coldata_using_col_x=True,
-                column_name_for_expanding_labels='sample_names',
-                idx_for_expanding_labels=0,
-                title=f'Precision difference between circuit\nand mutated counterparts',
-                xlabel='Precision difference'
-            ),
-            req_input=True,
-            name='visualise_interactions_difference',
-            skip=config_file.get('only_visualise_circuits', False)
-        ),
         # Binding rates min int's mutations
         Protocol(
             partial(
@@ -143,6 +120,24 @@ def main(config=None, data_writer=None):
         req_input=True,
         name='visualise_mutated_interactions'
     ))
+    # Plot mean of interacting numbers
+    protocols.append(Protocol(
+        partial(
+            visualise_data, data_writer=data_writer, 
+            cols_x=['mutation_num'],
+            cols_y=['eqconstants_num_interacting'],
+            plot_type='bar_plot',
+            out_name='num_interacting_barplot',
+            threshold_value_max=binding_rates_threshold_upper,
+            exclude_rows_zero_in_cols=['mutation_num'],
+            use_sns=True,
+            ci="sd",
+            title=f'Minimum ' + r'$k_d$' + ' strength',
+            ylabel='Number of interactions',
+            xlabel='Number of mutations'),
+        req_input=True,
+        name='visualise_mutated_interactions'
+    ))
 
     # Analytics visualisation
     analytics_types = ['fold_change',
@@ -158,7 +153,7 @@ def main(config=None, data_writer=None):
     for filltype in ['dodge', 'fill']:
         for cols_x, title, xlabel in [
                 [
-                    [f'{analytics_type}_diff_to_base_circuit'],
+                    f'{analytics_type}_diff_to_base_circuit',
                     f'{prettify_keys_for_label(analytics_type)} difference between circuit\nand mutated counterparts',
                     f'{prettify_keys_for_label(analytics_type)} difference'
                 ] for analytics_type in analytics_types]:
@@ -166,7 +161,7 @@ def main(config=None, data_writer=None):
             protocols.append(Protocol(
                 partial(
                     visualise_data,
-                    data_writer=data_writer, cols_x=cols_x,
+                    data_writer=data_writer, cols_x=[cols_x],
                     plot_type='histplot',
                     out_name=f'{cols_x}_log_{filltype}',
                     exclude_rows_zero_in_cols=['mutation_num'],
@@ -193,7 +188,7 @@ def main(config=None, data_writer=None):
     for filltype in ['dodge', 'fill']:
         for cols_x, title, xlabel in [
                 [
-                    [f'{analytics_type}_ratio_from_mutation_to_base'],
+                    f'{analytics_type}_ratio_from_mutation_to_base',
                     f'{prettify_keys_for_label(analytics_type)} ratio from mutated\nto original circuit',
                     f'{prettify_keys_for_label(analytics_type)} ratio'
                 ] for analytics_type in analytics_types]:
@@ -201,7 +196,7 @@ def main(config=None, data_writer=None):
             protocols.append(Protocol(
                 partial(
                     visualise_data,
-                    data_writer=data_writer, cols_x=cols_x,
+                    data_writer=data_writer, cols_x=[cols_x],
                     plot_type='histplot',
                     out_name=f'{cols_x}_log_{filltype}',
                     exclude_rows_zero_in_cols=['mutation_num'],
