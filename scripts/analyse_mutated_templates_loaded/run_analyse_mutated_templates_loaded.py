@@ -8,6 +8,8 @@ import pandas as pd
 from fire import Fire
 from src.utils.misc.io import get_pathnames_from_mult_dirs
 from src.utils.misc.scripts_io import load_experiment_config, load_experiment_config_original
+from src.utils.misc.string_handling import prettify_keys_for_label
+from src.utils.results.analytics.timeseries import Timeseries
 
 from src.utils.results.experiments import Experiment, Protocol
 from src.utils.results.result_writer import ResultWriter
@@ -70,12 +72,6 @@ def main(config=None, data_writer=None):
             req_output=True,
             name='concatenate_dfs'
         ),
-        # Protocol(
-        #     readout,
-        #     req_input=True,
-        #     req_output=True
-        # ),
-        # precision
         Protocol(
             partial(
                 visualise_data,
@@ -84,30 +80,10 @@ def main(config=None, data_writer=None):
                 plot_type='histplot',
                 out_name='precision_diff',
                 exclude_rows_zero_in_cols=['mutation_num'],
-                hue=['mutation_num'],
+                misc_histplot_kwargs={
+                    "hue": 'mutation_num',
+                },
                 log_axis=(False, False),
-                use_sns=True,
-                expand_coldata_using_col_x=True,
-                column_name_for_expanding_labels='sample_names',
-                idx_for_expanding_labels=0,
-                title=f'Precision difference between circuit\nand mutated counterparts',
-                xlabel='Precision difference'
-            ),
-            req_input=True,
-            name='visualise_interactions_difference',
-            skip=config_file.get('only_visualise_circuits', False)
-        ),
-        # precision log
-        Protocol(
-            partial(
-                visualise_data,
-                data_writer=data_writer, cols_x=[
-                    'precision_diff_to_base_circuit'],
-                plot_type='histplot',
-                out_name='precision_diff_log',
-                exclude_rows_zero_in_cols=['mutation_num'],
-                hue=['mutation_num'],
-                log_axis=(True, False),
                 use_sns=True,
                 expand_coldata_using_col_x=True,
                 column_name_for_expanding_labels='sample_names',
@@ -128,9 +104,10 @@ def main(config=None, data_writer=None):
                 out_name='binding_rates_min_freqs_mutations_logs',
                 threshold_value_max=binding_rates_threshold_upper,
                 exclude_rows_zero_in_cols=['mutation_num'],
-                hue=['mutation_num'],
                 misc_histplot_kwargs={
-                    "multiple": "stack"},
+                    "hue": 'mutation_num',
+                    "multiple": "dodge",
+                    "element": "poly"},
                 log_axis=(True, False),
                 use_sns=True,
                 title=f'Minimum ' + r'$k_d$' + ' strength',
@@ -141,6 +118,110 @@ def main(config=None, data_writer=None):
             name='visualise_mutated_interactions'
         ),
     ]
+
+    # Visualisations
+
+    # Binding rates
+    protocols.append(Protocol(
+        partial(
+            visualise_data, data_writer=data_writer, cols_x=[
+                'binding_rates_min_interaction'],
+            plot_type='histplot',
+            out_name='binding_rates_min_freqs_mutations_logs',
+            threshold_value_max=binding_rates_threshold_upper,
+            exclude_rows_zero_in_cols=['mutation_num'],
+            misc_histplot_kwargs={
+                "hue": 'mutation_num',
+                "multiple": "dodge",
+                "element": "poly"},
+            log_axis=(True, False),
+            use_sns=True,
+            title=f'Minimum ' + r'$k_d$' + ' strength',
+            xlabel='Dissociation rate ' + r'$k_d$' + ' (' +
+            fr'{SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]})' +
+            f'{binding_rates_threshold_upper_text}'),
+        req_input=True,
+        name='visualise_mutated_interactions'
+    ))
+
+    # Analytics visualisation
+    analytics_types = ['fold_change',
+                       'overshoot',
+                       'precision',
+                       'response_time',
+                       'response_time_high',
+                       'response_time_low',
+                       'sensitivity',
+                       'steady_states']  # Timeseries(data=None).get_analytics_types()
+    # Log graphs with mutation number hue
+    # Difference
+    for filltype in ['dodge', 'fill']:
+        for cols_x, title, xlabel in [
+                [
+                    [f'{analytics_type}_diff_to_base_circuit'],
+                    f'{prettify_keys_for_label(analytics_type)} difference between circuit\nand mutated counterparts',
+                    f'{prettify_keys_for_label(analytics_type)} difference'
+                ] for analytics_type in analytics_types]:
+
+            protocols.append(Protocol(
+                partial(
+                    visualise_data,
+                    data_writer=data_writer, cols_x=cols_x,
+                    plot_type='histplot',
+                    out_name=f'{cols_x}_log_{filltype}',
+                    exclude_rows_zero_in_cols=['mutation_num'],
+                    misc_histplot_kwargs={
+                        "multiple": filltype,
+                        "hue": 'mutation_num',
+                        "element": "step"
+                    },
+                    log_axis=(True, False),
+                    use_sns=True,
+                    expand_coldata_using_col_x=True,
+                    column_name_for_expanding_labels='sample_names',
+                    idx_for_expanding_labels=0,
+                    title=title,
+                    xlabel=xlabel
+                ),
+                req_input=True,
+                name='visualise_interactions_difference',
+                skip=config_file.get('only_visualise_circuits', False)
+            ))
+
+    # Log graphs with mutation number hue
+    # Ratios
+    for filltype in ['dodge', 'fill']:
+        for cols_x, title, xlabel in [
+                [
+                    [f'{analytics_type}_ratio_from_mutation_to_base'],
+                    f'{prettify_keys_for_label(analytics_type)} ratio from mutated\nto original circuit',
+                    f'{prettify_keys_for_label(analytics_type)} ratio'
+                ] for analytics_type in analytics_types]:
+
+            protocols.append(Protocol(
+                partial(
+                    visualise_data,
+                    data_writer=data_writer, cols_x=cols_x,
+                    plot_type='histplot',
+                    out_name=f'{cols_x}_log_{filltype}',
+                    exclude_rows_zero_in_cols=['mutation_num'],
+                    misc_histplot_kwargs={
+                        "multiple": filltype,
+                        "hue": 'mutation_num',
+                        "element": "step"
+                    },
+                    log_axis=(True, False),
+                    use_sns=True,
+                    expand_coldata_using_col_x=True,
+                    column_name_for_expanding_labels='sample_names',
+                    idx_for_expanding_labels=0,
+                    title=title,
+                    xlabel=xlabel
+                ),
+                req_input=True,
+                name='visualise_interactions_difference',
+                skip=config_file.get('only_visualise_circuits', False)
+            ))
 
     experiment = Experiment(config=config, config_file=config_file, protocols=protocols,
                             data_writer=data_writer)

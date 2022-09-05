@@ -44,6 +44,12 @@ def ordered_merge(list1, list2, mask) -> list:
     return merged
 
 
+def prettify_keys_for_label(key: str):
+    key = key.replace('_', ' ')
+    key = key.capitalize()
+    return key
+
+
 def prettify_logging_info(loggin):
     str_out = loggin
     if type(loggin) == list:

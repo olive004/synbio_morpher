@@ -107,6 +107,8 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
     def expand_data_by_col(data: pd.DataFrame, column, column_for_expanding_labels):
         df_lists = data[[column]].unstack().apply(pd.Series)
         col_names = data[column_for_expanding_labels].iloc[idx_for_expanding_labels]
+        if len(df_lists.columns) == 1:
+            logging.warning(f'The current column {column} may not be expandable with {col_names}')
         df_lists = df_lists.rename(columns=dict(
             zip(df_lists.columns.values, col_names)))
 
@@ -117,10 +119,14 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                 {column: df_lists[c], column_for_expanding_labels: c})
             temp_data.drop(column, axis=1, inplace=True)
             temp_data = temp_data.assign(**{
-                column: pd.Series(expanded_df_col[column].values), #.reset_index(inplace=True, drop=True)),
-                column_for_expanding_labels: pd.Series(expanded_df_col[column_for_expanding_labels].values) #.reset_index(inplace=True, drop=True))
-                })
-            expanded_data = pd.concat([expanded_data, temp_data], axis=0, ignore_index=True)
+                # .reset_index(inplace=True, drop=True)),
+                column: pd.Series(expanded_df_col[column].values),
+                # .reset_index(inplace=True, drop=True))
+                column_for_expanding_labels: pd.Series(
+                    expanded_df_col[column_for_expanding_labels].values)
+            })
+            expanded_data = pd.concat(
+                [expanded_data, temp_data], axis=0, ignore_index=True)
         return expanded_data
 
     def process_log_sns(data: pd.DataFrame, column_x: str, column_y: str,
@@ -158,7 +164,6 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                     data = expand_data_by_col(
                         data=data, column=column,
                         column_for_expanding_labels=column_name_for_expanding_labels)
-                    logging.info(data)
                 if threshold_value_max:
                     data = data[data[column] <= threshold_value_max]
                 if normalise_data:
@@ -180,11 +185,6 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
         data.reset_index(drop=True, inplace=True)
         return data
 
-    for exc_cols, condition in zip(
-        [exclude_rows_nonempty_in_cols, exclude_rows_zero_in_cols],
-            ['', 0]):
-        data = exclude_rows_by_cols(data, exc_cols, condition)
-
     visualiser = VisODE()
     if plot_type == 'histplot':
         for col_x in cols_x:
@@ -196,6 +196,12 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                     col_x, col_y,
                     normalise_data_x, normalise_data_y,
                     column_name_for_expanding_labels)
+
+                
+                for exc_cols, condition in zip(
+                    [exclude_rows_nonempty_in_cols, exclude_rows_zero_in_cols],
+                        ['', 0]):
+                    data = exclude_rows_by_cols(data, exc_cols, condition)
 
                 if use_sns:
                     data.reset_index(drop=True, inplace=True)
@@ -209,8 +215,8 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
 
                 data_writer.output(out_type='png', out_name=out_name,
                                    write_func=visualiser.histplot,
-                                   **merge_dicts({'use_sns': use_sns, "log_axis": log_axis,
-                                                  'hue': hue,
+                                   **merge_dicts({'use_sns': use_sns,
+                                                  'log_axis': log_axis,
                                                   'bin_count': bin_count,
                                                   'histplot_kwargs': misc_histplot_kwargs
                                                   },
@@ -306,7 +312,6 @@ class VisODE():
 
     def histplot(self, data: pd.DataFrame, out_path, bin_count=100,
                  use_sns=False,
-                 hue=None,
                  column_x: str = None, column_y: str = None,
                  log_axis: tuple = (False, False),
                  histplot_kwargs: dict = None,
@@ -320,12 +325,10 @@ class VisODE():
             histplot_kwargs = {} if histplot_kwargs is None else histplot_kwargs
             default_kwargs = {
                 "edgecolor": ".3",
-                "element": "step",
-                # "hue": hue,
-                "hue": "mutation_num",
+                # "element": "step",
                 "fill": True,
                 "linewidth": .5,
-                "multiple": "layer", #"stack", "fill", "dodge"
+                "multiple": "dodge",  # "stack", "fill", "dodge"
                 "palette": "deep"
                 # palette="light:m_r",
             }
