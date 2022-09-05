@@ -35,10 +35,6 @@ def determine_file_format(filepath: str) -> str:
                 f'Attempted to determine file format of an object that is not a file: {filepath}')
 
 
-def concatenate_dfs_from_list(listlike: list):
-    return pd.concat(listlike, axis=0, ignore_index=True)
-
-
 def load_json_as_dict(json_pathname: str, process=True) -> dict:
     if not json_pathname:
         return {}
@@ -136,7 +132,7 @@ def write_csv(data: pd.DataFrame, out_path: str, overwrite=False):
 
 def write_json(data: Union[dict, pd.DataFrame], out_path: str, overwrite=False):
     if type(data) == pd.DataFrame:
-        data = data.reset_index()
+        data.reset_index(drop=True, inplace=True)
         data.to_json(out_path)
     else:
         data = process_dict_for_json(data)

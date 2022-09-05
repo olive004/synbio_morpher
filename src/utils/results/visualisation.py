@@ -76,10 +76,6 @@ class NetworkCustom(Network):
             self.add_node(node, **nodes[node])
 
 
-def visualise_():
-    pass
-
-
 def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                    cols_x: list = None, cols_y: list = None,
                    expand_coldata_using_col_x: bool = False,
@@ -96,7 +92,7 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                    exclude_rows_nonempty_in_cols: list = None,
                    exclude_rows_zero_in_cols: list = None,
                    column_name_for_expanding_labels: str = None,
-                   idx_for_expanding_labels: int = None,
+                   idx_for_expanding_labels: int = 0,
                    plot_cols_on_same_graph=False,
                    misc_histplot_kwargs=None,
                    **plot_kwrgs):
@@ -108,22 +104,24 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
     cols_x = cols_x if cols_x is not None else [None]
     cols_y = cols_y if cols_y is not None else [None]
 
-    def expand_data_by_col(data: pd.DataFrame, column, column_name_for_expanding_labels):
+    def expand_data_by_col(data: pd.DataFrame, column, column_for_expanding_labels):
         df_lists = data[[column]].unstack().apply(pd.Series)
-        col_names = data[column_name_for_expanding_labels].iloc[idx_for_expanding_labels]
+        col_names = data[column_for_expanding_labels].iloc[idx_for_expanding_labels]
         df_lists = df_lists.rename(columns=dict(
             zip(df_lists.columns.values, col_names)))
 
-        logging.info(col_names)
-        logging.info([c for c in col_names])
-        logging.info([type(c) for c in col_names])
-        logging.info(df_lists)
-
-        df_lists = pd.concat(axis=0, ignore_index=True, objs=[
-            pd.DataFrame.from_dict(
-                {column: df_lists[c], column_name_for_expanding_labels: c})
-            for c in col_names])
-        return df_lists
+        temp_data = deepcopy(data)
+        expanded_data = pd.DataFrame(columns=temp_data.columns)
+        for c in col_names:
+            expanded_df_col = pd.DataFrame.from_dict(
+                {column: df_lists[c], column_for_expanding_labels: c})
+            temp_data.drop(column, axis=1, inplace=True)
+            temp_data = temp_data.assign(**{
+                column: pd.Series(expanded_df_col[column].values), #.reset_index(inplace=True, drop=True)),
+                column_for_expanding_labels: pd.Series(expanded_df_col[column_for_expanding_labels].values) #.reset_index(inplace=True, drop=True))
+                })
+            expanded_data = pd.concat([expanded_data, temp_data], axis=0, ignore_index=True)
+        return expanded_data
 
     def process_log_sns(data: pd.DataFrame, column_x: str, column_y: str,
                         plot_kwrgs: dict, log_axis: list):
@@ -144,6 +142,7 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
             data, column_y = process_log(data, column_y, log_axis[0], 'ylabel')
         if column_x is None and column_y is None:
             logging.warning('No columns given as input to histplot.')
+        data.reset_index(drop=True, inplace=True)
         return data, column_x, column_y
 
     def preprocess_data_histplot(data: pd.DataFrame, preprocessor_func, threshold_value_max,
@@ -158,7 +157,8 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                 if expand_coldata_using_col:
                     data = expand_data_by_col(
                         data=data, column=column,
-                        column_name_for_expanding_labels=column_name_for_expanding_labels)
+                        column_for_expanding_labels=column_name_for_expanding_labels)
+                    logging.info(data)
                 if threshold_value_max:
                     data = data[data[column] <= threshold_value_max]
                 if normalise_data:
@@ -170,12 +170,14 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
             data, column_x, expand_coldata_using_col_x, normalise_data_x)
         data, column_y = preprocess(
             data, column_y, expand_coldata_using_col_y, normalise_data_y)
+        data.reset_index(drop=True, inplace=True)
         return data, column_x, column_y
 
-    def exclude_rows_by_cols(data, cols: list, condition):
+    def exclude_rows_by_cols(data: pd.DataFrame, cols: list, condition):
         if cols is not None:
             for exc_col in cols:
-                data = data[data[exc_col] == condition]
+                data = data[data[exc_col] != condition]
+        data.reset_index(drop=True, inplace=True)
         return data
 
     for exc_cols, condition in zip(
@@ -187,6 +189,7 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
     if plot_type == 'histplot':
         for col_x in cols_x:
             for col_y in cols_y:
+
                 data, col_x, col_y = preprocess_data_histplot(
                     data, preprocessor_func, threshold_value_max,
                     expand_coldata_using_col_x, expand_coldata_using_col_y,
@@ -195,7 +198,7 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                     column_name_for_expanding_labels)
 
                 if use_sns:
-                    data = data.reset_index()
+                    data.reset_index(drop=True, inplace=True)
                     data, col_x, col_y = process_log_sns(
                         data, col_x, col_y, plot_kwrgs, log_axis)
 
@@ -209,7 +212,7 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                                    **merge_dicts({'use_sns': use_sns, "log_axis": log_axis,
                                                   'hue': hue,
                                                   'bin_count': bin_count,
-                                                  'misc_histplot_kwargs': misc_histplot_kwargs
+                                                  'histplot_kwargs': misc_histplot_kwargs
                                                   },
                                                  plot_kwrgs))
     elif plot_type == 'plot':
@@ -303,10 +306,10 @@ class VisODE():
 
     def histplot(self, data: pd.DataFrame, out_path, bin_count=100,
                  use_sns=False,
-                 column_x: str = None, column_y: str = None,
                  hue=None,
+                 column_x: str = None, column_y: str = None,
                  log_axis: tuple = (False, False),
-                 histplot_kwargs: dict = {},
+                 histplot_kwargs: dict = None,
                  **plot_kwrgs):
         """ log_axis: use logarithmic axes in (x-axis, y-axis) """
         from matplotlib import pyplot as plt
@@ -314,14 +317,19 @@ class VisODE():
             import seaborn as sns
             sns.set_context('paper')
 
+            histplot_kwargs = {} if histplot_kwargs is None else histplot_kwargs
             default_kwargs = {
-                "multiple": "stack",
-                "palette": "deep",
-                # palette="light:m_r",
                 "edgecolor": ".3",
-                "linewidth": .5
+                "element": "step",
+                # "hue": hue,
+                "hue": "mutation_num",
+                "fill": True,
+                "linewidth": .5,
+                "multiple": "layer", #"stack", "fill", "dodge"
+                "palette": "deep"
+                # palette="light:m_r",
             }
-            
+
             default_kwargs.update(histplot_kwargs)
 
             if column_x is None:

@@ -14,7 +14,7 @@ from src.utils.results.result_writer import ResultWriter
 from src.utils.results.visualisation import visualise_data
 from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS, RawSimulationHandling
 from src.srv.sequence_exploration.sequence_analysis import get_mutation_info_columns, tabulate_mutation_info
-from src.utils.data.data_format_tools.common import concatenate_dfs_from_list, load_csv_mult, load_json_as_dict, load_json_mult
+from src.utils.data.data_format_tools.common import load_json_as_dict, load_json_mult
 
 
 def main(config=None, data_writer=None):
@@ -26,20 +26,17 @@ def main(config=None, data_writer=None):
 
     # Start_experiment
     if data_writer is None:
-        data_writer = ResultWriter(purpose=config_file.get('experiment', {}).get('purpose', 'analyse_mutated_templates_loaded'))
+        data_writer = ResultWriter(purpose=config_file.get(
+            'experiment', {}).get('purpose', 'analyse_mutated_templates_loaded'))
 
     source_dirs = config_file.get('source_dirs', [])
     source_dir = source_dirs[0]
-    source_config = load_experiment_config_original(source_dir, 'mutation_effect_on_interactions_signal')
-    
+    source_config = load_experiment_config_original(
+        source_dir, 'mutation_effect_on_interactions_signal')
+
     # binding_rates_threshold_upper = np.power(10, 6)
     binding_rates_threshold_upper = None
     binding_rates_threshold_upper_text = f', with cutoff at {binding_rates_threshold_upper}' if binding_rates_threshold_upper else ''
-
-    if config_file.get('only_visualise_circuits', False):
-        exclude_rows_via_cols = ['mutation_name']
-    else:
-        exclude_rows_via_cols = []
 
     def readout(v):
         logging.info(v)
@@ -62,27 +59,52 @@ def main(config=None, data_writer=None):
             ),
             req_input=True,
             req_output=True,
-            name='load_csv'
-        ), 
-        Protocol(
-            concatenate_dfs_from_list,
-            req_input=True,
-            req_output=True,
-            name='concatenate_csvs'
+            name='load_json'
         ),
         Protocol(
-            readout,
+            partial(
+                pd.concat,
+                axis=0,
+                ignore_index=True),
             req_input=True,
-            req_output=True
+            req_output=True,
+            name='concatenate_dfs'
+        ),
+        # Protocol(
+        #     readout,
+        #     req_input=True,
+        #     req_output=True
+        # ),
+        # precision
+        Protocol(
+            partial(
+                visualise_data,
+                data_writer=data_writer, cols_x=[
+                    'precision_diff_to_base_circuit'],
+                plot_type='histplot',
+                out_name='precision_diff',
+                exclude_rows_zero_in_cols=['mutation_num'],
+                hue=['mutation_num'],
+                log_axis=(False, False),
+                use_sns=True,
+                expand_coldata_using_col_x=True,
+                column_name_for_expanding_labels='sample_names',
+                idx_for_expanding_labels=0,
+                title=f'Precision difference between circuit\nand mutated counterparts',
+                xlabel='Precision difference'
+            ),
+            req_input=True,
+            name='visualise_interactions_difference',
+            skip=config_file.get('only_visualise_circuits', False)
         ),
         # precision log
         Protocol(
             partial(
                 visualise_data,
-                data_writer=data_writer, cols_x=['precision_diff_to_base_circuit'],
+                data_writer=data_writer, cols_x=[
+                    'precision_diff_to_base_circuit'],
                 plot_type='histplot',
                 out_name='precision_diff_log',
-                exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
                 exclude_rows_zero_in_cols=['mutation_num'],
                 hue=['mutation_num'],
                 log_axis=(True, False),
@@ -99,20 +121,22 @@ def main(config=None, data_writer=None):
         ),
         # Binding rates min int's mutations
         Protocol(
-            partial(visualise_data, data_writer=data_writer, cols_x=['binding_rates_min_interaction'],
-                    plot_type='histplot',
-                    out_name='binding_rates_min_freqs_mutations_logs',
-                    exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
-                    threshold_value_max=binding_rates_threshold_upper,
-                    misc_histplot_kwargs={
-                        "hue": ['mutation_num'],
-                        "multiple": "stacked"},
-                    log_axis=(True, False),
-                    use_sns=True,
-                    title=f'Minimum ' + r'$k_d$' + ' strength',
-                    xlabel='Dissociation rate ' + r'$k_d$' + ' (' +
-                    fr'{SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]})' +
-                    f'{binding_rates_threshold_upper_text}'),
+            partial(
+                visualise_data, data_writer=data_writer, cols_x=[
+                    'binding_rates_min_interaction'],
+                plot_type='histplot',
+                out_name='binding_rates_min_freqs_mutations_logs',
+                threshold_value_max=binding_rates_threshold_upper,
+                exclude_rows_zero_in_cols=['mutation_num'],
+                hue=['mutation_num'],
+                misc_histplot_kwargs={
+                    "multiple": "stack"},
+                log_axis=(True, False),
+                use_sns=True,
+                title=f'Minimum ' + r'$k_d$' + ' strength',
+                xlabel='Dissociation rate ' + r'$k_d$' + ' (' +
+                fr'{SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]})' +
+                f'{binding_rates_threshold_upper_text}'),
             req_input=True,
             name='visualise_mutated_interactions'
         ),
