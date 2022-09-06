@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import logging
 from src.utils.results.writer import DataWriter
-from src.utils.misc.string_handling import add_outtype, make_time_str
+from src.utils.misc.string_handling import add_outtype, make_time_str, prettify_keys_for_label
 from pyvis.network import Network
 from src.utils.misc.type_handling import merge_dicts
 
@@ -319,6 +319,12 @@ class VisODE():
                     getattr(plt, plot_kwrg, partial(
                         warning_call, dummy_value=None, function=plot_kwrg))(value)
 
+    def rename_legend(self, plot, new_title: str, new_labels: list):
+        leg = plot.axes.flat[0].get_legend()
+        leg.set_title(new_title)
+        for t, l in zip(leg.texts, new_labels):
+            t.set_text(l)
+
     def plot(self, data, y=None, new_vis=False, out_path='test_plot', out_type='png',
              **plot_kwrgs) -> None:
         from matplotlib import pyplot as plt
@@ -406,6 +412,9 @@ class VisODE():
                 # element='poly'
                 **default_kwargs
             ).set(title=plot_kwrgs.get('title', None))
+            if plot_kwrgs.get('hue', None) is not None:
+                leg = f.axes.flat[0].get_legend()
+                leg.set_title(prettify_keys_for_label(plot_kwrgs['hue']))
             f.savefig(out_path)
             plt.close()
         else:

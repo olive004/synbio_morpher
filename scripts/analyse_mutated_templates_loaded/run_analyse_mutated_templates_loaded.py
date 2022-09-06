@@ -99,6 +99,7 @@ def main(config=None, data_writer=None):
     # Visualisations
 
     # Binding rates
+    rate_unit = r'{}'.format(SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"])
     protocols.append(Protocol(
         partial(
             visualise_data, data_writer=data_writer, cols_x=[
@@ -115,7 +116,7 @@ def main(config=None, data_writer=None):
             use_sns=True,
             title=f'Minimum ' + r'$k_d$' + ' strength',
             xlabel='Dissociation rate ' + r'$k_d$' + ' (' +
-            fr'{SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]})' +
+            f'{rate_unit})' +
             f'{binding_rates_threshold_upper_text}'),
         req_input=True,
         name='visualise_mutated_interactions'
@@ -217,6 +218,8 @@ def main(config=None, data_writer=None):
                 name='visualise_interactions_difference',
                 skip=config_file.get('only_visualise_circuits', False)
             ))
+
+    for col_x, col_y in [precision]
 
     experiment = Experiment(config=config, config_file=config_file, protocols=protocols,
                             data_writer=data_writer)

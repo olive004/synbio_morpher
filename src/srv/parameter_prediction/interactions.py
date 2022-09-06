@@ -76,9 +76,11 @@ class InteractionMatrix():
             return 'unknown'
 
     def isolate_circuit_name(self, circuit_filepath, filetype):
+        circuit_name = None
         for faddon in self.interaction_file_addons:
-            circuit_name = os.path.basename(circuit_filepath).replace('.'+filetype, '').replace(
+            base_name = os.path.basename(circuit_filepath).replace('.'+filetype, '').replace(
                 faddon+'_', '').replace('_'+faddon, '')
+            circuit_name = base_name if type(base_name) == str else circuit_name
         return circuit_name
 
     def make_rand_matrix(self, num_nodes):

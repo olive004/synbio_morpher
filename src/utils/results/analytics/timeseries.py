@@ -44,12 +44,12 @@ class Timeseries():
         signal_diff = signal_end - signal_start
         output_diff = steady_states - starting_states
 
-        if signal_diff == 0:
-            return self.num_dtype(0) 
-        if signal_start == 0:
-            signal_start = 1
-        if any(starting_states == 0):
-            starting_states = 1
+        # if signal_diff == 0:
+        #     return self.num_dtype(0) 
+        # if signal_start == 0:
+        #     signal_start = 1
+        # if any(starting_states == 0):
+        #     starting_states = 1
         precision = np.absolute(np.divide(
             output_diff / starting_states,
             signal_diff / signal_start
@@ -65,18 +65,21 @@ class Timeseries():
         signal_high = np.max(self.data[signal_idx, :])
 
         """ MODIFYING THIS PART A BIT - GETTING DIVIDE BY ZERO ERROR OTHERWISE """
-        if signal_high - signal_low == 0:
+        output_diff = peaks - starting_states
+        signal_diff = signal_high - signal_low
+
+        if signal_diff == 0:
+            logging.warning(f'Signal difference was 0 from {signal_high} and {signal_low}.')
             return self.num_dtype(0)
-        elif signal_low == 0 or any(starting_states == 0):
-            return np.expand_dims(np.absolute(np.divide(
-                peaks - starting_states,
-                signal_high - signal_low
-            )).astype(self.num_dtype), axis=1)
-        else:
-            return np.absolute(np.divide(
-                (peaks - starting_states) / starting_states,
-                (signal_high - signal_low) / signal_low
-            )).astype(self.num_dtype)
+        # elif signal_low == 0 or any(starting_states == 0):
+        #     return np.expand_dims(np.absolute(np.divide(
+        #         output_diff,
+        #         signal_diff
+        #     )).astype(self.num_dtype), axis=1)
+        return np.absolute(np.divide(
+            output_diff / starting_states,
+            signal_diff / signal_low
+        )).astype(self.num_dtype)
 
     def get_response_times(self, steady_states):
         margin_high = 1.05
