@@ -220,38 +220,6 @@ def main(config=None, data_writer=None):
                 skip=config_file.get('only_visualise_circuits', False)
             ))
 
-    # Scatter plots
-    for cols_x, cols_y, title, xlabel, ylabel in [
-            [
-                'mutation_position',
-                f'{analytics_type}_ratio_from_mutation_to_base',
-                f'Position vs. {prettify_keys_for_label(analytics_type)} ratio from mutated\nto original circuit',
-                f'{prettify_keys_for_label("mutation_position")}',
-                f'{prettify_keys_for_label(analytics_type)} ratio'
-            ] for analytics_type in analytics_types]:
-        protocols.append(Protocol(
-            partial(
-                visualise_data,
-                data_writer=data_writer,
-                cols_x=[cols_x], cols_y=[cols_y],
-                plot_type='scatter_plot',
-                out_name=f'{cols_x}_{cols_y}_log',
-                exclude_rows_zero_in_cols=['mutation_num'],
-                log_axis=(True, False),
-                use_sns=True,
-                expand_xcoldata_using_col=True,
-                column_name_for_expanding_labels='sample_names',
-                idx_for_expanding_labels=0,
-                title=title,
-                xlabel=xlabel,
-                ylabel=ylabel
-            ),
-            req_input=True,
-            name='visualise_interactions_difference',
-            skip=config_file.get('only_visualise_circuits', False)
-        )
-        )
-
     experiment = Experiment(config=config, config_file=config_file, protocols=protocols,
                             data_writer=data_writer)
     experiment.run_experiment()

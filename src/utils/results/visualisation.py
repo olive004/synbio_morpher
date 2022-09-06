@@ -79,8 +79,6 @@ class NetworkCustom(Network):
 
 def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                    cols_x: list = None, cols_y: list = None,
-                   expand_xcoldata_using_col: bool = False,
-                   expand_coldata_using_col_y: bool = False,
                    normalise_data_x: bool = False,
                    normalise_data_y: bool = False,
                    plot_type='histplot', out_name='test_plot',
@@ -93,6 +91,8 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                    selection_conditions: List[tuple] = None,
                    exclude_rows_nonempty_in_cols: list = None,
                    exclude_rows_zero_in_cols: list = None,
+                   expand_xcoldata_using_col: bool = False,
+                   expand_ycoldata_using_col: bool = False,
                    column_name_for_expanding_labels: str = None,
                    idx_for_expanding_labels: int = 0,
                    plot_cols_on_same_graph=False,
@@ -137,12 +137,12 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
         def process_log(data, col, log_option, col_label):
             if col is not None:
                 if log_option:
+                    data = data[data[col] != 0]
+                    data[col] = data[col].abs()
                     new_col = 'Log of ' + plot_kwrgs.get(col_label, col)
                 else:
                     new_col = plot_kwrgs.get(col_label, col)
                 data = data.rename(columns={col: new_col})
-                data = data[data[new_col] != 0]
-                data[new_col] = data[new_col].abs()
             return data, new_col
 
         if column_x is not None:
@@ -156,7 +156,7 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
 
     def preprocess_data_histplot(data: pd.DataFrame, preprocessor_func_x,
                                  threshold_value_max,
-                                 expand_xcoldata_using_col, expand_coldata_using_col_y,
+                                 expand_xcoldata_using_col, expand_ycoldata_using_col,
                                  column_x: str, column_y: str,
                                  normalise_data_x: bool, normalise_data_y: bool,
                                  column_name_for_expanding_labels,
@@ -182,7 +182,7 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
         data, column_x = preprocess(
             data, column_x, expand_xcoldata_using_col, normalise_data_x, preprocessor_func_x)
         data, column_y = preprocess(
-            data, column_y, expand_coldata_using_col_y, normalise_data_y, None)
+            data, column_y, expand_ycoldata_using_col, normalise_data_y, None)
         data.reset_index(drop=True, inplace=True)
 
         for exc_cols, condition in zip(
@@ -217,7 +217,7 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
 
     #             data, col_x, col_y = preprocess_data_histplot(
     #                 data, preprocessor_func_x, threshold_value_max,
-    #                 expand_xcoldata_using_col, expand_coldata_using_col_y,
+    #                 expand_xcoldata_using_col, expand_ycoldata_using_col,
     #                 col_x, col_y,
     #                 normalise_data_x, normalise_data_y,
     #                 column_name_for_expanding_labels,
@@ -273,7 +273,7 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
             if use_sns:
                 data, col_x, col_y = preprocess_data_histplot(
                     data, preprocessor_func_x, threshold_value_max,
-                    expand_xcoldata_using_col, expand_coldata_using_col_y,
+                    expand_xcoldata_using_col, expand_ycoldata_using_col,
                     col_x, col_y,
                     normalise_data_x, normalise_data_y,
                     column_name_for_expanding_labels,
