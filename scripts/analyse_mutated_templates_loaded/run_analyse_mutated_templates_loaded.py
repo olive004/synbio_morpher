@@ -175,8 +175,8 @@ def main(config=None, data_writer=None):
                     log_axis=(True, False),
                     use_sns=True,
                     expand_xcoldata_using_col=True,
-                    column_name_for_expanding_labels='sample_names',
-                    idx_for_expanding_labels=0,
+                    column_name_for_expanding_xcoldata='sample_names',
+                    idx_for_expanding_xcoldata=0,
                     title=title,
                     xlabel=xlabel
                 ),
@@ -210,8 +210,8 @@ def main(config=None, data_writer=None):
                     log_axis=(True, False),
                     use_sns=True,
                     expand_xcoldata_using_col=True,
-                    column_name_for_expanding_labels='sample_names',
-                    idx_for_expanding_labels=0,
+                    column_name_for_expanding_xcoldata='sample_names',
+                    idx_for_expanding_xcoldata=0,
                     title=title,
                     xlabel=xlabel
                 ),

@@ -93,43 +93,64 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                    exclude_rows_zero_in_cols: list = None,
                    expand_xcoldata_using_col: bool = False,
                    expand_ycoldata_using_col: bool = False,
-                   column_name_for_expanding_labels: str = None,
-                   idx_for_expanding_labels: int = 0,
+                   column_name_for_expanding_xcoldata: str = None,
+                   column_name_for_expanding_ycoldata: str = None,
+                   idx_for_expanding_xcoldata: int = 0,
+                   idx_for_expanding_ycoldata: int = 0,
                    plot_cols_on_same_graph=False,
                    misc_histplot_kwargs=None,
                    **plot_kwargs):
     """ Plot type can be any attributes of VisODE() """
     data = deepcopy(og_data)
 
-    hue = hue if hue is not None else column_name_for_expanding_labels
+    hue = hue if hue is not None else column_name_for_expanding_xcoldata
 
     cols_x = cols_x if cols_x is not None else [None]
     cols_y = cols_y if cols_y is not None else [None]
 
-    def expand_data_by_col(data: pd.DataFrame, column, column_for_expanding_labels):
-        df_lists = data[[column]].unstack().apply(pd.Series)
-        col_names = data[column_for_expanding_labels].iloc[idx_for_expanding_labels]
-        if len(df_lists.columns) == 1:
-            logging.warning(
-                f'The current column {column} may not be expandable with {col_names}')
-        df_lists = df_lists.rename(columns=dict(
-            zip(df_lists.columns.values, col_names)))
+    def expand_data_by_col(data: pd.DataFrame, column, column_for_expanding_labels, idx_for_expanding_coldata):
+        if column_for_expanding_labels is None:
+            expand_vertically = True
+            s = data.apply(lambda x: pd.Series(x[column]),axis=1).stack().reset_index(level=1, drop=True)
+            s.name = column
+            logging.info(s)
+            expanded_data = data.drop(column, axis=1).join(s)
+            logging.info(expanded_data)
+        else: 
+            df_lists = data[[column]].unstack().apply(pd.Series)
+            logging.info(df_lists)
+            col_names = data[column_for_expanding_labels].iloc[idx_for_expanding_coldata]
+            if len(df_lists.columns) == 1:
+                logging.warning(
+                    f'The current column {column} may not be expandable with {col_names}')
+            df_lists = df_lists.rename(columns=dict(
+                zip(df_lists.columns.values, col_names)))
+            logging.info(df_lists)
 
-        temp_data = deepcopy(data)
-        expanded_data = pd.DataFrame(columns=temp_data.columns)
-        for c in col_names:
-            expanded_df_col = pd.DataFrame.from_dict(
-                {column: df_lists[c], column_for_expanding_labels: c})
-            temp_data.drop(column, axis=1, inplace=True)
-            temp_data = temp_data.assign(**{
-                # .reset_index(inplace=True, drop=True)),
-                column: pd.Series(expanded_df_col[column].values),
-                # .reset_index(inplace=True, drop=True))
-                column_for_expanding_labels: pd.Series(
-                    expanded_df_col[column_for_expanding_labels].values)
-            })
-            expanded_data = pd.concat(
-                [expanded_data, temp_data], axis=0, ignore_index=True)
+            temp_data = deepcopy(data)
+            expanded_data = pd.DataFrame(columns=temp_data.columns)
+            for c in col_names:
+                logging.info(df_lists[c])
+                expanded_df_col = pd.DataFrame.from_dict(
+                    {column: df_lists[c], column_for_expanding_labels: c})
+                logging.info(column)
+                logging.info(column_for_expanding_labels)
+                logging.info(col_names)
+                logging.info(expanded_df_col)
+                logging.info(type(expanded_df_col))
+                logging.info(len(expanded_df_col))
+                temp_data.drop(column, axis=1, inplace=True)
+                temp_data = temp_data.assign(**{
+                    # .reset_index(inplace=True, drop=True)),
+                    column: pd.Series(expanded_df_col[column].values),
+                    # .reset_index(inplace=True, drop=True))
+                    column_for_expanding_labels: pd.Series(
+                        expanded_df_col[column_for_expanding_labels].values)
+                })
+                expanded_data = pd.concat(
+                    [expanded_data, temp_data], axis=0, ignore_index=True)
+        expanded_data.reset_index(drop=True, inplace=True)
+        logging.info(expanded_data)
         return expanded_data
 
     def process_log_sns(data: pd.DataFrame, column_x: str, column_y: str,
@@ -159,19 +180,24 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                                  expand_xcoldata_using_col, expand_ycoldata_using_col,
                                  column_x: str, column_y: str,
                                  normalise_data_x: bool, normalise_data_y: bool,
-                                 column_name_for_expanding_labels,
+                                 column_name_for_expanding_xcoldata,
+                                 column_name_for_expanding_ycoldata,
                                  exclude_rows_nonempty_in_cols, exclude_rows_zero_in_cols,
+                                 idx_for_expanding_xcoldata,
+                                 idx_for_expanding_ycoldata,
                                  preprocessor_func_y=None,
                                  selection_conditions=None):
         def preprocess(data, column, expand_coldata_using_col, normalise_data,
-                       preprocessor_func):
+                       preprocessor_func, column_name_for_expanding_coldata,
+                       idx_for_expanding_coldata):
             if column is not None:
                 if preprocessor_func:
                     data[column] = preprocessor_func(data[column].values)
                 if expand_coldata_using_col:
                     data = expand_data_by_col(
                         data=data, column=column,
-                        column_for_expanding_labels=column_name_for_expanding_labels)
+                        column_for_expanding_labels=column_name_for_expanding_coldata,
+                        idx_for_expanding_coldata=idx_for_expanding_coldata)
                 if threshold_value_max:
                     data = data[data[column] <= threshold_value_max]
                 if normalise_data:
@@ -180,9 +206,13 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
 
             return data, column
         data, column_x = preprocess(
-            data, column_x, expand_xcoldata_using_col, normalise_data_x, preprocessor_func_x)
+            data, column_x, expand_xcoldata_using_col, normalise_data_x, 
+            preprocessor_func_x, column_name_for_expanding_xcoldata, 
+            idx_for_expanding_xcoldata)
         data, column_y = preprocess(
-            data, column_y, expand_ycoldata_using_col, normalise_data_y, None)
+            data, column_y, expand_ycoldata_using_col, normalise_data_y, 
+            None, column_name_for_expanding_ycoldata,
+            idx_for_expanding_ycoldata)
         data.reset_index(drop=True, inplace=True)
 
         for exc_cols, condition in zip(
@@ -220,7 +250,7 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
     #                 expand_xcoldata_using_col, expand_ycoldata_using_col,
     #                 col_x, col_y,
     #                 normalise_data_x, normalise_data_y,
-    #                 column_name_for_expanding_labels,
+    #                 column_name_for_expanding_xcoldata,
     #                 exclude_rows_nonempty_in_cols, exclude_rows_zero_in_cols,
     #                 selection_conditions)
 
@@ -255,19 +285,7 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                                    write_func=visualiser.plot,
                                    **merge_dicts({'data': x, 'y': y}, plot_kwargs))
         return
-        # try:
-        #     for col_x in cols_x:
-        #         for col_y in cols_y:
-        #             x, y = data[col_x], data[col_y]
-        #             if preprocessor_func_x:
-        #                 x = preprocessor_func_x(x.values)
-        #                 # y = preprocessor_func_x(y.values)
-        #             data_writer.output(out_type='png', out_name=out_name,
-        #                             write_func=visualiser.plot,
-        #                             **merge_dicts({'data': x, 'y': y}, plot_kwrgs))
-        # except IndexError:
-        #     assert cols_x is not None and cols_y is not None, 'For visualising' \
-        #         ' a plot from a table, please only provide 2 columns as variables.'
+
     for col_x in cols_x:
         for col_y in cols_y:
             if use_sns:
@@ -276,9 +294,12 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                     expand_xcoldata_using_col, expand_ycoldata_using_col,
                     col_x, col_y,
                     normalise_data_x, normalise_data_y,
-                    column_name_for_expanding_labels,
+                    column_name_for_expanding_xcoldata,
+                    column_name_for_expanding_ycoldata,
                     exclude_rows_nonempty_in_cols, exclude_rows_zero_in_cols,
-                    selection_conditions)
+                    idx_for_expanding_xcoldata,
+                    idx_for_expanding_ycoldata,
+                    selection_conditions=selection_conditions)
                 data, col_x, col_y = process_log_sns(
                     data, col_x, col_y, plot_kwargs, log_axis)
                 if plot_type == 'scatter_plot':
@@ -395,12 +416,16 @@ class VisODE():
         import matplotlib.pyplot as plt
         sns.set_context('paper')
 
+        logging.info(data[x])
+        logging.info(data[y])
+
         f, ax = plt.subplots(figsize=(7, 5))
         sns.scatterplot(
             data=data,
             x=x,
-            y=y,
-            **plot_kwargs
+            y=y
+            # y=y,
+            # **plot_kwargs
         ).set(title=title)
         f.savefig(out_path)
         plt.close()
