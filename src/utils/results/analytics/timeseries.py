@@ -81,6 +81,14 @@ class Timeseries():
             signal_diff / signal_low
         )).astype(self.num_dtype)
 
+    def get_rmse(self):
+        if 'signal_diff' in self.name:
+            rmse = np.sqrt(np.sum(np.divide(np.power(self.data, 2), len(self.data))))
+        else:
+            rmse = 'No reference given.'
+        return rmse
+        
+
     def get_response_times(self, steady_states):
         margin_high = 1.05
         margin_low = 0.95
@@ -107,7 +115,6 @@ class Timeseries():
 
     def get_analytics_types(self):
         return ['fold_change',
-                'is_steady_state_reached',
                 'overshoot',
                 'precision',
                 'response_time',
@@ -126,6 +133,7 @@ class Timeseries():
         analytics = {
             'first_derivative': self.get_derivative(),
             'fold_change': self.fold_change(),
+            'RMSE': self.get_rmse(),
             'sensitivity': self.get_sensitivity(signal_idx)
         }
         analytics['steady_states'], \

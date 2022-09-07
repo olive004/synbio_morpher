@@ -345,7 +345,7 @@ class CircuitModeller():
         signal_diff = ref_circuit.result_collector.get_result('signal').data - \
             new_circuit.result_collector.get_result('signal').data
 
-        new_circuit.result_collector.make_modified_duplicate_result(
+        new_circuit.result_collector.add_modified_duplicate_result(
             key='signal', data=signal_diff, name='signal_diff')
         return new_circuit
 

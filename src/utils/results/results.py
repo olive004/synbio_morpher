@@ -44,9 +44,10 @@ class ResultCollector():
                               vis_kwargs, analytics_kwargs, analytics)
         self.results[name] = result_entry
 
-    def make_modified_duplicate_result(self, key, **result_kwargs):
+    def add_modified_duplicate_result(self, key, **add_kwargs):
         result = deepcopy(self.get_result(key))
-        result_kwargs.update(result.__dict__)
+        result_kwargs = result.__dict__
+        result_kwargs.update(add_kwargs)
         self.add_result(**result_kwargs)
 
     def get_result(self, key) -> Result:
