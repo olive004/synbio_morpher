@@ -79,6 +79,43 @@ def main(config=None, data_writer=None):
                        'steady_states']  # Timeseries(data=None).get_analytics_types()
 
     # Scatter plots
+    # Difference
+    for cols_x, cols_y, title, xlabel, ylabel in [
+            [
+                'mutation_positions',
+                f'{analytics_type}_diff_to_base_circuit',
+                f'Position vs. {prettify_keys_for_label(analytics_type)} difference between circuit\nand mutated counterparts',
+                f'{prettify_keys_for_label("mutation_position")}',
+                f'{prettify_keys_for_label(analytics_type)} difference'
+            ] for analytics_type in analytics_types]:
+        protocols.append(Protocol(
+            partial(
+                visualise_data,
+                data_writer=data_writer,
+                cols_x=[cols_x], cols_y=[cols_y],
+                plot_type='scatter_plot',
+                out_name=f'{cols_x}_{cols_y}',
+                exclude_rows_zero_in_cols=['mutation_num'],
+                log_axis=(False, False),
+                use_sns=True,
+                hue='mutation_num',
+                expand_xcoldata_using_col=True,
+                expand_ycoldata_using_col=True,
+                column_name_for_expanding_xcoldata=None,
+                column_name_for_expanding_ycoldata='sample_names',
+                idx_for_expanding_xcoldata=1,
+                idx_for_expanding_ycoldata=0,
+                title=title,
+                xlabel=xlabel,
+                ylabel=ylabel
+            ),
+            req_input=True,
+            name='visualise_interactions_difference',
+            skip=config_file.get('only_visualise_circuits', False)
+        )
+        )
+
+    # Ratio
     for cols_x, cols_y, title, xlabel, ylabel in [
             [
                 'mutation_positions',

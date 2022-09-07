@@ -111,34 +111,24 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
     def expand_data_by_col(data: pd.DataFrame, column, column_for_expanding_labels, idx_for_expanding_coldata):
         if column_for_expanding_labels is None:
             expand_vertically = True
-            s = data.apply(lambda x: pd.Series(x[column]),axis=1).stack().reset_index(level=1, drop=True)
+            s = data.apply(lambda x: pd.Series(
+                x[column]), axis=1).stack().reset_index(level=1, drop=True)
             s.name = column
-            logging.info(s)
             expanded_data = data.drop(column, axis=1).join(s)
-            logging.info(expanded_data)
-        else: 
+        else:
             df_lists = data[[column]].unstack().apply(pd.Series)
-            logging.info(df_lists)
             col_names = data[column_for_expanding_labels].iloc[idx_for_expanding_coldata]
             if len(df_lists.columns) == 1:
                 logging.warning(
                     f'The current column {column} may not be expandable with {col_names}')
             df_lists = df_lists.rename(columns=dict(
                 zip(df_lists.columns.values, col_names)))
-            logging.info(df_lists)
 
             temp_data = deepcopy(data)
             expanded_data = pd.DataFrame(columns=temp_data.columns)
             for c in col_names:
-                logging.info(df_lists[c])
                 expanded_df_col = pd.DataFrame.from_dict(
                     {column: df_lists[c], column_for_expanding_labels: c})
-                logging.info(column)
-                logging.info(column_for_expanding_labels)
-                logging.info(col_names)
-                logging.info(expanded_df_col)
-                logging.info(type(expanded_df_col))
-                logging.info(len(expanded_df_col))
                 temp_data.drop(column, axis=1, inplace=True)
                 temp_data = temp_data.assign(**{
                     # .reset_index(inplace=True, drop=True)),
@@ -150,7 +140,6 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                 expanded_data = pd.concat(
                     [expanded_data, temp_data], axis=0, ignore_index=True)
         expanded_data.reset_index(drop=True, inplace=True)
-        logging.info(expanded_data)
         return expanded_data
 
     def process_log_sns(data: pd.DataFrame, column_x: str, column_y: str,
@@ -206,11 +195,11 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
 
             return data, column
         data, column_x = preprocess(
-            data, column_x, expand_xcoldata_using_col, normalise_data_x, 
-            preprocessor_func_x, column_name_for_expanding_xcoldata, 
+            data, column_x, expand_xcoldata_using_col, normalise_data_x,
+            preprocessor_func_x, column_name_for_expanding_xcoldata,
             idx_for_expanding_xcoldata)
         data, column_y = preprocess(
-            data, column_y, expand_ycoldata_using_col, normalise_data_y, 
+            data, column_y, expand_ycoldata_using_col, normalise_data_y,
             None, column_name_for_expanding_ycoldata,
             idx_for_expanding_ycoldata)
         data.reset_index(drop=True, inplace=True)
@@ -316,7 +305,8 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                     logging.warning(f'Unknown plot type given "{plot_type}"')
                 data_writer.output(out_type='png', out_name=out_name,
                                    write_func=write_func,
-                                   **merge_dicts({'x': col_x, 'y': col_y, 'data': data},
+                                   **merge_dicts({'x': col_x, 'y': col_y, 'data': data,
+                                                  'hue': hue},
                                                  plot_kwargs))
     # else:
     #     logging.warning(f'Could not find visualiser function {plot_type}')
@@ -389,46 +379,41 @@ class VisODE():
         plt.savefig(out_path)
         plt.close()
 
-    def sns_barplot(self, out_path: str, x: str, y: str, data: pd.DataFrame,
-                    title: str = None, xlabel=None, ylabel=None,
-                    **plot_kwargs):
+    def sns_generic_plot(self, plot_func, out_path: str, x: str, y: str, data: pd.DataFrame,
+                         title: str = None,
+                         **plot_kwargs):
         import seaborn as sns
         import matplotlib.pyplot as plt
         sns.set_context('paper')
-        # sns.set_theme(style="ticks")
+        sns.set_theme(style="ticks")
 
         f, ax = plt.subplots(figsize=(7, 5))
-        # sns.despine(f)
-        sns.barplot(
+        plot_func(
             data=data,
             x=x,
             y=y,
-            # element='poly'
             **plot_kwargs
         ).set(title=title)
         f.savefig(out_path)
         plt.close()
 
+    def sns_barplot(self, out_path: str, x: str, y: str, data: pd.DataFrame,
+                    title: str = None, xlabel=None, ylabel=None,
+                    **plot_kwargs):
+        import seaborn as sns
+        self.sns_generic_plot(sns.barplot, out_path, x, y, data, title, **plot_kwargs)
+
     def sns_scatterplot(self, out_path: str, x: str, y: str, data: pd.DataFrame,
                         title: str = None, xlabel=None, ylabel=None,
                         **plot_kwargs):
         import seaborn as sns
-        import matplotlib.pyplot as plt
-        sns.set_context('paper')
+        self.sns_generic_plot(sns.scatterplot, out_path, x, y, data, title, **plot_kwargs)
 
-        logging.info(data[x])
-        logging.info(data[y])
-
-        f, ax = plt.subplots(figsize=(7, 5))
-        sns.scatterplot(
-            data=data,
-            x=x,
-            y=y
-            # y=y,
-            # **plot_kwargs
-        ).set(title=title)
-        f.savefig(out_path)
-        plt.close()
+    def sns_violinplot(self, out_path: str, x: str, y: str, data: pd.DataFrame,
+                       title: str = None, xlabel=None, ylabel=None,
+                       **plot_kwargs):
+        import seaborn as sns
+        self.sns_generic_plot(sns.violinplot, out_path, x, y, data, title, **plot_kwargs)
 
     # Make visualisations for each analytic chosen
     def heatmap(self, data: pd.DataFrame, out_path: str = None, out_type='png',
@@ -445,11 +430,11 @@ class VisODE():
         plt.clf()
 
     def sns_histplot(self, data: pd.DataFrame, out_path,
-                 bin_count=100,
-                 x: str = None, y: str = None,
-                 log_axis: tuple = (False, False),
-                 histplot_kwargs: dict = None,
-                 **plot_kwrgs):
+                     bin_count=100,
+                     x: str = None, y: str = None,
+                     log_axis: tuple = (False, False),
+                     histplot_kwargs: dict = None,
+                     **plot_kwrgs):
         """ log_axis: use logarithmic axes in (x-axis, y-axis) """
         from matplotlib import pyplot as plt
         import seaborn as sns
