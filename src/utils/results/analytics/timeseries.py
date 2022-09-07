@@ -117,6 +117,7 @@ class Timeseries():
                 'response_time',
                 'response_time_high',
                 'response_time_low',
+                'RMSE',
                 'sensitivity',
                 'steady_states']
 
