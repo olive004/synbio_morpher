@@ -90,7 +90,7 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                    bin_count=100,
                    selection_conditions: List[tuple] = None,
                    remove_outliers_y: bool = False,
-                   outlier_std_threshold_y = 3,
+                   outlier_std_threshold_y=3,
                    exclude_rows_nonempty_in_cols: list = None,
                    exclude_rows_zero_in_cols: list = None,
                    expand_xcoldata_using_col: bool = False,
@@ -148,13 +148,18 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
         return expanded_data
 
     def process_log_sns(data: pd.DataFrame, column_x: str, column_y: str,
-                        plot_kwrgs: dict, log_axis: list):
+                        plot_kwrgs: dict, log_axis: list, plot_type: str = None):
+        exempt_from_log = ['histplot']
+
         def process_log(data, col, log_option, col_label):
             if col is not None:
                 if log_option:
                     data = data[data[col] != 0]
-                    data[col] = data[col].abs()
+                    data = data.drop(col, axis=1).join(data[col].abs())
                     new_col = 'Log of ' + plot_kwrgs.get(col_label, col)
+                    if plot_type not in exempt_from_log:
+                        log_df = np.log10(data[col])
+                        data = data.drop(col, axis=1).join(log_df)
                 else:
                     new_col = plot_kwrgs.get(col_label, col)
                 data = data.rename(columns={col: new_col})
@@ -163,24 +168,24 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
         if column_x is not None:
             data, column_x = process_log(data, column_x, log_axis[0], 'xlabel')
         if column_y is not None:
-            data, column_y = process_log(data, column_y, log_axis[0], 'ylabel')
+            data, column_y = process_log(data, column_y, log_axis[1], 'ylabel')
         if column_x is None and column_y is None:
             logging.warning('No columns given as input to histplot.')
         data.reset_index(drop=True, inplace=True)
         return data, column_x, column_y
 
     def preprocess_data(data: pd.DataFrame, preprocessor_func_x,
-                                 threshold_value_max,
-                                 expand_xcoldata_using_col, expand_ycoldata_using_col,
-                                 column_x: str, column_y: str,
-                                 normalise_data_x: bool, normalise_data_y: bool,
-                                 column_name_for_expanding_xcoldata,
-                                 column_name_for_expanding_ycoldata,
-                                 exclude_rows_nonempty_in_cols, exclude_rows_zero_in_cols,
-                                 idx_for_expanding_xcoldata,
-                                 idx_for_expanding_ycoldata,
-                                 preprocessor_func_y=None,
-                                 selection_conditions=None):
+                        threshold_value_max,
+                        expand_xcoldata_using_col, expand_ycoldata_using_col,
+                        column_x: str, column_y: str,
+                        normalise_data_x: bool, normalise_data_y: bool,
+                        column_name_for_expanding_xcoldata,
+                        column_name_for_expanding_ycoldata,
+                        exclude_rows_nonempty_in_cols, exclude_rows_zero_in_cols,
+                        idx_for_expanding_xcoldata,
+                        idx_for_expanding_ycoldata,
+                        preprocessor_func_y=None,
+                        selection_conditions=None):
         def preprocess(data, column, expand_coldata_using_col, normalise_data,
                        preprocessor_func, column_name_for_expanding_coldata,
                        idx_for_expanding_coldata, remove_outliers=False,
@@ -198,8 +203,10 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                 if remove_outliers:
                     mean = data[column].mean()
                     std = data[column].std()
-                    data = data[data[column] < mean + np.multiply(outlier_std_threshold, std)]
-                    data = data[data[column] > mean - np.multiply(outlier_std_threshold, std)]
+                    data = data[data[column] < mean +
+                                np.multiply(outlier_std_threshold, std)]
+                    data = data[data[column] > mean -
+                                np.multiply(outlier_std_threshold, std)]
                 if normalise_data:
                     df = data[column]
                     data[column] = (df - df.mean()) / df.std()
@@ -300,7 +307,7 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                     idx_for_expanding_ycoldata,
                     selection_conditions=selection_conditions)
                 data, col_x, col_y = process_log_sns(
-                    data, col_x, col_y, plot_kwargs, log_axis)
+                    data, col_x, col_y, plot_kwargs, log_axis, plot_type)
                 if plot_type == 'scatter_plot':
                     write_func = visualiser.sns_scatterplot
                 elif plot_type == 'bar_plot':
@@ -405,8 +412,6 @@ class VisODE():
 
         if plot_kwargs.get('hue'):
             default_kwargs = {
-                # 'palette': sns.color_palette("husl", as_cmap=True)
-                # 'palette': sns.color_palette("husl", 8)
                 'palette': sns.color_palette("husl", len(data[plot_kwargs.get('hue')].unique()))
             }
             plot_kwargs.update(default_kwargs)
@@ -418,10 +423,8 @@ class VisODE():
             y=y,
             **plot_kwargs
         ).set(title=title)
-        plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., title=prettify_keys_for_label(plot_kwargs.get('hue')))
-        # if plot_kwargs.get('hue', None) is not None:
-        #     leg = f.axes.flat[0].get_legend()
-        #     leg.set_title(prettify_keys_for_label(plot_kwargs['hue']))
+        plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.,
+                   title=prettify_keys_for_label(plot_kwargs.get('hue')))
         f.savefig(out_path, bbox_inches='tight')
         plt.close()
 
@@ -429,6 +432,7 @@ class VisODE():
                     title: str = None, xlabel=None, ylabel=None,
                     **plot_kwargs):
         import seaborn as sns
+        plot_kwargs.update({'errwidth': 0.5})
         self.sns_generic_plot(sns.barplot, out_path, x,
                               y, data, title, **plot_kwargs)
 
