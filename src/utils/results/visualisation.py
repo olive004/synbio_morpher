@@ -401,8 +401,15 @@ class VisODE():
         import matplotlib.pyplot as plt
         sns.set_context('paper')
         sns.set_theme(style=style)
-        # sns.color_palette("magma", as_cmap=True)
         sns.set_palette("magma")
+
+        if plot_kwargs.get('hue'):
+            default_kwargs = {
+                # 'palette': sns.color_palette("husl", as_cmap=True)
+                # 'palette': sns.color_palette("husl", 8)
+                'palette': sns.color_palette("husl", len(data[plot_kwargs.get('hue')].unique()))
+            }
+            plot_kwargs.update(default_kwargs)
 
         f, ax = plt.subplots(figsize=figsize)
         plot_func(

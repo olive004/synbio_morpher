@@ -102,7 +102,7 @@ def main(config=None, data_writer=None):
                     plot_type='line_plot',
                     out_name=f'{cols_x}_{cols_y}',
                     exclude_rows_zero_in_cols=['mutation_num'],
-                    log_axis=(False, False),
+                    log_axis=(False, True),
                     use_sns=True,
                     hue='mutation_num',
                     expand_xcoldata_using_col=True,
@@ -112,7 +112,7 @@ def main(config=None, data_writer=None):
                     idx_for_expanding_xcoldata=1,
                     idx_for_expanding_ycoldata=0,
                     remove_outliers_y=remove_outliers,
-                    outlier_threshold_y=outlier_std_threshold,
+                    outlier_std_threshold_y=outlier_std_threshold,
                     title=title,
                     xlabel=xlabel,
                     ylabel=ylabel
@@ -127,8 +127,8 @@ def main(config=None, data_writer=None):
         for cols_x, cols_y, title, xlabel, ylabel in [
                 [
                     mutation_attr,
-                    f'{prettify_keys_for_label(mutation_attr)} vs. {prettify_keys_for_label(analytics_type)} ratio from mutated\nto original circuit',
                     f'{analytics_type}_ratio_from_mutation_to_base',
+                    f'{prettify_keys_for_label(mutation_attr)} vs. {prettify_keys_for_label(analytics_type)} ratio from mutated\nto original circuit',
                     f'{prettify_keys_for_label(mutation_attr)}',
                     f'{prettify_keys_for_label(analytics_type)} ratio'
                 ] for analytics_type in analytics_types]:
