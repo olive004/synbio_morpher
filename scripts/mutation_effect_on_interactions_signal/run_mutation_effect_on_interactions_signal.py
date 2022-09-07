@@ -18,10 +18,10 @@ def main(config=None, data_writer=None):
     # Set configs
     if config is None:
         config = os.path.join(
-            "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_1.json")
+            # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_1.json")
             # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_2.json")
             # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_10.json")
-            # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_2-.json")
+            "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_20.json")
     config_file = load_json_as_dict(config)
 
     # Start_experiment
@@ -75,6 +75,7 @@ def main(config=None, data_writer=None):
                         methods={
                     "init_circuit": {},
                     "simulate_signal": {'save_numerical_vis_data': True},
+                    "compare_circuits": {'ref_circuit': None},
                     "write_results": {}
                 }
                 ),

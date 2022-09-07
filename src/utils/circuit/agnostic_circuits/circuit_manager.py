@@ -320,7 +320,8 @@ class CircuitModeller():
             # logging.info(f'Running methods on mutation {name} ({i})')
             if include_normal_run and i == 0:
                 self.result_writer.unsubdivide_last_dir()
-                circuit = self.apply_to_circuit(circuit, methods)
+                circuit = self.apply_to_circuit(
+                    circuit, methods, ref_circuit=circuit)
                 self.result_writer.subdivide_writing(
                     'mutations', safe_dir_change=False)
             subcircuit = circuit.make_subsystem(name, mutation)
@@ -332,17 +333,20 @@ class CircuitModeller():
     def apply_to_circuit(self, circuit: BaseCircuit, methods: dict, ref_circuit: BaseCircuit):
         for method, kwargs in methods.items():
             if hasattr(self, method):
+                if 'ref_circuit' in kwargs.keys():
+                    kwargs.update({'ref_circuit': ref_circuit})
                 circuit = getattr(self, method)(circuit, **kwargs)
             else:
                 logging.warning(
                     f'Could not find method @{method} in class {self}')
+        return circuit
 
     def compare_circuits(self, new_circuit: BaseCircuit, ref_circuit: BaseCircuit):
         signal_diff = ref_circuit.result_collector.get_result('signal').data - \
             new_circuit.result_collector.get_result('signal').data
 
         new_circuit.result_collector.make_modified_duplicate_result(
-            key='signal', result_data=signal_diff, name='signal_diff')
+            key='signal', data=signal_diff, name='signal_diff')
         return new_circuit
 
     def visualise_graph(self, circuit: BaseCircuit, mode="pyvis", new_vis=False):
@@ -352,3 +356,4 @@ class CircuitModeller():
                       only_numerical: bool = False):
         self.result_writer.write_all(
             circuit, new_report, no_visualisations=no_visualisations, only_numerical=only_numerical)
+        return circuit
