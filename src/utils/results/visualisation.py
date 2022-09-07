@@ -81,7 +81,7 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                    cols_x: list = None, cols_y: list = None,
                    normalise_data_x: bool = False,
                    normalise_data_y: bool = False,
-                   plot_type='histplot', out_name='test_plot',
+                   plot_type: str = None, out_name='test_plot',
                    hue: str = None,
                    preprocessor_func_x=None,
                    use_sns=False,
@@ -89,6 +89,8 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                    threshold_value_max=None,
                    bin_count=100,
                    selection_conditions: List[tuple] = None,
+                   remove_outliers_y: bool = False,
+                   outlier_threshold_y = 0.0001,
                    exclude_rows_nonempty_in_cols: list = None,
                    exclude_rows_zero_in_cols: list = None,
                    expand_xcoldata_using_col: bool = False,
@@ -108,8 +110,11 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
     cols_x = cols_x if cols_x is not None else [None]
     cols_y = cols_y if cols_y is not None else [None]
 
-    def expand_data_by_col(data: pd.DataFrame, column, column_for_expanding_labels, idx_for_expanding_coldata):
-        if column_for_expanding_labels is None:
+    def expand_data_by_col(data: pd.DataFrame, column, column_for_expanding_coldata, idx_for_expanding_coldata):
+        """ Expand horizontally or vertically based on if a second column name 
+        is given for expanding the column data """
+
+        if column_for_expanding_coldata is None:
             expand_vertically = True
             s = data.apply(lambda x: pd.Series(
                 x[column]), axis=1).stack().reset_index(level=1, drop=True)
@@ -117,7 +122,7 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
             expanded_data = data.drop(column, axis=1).join(s)
         else:
             df_lists = data[[column]].unstack().apply(pd.Series)
-            col_names = data[column_for_expanding_labels].iloc[idx_for_expanding_coldata]
+            col_names = data[column_for_expanding_coldata].iloc[idx_for_expanding_coldata]
             if len(df_lists.columns) == 1:
                 logging.warning(
                     f'The current column {column} may not be expandable with {col_names}')
@@ -128,14 +133,14 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
             expanded_data = pd.DataFrame(columns=temp_data.columns)
             for c in col_names:
                 expanded_df_col = pd.DataFrame.from_dict(
-                    {column: df_lists[c], column_for_expanding_labels: c})
+                    {column: df_lists[c], column_for_expanding_coldata: c})
                 temp_data.drop(column, axis=1, inplace=True)
                 temp_data = temp_data.assign(**{
                     # .reset_index(inplace=True, drop=True)),
                     column: pd.Series(expanded_df_col[column].values),
                     # .reset_index(inplace=True, drop=True))
-                    column_for_expanding_labels: pd.Series(
-                        expanded_df_col[column_for_expanding_labels].values)
+                    column_for_expanding_coldata: pd.Series(
+                        expanded_df_col[column_for_expanding_coldata].values)
                 })
                 expanded_data = pd.concat(
                     [expanded_data, temp_data], axis=0, ignore_index=True)
@@ -164,7 +169,7 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
         data.reset_index(drop=True, inplace=True)
         return data, column_x, column_y
 
-    def preprocess_data_histplot(data: pd.DataFrame, preprocessor_func_x,
+    def preprocess_data(data: pd.DataFrame, preprocessor_func_x,
                                  threshold_value_max,
                                  expand_xcoldata_using_col, expand_ycoldata_using_col,
                                  column_x: str, column_y: str,
@@ -178,21 +183,25 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                                  selection_conditions=None):
         def preprocess(data, column, expand_coldata_using_col, normalise_data,
                        preprocessor_func, column_name_for_expanding_coldata,
-                       idx_for_expanding_coldata):
+                       idx_for_expanding_coldata, remove_outliers=False):
             if column is not None:
                 if preprocessor_func:
                     data[column] = preprocessor_func(data[column].values)
                 if expand_coldata_using_col:
                     data = expand_data_by_col(
                         data=data, column=column,
-                        column_for_expanding_labels=column_name_for_expanding_coldata,
+                        column_for_expanding_coldata=column_name_for_expanding_coldata,
                         idx_for_expanding_coldata=idx_for_expanding_coldata)
                 if threshold_value_max:
                     data = data[data[column] <= threshold_value_max]
+                if remove_outliers:
+                    colmax= data[column].max()
+                    colmin= data[column].min()
+                    data = data[data[column] < colmax - np.multiply(outlier_threshold_y, colmax)]
+                    data = data[data[column] > colmin + np.multiply(outlier_threshold_y, colmin)]
                 if normalise_data:
                     df = data[column]
                     data[column] = (df - df.mean()) / df.std()
-
             return data, column
         data, column_x = preprocess(
             data, column_x, expand_xcoldata_using_col, normalise_data_x,
@@ -201,7 +210,7 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
         data, column_y = preprocess(
             data, column_y, expand_ycoldata_using_col, normalise_data_y,
             None, column_name_for_expanding_ycoldata,
-            idx_for_expanding_ycoldata)
+            idx_for_expanding_ycoldata, remove_outliers_y)
         data.reset_index(drop=True, inplace=True)
 
         for exc_cols, condition in zip(
@@ -278,7 +287,7 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
     for col_x in cols_x:
         for col_y in cols_y:
             if use_sns:
-                data, col_x, col_y = preprocess_data_histplot(
+                data, col_x, col_y = preprocess_data(
                     data, preprocessor_func_x, threshold_value_max,
                     expand_xcoldata_using_col, expand_ycoldata_using_col,
                     col_x, col_y,
@@ -295,6 +304,10 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                     write_func = visualiser.sns_scatterplot
                 elif plot_type == 'bar_plot':
                     write_func = visualiser.sns_barplot
+                elif plot_type == 'violin_plot':
+                    write_func = visualiser.sns_violinplot
+                elif plot_type == 'line_plot':
+                    write_func = visualiser.sns_lineplot
                 elif plot_type == 'histplot':
                     write_func = visualiser.sns_histplot
                     plot_kwargs.update({'log_axis': log_axis,
@@ -381,39 +394,55 @@ class VisODE():
 
     def sns_generic_plot(self, plot_func, out_path: str, x: str, y: str, data: pd.DataFrame,
                          title: str = None,
+                         figsize=(7, 5), style="ticks",
                          **plot_kwargs):
         import seaborn as sns
         import matplotlib.pyplot as plt
         sns.set_context('paper')
-        sns.set_theme(style="ticks")
+        sns.set_theme(style=style)
+        sns.color_palette("magma", as_cmap=True)
 
-        f, ax = plt.subplots(figsize=(7, 5))
+        f, ax = plt.subplots(figsize=figsize)
         plot_func(
             data=data,
             x=x,
             y=y,
             **plot_kwargs
         ).set(title=title)
-        f.savefig(out_path)
+        plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., title=prettify_keys_for_label(plot_kwargs.get('hue')))
+        # if plot_kwargs.get('hue', None) is not None:
+        #     leg = f.axes.flat[0].get_legend()
+        #     leg.set_title(prettify_keys_for_label(plot_kwargs['hue']))
+        f.savefig(out_path, bbox_inches='tight')
         plt.close()
 
     def sns_barplot(self, out_path: str, x: str, y: str, data: pd.DataFrame,
                     title: str = None, xlabel=None, ylabel=None,
                     **plot_kwargs):
         import seaborn as sns
-        self.sns_generic_plot(sns.barplot, out_path, x, y, data, title, **plot_kwargs)
+        self.sns_generic_plot(sns.barplot, out_path, x,
+                              y, data, title, **plot_kwargs)
 
     def sns_scatterplot(self, out_path: str, x: str, y: str, data: pd.DataFrame,
                         title: str = None, xlabel=None, ylabel=None,
                         **plot_kwargs):
         import seaborn as sns
-        self.sns_generic_plot(sns.scatterplot, out_path, x, y, data, title, **plot_kwargs)
+        self.sns_generic_plot(sns.scatterplot, out_path,
+                              x, y, data, title, **plot_kwargs)
 
     def sns_violinplot(self, out_path: str, x: str, y: str, data: pd.DataFrame,
                        title: str = None, xlabel=None, ylabel=None,
                        **plot_kwargs):
         import seaborn as sns
-        self.sns_generic_plot(sns.violinplot, out_path, x, y, data, title, **plot_kwargs)
+        self.sns_generic_plot(sns.violinplot, out_path, x, y, data, title,
+                              figsize=(10, 6), **plot_kwargs)
+
+    def sns_lineplot(self, out_path: str, x: str, y: str, data: pd.DataFrame,
+                     title: str = None, xlabel=None, ylabel=None,
+                     **plot_kwargs):
+        import seaborn as sns
+        self.sns_generic_plot(sns.lineplot, out_path,
+                              x, y, data, title, **plot_kwargs)
 
     # Make visualisations for each analytic chosen
     def heatmap(self, data: pd.DataFrame, out_path: str = None, out_type='png',

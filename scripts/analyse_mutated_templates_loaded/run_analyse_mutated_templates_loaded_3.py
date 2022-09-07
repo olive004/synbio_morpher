@@ -78,7 +78,7 @@ def main(config=None, data_writer=None):
                        'sensitivity',
                        'steady_states']  # Timeseries(data=None).get_analytics_types()
 
-    ## Violin plots
+    ## Line plots
 
     # Difference
     for cols_x, cols_y, title, xlabel, ylabel in [
@@ -94,7 +94,7 @@ def main(config=None, data_writer=None):
                 visualise_data,
                 data_writer=data_writer,
                 cols_x=[cols_x], cols_y=[cols_y],
-                plot_type='violin_plot',
+                plot_type='line_plot',
                 out_name=f'{cols_x}_{cols_y}',
                 exclude_rows_zero_in_cols=['mutation_num'],
                 log_axis=(False, False),
@@ -106,9 +106,11 @@ def main(config=None, data_writer=None):
                 column_name_for_expanding_ycoldata='sample_names',
                 idx_for_expanding_xcoldata=1,
                 idx_for_expanding_ycoldata=0,
+                remove_outliers_y=True,
                 title=title,
                 xlabel=xlabel,
-                ylabel=ylabel
+                ylabel=ylabel,
+                units='circuit_name'
             ),
             req_input=True,
             name='visualise_interactions_difference',
@@ -130,7 +132,7 @@ def main(config=None, data_writer=None):
                 visualise_data,
                 data_writer=data_writer,
                 cols_x=[cols_x], cols_y=[cols_y],
-                plot_type='violin_plot',
+                plot_type='line_plot',
                 out_name=f'{cols_x}_{cols_y}',
                 exclude_rows_zero_in_cols=['mutation_num'],
                 log_axis=(False, False),

@@ -46,6 +46,7 @@ def ordered_merge(list1, list2, mask) -> list:
 
 def prettify_keys_for_label(key: str):
     key = key.replace('_', ' ')
+    key = key.replace('number', 'num').replace('num', 'number')
     key = key.capitalize()
     return key
 
