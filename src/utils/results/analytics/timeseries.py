@@ -82,10 +82,7 @@ class Timeseries():
         )).astype(self.num_dtype)
 
     def get_rmse(self):
-        if 'signal_diff' in self.name:
-            rmse = np.sqrt(np.sum(np.divide(np.power(self.data, 2), len(self.data))))
-        else:
-            rmse = 'No reference given.'
+        rmse = np.sqrt(np.sum(np.divide(np.power(self.data, 2), len(self.data))))
         return rmse
         
 
