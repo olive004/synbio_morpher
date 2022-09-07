@@ -14,11 +14,11 @@
     },
     "filters": {
         "min_num_interacting": 3,
-        "max_self_interacting": 2
+        "max_self_interacting": 3
     },
     "mutations": {
         "mutation_counts": 10,
-        "mutation_nums_within_sequence": 10,
+        "mutation_nums_within_sequence": 2,
         "concurrent_species_to_mutate": "single_species_at_a_time"
     },
     "signal": {
@@ -26,7 +26,7 @@
         "signal_spec": "raw",
         "signal_type": "abstract",
         "total_time":15000,
-        "magnitude":100,
+        "magnitude":1000,
         "positions":[6, 500],
         "heights":[50, 80],
         "durations":[50, 400]

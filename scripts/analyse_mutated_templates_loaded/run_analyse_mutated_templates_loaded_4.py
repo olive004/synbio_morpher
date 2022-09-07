@@ -80,11 +80,12 @@ def main(config=None, data_writer=None):
 
     # Bar plots
 
-    remove_outliers = True
-    outlier_std_threshold = 3
-    outlier_text = f', outliers removed (>{outlier_std_threshold} standard deviations)' if remove_outliers else ''
+    def plot_mutation_attr(mutation_attr: str, remove_outliers: bool, log_axis: tuple, plot_type):
+        outlier_std_threshold = 3
+        outlier_text = f', outliers removed (>{outlier_std_threshold} standard deviations)' if remove_outliers else ''
 
-    for mutation_attr in ['mutation_type']:
+        log_text = '_log' if any(log_axis) else ''
+        outlier_save_text = '_nooutliers' if remove_outliers else ''
         # Difference
         for cols_x, cols_y, title, xlabel, ylabel in [
                 [
@@ -99,11 +100,12 @@ def main(config=None, data_writer=None):
                     visualise_data,
                     data_writer=data_writer,
                     cols_x=[cols_x], cols_y=[cols_y],
-                    plot_type='bar_plot',
-                    out_name=f'{cols_x}_{cols_y}',
+                    plot_type=plot_type,
+                    out_name=f'{cols_x}_{cols_y}{log_text}{outlier_save_text}',
                     exclude_rows_zero_in_cols=['mutation_num'],
-                    log_axis=(False, False),
-                    # log_axis=(False, True),
+                    preprocessor_func_x=partial(
+                        pd.to_numeric, downcast='integer'),
+                    log_axis=log_axis,
                     use_sns=True,
                     hue='mutation_num',
                     expand_xcoldata_using_col=True,
@@ -124,25 +126,26 @@ def main(config=None, data_writer=None):
             )
             )
 
-        # Ratio
+        # Ratios
         for cols_x, cols_y, title, xlabel, ylabel in [
                 [
                     mutation_attr,
                     f'{analytics_type}_ratio_from_mutation_to_base',
                     f'{prettify_keys_for_label(mutation_attr)} vs. {prettify_keys_for_label(analytics_type)} ratio from mutated\nto original circuit',
                     f'{prettify_keys_for_label(mutation_attr)}',
-                    f'{prettify_keys_for_label(analytics_type)} ratio'
+                    f'{prettify_keys_for_label(analytics_type)} ratio{outlier_text}'
                 ] for analytics_type in analytics_types]:
             protocols.append(Protocol(
                 partial(
                     visualise_data,
                     data_writer=data_writer,
                     cols_x=[cols_x], cols_y=[cols_y],
-                    plot_type='bar_plot',
-                    out_name=f'{cols_x}_{cols_y}',
+                    plot_type=plot_type,
+                    out_name=f'{cols_x}_{cols_y}{log_text}{outlier_save_text}',
                     exclude_rows_zero_in_cols=['mutation_num'],
-                    log_axis=(False, False),
-                    # log_axis=(False, True),
+                    preprocessor_func_x=partial(
+                        pd.to_numeric, downcast='integer'),
+                    log_axis=log_axis,
                     use_sns=True,
                     hue='mutation_num',
                     expand_xcoldata_using_col=True,
@@ -162,6 +165,13 @@ def main(config=None, data_writer=None):
                 skip=config_file.get('only_visualise_circuits', False)
             )
             )
+
+    for remove_outliers in [False, True]:
+        for log_axis in [(False, False), (False, True)]:
+            plot_mutation_attr('mutation_type', remove_outliers=remove_outliers, log_axis=log_axis,
+                               plot_type='bar_plot')
+            plot_mutation_attr('mutation_positions', remove_outliers=remove_outliers, log_axis=log_axis,
+                               plot_type='line_plot')
 
     experiment = Experiment(config=config, config_file=config_file, protocols=protocols,
                             data_writer=data_writer)

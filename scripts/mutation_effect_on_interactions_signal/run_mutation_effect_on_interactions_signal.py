@@ -18,7 +18,10 @@ def main(config=None, data_writer=None):
     # Set configs
     if config is None:
         config = os.path.join(
-            "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config.json")
+            "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_1.json")
+            # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_2.json")
+            # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_10.json")
+            # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_2-.json")
     config_file = load_json_as_dict(config)
 
     # Start_experiment

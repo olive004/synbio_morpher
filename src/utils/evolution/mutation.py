@@ -13,7 +13,7 @@ from src.utils.misc.string_handling import add_outtype, prettify_logging_info
 from src.utils.circuit.agnostic_circuits.base_circuit import BaseSpecies, BaseCircuit
 
 
-mapping = {
+mutation_type_mapping = {
     # Mutation idx from parent key to child key
     "A": {
         "C": 0,
@@ -63,21 +63,12 @@ class Mutations(Tabulated):
 
     def get_sequence(self):
         seq = list(deepcopy(self.template_seq))
-        # seq = deepcopy(self.template_seq)
         for i, p in enumerate(self.positions):
-            # point_mutation = self.reverse_mut_mapping(self.mutation_types[i])
-            # logging.info(f'All mutation types: {self.mutation_types}')
-            # logging.info(f'Position: {p}')
-            # logging.info(f'Chosen mutation enc: {self.mutation_types[i]}')
-            # logging.info(f'Chosen mutation nuc: {point_mutation}')
-            # logging.info(f'Sequence: {seq[:p]} {seq[p]} {seq[p+1:]}')
-            # logging.info(f'Targ seq: {seq[:p]} {point_mutation} {seq[p+1:]}')
-            # seq = list(seq)
             seq[p] = self.reverse_mut_mapping(self.mutation_types[i])
         return ''.join(seq)
 
     def reverse_mut_mapping(self, mut_encoding: int):
-        for k, v in mapping.items():
+        for k, v in mutation_type_mapping.items():
             if mut_encoding in list(v.values()):
                 for mut, enc in v.items():
                     if enc == mut_encoding:
@@ -152,7 +143,7 @@ class Evolver():
     def sample_mutations(self, sequence, positions):
         mutation_types = []
         for p in positions:
-            possible_transitions = mapping[sequence[p]]
+            possible_transitions = mutation_type_mapping[sequence[p]]
             mutation_types.append(random.choice(
                 list(possible_transitions.values())))
         return mutation_types

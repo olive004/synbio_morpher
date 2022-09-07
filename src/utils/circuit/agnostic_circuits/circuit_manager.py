@@ -2,14 +2,11 @@ from copy import deepcopy
 from typing import Union
 from functools import partial
 import logging
-import os
 import numpy as np
 from scipy import integrate
-from src.utils.misc.units import per_mol_to_per_molecules
 from src.utils.results.analytics.timeseries import Timeseries
 from src.utils.results.result_writer import ResultWriter
 
-from src.utils.misc.decorators import time_it
 from src.utils.misc.numerical import make_dynamic_indexer, np_delete_axes, zero_out_negs
 from src.utils.misc.type_handling import flatten_nested_dict
 from src.utils.signal.inputs import Signal
@@ -48,7 +45,8 @@ class CircuitModeller():
             exclude_species_by_idx)
 
         interaction_binding_rates = circuit.species.interactions
-        interaction_binding_rates[interaction_binding_rates < MIN_INTERACTION_EQCONSTANT] = 0
+        interaction_binding_rates[interaction_binding_rates <
+                                  MIN_INTERACTION_EQCONSTANT] = 0
         creation_rates = circuit.species.creation_rates
         degradation_rates = circuit.species.degradation_rates
 
@@ -95,10 +93,10 @@ class CircuitModeller():
             filename_addon_binding_rates = 'binding_rates'
             filename_addon_coupled_rates = 'interactions'
             for interaction_matrix, filename_addon in zip(
-                [circuit.species.eqconstants, circuit.species.binding_rates_dissociation, 
-                circuit.species.interactions],
+                [circuit.species.eqconstants, circuit.species.binding_rates_dissociation,
+                 circuit.species.interactions],
                 [filename_addon_eqconstants, filename_addon_binding_rates,
-                filename_addon_coupled_rates]
+                 filename_addon_coupled_rates]
             ):
                 self.result_writer.output(
                     out_type='csv', out_name=circuit.name, data=circuit.species.interactions_to_df(
@@ -300,7 +298,7 @@ class CircuitModeller():
         circuit.result_collector.add_result(new_copynumbers,
                                             name='signal',
                                             category='time_series',
-                                            vis_func=modeller_signal.plot,
+                                            vis_func=Deterministic().plot,
                                             save_numerical_vis_data=save_numerical_vis_data,
                                             vis_kwargs={'legend': list(circuit.species.data.sample_names),
                                                         'out_type': 'png'},
@@ -316,26 +314,36 @@ class CircuitModeller():
         # logging.info(
         #     f'Running functions {methods} on circuit with {len(mutation_dict)} items.')
 
-        self.result_writer.subdivide_writing('mutations', safe_dir_change=False)
+        self.result_writer.subdivide_writing(
+            'mutations', safe_dir_change=False)
         for i, (name, mutation) in enumerate(mutation_dict.items()):
             # logging.info(f'Running methods on mutation {name} ({i})')
             if include_normal_run and i == 0:
                 self.result_writer.unsubdivide_last_dir()
-                self.apply_to_circuit(circuit, methods)
-                self.result_writer.subdivide_writing('mutations', safe_dir_change=False)
+                circuit = self.apply_to_circuit(circuit, methods)
+                self.result_writer.subdivide_writing(
+                    'mutations', safe_dir_change=False)
             subcircuit = circuit.make_subsystem(name, mutation)
             self.result_writer.subdivide_writing(name, safe_dir_change=False)
-            self.apply_to_circuit(subcircuit, methods)
+            self.apply_to_circuit(subcircuit, methods, circuit)
             self.result_writer.unsubdivide_last_dir()
         self.result_writer.unsubdivide()
 
-    def apply_to_circuit(self, circuit: BaseCircuit, methods: dict):
+    def apply_to_circuit(self, circuit: BaseCircuit, methods: dict, ref_circuit: BaseCircuit):
         for method, kwargs in methods.items():
             if hasattr(self, method):
                 circuit = getattr(self, method)(circuit, **kwargs)
             else:
                 logging.warning(
                     f'Could not find method @{method} in class {self}')
+
+    def compare_circuits(self, new_circuit: BaseCircuit, ref_circuit: BaseCircuit):
+        signal_diff = ref_circuit.result_collector.get_result('signal').data - \
+            new_circuit.result_collector.get_result('signal').data
+
+        new_circuit.result_collector.make_modified_duplicate_result(
+            key='signal', result_data=signal_diff, name='signal_diff')
+        return new_circuit
 
     def visualise_graph(self, circuit: BaseCircuit, mode="pyvis", new_vis=False):
         self.result_writer.visualise_graph(circuit, mode, new_vis)

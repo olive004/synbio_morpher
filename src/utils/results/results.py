@@ -1,5 +1,6 @@
 
 
+from copy import deepcopy
 import logging
 from src.utils.misc.type_handling import assert_uniform_type
 
@@ -43,8 +44,16 @@ class ResultCollector():
                               vis_func, save_numerical_vis_data, vis_kwargs, analytics_kwargs)
         self.results[name] = result_entry
 
-    def get_result(self, key):
-        return self.results.get(key, None)
+    def make_modified_duplicate_result(self, key, **result_kwargs):
+        result = deepcopy(self.get_result(key))
+        result_kwargs.update(result.__dict__)
+        self.add_result(**result_kwargs)
+
+    def get_result(self, key) -> Result:
+        result = self.results.get(key, None)
+        if result is None:
+            logging.warning(f'The keyword {key} did not return a result from {self}.')
+        return result
 
     def pool_results(self, results: dict):
         assert_uniform_type(results.values, Result)

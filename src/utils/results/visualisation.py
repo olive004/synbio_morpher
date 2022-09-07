@@ -191,13 +191,14 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                        idx_for_expanding_coldata, remove_outliers=False,
                        outlier_std_threshold=3):
             if column is not None:
-                if preprocessor_func:
-                    data[column] = preprocessor_func(data[column].values)
                 if expand_coldata_using_col:
                     data = expand_data_by_col(
                         data=data, column=column,
                         column_for_expanding_coldata=column_name_for_expanding_coldata,
                         idx_for_expanding_coldata=idx_for_expanding_coldata)
+                if preprocessor_func:
+                    data = data.drop(column, axis=1).join(
+                        preprocessor_func(arg=data[column]))
                 if threshold_value_max:
                     data = data[data[column] <= threshold_value_max]
                 if remove_outliers:
@@ -209,7 +210,8 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                                 np.multiply(outlier_std_threshold, std)]
                 if normalise_data:
                     df = data[column]
-                    data[column] = (df - df.mean()) / df.std()
+                    s = (df - df.mean()) / df.std()
+                    data = data.drop(column, axis=1).join(s)
             return data, column
         data, column_x = preprocess(
             data, column_x, expand_xcoldata_using_col, normalise_data_x,
@@ -408,13 +410,7 @@ class VisODE():
         import matplotlib.pyplot as plt
         sns.set_context('paper')
         sns.set_theme(style=style)
-        sns.set_palette("magma")
-
-        if plot_kwargs.get('hue'):
-            default_kwargs = {
-                'palette': sns.color_palette("husl", len(data[plot_kwargs.get('hue')].unique()))
-            }
-            plot_kwargs.update(default_kwargs)
+        sns.set_palette("viridis")
 
         f, ax = plt.subplots(figsize=figsize)
         plot_func(
@@ -432,7 +428,14 @@ class VisODE():
                     title: str = None, xlabel=None, ylabel=None,
                     **plot_kwargs):
         import seaborn as sns
-        plot_kwargs.update({'errwidth': 0.5})
+        plot_kwargs.update({'errwidth': 1})
+        if plot_kwargs.get('hue'):
+            plot_kwargs.update({
+                # 'palette': sns.color_palette("husl", len(data[plot_kwargs.get('hue')].unique()))
+                # 'palette': sns.color_palette("plasma", len(data[plot_kwargs.get('hue')].unique()))
+                'palette': sns.color_palette("viridis", len(data[plot_kwargs.get('hue')].unique()))
+            })
+
         self.sns_generic_plot(sns.barplot, out_path, x,
                               y, data, title, **plot_kwargs)
 
@@ -454,6 +457,14 @@ class VisODE():
                      title: str = None, xlabel=None, ylabel=None,
                      **plot_kwargs):
         import seaborn as sns
+
+        if plot_kwargs.get('hue'):
+            plot_kwargs.update({
+                # 'palette': sns.color_palette("husl", len(data[plot_kwargs.get('hue')].unique()))
+                # 'palette': sns.color_palette("plasma", len(data[plot_kwargs.get('hue')].unique()))
+                'palette': sns.color_palette("viridis", len(data[plot_kwargs.get('hue')].unique()))
+            })
+
         self.sns_generic_plot(sns.lineplot, out_path,
                               x, y, data, title, **plot_kwargs)
 
