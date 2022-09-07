@@ -80,80 +80,85 @@ def main(config=None, data_writer=None):
 
     ## Line plots
 
-    # Difference
-    for cols_x, cols_y, title, xlabel, ylabel in [
-            [
-                'mutation_positions',
-                f'{analytics_type}_diff_to_base_circuit',
-                f'Mutation position vs. {prettify_keys_for_label(analytics_type)} difference between circuit\nand mutated counterparts',
-                f'{prettify_keys_for_label("mutation_position")}',
-                f'{prettify_keys_for_label(analytics_type)} difference'
-            ] for analytics_type in analytics_types]:
-        protocols.append(Protocol(
-            partial(
-                visualise_data,
-                data_writer=data_writer,
-                cols_x=[cols_x], cols_y=[cols_y],
-                plot_type='line_plot',
-                out_name=f'{cols_x}_{cols_y}',
-                exclude_rows_zero_in_cols=['mutation_num'],
-                log_axis=(False, False),
-                use_sns=True,
-                hue='mutation_num',
-                expand_xcoldata_using_col=True,
-                expand_ycoldata_using_col=True,
-                column_name_for_expanding_xcoldata=None,
-                column_name_for_expanding_ycoldata='sample_names',
-                idx_for_expanding_xcoldata=1,
-                idx_for_expanding_ycoldata=0,
-                remove_outliers_y=True,
-                title=title,
-                xlabel=xlabel,
-                ylabel=ylabel,
-                units='circuit_name'
-            ),
-            req_input=True,
-            name='visualise_interactions_difference',
-            skip=config_file.get('only_visualise_circuits', False)
-        )
-        )
+    remove_outliers=True
+    outlier_std_threshold=3
+    outlier_text = f', outliers removed (>{outlier_std_threshold} standard deviations)'
 
-    # Ratio
-    for cols_x, cols_y, title, xlabel, ylabel in [
-            [
-                'mutation_positions',
-                f'{analytics_type}_ratio_from_mutation_to_base',
-                f'Mutation position vs. {prettify_keys_for_label(analytics_type)} ratio from mutated\nto original circuit',
-                f'{prettify_keys_for_label("mutation_position")}',
-                f'{prettify_keys_for_label(analytics_type)} ratio'
-            ] for analytics_type in analytics_types]:
-        protocols.append(Protocol(
-            partial(
-                visualise_data,
-                data_writer=data_writer,
-                cols_x=[cols_x], cols_y=[cols_y],
-                plot_type='line_plot',
-                out_name=f'{cols_x}_{cols_y}',
-                exclude_rows_zero_in_cols=['mutation_num'],
-                log_axis=(False, False),
-                use_sns=True,
-                hue='mutation_num',
-                expand_xcoldata_using_col=True,
-                expand_ycoldata_using_col=True,
-                # column_name_for_expanding_xcoldata='mutation_num',
-                column_name_for_expanding_xcoldata=None,
-                column_name_for_expanding_ycoldata='sample_names',
-                idx_for_expanding_xcoldata=1,
-                idx_for_expanding_ycoldata=0,
-                title=title,
-                xlabel=xlabel,
-                ylabel=ylabel
-            ),
-            req_input=True,
-            name='visualise_interactions_difference',
-            skip=config_file.get('only_visualise_circuits', False)
-        )
-        )
+    for mutation_attr in ['mutation_positions', 'mutation_type']:
+        # Difference
+        for cols_x, cols_y, title, xlabel, ylabel in [
+                [
+                    mutation_attr,
+                    f'{analytics_type}_diff_to_base_circuit',
+                    f'{prettify_keys_for_label(mutation_attr)} vs. {prettify_keys_for_label(analytics_type)} difference between circuit\nand mutated counterparts',
+                    f'{prettify_keys_for_label(mutation_attr)}',
+                    f'{prettify_keys_for_label(analytics_type)} difference{outlier_text}'
+                ] for analytics_type in analytics_types]:
+            protocols.append(Protocol(
+                partial(
+                    visualise_data,
+                    data_writer=data_writer,
+                    cols_x=[cols_x], cols_y=[cols_y],
+                    plot_type='line_plot',
+                    out_name=f'{cols_x}_{cols_y}',
+                    exclude_rows_zero_in_cols=['mutation_num'],
+                    log_axis=(False, False),
+                    use_sns=True,
+                    hue='mutation_num',
+                    expand_xcoldata_using_col=True,
+                    expand_ycoldata_using_col=True,
+                    column_name_for_expanding_xcoldata=None,
+                    column_name_for_expanding_ycoldata='sample_names',
+                    idx_for_expanding_xcoldata=1,
+                    idx_for_expanding_ycoldata=0,
+                    remove_outliers_y=remove_outliers,
+                    outlier_threshold_y=outlier_std_threshold,
+                    title=title,
+                    xlabel=xlabel,
+                    ylabel=ylabel
+                ),
+                req_input=True,
+                name='visualise_interactions_difference',
+                skip=config_file.get('only_visualise_circuits', False)
+            )
+            )
+
+        # Ratio
+        for cols_x, cols_y, title, xlabel, ylabel in [
+                [
+                    mutation_attr,
+                    f'{prettify_keys_for_label(mutation_attr)} vs. {prettify_keys_for_label(analytics_type)} ratio from mutated\nto original circuit',
+                    f'{analytics_type}_ratio_from_mutation_to_base',
+                    f'{prettify_keys_for_label(mutation_attr)}',
+                    f'{prettify_keys_for_label(analytics_type)} ratio'
+                ] for analytics_type in analytics_types]:
+            protocols.append(Protocol(
+                partial(
+                    visualise_data,
+                    data_writer=data_writer,
+                    cols_x=[cols_x], cols_y=[cols_y],
+                    plot_type='line_plot',
+                    out_name=f'{cols_x}_{cols_y}',
+                    exclude_rows_zero_in_cols=['mutation_num'],
+                    log_axis=(False, False),
+                    use_sns=True,
+                    hue='mutation_num',
+                    expand_xcoldata_using_col=True,
+                    expand_ycoldata_using_col=True,
+                    # column_name_for_expanding_xcoldata='mutation_num',
+                    column_name_for_expanding_xcoldata=None,
+                    column_name_for_expanding_ycoldata='sample_names',
+                    idx_for_expanding_xcoldata=1,
+                    idx_for_expanding_ycoldata=0,
+                    title=title,
+                    xlabel=xlabel,
+                    ylabel=ylabel
+                ),
+                req_input=True,
+                name='visualise_interactions_difference',
+                skip=config_file.get('only_visualise_circuits', False)
+            )
+            )
 
     experiment = Experiment(config=config, config_file=config_file, protocols=protocols,
                             data_writer=data_writer)

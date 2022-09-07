@@ -90,7 +90,7 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                    bin_count=100,
                    selection_conditions: List[tuple] = None,
                    remove_outliers_y: bool = False,
-                   outlier_threshold_y = 0.0001,
+                   outlier_std_threshold_y = 3,
                    exclude_rows_nonempty_in_cols: list = None,
                    exclude_rows_zero_in_cols: list = None,
                    expand_xcoldata_using_col: bool = False,
@@ -183,7 +183,8 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                                  selection_conditions=None):
         def preprocess(data, column, expand_coldata_using_col, normalise_data,
                        preprocessor_func, column_name_for_expanding_coldata,
-                       idx_for_expanding_coldata, remove_outliers=False):
+                       idx_for_expanding_coldata, remove_outliers=False,
+                       outlier_std_threshold=3):
             if column is not None:
                 if preprocessor_func:
                     data[column] = preprocessor_func(data[column].values)
@@ -195,10 +196,10 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                 if threshold_value_max:
                     data = data[data[column] <= threshold_value_max]
                 if remove_outliers:
-                    colmax= data[column].max()
-                    colmin= data[column].min()
-                    data = data[data[column] < colmax - np.multiply(outlier_threshold_y, colmax)]
-                    data = data[data[column] > colmin + np.multiply(outlier_threshold_y, colmin)]
+                    mean = data[column].mean()
+                    std = data[column].std()
+                    data = data[data[column] < mean + np.multiply(outlier_std_threshold, std)]
+                    data = data[data[column] > mean - np.multiply(outlier_std_threshold, std)]
                 if normalise_data:
                     df = data[column]
                     data[column] = (df - df.mean()) / df.std()
@@ -210,7 +211,7 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
         data, column_y = preprocess(
             data, column_y, expand_ycoldata_using_col, normalise_data_y,
             None, column_name_for_expanding_ycoldata,
-            idx_for_expanding_ycoldata, remove_outliers_y)
+            idx_for_expanding_ycoldata, remove_outliers_y, outlier_std_threshold_y)
         data.reset_index(drop=True, inplace=True)
 
         for exc_cols, condition in zip(
@@ -400,7 +401,8 @@ class VisODE():
         import matplotlib.pyplot as plt
         sns.set_context('paper')
         sns.set_theme(style=style)
-        sns.color_palette("magma", as_cmap=True)
+        # sns.color_palette("magma", as_cmap=True)
+        sns.set_palette("magma")
 
         f, ax = plt.subplots(figsize=figsize)
         plot_func(
