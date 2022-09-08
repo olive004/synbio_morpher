@@ -3,6 +3,7 @@ from functools import partial
 import logging
 import os
 import random
+import sys
 import pandas as pd
 import numpy as np
 from src.srv.io.loaders.misc import load_csv
@@ -13,7 +14,31 @@ from src.utils.misc.string_handling import add_outtype, prettify_logging_info
 from src.utils.circuit.agnostic_circuits.base_circuit import BaseSpecies, BaseCircuit
 
 
-mutation_type_mapping = {
+mutation_type_mapping_RNA = {
+    # Mutation idx from parent key to child key
+    "A": {
+        "C": 0,
+        "G": 1,
+        "U": 2
+    },
+    "C": {
+        "A": 3,
+        "G": 4,
+        "U": 5
+    },
+    "G": {
+        "A": 6,
+        "C": 7,
+        "U": 8
+    },
+    "U": {
+        "A": 9,
+        "C": 10,
+        "G": 11
+    }
+}
+
+mutation_type_mapping_DNA = {
     # Mutation idx from parent key to child key
     "A": {
         "C": 0,
@@ -34,11 +59,6 @@ mutation_type_mapping = {
         "A": 9,
         "C": 10,
         "G": 11
-    },
-    "U": {
-        "A": 12,
-        "C": 13,
-        "G": 14
     }
 }
 
@@ -46,7 +66,7 @@ mutation_type_mapping = {
 class Mutations(Tabulated):
 
     def __init__(self, mutation_name, template_name, template_file, template_seq,
-                 positions, mutation_types, algorithm='random') -> None:
+                 positions, mutation_types, mutation_type_mapping: dict, algorithm='random') -> None:
         self.mutation_name = mutation_name
         self.template_name = template_name
         self.template_file = template_file
@@ -55,6 +75,7 @@ class Mutations(Tabulated):
         self.positions = positions
         self.count = len(positions)
         self.algorithm = algorithm
+        self.mutation_type_mapping = mutation_type_mapping
 
         super().__init__()
 
@@ -68,7 +89,7 @@ class Mutations(Tabulated):
         return ''.join(seq)
 
     def reverse_mut_mapping(self, mut_encoding: int):
-        for k, v in mutation_type_mapping.items():
+        for k, v in self.mutation_type_mapping.items():
             if mut_encoding in list(v.values()):
                 for mut, enc in v.items():
                     if enc == mut_encoding:
@@ -79,11 +100,21 @@ class Mutations(Tabulated):
 
 class Evolver():
 
-    def __init__(self, data_writer: DataWriter, mutation_type: str = 'random') -> None:
+    def __init__(self, data_writer: DataWriter, mutation_type: str = 'random', sequence_type: str = None) -> None:
         self.data_writer = data_writer
         self.mutation_type = mutation_type  # Not implemented
         self.out_name = 'mutations'
         self.out_type = 'csv'
+        self.mutation_type_mapping = self.get_mutation_type_mapping(sequence_type)
+
+    def get_mutation_type_mapping(self, sequence_type):
+        if sequence_type == 'RNA':
+            return mutation_type_mapping_RNA
+        elif sequence_type == 'DNA':
+            return mutation_type_mapping_DNA
+        else:
+            logging.warning(f'Unrecognised sequence type {sequence_type} provided - should be DNA or RNA.')
+            sys.exit()
 
     def is_mutation_possible(self, system: BaseCircuit):
         if system.species.mutation_counts is None or system.species.mutation_nums_within_sequence is None:
@@ -120,7 +151,8 @@ class Evolver():
                 template_file=species.data.source,
                 template_seq=sequence,
                 mutation_types=self.sample_mutations(sequence, positions),
-                positions=positions
+                positions=positions,
+                mutation_type_mapping=self.mutation_type_mapping
             )
             self.write_mutations(mutations)
             return mutations
@@ -143,7 +175,7 @@ class Evolver():
     def sample_mutations(self, sequence, positions):
         mutation_types = []
         for p in positions:
-            possible_transitions = mutation_type_mapping[sequence[p]]
+            possible_transitions = self.mutation_type_mapping[sequence[p]]
             mutation_types.append(random.choice(
                 list(possible_transitions.values())))
         return mutation_types

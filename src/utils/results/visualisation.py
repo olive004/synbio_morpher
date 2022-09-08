@@ -156,7 +156,7 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                 if log_option:
                     data = data[data[col] != 0]
                     data = data.drop(col, axis=1).join(data[col].abs())
-                    new_col = 'Log of ' + plot_kwrgs.get(col_label, col)
+                    new_col = r'$Log_{10}$' + ' of ' + plot_kwrgs.get(col_label, col)
                     if plot_type not in exempt_from_log:
                         log_df = np.log10(data[col])
                         data = data.drop(col, axis=1).join(log_df)
