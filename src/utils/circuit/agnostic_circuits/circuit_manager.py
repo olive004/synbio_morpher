@@ -209,6 +209,7 @@ class CircuitModeller():
                             1] = zero_out_negs(current_copynumbers)
         else:
             for tstep in range(0, max_time-1):
+                time_step = 1
                 dxdt = modelling_func(
                     copynumbers=copynumbers[:, tstep]) * time_step
 
@@ -224,7 +225,7 @@ class CircuitModeller():
 
     # @time_it
     def simulate_signal(self, circuit: BaseCircuit, signal: Signal = None, save_numerical_vis_data: bool = False,
-                        use_old_steadystates: bool = False, use_solver: str = 'naive'):
+                        use_old_steadystates: bool = False, use_solver: str = 'naive', ref_circuit: BaseCircuit = None):
         time_step = 1
         if signal is None:
             # circuit.signal.update_time_interval(time_step)
@@ -295,6 +296,14 @@ class CircuitModeller():
                 circuit.species.time_axis: slice(1, np.shape(new_copynumbers)[
                                                  circuit.species.species_axis])
             })]), axis=circuit.species.time_axis)
+        if ref_circuit is None:
+            ref_circuit_signal = None
+        else:
+            ref_circuit_result = ref_circuit.result_collector.get_result('signal')
+            if ref_circuit_result is None:
+                ref_circuit_signal = None
+            else:
+                ref_circuit_signal = ref_circuit_result.data
         circuit.result_collector.add_result(new_copynumbers,
                                             name='signal',
                                             category='time_series',
@@ -302,7 +311,8 @@ class CircuitModeller():
                                             save_numerical_vis_data=save_numerical_vis_data,
                                             vis_kwargs={'legend': list(circuit.species.data.sample_names),
                                                         'out_type': 'png'},
-                                            analytics_kwargs={'signal_idx': signal.identities_idx})
+                                            analytics_kwargs={'signal_idx': signal.identities_idx,
+                                                              'ref_circuit_signal': ref_circuit_signal})
         return circuit
 
     # @time_it
@@ -340,14 +350,6 @@ class CircuitModeller():
                 logging.warning(
                     f'Could not find method @{method} in class {self}')
         return circuit
-
-    def compare_circuits(self, new_circuit: BaseCircuit, ref_circuit: BaseCircuit):
-        signal_diff = ref_circuit.result_collector.get_result('signal').data - \
-            new_circuit.result_collector.get_result('signal').data
-
-        new_circuit.result_collector.add_modified_duplicate_result(
-            key='signal', data=signal_diff, name='signal_diff')
-        return new_circuit
 
     def visualise_graph(self, circuit: BaseCircuit, mode="pyvis", new_vis=False):
         self.result_writer.visualise_graph(circuit, mode, new_vis)

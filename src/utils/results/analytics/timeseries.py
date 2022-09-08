@@ -81,10 +81,12 @@ class Timeseries():
             signal_diff / signal_low
         )).astype(self.num_dtype)
 
-    def get_rmse(self):
-        rmse = np.sqrt(np.sum(np.divide(np.power(self.data, 2), len(self.data))))
+    def get_rmse(self, ref_circuit_signal):
+        if ref_circuit_signal is None:
+            return 0
+        data = self.data - ref_circuit_signal
+        rmse = np.sqrt(np.sum(np.divide(np.power(data, 2), len(self.data))))
         return rmse
-        
 
     def get_response_times(self, steady_states):
         margin_high = 1.05
@@ -127,11 +129,11 @@ class Timeseries():
         freq = np.fft.fftfreq(len(spectrum))
         return freq
 
-    def generate_analytics(self, signal_idx=None):
+    def generate_analytics(self, signal_idx=None, ref_circuit_signal=None):
         analytics = {
             'first_derivative': self.get_derivative(),
             'fold_change': self.fold_change(),
-            'RMSE': self.get_rmse(),
+            'RMSE': self.get_rmse(ref_circuit_signal),
             'sensitivity': self.get_sensitivity(signal_idx)
         }
         analytics['steady_states'], \

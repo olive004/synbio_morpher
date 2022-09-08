@@ -74,8 +74,7 @@ def main(config=None, data_writer=None):
                         write_to_subsystem=True,
                         methods={
                     "init_circuit": {},
-                    "simulate_signal": {'save_numerical_vis_data': True},
-                    "compare_circuits": {'ref_circuit': None},
+                    "simulate_signal": {'save_numerical_vis_data': True, 'ref_circuit': None},
                     "write_results": {}
                 }
                 ),
