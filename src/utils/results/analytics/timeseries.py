@@ -83,9 +83,9 @@ class Timeseries():
 
     def get_rmse(self, ref_circuit_signal):
         if ref_circuit_signal is None:
-            return 0
+            return np.zeros(shape=(np.shape(self.data)[0]))
         data = self.data - ref_circuit_signal
-        rmse = np.sqrt(np.sum(np.divide(np.power(data, 2), len(self.data))))
+        rmse = np.sqrt(np.sum(np.divide(np.power(data, 2), len(self.data)), axis=1))
         return rmse
 
     def get_response_times(self, steady_states):

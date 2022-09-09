@@ -62,7 +62,7 @@ def main(config=None, data_writer=None):
             ),
             # Mutate circuit
             Protocol(
-                partial(Evolver(data_writer=data_writer).mutate,
+                partial(Evolver(data_writer=data_writer, sequence_type=config_file.get('system_type')).mutate,
                         write_to_subsystem=True),
                 req_input=True,
                 req_output=True,

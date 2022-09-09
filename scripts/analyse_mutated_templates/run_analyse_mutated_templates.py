@@ -20,10 +20,12 @@ def main(config=None, data_writer=None):
     if config is None:
         config = os.path.join(
             # "scripts", "analyse_mutated_templates", "configs", "logscale", "analyse_templates.json")
-            # "scripts", "analyse_mutated_templates", "configs", "logscale", "analyse_mutated_templates_1.json")
-            # "scripts", "analyse_mutated_templates", "configs", "logscale", "analyse_mutated_templates_2.json")
+            "scripts", "analyse_mutated_templates", "configs", "analyse_mutated_templates_1.json")
+            # "scripts", "analyse_mutated_templates", "configs", "analyse_mutated_templates_2.json")
+            # "scripts", "analyse_mutated_templates", "configs", "analyse_mutated_templates_10.json")
+            # "scripts", "analyse_mutated_templates", "configs", "analyse_mutated_templates_20.json")
             # "scripts", "analyse_mutated_templates", "configs", "base_config_testing.json")
-            "scripts", "analyse_mutated_templates", "configs", "base_config.json")
+            # "scripts", "analyse_mutated_templates", "configs", "base_config.json")
     config_file = load_json_as_dict(config)
 
     # Start_experiment
