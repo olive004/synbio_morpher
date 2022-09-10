@@ -2,7 +2,7 @@
     "experiment": {
         "purpose": "analyse_mutated_templates"
     },
-    "source_dir": "data/mutation_effect_on_interactions_signal/2022_09_08_124601",
+    "source_dir": "data/mutation_effect_on_interactions_signal/2022_09_09_184642",
     "preprocessing_func": null,
     "only_visualise_circuits": false
 }

@@ -156,7 +156,8 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                 if log_option:
                     data = data[data[col] != 0]
                     data = data.drop(col, axis=1).join(data[col].abs())
-                    new_col = r'$Log_{10}$' + ' of ' + plot_kwrgs.get(col_label, col)
+                    new_col = r'$Log_{10}$' + ' of ' + \
+                        plot_kwrgs.get(col_label, col)
                     if plot_type not in exempt_from_log:
                         log_df = np.log10(data[col])
                         data = data.drop(col, axis=1).join(log_df)
@@ -411,7 +412,12 @@ class VisODE():
         sns.set_context('paper')
         sns.set_theme(style=style)
         sns.set_palette("viridis")
+        if title is None:
+            title = plot_kwargs.get('title')
 
+        if x is None:
+            logging.warn(
+                'Make sure a column is specified for visualising with seaborn')
         f, ax = plt.subplots(figsize=figsize)
         plot_func(
             data=data,
@@ -419,8 +425,9 @@ class VisODE():
             y=y,
             **plot_kwargs
         ).set(title=title)
-        plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.,
-                   title=prettify_keys_for_label(plot_kwargs.get('hue')))
+        if plot_kwargs.get('hue'):
+            plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.,
+                       title=prettify_keys_for_label(plot_kwargs.get('hue')))
         f.savefig(out_path, bbox_inches='tight')
         plt.close()
 
@@ -487,7 +494,7 @@ class VisODE():
                      x: str = None, y: str = None,
                      log_axis: tuple = (False, False),
                      histplot_kwargs: dict = None,
-                     **plot_kwrgs):
+                     **plot_kwargs):
         """ log_axis: use logarithmic axes in (x-axis, y-axis) """
         from matplotlib import pyplot as plt
         import seaborn as sns
@@ -495,36 +502,21 @@ class VisODE():
 
         histplot_kwargs = {} if histplot_kwargs is None else histplot_kwargs
         default_kwargs = {
+            "bins": bin_count,
             "edgecolor": ".3",
+            # element='poly'
             # "element": "step",
+            "log_scale": log_axis,
             "fill": True,
             "linewidth": .5,
             "multiple": "dodge",  # "stack", "fill", "dodge"
-            "palette": "deep"
+            "palette": "deep",
             # palette="light:m_r",
+            "title": plot_kwargs.get('title')
         }
         default_kwargs.update(histplot_kwargs)
-
-        if x is None:
-            logging.warn(
-                'Make sure a column is specified for visualising with seaborn')
-        sns.set_theme(style="ticks")
-        f, ax = plt.subplots(figsize=(7, 5))
-        sns.despine(f)
-        sns.histplot(
-            data,
-            x=x,
-            y=y,
-            bins=bin_count,
-            log_scale=log_axis,
-            # element='poly'
-            **default_kwargs
-        ).set(title=plot_kwrgs.get('title', None))
-        if plot_kwrgs.get('hue', None) is not None:
-            leg = f.axes.flat[0].get_legend()
-            leg.set_title(prettify_keys_for_label(plot_kwrgs['hue']))
-        f.savefig(out_path)
-        plt.close()
+        self.sns_generic_plot(sns.histplot, out_path,
+                              x, y, data, **default_kwargs)
 
     def histplot(self, data: pd.DataFrame, out_path,
                  bin_count=100,
