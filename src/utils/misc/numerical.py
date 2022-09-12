@@ -1,7 +1,9 @@
+import functools
 import logging
 from math import factorial
 from typing import Union
 import numpy as np
+import pandas as pd
 
 
 SCIENTIFIC = {
@@ -23,6 +25,25 @@ def zero_out_negs(npmatrix):
 
 def nPr(n, r):
     return int(factorial(n)/factorial(n-r))
+
+
+def cast_astype(list_like, dtypes):
+    if type(dtypes) == list:
+        dtype = dtypes[0]
+        if len(dtypes) == 1:
+            dtypes = dtypes[0]
+        else:
+            dtypes = dtypes[1:]
+        list_like = cast_astype(list_like, dtypes)
+    else:
+        dtype = dtypes
+    if type(list_like) == list: 
+        recast = map(dtype, list_like)
+    elif type(list_like) == pd.Series:
+        recast = list_like.astype(dtype)
+    else:
+        raise TypeError(f'Type {type(list_like)} cannot be converted to {dtype}')
+    return recast
 
 
 def binary_arpeggiator(sequence: str, count: int):

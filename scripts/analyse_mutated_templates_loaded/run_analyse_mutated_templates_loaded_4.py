@@ -1,11 +1,14 @@
 from functools import partial
 import logging
+import operator
 import os
 
+import numpy as np
 import pandas as pd
 
 from fire import Fire
 from src.utils.misc.io import get_pathnames_from_mult_dirs
+from src.utils.misc.numerical import cast_astype
 from src.utils.misc.scripts_io import load_experiment_config_original
 from src.utils.misc.string_handling import prettify_keys_for_label
 
@@ -103,17 +106,20 @@ def main(config=None, data_writer=None):
                     plot_type=plot_type,
                     out_name=f'{cols_x}_{cols_y}{log_text}{outlier_save_text}',
                     exclude_rows_zero_in_cols=['mutation_num'],
-                    preprocessor_func_x=partial(
-                        pd.to_numeric, downcast='integer'),
+                    postprocessor_func_x=partial(cast_astype, 
+                        dtypes=[int, float]),
+                    selection_conditions=[(
+                        mutation_attr, operator.ne, ''
+                    )],
                     log_axis=log_axis,
                     use_sns=True,
                     hue='mutation_num',
                     expand_xcoldata_using_col=True,
-                    expand_ycoldata_using_col=True,
+                    # expand_ycoldata_using_col=True,
                     column_name_for_expanding_xcoldata=None,
-                    column_name_for_expanding_ycoldata='sample_names',
+                    # column_name_for_expanding_ycoldata='sample_names',
                     idx_for_expanding_xcoldata=1,
-                    idx_for_expanding_ycoldata=0,
+                    # idx_for_expanding_ycoldata=0,
                     remove_outliers_y=remove_outliers,
                     outlier_std_threshold_y=outlier_std_threshold,
                     title=title,
@@ -143,17 +149,20 @@ def main(config=None, data_writer=None):
                     plot_type=plot_type,
                     out_name=f'{cols_x}_{cols_y}{log_text}{outlier_save_text}',
                     exclude_rows_zero_in_cols=['mutation_num'],
-                    preprocessor_func_x=partial(
-                        pd.to_numeric, downcast='integer'),
+                    postprocessor_func_x=partial(cast_astype, 
+                        dtypes=[int, float]),
+                    selection_conditions=[(
+                        mutation_attr, operator.ne, ''
+                    )],
                     log_axis=log_axis,
                     use_sns=True,
                     hue='mutation_num',
                     expand_xcoldata_using_col=True,
-                    expand_ycoldata_using_col=True,
+                    # expand_ycoldata_using_col=True,
                     column_name_for_expanding_xcoldata=None,
-                    column_name_for_expanding_ycoldata='sample_names',
+                    # column_name_for_expanding_ycoldata='sample_names',
                     idx_for_expanding_xcoldata=1,
-                    idx_for_expanding_ycoldata=0,
+                    # idx_for_expanding_ycoldata=0,
                     remove_outliers_y=remove_outliers,
                     outlier_std_threshold_y=outlier_std_threshold,
                     title=title,

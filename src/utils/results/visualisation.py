@@ -154,6 +154,8 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                    plot_type: str = None, out_name='test_plot',
                    hue: str = None,
                    preprocessor_func_x=None,
+                   postprocessor_func_x=None,
+                   postprocessor_func_y=None,
                    use_sns=False,
                    log_axis=[False, False],
                    threshold_value_max=None,
@@ -174,7 +176,7 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                    **plot_kwargs):
     """ Plot type can be any attributes of VisODE() """
     data = deepcopy(og_data)
-
+    
     hue = hue if hue is not None else column_name_for_expanding_xcoldata
 
     cols_x = cols_x if cols_x is not None else [None]
@@ -220,6 +222,8 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                         idx_for_expanding_xcoldata,
                         idx_for_expanding_ycoldata,
                         preprocessor_func_y=None,
+                        postprocessor_func_x=None,
+                        postprocessor_func_y=None,
                         selection_conditions=None):
         def preprocess(data, column, expand_coldata_using_col, normalise_data,
                        preprocessor_func, column_name_for_expanding_coldata,
@@ -233,7 +237,7 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                         idx_for_expanding_coldata=idx_for_expanding_coldata)
                 if preprocessor_func:
                     data = data.drop(column, axis=1).join(
-                        preprocessor_func(arg=data[column]))
+                        preprocessor_func(data[column]))
                 if threshold_value_max:
                     data = data[data[column] <= threshold_value_max]
                 if remove_outliers:
@@ -247,7 +251,14 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                     df = data[column]
                     s = (df - df.mean()) / df.std()
                     data = data.drop(column, axis=1).join(s)
+                
             return data, column
+
+        def postprocess(data, column, postprocessor_func):
+            if postprocessor_func:
+                data = data.drop(column, axis=1).join(
+                    postprocessor_func(data[column]))
+            return data
         data, column_x = preprocess(
             data, column_x, expand_xcoldata_using_col, normalise_data_x,
             preprocessor_func_x, column_name_for_expanding_xcoldata,
@@ -264,6 +275,8 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
             data = exclude_rows_by_cols(data, exc_cols, condition)
 
         data = select_rows_by_conditional_cols(data, selection_conditions)
+        data = postprocess(data, column_x, postprocessor_func_x)
+        data = postprocess(data, column_y, postprocessor_func_y)
         data.reset_index(drop=True, inplace=True)
         return data, column_x, column_y
 
@@ -275,6 +288,8 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
         return data
 
     def select_rows_by_conditional_cols(data: pd.DataFrame, conditions: List[tuple]):
+        """ Selection condition should be a tuple of (the column to be used for the selection,
+        a condition such as == or !=, and the value for the condition """
         if conditions is None:
             return data
         for column, condition_op, value in conditions:
@@ -342,7 +357,9 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                     exclude_rows_nonempty_in_cols, exclude_rows_zero_in_cols,
                     idx_for_expanding_xcoldata,
                     idx_for_expanding_ycoldata,
-                    selection_conditions=selection_conditions)
+                    selection_conditions=selection_conditions,
+                    postprocessor_func_x=postprocessor_func_x,
+                    postprocessor_func_y=postprocessor_func_y)
                 data, col_x, col_y = process_log_sns(
                     data, col_x, col_y, plot_kwargs, log_axis, plot_type)
                 if plot_type == 'scatter_plot':
