@@ -389,8 +389,6 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                                                      plot_kwargs))
                 else:
                     logging.warning(f'Could not visualise columns {col_x} and {col_y} for {data}')
-    # else:
-    #     logging.warning(f'Could not find visualiser function {plot_type}')
 
 
 def visualise_graph_pyvis(graph: nx.DiGraph,
