@@ -20,10 +20,10 @@ def main(config=None, data_writer=None):
     if config is None:
         config = os.path.join(
             # "scripts", "analyse_mutated_templates", "configs", "logscale", "analyse_templates.json")
-            # "scripts", "analyse_mutated_templates", "configs", "analyse_mutated_templates_1.json")
+            "scripts", "analyse_mutated_templates", "configs", "analyse_mutated_templates_1.json")
             # "scripts", "analyse_mutated_templates", "configs", "analyse_mutated_templates_2.json")
             # "scripts", "analyse_mutated_templates", "configs", "analyse_mutated_templates_10.json")
-            "scripts", "analyse_mutated_templates", "configs", "analyse_mutated_templates_20.json")
+            # "scripts", "analyse_mutated_templates", "configs", "analyse_mutated_templates_20.json")
             # "scripts", "analyse_mutated_templates", "configs", "base_config_testing.json")
             # "scripts", "analyse_mutated_templates", "configs", "base_config.json")
     config_file = load_json_as_dict(config)
@@ -49,6 +49,9 @@ def main(config=None, data_writer=None):
 
     binding_rates_threshold_upper = np.power(10,6)
     binding_rates_threshold_upper_text = f', with cutoff at {binding_rates_threshold_upper}' if binding_rates_threshold_upper else ''
+
+    rate_unit = fr'${SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]}$'
+
     protocols = [
         Protocol(
             partial(tabulate_mutation_info, source_dir=source_dir,
@@ -68,7 +71,7 @@ def main(config=None, data_writer=None):
                     use_sns=True,
                     title='Maximum ' + r'$k_d$' + ' strength, unmutated circuits',
                     xlabel='Dissociation rate ' + r'$k_d$' + ' (' +
-                    f'{SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]})' +
+                    f'{rate_unit})' +
                     f'{binding_rates_threshold_upper_text}'),
             req_input=True,
             name='visualise_circuit_interactions'
@@ -85,7 +88,7 @@ def main(config=None, data_writer=None):
                     use_sns=True,
                     title=f'Maximum ' + r'$k_d$' + f' strength, {num_mutations} mutation{plot_grammar}',
                     xlabel='Dissociation rate' + r'$k_d$' + '(' +
-                    f'{SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]})' +
+                    f'{rate_unit})' +
                     f'{binding_rates_threshold_upper_text}'),
             req_input=True,
             name='visualise_mutated_interactions'
@@ -101,7 +104,7 @@ def main(config=None, data_writer=None):
                     use_sns=True,
                     title=f'Difference between circuit\nand mutated (maximum ' + r'$k_d$' + f'), {num_mutations} mutation{plot_grammar}',
                     xlabel='Difference in ' + r'$k_d$' + ' (' +
-                    f'{SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]})' +
+                    f'{rate_unit})' +
                     f'{binding_rates_threshold_upper_text}'),
             req_input=True,
             name='visualise_interactions_difference',
@@ -128,7 +131,7 @@ def main(config=None, data_writer=None):
                     use_sns=True,
                     title='Minimum ' + r'$k_d$' + ' strength, unmutated circuits',
                     xlabel='Dissociation rate ' + r'$k_d$' + ' (' +
-                    f'{SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]})' +
+                    f'{rate_unit})' +
                     f'{binding_rates_threshold_upper_text}'),
             req_input=True,
             name='visualise_circuit_interactions'
@@ -145,7 +148,7 @@ def main(config=None, data_writer=None):
                     use_sns=True,
                     title=f'Minimum ' + r'$k_d$' + f' strength, {num_mutations} mutation{plot_grammar}',
                     xlabel='Dissociation rate ' + r'$k_d$' + ' (' +
-                    f'{SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]})' +
+                    f'{rate_unit})' +
                     f'{binding_rates_threshold_upper_text}'),
             req_input=True,
             name='visualise_mutated_interactions'
@@ -162,7 +165,7 @@ def main(config=None, data_writer=None):
                     use_sns=True,
                     title=f'Difference between circuit\nand mutated (minimum ' + r'$k_d$' + f'), {num_mutations} mutation{plot_grammar}',
                     xlabel='Difference in ' + r'$k_d$' + ' (' +
-                    f'{SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]})' +
+                    f'{rate_unit})' +
                     f'{binding_rates_threshold_upper_text}'),
             req_input=True,
             name='visualise_interactions_difference',
@@ -180,7 +183,7 @@ def main(config=None, data_writer=None):
                     use_sns=True,
                     title=f'Ratio between mutated and \noriginal circuit (minimum ' + r'$k_d$' + f'), {num_mutations} mutation{plot_grammar}',
                     xlabel='Ratio of ' + r'$k_d$' + ' (' +
-                    f'{SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]})' +
+                    f'{rate_unit})' +
                     f'{binding_rates_threshold_upper_text}'),
             req_input=True,
             name='visualise_interactions_difference',
@@ -199,7 +202,7 @@ def main(config=None, data_writer=None):
                     use_sns=True,
                     title='Minimum ' + r'$k_d$' + ' strength, unmutated circuits',
                     xlabel='Dissociation rate ' + r'$k_d$' + ' (' +
-                    f'{SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]})' +
+                    f'{rate_unit})' +
                     f'{binding_rates_threshold_upper_text}'),
             req_input=True,
             name='visualise_circuit_interactions'
@@ -216,7 +219,7 @@ def main(config=None, data_writer=None):
                     use_sns=True,
                     title=f'Minimum ' + r'$k_d$' + f' strength, {num_mutations} mutation{plot_grammar}',
                     xlabel='Dissociation rate ' + r'$k_d$' + ' (' +
-                    f'{SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]})' +
+                    f'{rate_unit})' +
                     f'{binding_rates_threshold_upper_text}'),
             req_input=True,
             name='visualise_mutated_interactions'
@@ -233,7 +236,7 @@ def main(config=None, data_writer=None):
                     use_sns=True,
                     title=f'Difference between circuit\nand mutated (minimum ' + r'$k_d$' + f'), {num_mutations} mutation{plot_grammar}',
                     xlabel='Difference in ' + r'$k_d$' + ' (' +
-                    f'{SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]})' +
+                    f'{rate_unit})' +
                     f'{binding_rates_threshold_upper_text}'),
             req_input=True,
             name='visualise_interactions_difference',
@@ -251,7 +254,7 @@ def main(config=None, data_writer=None):
                     use_sns=True,
                     title=f'Ratio between mutated and \noriginal circuit (minimum ' + r'$k_d$' + f'), {num_mutations} mutation{plot_grammar}',
                     xlabel='Ratio of ' + r'$k_d$' + ' (' +
-                    f'{SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]})' +
+                    f'{rate_unit})' +
                     f'{binding_rates_threshold_upper_text}'),
             req_input=True,
             name='visualise_interactions_difference',
@@ -360,9 +363,6 @@ def main(config=None, data_writer=None):
             exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
             log_axis=(False, False),
             use_sns=True,
-            expand_xcoldata_using_col=True,
-            column_name_for_expanding_xcoldata='sample_names',
-            idx_for_expanding_xcoldata=0,
             title=f'Fold change difference between circuit\nand mutated counterparts, {num_mutations} mutation{plot_grammar}',
             xlabel='Fold change difference'),
             req_input=True,
@@ -379,9 +379,6 @@ def main(config=None, data_writer=None):
             exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
             log_axis=(True, False),
             use_sns=True,
-            expand_xcoldata_using_col=True,
-            column_name_for_expanding_xcoldata='sample_names',
-            idx_for_expanding_xcoldata=0,
             title=f'Fold change difference between circuit\nand mutated counterparts, {num_mutations} mutation{plot_grammar}',
             xlabel='Fold change difference'),
             req_input=True,
@@ -398,9 +395,6 @@ def main(config=None, data_writer=None):
             exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
             log_axis=(False, False),
             use_sns=True,
-            expand_xcoldata_using_col=True,
-            column_name_for_expanding_xcoldata='sample_names',
-            idx_for_expanding_xcoldata=0,
             title=f'Overshoot difference between circuit\nand mutated counterparts, {num_mutations} mutation{plot_grammar}',
             xlabel='Overshoot difference'),
             req_input=True,
@@ -417,9 +411,6 @@ def main(config=None, data_writer=None):
             exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
             log_axis=(True, False),
             use_sns=True,
-            expand_xcoldata_using_col=True,
-            column_name_for_expanding_xcoldata='sample_names',
-            idx_for_expanding_xcoldata=0,
             title=f'Overshoot difference between circuit\nand mutated counterparts, {num_mutations} mutation{plot_grammar}',
             xlabel='Overshoot difference'),
             req_input=True,
@@ -436,9 +427,6 @@ def main(config=None, data_writer=None):
             exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
             log_axis=(False, False),
             use_sns=True,
-            expand_xcoldata_using_col=True,
-            column_name_for_expanding_xcoldata='sample_names',
-            idx_for_expanding_xcoldata=0,
             title=f'Response time difference between circuit\nand mutated counterparts, {num_mutations} mutation{plot_grammar}',
             xlabel='Response time difference (s)'),
             req_input=True,
@@ -455,9 +443,6 @@ def main(config=None, data_writer=None):
             exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
             log_axis=(True, False),
             use_sns=True,
-            expand_xcoldata_using_col=True,
-            column_name_for_expanding_xcoldata='sample_names',
-            idx_for_expanding_xcoldata=0,
             title=f'Response time difference between circuit\nand mutated counterparts, {num_mutations} mutation{plot_grammar}',
             xlabel='Response time difference (s)'),
             req_input=True,
@@ -474,9 +459,6 @@ def main(config=None, data_writer=None):
             exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
             log_axis=(False, False),
             use_sns=True,
-            expand_xcoldata_using_col=True,
-            column_name_for_expanding_xcoldata='sample_names',
-            idx_for_expanding_xcoldata=0,
             title=f'Precision difference between circuit\nand mutated counterparts, {num_mutations} mutation{plot_grammar}',
             xlabel='Precision difference'),
             req_input=True,
@@ -493,9 +475,6 @@ def main(config=None, data_writer=None):
             exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
             log_axis=(True, False),
             use_sns=True,
-            expand_xcoldata_using_col=True,
-            column_name_for_expanding_xcoldata='sample_names',
-            idx_for_expanding_xcoldata=0,
             title=f'Precision difference between circuit\nand mutated counterparts, {num_mutations} mutation{plot_grammar}',
             xlabel='Precision difference'),
             req_input=True,
@@ -512,9 +491,6 @@ def main(config=None, data_writer=None):
             exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
             log_axis=(False, False),
             use_sns=True,
-            expand_xcoldata_using_col=True,
-            column_name_for_expanding_xcoldata='sample_names',
-            idx_for_expanding_xcoldata=0,
             title=f'Sensitivity difference between circuit\nand mutated counterparts, {num_mutations} mutation{plot_grammar}',
             xlabel='Sensitivity difference'),
             req_input=True,
@@ -531,9 +507,6 @@ def main(config=None, data_writer=None):
             exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
             log_axis=(True, False),
             use_sns=True,
-            expand_xcoldata_using_col=True,
-            column_name_for_expanding_xcoldata='sample_names',
-            idx_for_expanding_xcoldata=0,
             title=f'Sensitivity difference between circuit\nand mutated counterparts, {num_mutations} mutation{plot_grammar}',
             xlabel='Sensitivity difference'),
             req_input=True,
