@@ -59,7 +59,7 @@ def load_json_as_df(json_pathname: str) -> pd.DataFrame:
     return pd.read_json(json_pathname)
 
 
-def load_multiple_as_list(inputs_list, load_func, **kwargs):
+def load_multiple_as_list(inputs_list: list, load_func, **kwargs):
     collection_list = []
     for inp in inputs_list:
         collection_list.append(load_func(inp, **kwargs))
@@ -70,7 +70,7 @@ def load_csv_mult(file_paths):
     return load_multiple_as_list(file_paths, load_csv)
 
 
-def load_json_mult(file_paths, as_type=dict):
+def load_json_mult(file_paths: list, as_type=dict):
     if as_type == dict:
         return load_multiple_as_list(file_paths, load_json_as_dict)
     elif as_type == pd.DataFrame:
@@ -132,7 +132,7 @@ def write_csv(data: pd.DataFrame, out_path: str, overwrite=False):
 
 def write_json(data: Union[dict, pd.DataFrame], out_path: str, overwrite=False):
     if type(data) == pd.DataFrame:
-        data = data.reset_index()
+        data.reset_index(drop=True, inplace=True)
         data.to_json(out_path)
     else:
         data = process_dict_for_json(data)

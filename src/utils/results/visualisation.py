@@ -2,12 +2,14 @@ from cmath import log
 from copy import deepcopy
 from functools import partial
 import sys
+from typing import List, Union
 import networkx as nx
 import numpy as np
 import pandas as pd
 import logging
+from src.utils.misc.type_funcs import get_unique
 from src.utils.results.writer import DataWriter
-from src.utils.misc.string_handling import add_outtype, make_time_str
+from src.utils.misc.string_handling import add_outtype, get_all_similar, make_time_str, prettify_keys_for_label
 from pyvis.network import Network
 from src.utils.misc.type_handling import merge_dicts
 
@@ -76,154 +78,317 @@ class NetworkCustom(Network):
             self.add_node(node, **nodes[node])
 
 
-def visualise_():
-    pass
+def expand_data_by_col(data: pd.DataFrame, columns: Union[str, list], column_for_expanding_coldata: str, idx_for_expanding_coldata: int,
+                       find_all_similar_columns=False):
+    """ Expand horizontally or vertically based on if a second column name 
+    is given for expanding the column data """
+
+    def make_expansion_df(df_lists, col_names: list) -> pd.DataFrame:
+        temp_data = deepcopy(data)
+        expanded_data = pd.DataFrame(columns=data.columns)
+        for c in col_names:
+            expanded_df_col = pd.DataFrame.from_dict(
+                dict(zip(columns + [column_for_expanding_coldata],
+                     [df_lists.loc[column][c] for column in columns] + [c]))
+            )
+            # {column: df_lists[c], column_for_expanding_coldata: c})
+            temp_data.drop(columns, axis=1, inplace=True)
+            temp_data = temp_data.assign(
+                **dict(zip(
+                    columns + [column_for_expanding_coldata],
+                    [pd.Series(expanded_df_col[column].values) for column in columns] + [pd.Series(
+                        expanded_df_col[column_for_expanding_coldata].values)]))
+                # column: pd.Series(expanded_df_col[column].values),
+                # column_for_expanding_coldata: pd.Series(
+                #     expanded_df_col[column_for_expanding_coldata].values)
+            )
+            expanded_data = pd.concat(
+                [expanded_data, temp_data], axis=0, ignore_index=True)
+        return expanded_data
+
+    if type(columns) == str or (type(columns) == list and len(columns) == 1):
+        columns = [columns]
+
+    if find_all_similar_columns:
+        all_similar_columns = []
+        for column in columns:
+            similar_cols = get_all_similar(column, data.columns)
+            all_similar_columns += similar_cols
+        columns = get_unique(all_similar_columns)
+
+    if column_for_expanding_coldata is None:
+        # I haven't added the handling here for expanding multiple columns with lists in them simulatenously
+        column = columns[0]
+        expand_vertically = True
+        s = data.apply(lambda x: pd.Series(
+            x[column]), axis=1).stack().reset_index(level=1, drop=True)
+        s.name = column
+        expanded_data = data.drop(column, axis=1).join(s)
+    else:
+        # Retain the expanding column
+        new_expanding_column_name = 'all_' + column_for_expanding_coldata
+        if new_expanding_column_name not in list(data.columns):
+            data = data.rename(
+                columns={column_for_expanding_coldata: new_expanding_column_name})
+        df_lists = data[columns].unstack().apply(pd.Series)
+        col_names = data[new_expanding_column_name].iloc[idx_for_expanding_coldata]
+        if type(col_names) != list:
+            logging.warning(
+                f'The column {column_for_expanding_coldata} chosen for unstacking other columns has one value')
+        if len(df_lists.columns) == 1:
+            logging.warning(
+                f'The current column {columns} may not be expandable with {col_names}')
+        df_lists = df_lists.rename(columns=dict(
+            zip(df_lists.columns.values, col_names)))
+
+        # Make dataframe with expanded lists in one column labelled in expansion column
+        expanded_data = make_expansion_df(df_lists, col_names)
+
+    expanded_data.reset_index(drop=True, inplace=True)
+    return expanded_data
 
 
 def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                    cols_x: list = None, cols_y: list = None,
-                   expand_coldata_using_col_x: bool = False,
-                   expand_coldata_using_col_y: bool = False,
                    normalise_data_x: bool = False,
                    normalise_data_y: bool = False,
-                   plot_type='histplot', out_name='test_plot',
+                   plot_type: str = None, out_name='test_plot',
                    hue: str = None,
-                   preprocessor_func=None,
+                   preprocessor_func_x=None,
+                   postprocessor_func_x=None,
+                   postprocessor_func_y=None,
                    use_sns=False,
                    log_axis=[False, False],
                    threshold_value_max=None,
                    bin_count=100,
+                   selection_conditions: List[tuple] = None,
+                   remove_outliers_y: bool = False,
+                   outlier_std_threshold_y=3,
                    exclude_rows_nonempty_in_cols: list = None,
                    exclude_rows_zero_in_cols: list = None,
-                   column_name_for_expanding_labels: str = None,
-                   idx_for_expanding_labels: int = None,
+                   expand_xcoldata_using_col: bool = False,
+                   expand_ycoldata_using_col: bool = False,
+                   column_name_for_expanding_xcoldata: str = None,
+                   column_name_for_expanding_ycoldata: str = None,
+                   idx_for_expanding_xcoldata: int = 0,
+                   idx_for_expanding_ycoldata: int = 0,
                    plot_cols_on_same_graph=False,
                    misc_histplot_kwargs=None,
-                   **plot_kwrgs):
+                   **plot_kwargs):
     """ Plot type can be any attributes of VisODE() """
     data = deepcopy(og_data)
 
-    hue = hue if hue is not None else column_name_for_expanding_labels
+    hue = hue if hue is not None else column_name_for_expanding_xcoldata
 
     cols_x = cols_x if cols_x is not None else [None]
     cols_y = cols_y if cols_y is not None else [None]
 
-    def expand_data_by_col(data: pd.DataFrame, column, column_name_for_expanding_labels):
-        df_lists = data[[column]].unstack().apply(pd.Series)
-        col_names = data[column_name_for_expanding_labels].iloc[idx_for_expanding_labels]
-        df_lists = df_lists.rename(columns=dict(
-            zip(df_lists.columns.values, col_names)))
-
-        logging.info(col_names)
-        logging.info([c for c in col_names])
-        logging.info([type(c) for c in col_names])
-        logging.info(df_lists)
-
-        df_lists = pd.concat(axis=0, ignore_index=True, objs=[
-            pd.DataFrame.from_dict(
-                {column: df_lists[c], column_name_for_expanding_labels: c})
-            for c in col_names])
-        return df_lists
-
     def process_log_sns(data: pd.DataFrame, column_x: str, column_y: str,
-                        plot_kwrgs: dict, log_axis: list):
+                        plot_kwrgs: dict, log_axis: list, plot_type: str = None):
+        exempt_from_log = ['histplot']
+
         def process_log(data, col, log_option, col_label):
             if col is not None:
                 if log_option:
-                    new_col = 'Log of ' + plot_kwrgs.get(col_label, col)
+                    data = data[data[col] != 0]
+                    data = data.drop(col, axis=1).join(data[col].abs())
+                    new_col = r'$Log_{10}$' + ' of ' + \
+                        plot_kwrgs.get(col_label, col)
+                    if plot_type not in exempt_from_log:
+                        log_df = np.log10(data[col])
+                        data = data.drop(col, axis=1).join(log_df)
                 else:
                     new_col = plot_kwrgs.get(col_label, col)
+
                 data = data.rename(columns={col: new_col})
-                data = data[data[new_col] != 0]
-                data[new_col] = data[new_col].abs()
             return data, new_col
 
         if column_x is not None:
             data, column_x = process_log(data, column_x, log_axis[0], 'xlabel')
         if column_y is not None:
-            data, column_y = process_log(data, column_y, log_axis[0], 'ylabel')
+            data, column_y = process_log(data, column_y, log_axis[1], 'ylabel')
         if column_x is None and column_y is None:
             logging.warning('No columns given as input to histplot.')
+        data.reset_index(drop=True, inplace=True)
         return data, column_x, column_y
 
-    def preprocess_data_histplot(data: pd.DataFrame, preprocessor_func, threshold_value_max,
-                                 expand_coldata_using_col_x, expand_coldata_using_col_y,
-                                 column_x: str, column_y: str,
-                                 normalise_data_x: bool, normalise_data_y: bool,
-                                 column_name_for_expanding_labels):
-        def preprocess(data, column, expand_coldata_using_col, normalise_data):
+    def preprocess_data(data: pd.DataFrame, preprocessor_func_x,
+                        threshold_value_max,
+                        expand_xcoldata_using_col, expand_ycoldata_using_col,
+                        column_x: str, column_y: str,
+                        normalise_data_x: bool, normalise_data_y: bool,
+                        column_name_for_expanding_xcoldata,
+                        column_name_for_expanding_ycoldata,
+                        exclude_rows_nonempty_in_cols, exclude_rows_zero_in_cols,
+                        idx_for_expanding_xcoldata,
+                        idx_for_expanding_ycoldata,
+                        preprocessor_func_y=None,
+                        postprocessor_func_x=None,
+                        postprocessor_func_y=None,
+                        selection_conditions=None):
+        def preprocess(data, column, expand_coldata_using_col, normalise_data,
+                       preprocessor_func, column_name_for_expanding_coldata,
+                       idx_for_expanding_coldata, remove_outliers=False,
+                       outlier_std_threshold=3):
             if column is not None:
-                if preprocessor_func:
-                    data[column] = preprocessor_func(data[column].values)
                 if expand_coldata_using_col:
                     data = expand_data_by_col(
-                        data=data, column=column,
-                        column_name_for_expanding_labels=column_name_for_expanding_labels)
+                        data=data, columns=column,
+                        column_for_expanding_coldata=column_name_for_expanding_coldata,
+                        idx_for_expanding_coldata=idx_for_expanding_coldata)
+                if preprocessor_func:
+                    data = data.drop(column, axis=1).join(
+                        preprocessor_func(data[column]))
                 if threshold_value_max:
                     data = data[data[column] <= threshold_value_max]
+                if remove_outliers:
+                    mean = data[column].mean()
+                    std = data[column].std()
+                    if std != 0:
+                        data = data[data[column] < mean +
+                                    np.multiply(outlier_std_threshold, std)]
+                        data = data[data[column] > mean -
+                                    np.multiply(outlier_std_threshold, std)]
                 if normalise_data:
                     df = data[column]
-                    data[column] = (df - df.mean()) / df.std()
+                    s = (df - df.mean()) / df.std()
+                    data = data.drop(column, axis=1).join(s)
 
             return data, column
+
+        def postprocess(data, column, postprocessor_func):
+            if postprocessor_func:
+                data = data.drop(column, axis=1).join(
+                    postprocessor_func(data[column]))
+            return data
         data, column_x = preprocess(
-            data, column_x, expand_coldata_using_col_x, normalise_data_x)
+            data, column_x, expand_xcoldata_using_col, normalise_data_x,
+            preprocessor_func_x, column_name_for_expanding_xcoldata,
+            idx_for_expanding_xcoldata)
         data, column_y = preprocess(
-            data, column_y, expand_coldata_using_col_y, normalise_data_y)
+            data, column_y, expand_ycoldata_using_col, normalise_data_y,
+            None, column_name_for_expanding_ycoldata,
+            idx_for_expanding_ycoldata, remove_outliers_y, outlier_std_threshold_y)
+        data.reset_index(drop=True, inplace=True)
+
+        for exc_cols, condition in zip(
+            [exclude_rows_nonempty_in_cols, exclude_rows_zero_in_cols],
+                ['', 0]):
+            data = exclude_rows_by_cols(data, exc_cols, condition)
+
+        data = select_rows_by_conditional_cols(data, selection_conditions)
+        data = postprocess(data, column_x, postprocessor_func_x)
+        data = postprocess(data, column_y, postprocessor_func_y)
+        data.reset_index(drop=True, inplace=True)
         return data, column_x, column_y
 
-    def exclude_rows_by_cols(data, cols: list, condition):
+    def exclude_rows_by_cols(data: pd.DataFrame, cols: list, condition):
         if cols is not None:
             for exc_col in cols:
-                data = data[data[exc_col] == condition]
+                data = data[data[exc_col] != condition]
+        data.reset_index(drop=True, inplace=True)
         return data
 
-    for exc_cols, condition in zip(
-        [exclude_rows_nonempty_in_cols, exclude_rows_zero_in_cols],
-            ['', 0]):
-        data = exclude_rows_by_cols(data, exc_cols, condition)
+    def select_rows_by_conditional_cols(data: pd.DataFrame, conditions: List[tuple]):
+        """ Selection condition should be a tuple of (the column to be used for the selection,
+        a condition such as == or !=, and the value for the condition """
+        if conditions is None:
+            return data
+        for column, condition_op, value in conditions:
+            selection = condition_op(data[column], value)
+            data = data[selection]
+        data.reset_index(drop=True, inplace=True)
+        return data
 
     visualiser = VisODE()
-    if plot_type == 'histplot':
+    # if plot_type == 'histplot':
+    #     for col_x in cols_x:
+    #         for col_y in cols_y:
+
+    #             data, col_x, col_y = preprocess_data_histplot(
+    #                 data, preprocessor_func_x, threshold_value_max,
+    #                 expand_xcoldata_using_col, expand_ycoldata_using_col,
+    #                 col_x, col_y,
+    #                 normalise_data_x, normalise_data_y,
+    #                 column_name_for_expanding_xcoldata,
+    #                 exclude_rows_nonempty_in_cols, exclude_rows_zero_in_cols,
+    #                 selection_conditions)
+
+    #             if use_sns:
+    #                 data, col_x, col_y = process_log_sns(
+    #                     data, col_x, col_y, plot_kwargs, log_axis)
+
+    #                 plot_kwargs.update({'column_x': col_x, 'data': data})
+    #                 plot_kwargs.update({'column_y': col_y, 'data': data})
+    #             else:
+    #                 plot_kwargs.update({'data': data[col_x]})
+
+    #             data_writer.output(out_type='png', out_name=out_name,
+    #                                write_func=visualiser.histplot,
+    #                                **merge_dicts({'data': data,
+    #                                               'x': col_x,
+    #                                               'y': col_y,
+    #                                               'use_sns': use_sns,
+    #                                               'log_axis': log_axis,
+    #                                               'bin_count': bin_count,
+    #                                               'histplot_kwargs': misc_histplot_kwargs
+    #                                               },
+    #                                              plot_kwargs))
+    if plot_type == 'plot':
         for col_x in cols_x:
             for col_y in cols_y:
-                data, col_x, col_y = preprocess_data_histplot(
-                    data, preprocessor_func, threshold_value_max,
-                    expand_coldata_using_col_x, expand_coldata_using_col_y,
+                x, y = data[col_x], data[col_y]
+                if preprocessor_func_x:
+                    x = preprocessor_func_x(x.values)
+                    # y = preprocessor_func_x(y.values)
+                data_writer.output(out_type='png', out_name=out_name,
+                                   write_func=visualiser.plot,
+                                   **merge_dicts({'data': x, 'y': y}, plot_kwargs))
+        return
+
+    for col_x in cols_x:
+        for col_y in cols_y:
+            if use_sns:
+                data, col_x, col_y = preprocess_data(
+                    data, preprocessor_func_x, threshold_value_max,
+                    expand_xcoldata_using_col, expand_ycoldata_using_col,
                     col_x, col_y,
                     normalise_data_x, normalise_data_y,
-                    column_name_for_expanding_labels)
-
-                if use_sns:
-                    data = data.reset_index()
-                    data, col_x, col_y = process_log_sns(
-                        data, col_x, col_y, plot_kwrgs, log_axis)
-
-                    plot_kwrgs.update({'column_x': col_x, 'data': data})
-                    plot_kwrgs.update({'column_y': col_y, 'data': data})
+                    column_name_for_expanding_xcoldata,
+                    column_name_for_expanding_ycoldata,
+                    exclude_rows_nonempty_in_cols, exclude_rows_zero_in_cols,
+                    idx_for_expanding_xcoldata,
+                    idx_for_expanding_ycoldata,
+                    selection_conditions=selection_conditions,
+                    postprocessor_func_x=postprocessor_func_x,
+                    postprocessor_func_y=postprocessor_func_y)
+                data, col_x, col_y = process_log_sns(
+                    data, col_x, col_y, plot_kwargs, log_axis, plot_type)
+                if plot_type == 'scatter_plot':
+                    write_func = visualiser.sns_scatterplot
+                elif plot_type == 'bar_plot':
+                    write_func = visualiser.sns_barplot
+                elif plot_type == 'violin_plot':
+                    write_func = visualiser.sns_violinplot
+                elif plot_type == 'line_plot':
+                    write_func = visualiser.sns_lineplot
+                elif plot_type == 'histplot':
+                    write_func = visualiser.sns_histplot
+                    plot_kwargs.update({'log_axis': log_axis,
+                                        'bin_count': bin_count,
+                                        'histplot_kwargs': misc_histplot_kwargs
+                                        })
                 else:
-                    plot_kwrgs.update({'data': data[col_x]})
+                    logging.warning(f'Unknown plot type given "{plot_type}"')
 
-                data_writer.output(out_type='png', out_name=out_name,
-                                   write_func=visualiser.histplot,
-                                   **merge_dicts({'use_sns': use_sns, "log_axis": log_axis,
-                                                  'hue': hue,
-                                                  'bin_count': bin_count,
-                                                  'misc_histplot_kwargs': misc_histplot_kwargs
-                                                  },
-                                                 plot_kwrgs))
-    elif plot_type == 'plot':
-        try:
-            x, y = cols_x[0], cols_x[-1]
-            if preprocessor_func:
-                x, y = preprocessor_func(x.values), preprocessor_func(y.values)
-            data_writer.output(out_type='png', out_name=out_name,
-                               write_func=visualiser.plot, **merge_dicts({'data': x, 'y': y}, plot_kwrgs))
-        except IndexError:
-            assert len(
-                cols_x) == 2, 'For visualising a plot from a table, please only provide 2 columns as variables.'
-    else:
-        logging.warn(f'Could not find visualiser function {plot_type}')
+                if not data.empty:
+                    data_writer.output(out_type='png', out_name=out_name,
+                                       write_func=write_func,
+                                       **merge_dicts({'x': col_x, 'y': col_y, 'data': data,
+                                                      'hue': hue},
+                                                     plot_kwargs))
+                else:
+                    logging.warning(f'Could not visualise columns {col_x} and {col_y} for {data}')
 
 
 def visualise_graph_pyvis(graph: nx.DiGraph,
@@ -275,6 +440,12 @@ class VisODE():
                     getattr(plt, plot_kwrg, partial(
                         warning_call, dummy_value=None, function=plot_kwrg))(value)
 
+    def rename_legend(self, plot, new_title: str, new_labels: list):
+        leg = plot.axes.flat[0].get_legend()
+        leg.set_title(new_title)
+        for t, l in zip(leg.texts, new_labels):
+            t.set_text(l)
+
     def plot(self, data, y=None, new_vis=False, out_path='test_plot', out_type='png',
              **plot_kwrgs) -> None:
         from matplotlib import pyplot as plt
@@ -286,6 +457,83 @@ class VisODE():
         self.add_kwrgs(plt, **plot_kwrgs)
         plt.savefig(out_path)
         plt.close()
+
+    def sns_generic_plot(self, plot_func, out_path: str, x: str, y: str, data: pd.DataFrame,
+                         title: str = None,
+                         figsize=(7, 5), style="ticks",
+                         **plot_kwargs):
+        import seaborn as sns
+        import matplotlib.pyplot as plt
+        sns.set_context('paper')
+        sns.set_theme(style=style)
+        sns.set_palette("viridis")
+        if title is None:
+            title = plot_kwargs.get('title')
+
+        if x is None:
+            logging.warn(
+                'Make sure a column is specified for visualising with seaborn')
+        f, ax = plt.subplots(figsize=figsize)
+        plot_func(
+            data=data,
+            x=x,
+            y=y,
+            **plot_kwargs
+        ).set(title=title)
+        if plot_kwargs.get('hue'):
+            plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.,
+                       title=prettify_keys_for_label(plot_kwargs.get('hue')))
+        f.savefig(out_path, bbox_inches='tight')
+        plt.close()
+
+    def sns_barplot(self, out_path: str, x: str, y: str, data: pd.DataFrame,
+                    title: str = None, xlabel=None, ylabel=None,
+                    **plot_kwargs):
+        import seaborn as sns
+        plot_kwargs.update({'errwidth': 1})
+
+        if not plot_kwargs.get('hue') in data.columns:
+            logging.info(data)
+            logging.info(x)
+            logging.info(y)
+        if plot_kwargs.get('hue'):
+            plot_kwargs.update({
+                # 'palette': sns.color_palette("husl", len(data[plot_kwargs.get('hue')].unique()))
+                # 'palette': sns.color_palette("plasma", len(data[plot_kwargs.get('hue')].unique()))
+                'palette': sns.color_palette("viridis", len(data[plot_kwargs.get('hue')].unique()))
+            })
+
+        self.sns_generic_plot(sns.barplot, out_path, x,
+                              y, data, title, **plot_kwargs)
+
+    def sns_scatterplot(self, out_path: str, x: str, y: str, data: pd.DataFrame,
+                        title: str = None, xlabel=None, ylabel=None,
+                        **plot_kwargs):
+        import seaborn as sns
+        self.sns_generic_plot(sns.scatterplot, out_path,
+                              x, y, data, title, **plot_kwargs)
+
+    def sns_violinplot(self, out_path: str, x: str, y: str, data: pd.DataFrame,
+                       title: str = None, xlabel=None, ylabel=None,
+                       **plot_kwargs):
+        import seaborn as sns
+        self.sns_generic_plot(sns.violinplot, out_path, x, y, data, title,
+                              figsize=(10, 6), **plot_kwargs)
+
+    def sns_lineplot(self, out_path: str, x: str, y: str, data: pd.DataFrame,
+                     title: str = None, xlabel=None, ylabel=None,
+                     **plot_kwargs):
+        import seaborn as sns
+
+        if plot_kwargs.get('hue'):
+            plot_kwargs.update({
+                # 'palette': sns.color_palette("husl", len(data[plot_kwargs.get('hue')].unique()))
+                # 'palette': sns.color_palette("plasma", len(data[plot_kwargs.get('hue')].unique()))
+                'palette': sns.color_palette("viridis", len(data[plot_kwargs.get('hue')].unique()))
+            })
+
+        self.sns_generic_plot(sns.lineplot, out_path,
+                              x, y, data, title, **plot_kwargs)
 
     # Make visualisations for each analytic chosen
     def heatmap(self, data: pd.DataFrame, out_path: str = None, out_type='png',
@@ -301,49 +549,42 @@ class VisODE():
         fig.savefig(out_path)
         plt.clf()
 
-    def histplot(self, data: pd.DataFrame, out_path, bin_count=100,
-                 use_sns=False,
-                 column_x: str = None, column_y: str = None,
-                 hue=None,
-                 log_axis: tuple = (False, False),
-                 histplot_kwargs: dict = {},
-                 **plot_kwrgs):
+    def sns_histplot(self, data: pd.DataFrame, out_path,
+                     bin_count=100,
+                     x: str = None, y: str = None,
+                     log_axis: tuple = (False, False),
+                     histplot_kwargs: dict = None,
+                     **plot_kwargs):
         """ log_axis: use logarithmic axes in (x-axis, y-axis) """
         from matplotlib import pyplot as plt
-        if use_sns:
-            import seaborn as sns
-            sns.set_context('paper')
+        import seaborn as sns
+        sns.set_context('paper')
 
-            default_kwargs = {
-                "multiple": "stack",
-                "palette": "deep",
-                # palette="light:m_r",
-                "edgecolor": ".3",
-                "linewidth": .5
-            }
-            
-            default_kwargs.update(histplot_kwargs)
+        histplot_kwargs = {} if histplot_kwargs is None else histplot_kwargs
+        default_kwargs = {
+            "bins": bin_count,
+            "edgecolor": ".3",
+            # element='poly'
+            # "element": "step",
+            "log_scale": log_axis,
+            "fill": True,
+            "linewidth": .5,
+            "multiple": "dodge",  # "stack", "fill", "dodge"
+            "palette": "deep",
+            # palette="light:m_r",
+            "title": plot_kwargs.get('title')
+        }
+        default_kwargs.update(histplot_kwargs)
+        self.sns_generic_plot(sns.histplot, out_path,
+                              x, y, data, **default_kwargs)
 
-            if column_x is None:
-                logging.warn(
-                    'Make sure a column is specified for visualising with seaborn')
-            sns.set_theme(style="ticks")
-            f, ax = plt.subplots(figsize=(7, 5))
-            sns.despine(f)
-            sns.histplot(
-                data,
-                x=column_x,
-                y=column_y,
-                bins=bin_count,
-                log_scale=log_axis,
-                # element='poly'
-                **default_kwargs
-            ).set(title=plot_kwrgs.get('title', None))
-            f.savefig(out_path)
-            plt.close()
-        else:
-            plt.figure()
-            plt.hist(data, range=(min(data), max(data)), bins=bin_count)
-            self.add_kwrgs(plt, **plot_kwrgs)
-            plt.savefig(out_path)
-            plt.close()
+    def histplot(self, data: pd.DataFrame, out_path,
+                 bin_count=100,
+                 **plot_kwrgs):
+        logging.warning(f'Function "histplot" is not finished.')
+        from matplotlib import pyplot as plt
+        plt.figure()
+        plt.hist(data, range=(min(data), max(data)), bins=bin_count)
+        self.add_kwrgs(plt, **plot_kwrgs)
+        plt.savefig(out_path)
+        plt.close()

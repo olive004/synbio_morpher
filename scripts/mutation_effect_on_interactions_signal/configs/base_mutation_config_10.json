@@ -13,8 +13,8 @@
         "output": "RNA_2"
     },
     "filters": {
-        "min_num_interacting": 3,
-        "max_self_interacting": 2
+        "min_num_interacting": 1,
+        "max_self_interacting": 3
     },
     "mutations": {
         "mutation_counts": 10,

@@ -1,6 +1,8 @@
 {
-    "source_dir": "data/mutation_effect_on_interactions_signal/2022_05_06_105250",
+    "experiment": {
+        "purpose": "analyse_mutated_templates"
+    },
+    "source_dir": "data/mutation_effect_on_interactions_signal/2022_09_09_184613",
     "preprocessing_func": null,
-    "only_visualise_circuits": false,
-    "log_scale": false
+    "only_visualise_circuits": false
 }

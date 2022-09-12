@@ -1,12 +1,13 @@
 
 
+from copy import deepcopy
 import logging
 from src.utils.misc.type_handling import assert_uniform_type
 
 
 class Result():
     def __init__(self, name, result_data, category, vis_func, save_numerical_vis_data=False,
-                 vis_kwargs=None, analytics_kwargs=None) -> None:
+                 vis_kwargs=None, analytics_kwargs=None, analytics=None) -> None:
         self.name = name
         self.data = result_data
         self.category = category
@@ -15,7 +16,7 @@ class Result():
         self.vis_kwargs = vis_kwargs
         self.analytics_kwargs = analytics_kwargs
 
-        self.analytics = {}
+        self.analytics = analytics
         if category == 'time_series':
             from src.utils.results.analytics.timeseries import Timeseries
             analytics_kwargs = analytics_kwargs if analytics_kwargs is not None else {}
@@ -35,16 +36,26 @@ class ResultCollector():
 
         self.results = {}
 
-    def add_result(self, result_data, category, vis_func, name, save_numerical_vis_data=False,
-                   vis_kwargs=None, analytics_kwargs=None):
+    def add_result(self, data, category, vis_func, name, save_numerical_vis_data=False,
+                   vis_kwargs=None, analytics_kwargs=None, analytics=None):
         """ category: 'time_series', 'graph' """
         name = f'Result_{len(self.results.keys())}' if not name else name
-        result_entry = Result(name, result_data, category,
-                              vis_func, save_numerical_vis_data, vis_kwargs, analytics_kwargs)
+        result_entry = Result(name, data, category, vis_func, save_numerical_vis_data,
+                              vis_kwargs, analytics_kwargs, analytics)
         self.results[name] = result_entry
 
-    def get_result(self, key):
-        return self.results.get(key, None)
+    def add_modified_duplicate_result(self, key, **add_kwargs):
+        result = deepcopy(self.get_result(key))
+        result_kwargs = result.__dict__
+        result_kwargs.update(add_kwargs)
+        self.add_result(**result_kwargs)
+
+    def get_result(self, key) -> Result:
+        result = self.results.get(key, None)
+        if result is None:
+            logging.warning(
+                f'The keyword {key} did not return a result from {self}.')
+        return result
 
     def pool_results(self, results: dict):
         assert_uniform_type(results.values, Result)

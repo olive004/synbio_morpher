@@ -18,7 +18,15 @@ def main(config=None, data_writer=None):
     # Set configs
     if config is None:
         config = os.path.join(
-            "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config.json")
+            # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_test.json")
+            # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_1.json")
+            # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_2.json")
+            # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_10.json")
+            # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_20.json")
+            # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_1_highmag.json")
+            # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_2_highmag.json")
+            # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_10_highmag.json")
+            "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_20_highmag.json")
     config_file = load_json_as_dict(config)
 
     # Start_experiment
@@ -35,7 +43,7 @@ def main(config=None, data_writer=None):
             partial(get_pathnames,
                     first_only=True,
                     file_key="circuit_stats",
-                    search_dir=source_experiment_dir
+                    search_dir=source_experiment_dir,
                     ),
             req_output=True,
             name='get_pathname'
@@ -59,7 +67,7 @@ def main(config=None, data_writer=None):
             ),
             # Mutate circuit
             Protocol(
-                partial(Evolver(data_writer=data_writer).mutate,
+                partial(Evolver(data_writer=data_writer, sequence_type=config_file.get('system_type')).mutate,
                         write_to_subsystem=True),
                 req_input=True,
                 req_output=True,
@@ -71,7 +79,7 @@ def main(config=None, data_writer=None):
                         write_to_subsystem=True,
                         methods={
                     "init_circuit": {},
-                    "simulate_signal": {'save_numerical_vis_data': True},
+                    "simulate_signal": {'save_numerical_vis_data': True, 'ref_circuit': None},
                     "write_results": {}
                 }
                 ),

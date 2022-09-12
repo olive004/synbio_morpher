@@ -27,6 +27,14 @@ def list_to_str(input_listlike):
     return ''.join(input_listlike)
 
 
+def get_all_similar(key: str, similarity_list: list):
+    similar_keys = []
+    for s in similarity_list:
+        if key in s:
+            similar_keys.append(s)
+    return similar_keys
+
+
 def make_time_str():
     """Output as 'YEAR_MONTH_DAY_TIME'."""
     now = datetime.now() 
@@ -42,6 +50,13 @@ def ordered_merge(list1, list2, mask) -> list:
     for i, (n,c,m) in enumerate(zip(list1, list2, mask)):
         merged[i] = c if m else n
     return merged
+
+
+def prettify_keys_for_label(key: str):
+    key = key.replace('_', ' ')
+    key = key.replace('number', 'num').replace('num', 'number')
+    key = key.capitalize()
+    return key
 
 
 def prettify_logging_info(loggin):
