@@ -67,7 +67,7 @@ def filter_data(data: pd.DataFrame, filters: dict = {}):
     return filt_stats
 
 
-def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path') -> list:
+def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path', max_num: int = None) -> list:
 
     stats = GeneCircuitLoader().load_data(stats_pathname).data
     filt_stats = filter_data(stats, filters)
@@ -92,6 +92,8 @@ def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path
         extra_config.update(load_experiment_config(experiment_folder))
         extra_configs.append(extra_config)
     # logging.info(extra_configs)
+    if max_num is not None:
+        extra_configs = extra_configs[:max_num]
     return extra_configs
 
 
@@ -148,18 +150,14 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
         table.update(results)
         for k in results.keys():
             reference_v = reference_table[k]
-            if type(reference_v) == bool:
-                continue
             diff = np.asarray(table[k]) - np.asarray(reference_v)
-            if np.size(diff) == 1:
-                diff = diff[0]
-            table[f'{k}_diff_to_base_circuit'] = diff
-
             ratio = np.divide(np.asarray(table[k]), np.asarray(reference_v),
                               out=np.zeros_like(np.asarray(table[k])), where=np.asarray(reference_v) != 0)
+            if np.size(diff) == 1:
+                diff = diff[0]
             if np.size(ratio) == 1:
                 ratio = ratio[0]
-            # ratio[np.asarray(reference_v) == 0] =
+            table[f'{k}_diff_to_base_circuit'] = diff
             table[f'{k}_ratio_from_mutation_to_base'] = ratio
         table = remove_invalid_json_values(table)
         return table
@@ -198,7 +196,7 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
         curr_table = update_diff_to_base_circuit(curr_table, int_stats,
                                                  ref_stats, cols=diff_cols)
         result_report = load_result_report(source_dir)
-        # result_report = remove_invalid_json_values(load_result_report(source_dir))
+        result_report = remove_invalid_json_values(load_result_report(source_dir))
         curr_table = upate_table_with_results(
             curr_table, reference_table=ref_table, results=result_report)
         if check_coherent:
@@ -309,7 +307,7 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
             info_table = write_results(info_table)
 
     info_table = write_results(info_table)
-    info_table_path = get_pathnames(
-        search_dir=data_writer.write_dir, file_key='tabulated_mutation_info.json', first_only=True)
-    info_table = pd.read_json(info_table_path)
+    # info_table_path = get_pathnames(
+    #     search_dir=data_writer.write_dir, file_key='tabulated_mutation_info.csv', first_only=True)
+    # info_table = pd.read_csv(info_table_path)
     return info_table

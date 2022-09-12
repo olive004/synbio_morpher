@@ -3,37 +3,38 @@ import logging
 import os
 
 import numpy as np
+import pandas as pd
 
 from fire import Fire
 from src.utils.misc.scripts_io import load_experiment_config
 
 from src.utils.results.experiments import Experiment, Protocol
 from src.utils.results.result_writer import ResultWriter
-from src.utils.results.visualisation import visualise_data
 from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS, RawSimulationHandling
-from src.srv.sequence_exploration.sequence_analysis import tabulate_mutation_info
-from src.utils.data.data_format_tools.common import load_json_as_dict
+from src.utils.data.data_format_tools.common import load_csv_mult, load_json_as_dict
+from src.utils.misc.io import get_pathnames_from_mult_dirs
+
+from src.utils.results.visualisation import visualise_data
+from src.utils.data.data_format_tools.common import load_json_as_dict, load_json_mult
 
 
 def main(config=None, data_writer=None):
     # Set configs
     if config is None:
         config = os.path.join(
-            # "scripts", "analyse_mutated_templates", "configs", "logscale", "analyse_templates.json")
-            # "scripts", "analyse_mutated_templates", "configs", "analyse_mutated_templates_1.json")
-            # "scripts", "analyse_mutated_templates", "configs", "analyse_mutated_templates_2.json")
-            # "scripts", "analyse_mutated_templates", "configs", "analyse_mutated_templates_10.json")
-            # "scripts", "analyse_mutated_templates", "configs", "analyse_mutated_templates_20.json")
-            "scripts", "analyse_mutated_templates", "configs", "base_config_testing.json")
-            # "scripts", "analyse_mutated_templates", "configs", "base_config.json")
+            "scripts", "analyse_mutated_templates_loaded", "configs", "base_config_test_2.json")
     config_file = load_json_as_dict(config)
 
     # Start_experiment
     if data_writer is None:
-        data_writer = ResultWriter(purpose=config_file.get('experiment', {}).get('purpose'))
+        data_writer = ResultWriter(
+            purpose=config_file.get('experiment', {}).get('purpose'))
 
-    source_dir = config_file.get('source_dir')
-    source_config = load_experiment_config(source_dir)
+    source_dirs = config_file.get('source_dirs', [])
+    source_dir = source_dirs[0]
+    # source_config = load_experiment_config_original(
+    #     source_dir, 'mutation_effect_on_interactions_signal')
+
     if config_file.get('preprocessing_func') == 'rate_to_energy':
         preprocessing_func = RawSimulationHandling().rate_to_energy,
     else:
@@ -44,20 +45,44 @@ def main(config=None, data_writer=None):
     else:
         exclude_rows_via_cols = []
 
-    num_mutations = source_config['mutations']['mutation_nums_within_sequence']
+    # num_mutations = source_config['mutations']['mutation_nums_within_sequence']
+    num_mutations = 1
     plot_grammar = 's' if num_mutations > 1 else ''
 
-    binding_rates_threshold_upper = np.power(10,6)
+    # binding_rates_threshold_upper = np.power(10, 6)
+    binding_rates_threshold_upper = None
     binding_rates_threshold_upper_text = f', with cutoff at {binding_rates_threshold_upper}' if binding_rates_threshold_upper else ''
 
-    rate_unit = fr'${SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]}$'
+    # rate_unit = fr'${SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]}$'
+    rate_unit = r'$s^{-1}$'
 
     protocols = [
         Protocol(
-            partial(tabulate_mutation_info, source_dir=source_dir,
-                    data_writer=data_writer),
+            partial(
+                get_pathnames_from_mult_dirs,
+                search_dirs=source_dirs,
+                file_key='tabulated_mutation_info.json',
+                first_only=True),
             req_output=True,
-            name='tabulate_mutation_info'
+            name='get_pathnames_from_mult_dirs'
+        ),
+        Protocol(
+            partial(
+                load_json_mult,
+                as_type=pd.DataFrame
+            ),
+            req_input=True,
+            req_output=True,
+            name='load_json'
+        ),
+        Protocol(
+            partial(
+                pd.concat,
+                axis=0,
+                ignore_index=True),
+            req_input=True,
+            req_output=True,
+            name='concatenate_dfs'
         ),
         # Binding rates max int's og
         Protocol(
@@ -85,8 +110,9 @@ def main(config=None, data_writer=None):
                     exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
                     threshold_value_max=binding_rates_threshold_upper,
                     log_axis=(False, False),
-                    use_sns=True,
-                    title=f'Maximum ' + r'$k_d$' + f' strength, {num_mutations} mutation{plot_grammar}',
+                    use_sns=True,  
+                    title=f'Maximum ' + r'$k_d$' + \
+                    f' strength, {num_mutations} mutation{plot_grammar}',
                     xlabel='Dissociation rate' + r'$k_d$' + '(' +
                     f'{rate_unit})' +
                     f'{binding_rates_threshold_upper_text}'),
@@ -101,8 +127,9 @@ def main(config=None, data_writer=None):
                     preprocessor_func_x=preprocessing_func,
                     exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
                     log_axis=(False, False),
-                    use_sns=True,
-                    title=f'Difference between circuit\nand mutated (maximum ' + r'$k_d$' + f'), {num_mutations} mutation{plot_grammar}',
+                    use_sns=True,  
+                    title=f'Difference between circuit\nand mutated (maximum ' + \
+                    r'$k_d$' + f'), {num_mutations} mutation{plot_grammar}',
                     xlabel='Difference in ' + r'$k_d$' + ' (' +
                     f'{rate_unit})' +
                     f'{binding_rates_threshold_upper_text}'),
@@ -128,7 +155,7 @@ def main(config=None, data_writer=None):
                     exclude_rows_nonempty_in_cols=['mutation_name'],
                     threshold_value_max=binding_rates_threshold_upper,
                     log_axis=(False, False),
-                    use_sns=True,
+                    use_sns=True,  
                     title='Minimum ' + r'$k_d$' + ' strength, unmutated circuits',
                     xlabel='Dissociation rate ' + r'$k_d$' + ' (' +
                     f'{rate_unit})' +
@@ -145,8 +172,9 @@ def main(config=None, data_writer=None):
                     exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
                     threshold_value_max=binding_rates_threshold_upper,
                     log_axis=(False, False),
-                    use_sns=True,
-                    title=f'Minimum ' + r'$k_d$' + f' strength, {num_mutations} mutation{plot_grammar}',
+                    use_sns=True,  
+                    title=f'Minimum ' + r'$k_d$' + \
+                    f' strength, {num_mutations} mutation{plot_grammar}',
                     xlabel='Dissociation rate ' + r'$k_d$' + ' (' +
                     f'{rate_unit})' +
                     f'{binding_rates_threshold_upper_text}'),
@@ -162,8 +190,9 @@ def main(config=None, data_writer=None):
                     exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
                     threshold_value_max=binding_rates_threshold_upper,
                     log_axis=(False, False),
-                    use_sns=True,
-                    title=f'Difference between circuit\nand mutated (minimum ' + r'$k_d$' + f'), {num_mutations} mutation{plot_grammar}',
+                    use_sns=True,  
+                    title=f'Difference between circuit\nand mutated (minimum ' + \
+                    r'$k_d$' + f'), {num_mutations} mutation{plot_grammar}',
                     xlabel='Difference in ' + r'$k_d$' + ' (' +
                     f'{rate_unit})' +
                     f'{binding_rates_threshold_upper_text}'),
@@ -180,8 +209,9 @@ def main(config=None, data_writer=None):
                     exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
                     threshold_value_max=binding_rates_threshold_upper,
                     log_axis=(False, False),
-                    use_sns=True,
-                    title=f'Ratio between mutated and \noriginal circuit (minimum ' + r'$k_d$' + f'), {num_mutations} mutation{plot_grammar}',
+                    use_sns=True,  
+                    title=f'Ratio between mutated and \noriginal circuit (minimum ' + \
+                    r'$k_d$' + f'), {num_mutations} mutation{plot_grammar}',
                     xlabel='Ratio of ' + r'$k_d$' + ' (' +
                     f'{rate_unit})' +
                     f'{binding_rates_threshold_upper_text}'),
@@ -199,7 +229,7 @@ def main(config=None, data_writer=None):
                     exclude_rows_nonempty_in_cols=['mutation_name'],
                     threshold_value_max=binding_rates_threshold_upper,
                     log_axis=(True, False),
-                    use_sns=True,
+                    use_sns=True,  
                     title='Minimum ' + r'$k_d$' + ' strength, unmutated circuits',
                     xlabel='Dissociation rate ' + r'$k_d$' + ' (' +
                     f'{rate_unit})' +
@@ -216,8 +246,9 @@ def main(config=None, data_writer=None):
                     exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
                     threshold_value_max=binding_rates_threshold_upper,
                     log_axis=(True, False),
-                    use_sns=True,
-                    title=f'Minimum ' + r'$k_d$' + f' strength, {num_mutations} mutation{plot_grammar}',
+                    use_sns=True,  
+                    title=f'Minimum ' + r'$k_d$' + \
+                    f' strength, {num_mutations} mutation{plot_grammar}',
                     xlabel='Dissociation rate ' + r'$k_d$' + ' (' +
                     f'{rate_unit})' +
                     f'{binding_rates_threshold_upper_text}'),
@@ -233,8 +264,9 @@ def main(config=None, data_writer=None):
                     exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
                     threshold_value_max=binding_rates_threshold_upper,
                     log_axis=(True, False),
-                    use_sns=True,
-                    title=f'Difference between circuit\nand mutated (minimum ' + r'$k_d$' + f'), {num_mutations} mutation{plot_grammar}',
+                    use_sns=True,  
+                    title=f'Difference between circuit\nand mutated (minimum ' + \
+                    r'$k_d$' + f'), {num_mutations} mutation{plot_grammar}',
                     xlabel='Difference in ' + r'$k_d$' + ' (' +
                     f'{rate_unit})' +
                     f'{binding_rates_threshold_upper_text}'),
@@ -251,8 +283,9 @@ def main(config=None, data_writer=None):
                     exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
                     threshold_value_max=binding_rates_threshold_upper,
                     log_axis=(True, False),
-                    use_sns=True,
-                    title=f'Ratio between mutated and \noriginal circuit (minimum ' + r'$k_d$' + f'), {num_mutations} mutation{plot_grammar}',
+                    use_sns=True,  
+                    title=f'Ratio between mutated and \noriginal circuit (minimum ' + \
+                    r'$k_d$' + f'), {num_mutations} mutation{plot_grammar}',
                     xlabel='Ratio of ' + r'$k_d$' + ' (' +
                     f'{rate_unit})' +
                     f'{binding_rates_threshold_upper_text}'),
@@ -265,7 +298,7 @@ def main(config=None, data_writer=None):
 
 
 
-        
+
         # eqconstants max int's og
         Protocol(
             partial(visualise_data, data_writer=data_writer, cols_x=['eqconstants_max_interaction'],
@@ -274,7 +307,7 @@ def main(config=None, data_writer=None):
                     preprocessor_func_x=preprocessing_func,
                     exclude_rows_nonempty_in_cols=['mutation_name'],
                     log_axis=(False, False),
-                    use_sns=True,
+                    use_sns=True,  
                     title='Maximum equilibrium constant, unmutated circuits',
                     xlabel='Equilibrium constant'),
             req_input=True,
@@ -288,7 +321,7 @@ def main(config=None, data_writer=None):
                     preprocessor_func_x=preprocessing_func,
                     exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
                     log_axis=(False, False),
-                    use_sns=True,
+                    use_sns=True,  
                     title=f'Maximum equilibrium constant, {num_mutations} mutation{plot_grammar}',
                     xlabel=f'Equilibrium constant'),
             req_input=True,
@@ -302,7 +335,7 @@ def main(config=None, data_writer=None):
                     preprocessor_func_x=preprocessing_func,
                     exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
                     log_axis=(True, False),
-                    use_sns=True,
+                    use_sns=True,  
                     title=f'Maximum equilibrium constant, {num_mutations} mutation{plot_grammar}',
                     xlabel=f'Equilibrium constant'),
             req_input=True,
@@ -316,7 +349,7 @@ def main(config=None, data_writer=None):
                     preprocessor_func_x=preprocessing_func,
                     exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
                     log_axis=(False, False),
-                    use_sns=True,
+                    use_sns=True,  
                     title=f'Difference between circuit\nand mutated equilibrium constant, {num_mutations} mutation{plot_grammar}',
                     xlabel='Equilibrium constant difference'),
             req_input=True,
@@ -331,7 +364,7 @@ def main(config=None, data_writer=None):
                     preprocessor_func_x=preprocessing_func,
                     exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
                     log_axis=(True, False),
-                    use_sns=True,
+                    use_sns=True,  
                     title=f'Difference between circuit\nand mutated equilibrium constant, {num_mutations} mutation{plot_grammar}',
                     xlabel='Equilibrium constant difference'),
             req_input=True,
@@ -356,13 +389,16 @@ def main(config=None, data_writer=None):
         # fold_change
         Protocol(partial(
             visualise_data,
-            data_writer=data_writer, cols_x=['fold_change_diff_to_base_circuit'],
+            data_writer=data_writer, cols_x=[
+                'fold_change_diff_to_base_circuit'],
             plot_type='histplot',
             out_name='fold_change_diff',
             preprocessor_func_x=preprocessing_func,
             exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
             log_axis=(False, False),
             use_sns=True,
+            expand_xcoldata_using_col=True,
+            column_name_for_expanding_xcoldata='sample_names',
             title=f'Fold change difference between circuit\nand mutated counterparts, {num_mutations} mutation{plot_grammar}',
             xlabel='Fold change difference'),
             req_input=True,
@@ -372,13 +408,16 @@ def main(config=None, data_writer=None):
         # fold_change log
         Protocol(partial(
             visualise_data,
-            data_writer=data_writer, cols_x=['fold_change_diff_to_base_circuit'],
+            data_writer=data_writer, cols_x=[
+                'fold_change_diff_to_base_circuit'],
             plot_type='histplot',
             out_name='fold_change_diff_log',
             preprocessor_func_x=preprocessing_func,
             exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
             log_axis=(True, False),
             use_sns=True,
+            expand_xcoldata_using_col=True,
+            column_name_for_expanding_xcoldata='sample_names',
             title=f'Fold change difference between circuit\nand mutated counterparts, {num_mutations} mutation{plot_grammar}',
             xlabel='Fold change difference'),
             req_input=True,
@@ -395,6 +434,8 @@ def main(config=None, data_writer=None):
             exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
             log_axis=(False, False),
             use_sns=True,
+            expand_xcoldata_using_col=True,
+            column_name_for_expanding_xcoldata='sample_names',
             title=f'Overshoot difference between circuit\nand mutated counterparts, {num_mutations} mutation{plot_grammar}',
             xlabel='Overshoot difference'),
             req_input=True,
@@ -411,6 +452,8 @@ def main(config=None, data_writer=None):
             exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
             log_axis=(True, False),
             use_sns=True,
+            expand_xcoldata_using_col=True,
+            column_name_for_expanding_xcoldata='sample_names',
             title=f'Overshoot difference between circuit\nand mutated counterparts, {num_mutations} mutation{plot_grammar}',
             xlabel='Overshoot difference'),
             req_input=True,
@@ -420,13 +463,16 @@ def main(config=None, data_writer=None):
         # response_time
         Protocol(partial(
             visualise_data,
-            data_writer=data_writer, cols_x=['response_time_diff_to_base_circuit'],
+            data_writer=data_writer, cols_x=[
+                'response_time_diff_to_base_circuit'],
             plot_type='histplot',
             out_name='response_time_diff',
             preprocessor_func_x=preprocessing_func,
             exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
             log_axis=(False, False),
             use_sns=True,
+            expand_xcoldata_using_col=True,
+            column_name_for_expanding_xcoldata='sample_names',
             title=f'Response time difference between circuit\nand mutated counterparts, {num_mutations} mutation{plot_grammar}',
             xlabel='Response time difference (s)'),
             req_input=True,
@@ -436,13 +482,16 @@ def main(config=None, data_writer=None):
         # response_time log
         Protocol(partial(
             visualise_data,
-            data_writer=data_writer, cols_x=['response_time_diff_to_base_circuit'],
+            data_writer=data_writer, cols_x=[
+                'response_time_diff_to_base_circuit'],
             plot_type='histplot',
             out_name='response_time_diff_log',
             preprocessor_func_x=preprocessing_func,
             exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
             log_axis=(True, False),
             use_sns=True,
+            expand_xcoldata_using_col=True,
+            column_name_for_expanding_xcoldata='sample_names',
             title=f'Response time difference between circuit\nand mutated counterparts, {num_mutations} mutation{plot_grammar}',
             xlabel='Response time difference (s)'),
             req_input=True,
@@ -459,6 +508,8 @@ def main(config=None, data_writer=None):
             exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
             log_axis=(False, False),
             use_sns=True,
+            expand_xcoldata_using_col=True,
+            column_name_for_expanding_xcoldata='sample_names',
             title=f'Precision difference between circuit\nand mutated counterparts, {num_mutations} mutation{plot_grammar}',
             xlabel='Precision difference'),
             req_input=True,
@@ -475,6 +526,8 @@ def main(config=None, data_writer=None):
             exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
             log_axis=(True, False),
             use_sns=True,
+            expand_xcoldata_using_col=True,
+            column_name_for_expanding_xcoldata='sample_names',
             title=f'Precision difference between circuit\nand mutated counterparts, {num_mutations} mutation{plot_grammar}',
             xlabel='Precision difference'),
             req_input=True,
@@ -484,13 +537,16 @@ def main(config=None, data_writer=None):
         # sensitivity
         Protocol(partial(
             visualise_data,
-            data_writer=data_writer, cols_x=['sensitivity_diff_to_base_circuit'],
+            data_writer=data_writer, cols_x=[
+                'sensitivity_diff_to_base_circuit'],
             plot_type='histplot',
             out_name='sensitivity_diff',
             preprocessor_func_x=preprocessing_func,
             exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
             log_axis=(False, False),
             use_sns=True,
+            expand_xcoldata_using_col=True,
+            column_name_for_expanding_xcoldata='sample_names',
             title=f'Sensitivity difference between circuit\nand mutated counterparts, {num_mutations} mutation{plot_grammar}',
             xlabel='Sensitivity difference'),
             req_input=True,
@@ -500,13 +556,16 @@ def main(config=None, data_writer=None):
         # sensitivity log
         Protocol(partial(
             visualise_data,
-            data_writer=data_writer, cols_x=['sensitivity_diff_to_base_circuit'],
+            data_writer=data_writer, cols_x=[
+                'sensitivity_diff_to_base_circuit'],
             plot_type='histplot',
             out_name='sensitivity_diff_log',
             preprocessor_func_x=preprocessing_func,
             exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
             log_axis=(True, False),
             use_sns=True,
+            expand_xcoldata_using_col=True,
+            column_name_for_expanding_xcoldata='sample_names',
             title=f'Sensitivity difference between circuit\nand mutated counterparts, {num_mutations} mutation{plot_grammar}',
             xlabel='Sensitivity difference'),
             req_input=True,

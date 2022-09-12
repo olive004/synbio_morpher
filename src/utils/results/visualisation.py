@@ -83,7 +83,30 @@ def expand_data_by_col(data: pd.DataFrame, columns: Union[str, list], column_for
     """ Expand horizontally or vertically based on if a second column name 
     is given for expanding the column data """
 
-    if type(columns) == str:
+    def make_expansion_df(df_lists, col_names: list) -> pd.DataFrame:
+        temp_data = deepcopy(data)
+        expanded_data = pd.DataFrame(columns=data.columns)
+        for c in col_names:
+            expanded_df_col = pd.DataFrame.from_dict(
+                dict(zip(columns + [column_for_expanding_coldata],
+                     [df_lists.loc[column][c] for column in columns] + [c]))
+            )
+            # {column: df_lists[c], column_for_expanding_coldata: c})
+            temp_data.drop(columns, axis=1, inplace=True)
+            temp_data = temp_data.assign(
+                **dict(zip(
+                    columns + [column_for_expanding_coldata],
+                    [pd.Series(expanded_df_col[column].values) for column in columns] + [pd.Series(
+                        expanded_df_col[column_for_expanding_coldata].values)]))
+                # column: pd.Series(expanded_df_col[column].values),
+                # column_for_expanding_coldata: pd.Series(
+                #     expanded_df_col[column_for_expanding_coldata].values)
+            )
+            expanded_data = pd.concat(
+                [expanded_data, temp_data], axis=0, ignore_index=True)
+        return expanded_data
+
+    if type(columns) == str or (type(columns) == list and len(columns) == 1):
         columns = [columns]
     
     if find_all_similar_columns:
@@ -109,31 +132,17 @@ def expand_data_by_col(data: pd.DataFrame, columns: Union[str, list], column_for
                 columns={column_for_expanding_coldata: new_expanding_column_name})
         df_lists = data[columns].unstack().apply(pd.Series)
         col_names = data[new_expanding_column_name].iloc[idx_for_expanding_coldata]
+        if type(col_names) != list:
+            logging.warning(f'The column {column_for_expanding_coldata} chosen for unstacking other columns has one value')
         if len(df_lists.columns) == 1:
             logging.warning(
                 f'The current column {columns} may not be expandable with {col_names}')
         df_lists = df_lists.rename(columns=dict(
             zip(df_lists.columns.values, col_names)))
-        temp_data = deepcopy(data)
-        expanded_data = pd.DataFrame(columns=data.columns)
-        for c in col_names:
-            expanded_df_col = pd.DataFrame.from_dict(
-                dict(zip(columns + [column_for_expanding_coldata],
-                     [df_lists.loc[column][c] for column in columns] + [c]))
-            )
-            # {column: df_lists[c], column_for_expanding_coldata: c})
-            temp_data.drop(columns, axis=1, inplace=True)
-            temp_data = temp_data.assign(
-                **dict(zip(
-                    columns + [column_for_expanding_coldata],
-                    [pd.Series(expanded_df_col[column].values) for column in columns] + [pd.Series(
-                        expanded_df_col[column_for_expanding_coldata].values)]))
-                # column: pd.Series(expanded_df_col[column].values),
-                # column_for_expanding_coldata: pd.Series(
-                #     expanded_df_col[column_for_expanding_coldata].values)
-            )
-            expanded_data = pd.concat(
-                [expanded_data, temp_data], axis=0, ignore_index=True)
+
+        # Make dataframe with expanded lists in one column labelled in expansion column
+        expanded_data = make_expansion_df(df_lists, col_names)
+        
     expanded_data.reset_index(drop=True, inplace=True)
     logging.info(expanded_data)
     return expanded_data

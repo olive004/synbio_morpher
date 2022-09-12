@@ -38,7 +38,7 @@ def main(config=None, data_writer=None):
             partial(get_pathnames,
                     first_only=True,
                     file_key="circuit_stats",
-                    search_dir=source_experiment_dir
+                    search_dir=source_experiment_dir,
                     ),
             req_output=True,
             name='get_pathname'
@@ -46,7 +46,8 @@ def main(config=None, data_writer=None):
         # Filter circuits
         Protocol(
             partial(pull_circuits_from_stats,
-                    filters=config_file.get("filters", {})),
+                    filters=config_file.get("filters", {}),
+                    max_num=1),
             req_input=True,
             req_output=True,
             name='pull_circuit_from_stats'

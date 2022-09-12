@@ -28,7 +28,8 @@ def get_pathnames_from_mult_dirs(search_dirs: List[str], **get_pathnames_kwargs)
 
 def get_pathnames(search_dir: str, file_key: Union[List, str] = '', first_only: bool = False,
                   allow_empty: bool = False, subdir: str = '',
-                  conditional: Union[str, None] = 'filenames'):
+                  conditional: Union[str, None] = 'filenames',
+                  max_num: int = None):
     """ Get the pathnames in a folder given a keyword. 
 
     Args:
