@@ -133,7 +133,8 @@ def write_csv(data: pd.DataFrame, out_path: str, overwrite=False):
 def write_json(data: Union[dict, pd.DataFrame], out_path: str, overwrite=False):
     if type(data) == pd.DataFrame:
         data.reset_index(drop=True, inplace=True)
-        data.to_json(out_path)
+        logging.info(data)
+        data.to_json(out_path, default_handler=str, orient='records')
     else:
         data = process_dict_for_json(data)
         with open(out_path, 'w+') as fn:

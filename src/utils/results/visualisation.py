@@ -2,13 +2,14 @@ from cmath import log
 from copy import deepcopy
 from functools import partial
 import sys
-from typing import List
+from typing import List, Union
 import networkx as nx
 import numpy as np
 import pandas as pd
 import logging
+from src.utils.misc.type_funcs import get_unique
 from src.utils.results.writer import DataWriter
-from src.utils.misc.string_handling import add_outtype, make_time_str, prettify_keys_for_label
+from src.utils.misc.string_handling import add_outtype, get_all_similar, make_time_str, prettify_keys_for_label
 from pyvis.network import Network
 from src.utils.misc.type_handling import merge_dicts
 
@@ -77,6 +78,67 @@ class NetworkCustom(Network):
             self.add_node(node, **nodes[node])
 
 
+def expand_data_by_col(data: pd.DataFrame, columns: Union[str, list], column_for_expanding_coldata: str, idx_for_expanding_coldata: int,
+                       find_all_similar_columns=False):
+    """ Expand horizontally or vertically based on if a second column name 
+    is given for expanding the column data """
+
+    if type(columns) == str:
+        columns = [columns]
+    
+    if find_all_similar_columns:
+        all_similar_columns = []
+        for column in columns:
+            similar_cols = get_all_similar(column, data.columns)
+            all_similar_columns += similar_cols
+        columns = get_unique(all_similar_columns)
+
+    if column_for_expanding_coldata is None:
+        # I haven't added the handling here for expanding multiple columns with lists in them simulatenously
+        column = columns[0]
+        expand_vertically = True
+        s = data.apply(lambda x: pd.Series(
+            x[column]), axis=1).stack().reset_index(level=1, drop=True)
+        s.name = column
+        expanded_data = data.drop(column, axis=1).join(s)
+    else:
+        # Retain the expanding column
+        new_expanding_column_name = 'all_' + column_for_expanding_coldata
+        if new_expanding_column_name not in list(data.columns):
+            data = data.rename(
+                columns={column_for_expanding_coldata: new_expanding_column_name})
+        df_lists = data[columns].unstack().apply(pd.Series)
+        col_names = data[new_expanding_column_name].iloc[idx_for_expanding_coldata]
+        if len(df_lists.columns) == 1:
+            logging.warning(
+                f'The current column {columns} may not be expandable with {col_names}')
+        df_lists = df_lists.rename(columns=dict(
+            zip(df_lists.columns.values, col_names)))
+        temp_data = deepcopy(data)
+        expanded_data = pd.DataFrame(columns=data.columns)
+        for c in col_names:
+            expanded_df_col = pd.DataFrame.from_dict(
+                dict(zip(columns + [column_for_expanding_coldata],
+                     [df_lists.loc[column][c] for column in columns] + [c]))
+            )
+            # {column: df_lists[c], column_for_expanding_coldata: c})
+            temp_data.drop(columns, axis=1, inplace=True)
+            temp_data = temp_data.assign(
+                **dict(zip(
+                    columns + [column_for_expanding_coldata],
+                    [pd.Series(expanded_df_col[column].values) for column in columns] + [pd.Series(
+                        expanded_df_col[column_for_expanding_coldata].values)]))
+                # column: pd.Series(expanded_df_col[column].values),
+                # column_for_expanding_coldata: pd.Series(
+                #     expanded_df_col[column_for_expanding_coldata].values)
+            )
+            expanded_data = pd.concat(
+                [expanded_data, temp_data], axis=0, ignore_index=True)
+    expanded_data.reset_index(drop=True, inplace=True)
+    logging.info(expanded_data)
+    return expanded_data
+
+
 def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                    cols_x: list = None, cols_y: list = None,
                    normalise_data_x: bool = False,
@@ -109,43 +171,6 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
 
     cols_x = cols_x if cols_x is not None else [None]
     cols_y = cols_y if cols_y is not None else [None]
-
-    def expand_data_by_col(data: pd.DataFrame, column, column_for_expanding_coldata, idx_for_expanding_coldata):
-        """ Expand horizontally or vertically based on if a second column name 
-        is given for expanding the column data """
-
-        if column_for_expanding_coldata is None:
-            expand_vertically = True
-            s = data.apply(lambda x: pd.Series(
-                x[column]), axis=1).stack().reset_index(level=1, drop=True)
-            s.name = column
-            expanded_data = data.drop(column, axis=1).join(s)
-        else:
-            df_lists = data[[column]].unstack().apply(pd.Series)
-            col_names = data[column_for_expanding_coldata].iloc[idx_for_expanding_coldata]
-            if len(df_lists.columns) == 1:
-                logging.warning(
-                    f'The current column {column} may not be expandable with {col_names}')
-            df_lists = df_lists.rename(columns=dict(
-                zip(df_lists.columns.values, col_names)))
-
-            temp_data = deepcopy(data)
-            expanded_data = pd.DataFrame(columns=temp_data.columns)
-            for c in col_names:
-                expanded_df_col = pd.DataFrame.from_dict(
-                    {column: df_lists[c], column_for_expanding_coldata: c})
-                temp_data.drop(column, axis=1, inplace=True)
-                temp_data = temp_data.assign(**{
-                    # .reset_index(inplace=True, drop=True)),
-                    column: pd.Series(expanded_df_col[column].values),
-                    # .reset_index(inplace=True, drop=True))
-                    column_for_expanding_coldata: pd.Series(
-                        expanded_df_col[column_for_expanding_coldata].values)
-                })
-                expanded_data = pd.concat(
-                    [expanded_data, temp_data], axis=0, ignore_index=True)
-        expanded_data.reset_index(drop=True, inplace=True)
-        return expanded_data
 
     def process_log_sns(data: pd.DataFrame, column_x: str, column_y: str,
                         plot_kwrgs: dict, log_axis: list, plot_type: str = None):
@@ -194,7 +219,7 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
             if column is not None:
                 if expand_coldata_using_col:
                     data = expand_data_by_col(
-                        data=data, column=column,
+                        data=data, columns=column,
                         column_for_expanding_coldata=column_name_for_expanding_coldata,
                         idx_for_expanding_coldata=idx_for_expanding_coldata)
                 if preprocessor_func:

@@ -27,6 +27,14 @@ def list_to_str(input_listlike):
     return ''.join(input_listlike)
 
 
+def get_all_similar(key: str, similarity_list: list):
+    similar_keys = []
+    for s in similarity_list:
+        if key in s:
+            similar_keys.append(s)
+    return similar_keys
+
+
 def make_time_str():
     """Output as 'YEAR_MONTH_DAY_TIME'."""
     now = datetime.now() 

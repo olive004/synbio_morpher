@@ -4,13 +4,17 @@ import itertools
 import logging
 import os
 import sys
+from typing import Union
 import numpy as np
 import pandas as pd
 
 
 from src.srv.io.loaders.data_loader import GeneCircuitLoader
+from src.utils.misc.numerical import NUMERICAL
 from src.utils.misc.string_handling import prettify_logging_info, remove_element_from_list_by_substring
 from src.utils.misc.type_handling import flatten_nested_listlike
+from src.utils.results.analytics.timeseries import Timeseries
+from src.utils.results.visualisation import expand_data_by_col
 from src.utils.results.writer import DataWriter
 from src.srv.parameter_prediction.interactions import InteractionMatrix
 from src.utils.misc.io import get_pathnames, get_subdirectories
@@ -111,9 +115,10 @@ def get_mutation_info_columns():
 
 def tabulate_mutation_info(source_dir, data_writer: DataWriter):
 
-    info_column_names = get_mutation_info_columns()
-
-    info_table = pd.DataFrame(columns=info_column_names)
+    def init_info_table() -> pd.DataFrame:
+        info_column_names = get_mutation_info_columns()
+        info_table = pd.DataFrame(columns=info_column_names)
+        return info_table
 
     def check_coherency(table: pd.DataFrame):
         for (target, pathname) in [('circuit_name', 'path_to_template_circuit'),
@@ -150,15 +155,13 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
                 diff = diff[0]
             table[f'{k}_diff_to_base_circuit'] = diff
 
-            reference_v_zerod = reference_v == 0
-            reference_v[reference_v_zerod] = 1
-            ratio = np.divide(np.asarray(table[k]), np.asarray(reference_v))
-            ratio[reference_v_zerod] = 0
+            ratio = np.divide(np.asarray(table[k]), np.asarray(reference_v),
+                              out=np.zeros_like(np.asarray(table[k])), where=np.asarray(reference_v) != 0)
             if np.size(ratio) == 1:
                 ratio = ratio[0]
             # ratio[np.asarray(reference_v) == 0] =
             table[f'{k}_ratio_from_mutation_to_base'] = ratio
-
+        table = remove_invalid_json_values(table)
         return table
 
     def update_diff_to_base_circuit(curr_table: dict, int_stats: pd.DataFrame,
@@ -187,7 +190,7 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
         return curr_table
 
     def update_info_table(info_table: pd.DataFrame, curr_table: dict, int_stats: pd.DataFrame,
-                          ref_stats: pd.DataFrame, ref_table: dict, source_dir: str, check_coherent: bool = False):
+                          ref_stats: pd.DataFrame, ref_table: dict, source_dir: str, check_coherent: bool = False) -> pd.DataFrame:
         diff_cols = ['num_self_interacting',
                      'num_interacting',
                      'max_interaction',
@@ -195,6 +198,7 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
         curr_table = update_diff_to_base_circuit(curr_table, int_stats,
                                                  ref_stats, cols=diff_cols)
         result_report = load_result_report(source_dir)
+        # result_report = remove_invalid_json_values(load_result_report(source_dir))
         curr_table = upate_table_with_results(
             curr_table, reference_table=ref_table, results=result_report)
         if check_coherent:
@@ -202,12 +206,30 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
         info_table = pd.concat([info_table, pd.DataFrame([curr_table])])
         return info_table
 
-    def write_results(info_table):
+    def remove_invalid_json_values(table: Union[pd.DataFrame, dict]):
+        if type(table) == pd.DataFrame:
+            table.fillna(NUMERICAL['nan'], inplace=True)
+        elif type(table) == dict:
+            for k, v in table.items():
+                if type(v) == np.ndarray:
+                    v[v == np.inf] = NUMERICAL['infinity']
+                    v[v == -np.inf] = NUMERICAL['infinity']
+                    v[v == np.nan] = NUMERICAL['nan']
+                    table[k] = v
+        return table
+
+    def write_results(info_table: pd.DataFrame):
+        result_report_keys = Timeseries(None).get_analytics_types()
+        info_table = expand_data_by_col(info_table, columns=result_report_keys, find_all_similar_columns=True,
+                                        column_for_expanding_coldata='sample_names', idx_for_expanding_coldata=0)
+        info_table = remove_invalid_json_values(info_table)
         data_writer.output(
             out_type='csv', out_name='tabulated_mutation_info', **{'data': info_table})
         data_writer.output(
             out_type='json', out_name='tabulated_mutation_info', **{'data': info_table})
+        return init_info_table()
 
+    info_table = init_info_table()
     source_config = load_experiment_config(source_dir)
 
     circuit_dirs = get_subdirectories(source_dir)
@@ -284,7 +306,10 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
                                            ref_stats=interaction_stats, ref_table=current_og_table,
                                            source_dir=mutation_dir, check_coherent=True)
         if circ_idx != 0 and np.mod(circ_idx, 100) == 0:
-            write_results(info_table)
+            info_table = write_results(info_table)
 
-    write_results(info_table)
+    info_table = write_results(info_table)
+    info_table_path = get_pathnames(
+        search_dir=data_writer.write_dir, file_key='tabulated_mutation_info.json', first_only=True)
+    info_table = pd.read_json(info_table_path)
     return info_table

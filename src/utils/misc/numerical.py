@@ -11,6 +11,11 @@ SCIENTIFIC = {
     'mole': np.multiply(6.02214076, np.power(10, 23))
 }
 
+NUMERICAL = {
+    'infinity': np.multiply(10, 10),
+    'nan': 0
+}
+
 
 def zero_out_negs(npmatrix):
     return npmatrix.clip(min=0)
