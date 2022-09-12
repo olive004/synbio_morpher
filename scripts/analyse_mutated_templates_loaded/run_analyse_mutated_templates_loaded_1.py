@@ -150,7 +150,7 @@ def main(config=None, data_writer=None):
                        'response_time_low',
                        'sensitivity',
                        'steady_states']  # Timeseries(data=None).get_analytics_types()
-    # Log graphs with mutation number hue
+    # Log histplots with mutation number hue
     # Difference
     for filltype in ['dodge', 'fill']:
         for cols_x, title, xlabel in [
@@ -174,9 +174,6 @@ def main(config=None, data_writer=None):
                     },
                     log_axis=(True, False),
                     use_sns=True,
-                    expand_xcoldata_using_col=True,
-                    column_name_for_expanding_xcoldata='sample_names',
-                    idx_for_expanding_xcoldata=0,
                     title=title,
                     xlabel=xlabel
                 ),
@@ -185,7 +182,7 @@ def main(config=None, data_writer=None):
                 skip=config_file.get('only_visualise_circuits', False)
             ))
 
-    # Log graphs with mutation number hue
+    # Log histplots with mutation number hue
     # Ratios
     for filltype in ['dodge', 'fill']:
         for cols_x, title, xlabel in [
@@ -209,9 +206,6 @@ def main(config=None, data_writer=None):
                     },
                     log_axis=(True, False),
                     use_sns=True,
-                    expand_xcoldata_using_col=True,
-                    column_name_for_expanding_xcoldata='sample_names',
-                    idx_for_expanding_xcoldata=0,
                     title=title,
                     xlabel=xlabel
                 ),
