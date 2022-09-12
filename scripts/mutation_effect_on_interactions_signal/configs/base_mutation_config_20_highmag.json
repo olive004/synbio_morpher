@@ -1,0 +1,40 @@
+{
+    "system_type": "RNA",
+    "data_path": null,
+    "experiment": {
+        "purpose": "mutation_effect_on_interactions_signal"
+    },
+    "interaction_simulator": {
+        "name": "IntaRNA",
+        "postprocess": true
+    },
+    "identities": {
+        "input": "RNA_0",
+        "output": "RNA_2"
+    },
+    "filters": {
+        "min_num_interacting": 1,
+        "max_self_interacting": 3
+    },
+    "mutations": {
+        "mutation_counts": 10,
+        "mutation_nums_within_sequence": 20,
+        "concurrent_species_to_mutate": "single_species_at_a_time"
+    },
+    "signal": {
+        "signal":[0, 1],
+        "signal_spec": "raw",
+        "signal_type": "abstract",
+        "total_time":15000,
+        "magnitude":1000,
+        "positions":[6, 500],
+        "heights":[50, 80],
+        "durations":[50, 400]
+    },
+    "source_of_interaction_stats": {
+        "is_source_dir_incomplete": false,
+        "source_dir": "./data/gather_interaction_stats/2022_08_27_102311",
+        "purpose_to_get_source_dir_from": null,
+        "source_dir_actually_used_POSTERITY": null
+    }
+}

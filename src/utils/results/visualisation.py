@@ -470,12 +470,6 @@ class VisODE():
         if title is None:
             title = plot_kwargs.get('title')
 
-        logging.info(data)
-        logging.info(x)
-        logging.info(y)
-        logging.info(data[x])
-        logging.info(data[y])
-
         if x is None:
             logging.warn(
                 'Make sure a column is specified for visualising with seaborn')
@@ -497,6 +491,11 @@ class VisODE():
                     **plot_kwargs):
         import seaborn as sns
         plot_kwargs.update({'errwidth': 1})
+
+        if not plot_kwargs.get('hue') in data.columns:
+            logging.info(data)
+            logging.info(x)
+            logging.info(y)
         if plot_kwargs.get('hue'):
             plot_kwargs.update({
                 # 'palette': sns.color_palette("husl", len(data[plot_kwargs.get('hue')].unique()))

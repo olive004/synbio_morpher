@@ -11,6 +11,7 @@ from src.utils.misc.io import get_pathnames_from_mult_dirs
 from src.utils.misc.numerical import cast_astype
 from src.utils.misc.scripts_io import load_experiment_config_original
 from src.utils.misc.string_handling import prettify_keys_for_label
+from src.utils.results.analytics.timeseries import Timeseries
 
 from src.utils.results.experiments import Experiment, Protocol
 from src.utils.results.result_writer import ResultWriter
@@ -73,14 +74,7 @@ def main(config=None, data_writer=None):
     # Visualisations
 
     # Analytics visualisation
-    analytics_types = ['fold_change',
-                       'overshoot',
-                       'precision',
-                       'response_time',
-                       'response_time_high',
-                       'response_time_low',
-                       'sensitivity',
-                       'steady_states']  # Timeseries(data=None).get_analytics_types()
+    analytics_types = Timeseries(data=None).get_analytics_types()
 
     # Bar plots
 
