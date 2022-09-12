@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 
 from fire import Fire
+from src.srv.io.manage.script_manager import script_preamble
 from src.utils.misc.io import get_pathnames_from_mult_dirs
 from src.utils.misc.scripts_io import load_experiment_config, load_experiment_config_original
 from src.utils.misc.string_handling import prettify_keys_for_label
@@ -20,10 +21,9 @@ from src.utils.data.data_format_tools.common import load_json_as_dict, load_json
 
 def main(config=None, data_writer=None):
     # Set configs
-    if config is None:
-        config = os.path.join(
-            # "scripts", "analyse_mutated_templates_loaded", "configs", "base_config_test_2.json")
-        "scripts", "analyse_mutated_templates_loaded", "configs", "base_config.json")
+    config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
+            # "scripts", "analyse_mutated_templates_loaded", "configs", "base_config_test_2.json"))
+            "scripts", "analyse_mutated_templates_loaded", "configs", "base_config.json"))
     config_file = load_json_as_dict(config)
 
     # Start_experiment

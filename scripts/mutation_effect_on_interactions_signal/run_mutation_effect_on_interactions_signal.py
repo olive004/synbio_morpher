@@ -3,6 +3,7 @@ import os
 
 from fire import Fire
 from scripts.common.circuit import construct_circuit_from_cfg
+from src.srv.io.manage.script_manager import script_preamble
 
 from src.utils.results.experiments import Experiment, Protocol
 from src.utils.results.result_writer import ResultWriter
@@ -16,8 +17,7 @@ from src.utils.circuit.agnostic_circuits.circuit_manager import CircuitModeller
 
 def main(config=None, data_writer=None):
     # Set configs
-    if config is None:
-        config = os.path.join(
+    config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
             # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_test.json")
             # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_1.json")
             # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_2.json")
@@ -26,7 +26,7 @@ def main(config=None, data_writer=None):
             # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_1_highmag.json")
             # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_2_highmag.json")
             # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_10_highmag.json")
-            "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_20_highmag.json")
+            "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_20_highmag.json"))
     config_file = load_json_as_dict(config)
 
     # Start_experiment
