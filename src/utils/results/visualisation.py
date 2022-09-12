@@ -108,7 +108,7 @@ def expand_data_by_col(data: pd.DataFrame, columns: Union[str, list], column_for
 
     if type(columns) == str or (type(columns) == list and len(columns) == 1):
         columns = [columns]
-    
+
     if find_all_similar_columns:
         all_similar_columns = []
         for column in columns:
@@ -133,7 +133,8 @@ def expand_data_by_col(data: pd.DataFrame, columns: Union[str, list], column_for
         df_lists = data[columns].unstack().apply(pd.Series)
         col_names = data[new_expanding_column_name].iloc[idx_for_expanding_coldata]
         if type(col_names) != list:
-            logging.warning(f'The column {column_for_expanding_coldata} chosen for unstacking other columns has one value')
+            logging.warning(
+                f'The column {column_for_expanding_coldata} chosen for unstacking other columns has one value')
         if len(df_lists.columns) == 1:
             logging.warning(
                 f'The current column {columns} may not be expandable with {col_names}')
@@ -142,7 +143,7 @@ def expand_data_by_col(data: pd.DataFrame, columns: Union[str, list], column_for
 
         # Make dataframe with expanded lists in one column labelled in expansion column
         expanded_data = make_expansion_df(df_lists, col_names)
-        
+
     expanded_data.reset_index(drop=True, inplace=True)
     return expanded_data
 
@@ -176,7 +177,7 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                    **plot_kwargs):
     """ Plot type can be any attributes of VisODE() """
     data = deepcopy(og_data)
-    
+
     hue = hue if hue is not None else column_name_for_expanding_xcoldata
 
     cols_x = cols_x if cols_x is not None else [None]
@@ -243,15 +244,16 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                 if remove_outliers:
                     mean = data[column].mean()
                     std = data[column].std()
-                    data = data[data[column] < mean +
-                                np.multiply(outlier_std_threshold, std)]
-                    data = data[data[column] > mean -
-                                np.multiply(outlier_std_threshold, std)]
+                    if std != 0:
+                        data = data[data[column] < mean +
+                                    np.multiply(outlier_std_threshold, std)]
+                        data = data[data[column] > mean -
+                                    np.multiply(outlier_std_threshold, std)]
                 if normalise_data:
                     df = data[column]
                     s = (df - df.mean()) / df.std()
                     data = data.drop(column, axis=1).join(s)
-                
+
             return data, column
 
         def postprocess(data, column, postprocessor_func):
@@ -378,11 +380,15 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                                         })
                 else:
                     logging.warning(f'Unknown plot type given "{plot_type}"')
-                data_writer.output(out_type='png', out_name=out_name,
-                                   write_func=write_func,
-                                   **merge_dicts({'x': col_x, 'y': col_y, 'data': data,
-                                                  'hue': hue},
-                                                 plot_kwargs))
+
+                if not data.empty:
+                    data_writer.output(out_type='png', out_name=out_name,
+                                       write_func=write_func,
+                                       **merge_dicts({'x': col_x, 'y': col_y, 'data': data,
+                                                      'hue': hue},
+                                                     plot_kwargs))
+                else:
+                    logging.warning(f'Could not visualise columns {col_x} and {col_y} for {data}')
     # else:
     #     logging.warning(f'Could not find visualiser function {plot_type}')
 
@@ -465,6 +471,12 @@ class VisODE():
         sns.set_palette("viridis")
         if title is None:
             title = plot_kwargs.get('title')
+
+        logging.info(data)
+        logging.info(x)
+        logging.info(y)
+        logging.info(data[x])
+        logging.info(data[y])
 
         if x is None:
             logging.warn(

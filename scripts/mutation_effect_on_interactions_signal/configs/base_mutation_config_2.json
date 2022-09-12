@@ -13,7 +13,7 @@
         "output": "RNA_2"
     },
     "filters": {
-        "min_num_interacting": 3,
+        "min_num_interacting": 1,
         "max_self_interacting": 3
     },
     "mutations": {
@@ -26,7 +26,7 @@
         "signal_spec": "raw",
         "signal_type": "abstract",
         "total_time":15000,
-        "magnitude":1000,
+        "magnitude":100,
         "positions":[6, 500],
         "heights":[50, 80],
         "durations":[50, 400]
