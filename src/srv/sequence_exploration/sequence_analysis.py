@@ -67,7 +67,7 @@ def filter_data(data: pd.DataFrame, filters: dict = {}):
     return filt_stats
 
 
-def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path', max_num: int = None) -> list:
+def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path') -> list:
 
     stats = GeneCircuitLoader().load_data(stats_pathname).data
     filt_stats = filter_data(stats, filters)
@@ -92,8 +92,8 @@ def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path
         extra_config.update(load_experiment_config(experiment_folder))
         extra_configs.append(extra_config)
     # logging.info(extra_configs)
-    if max_num is not None:
-        extra_configs = extra_configs[:max_num]
+    if filters.get('max_circuits') is not None:
+        extra_configs = extra_configs[:filters.get('max_circuits')]
     return extra_configs
 
 
@@ -225,7 +225,6 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
             out_type='csv', out_name='tabulated_mutation_info', **{'data': info_table})
         data_writer.output(
             out_type='json', out_name='tabulated_mutation_info', **{'data': info_table})
-        return init_info_table()
 
     info_table = init_info_table()
     source_config = load_experiment_config(source_dir)
@@ -305,9 +304,10 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
                                            source_dir=mutation_dir, check_coherent=True)
         if circ_idx != 0 and np.mod(circ_idx, 100) == 0:
             info_table = write_results(info_table)
+            info_table = init_info_table()
 
-    info_table = write_results(info_table)
-    # info_table_path = get_pathnames(
-    #     search_dir=data_writer.write_dir, file_key='tabulated_mutation_info.csv', first_only=True)
-    # info_table = pd.read_csv(info_table_path)
+    write_results(info_table)
+    info_table_path = get_pathnames(
+        search_dir=data_writer.write_dir, file_key='tabulated_mutation_info.csv', first_only=True)
+    info_table = pd.read_csv(info_table_path)
     return info_table

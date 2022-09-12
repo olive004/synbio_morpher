@@ -18,10 +18,11 @@ def main(config=None, data_writer=None):
     # Set configs
     if config is None:
         config = os.path.join(
+            "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_test.json")
             # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_1.json")
             # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_2.json")
             # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_10.json")
-            "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_20.json")
+            # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_20.json")
     config_file = load_json_as_dict(config)
 
     # Start_experiment
@@ -46,8 +47,7 @@ def main(config=None, data_writer=None):
         # Filter circuits
         Protocol(
             partial(pull_circuits_from_stats,
-                    filters=config_file.get("filters", {}),
-                    max_num=1),
+                    filters=config_file.get("filters", {})),
             req_input=True,
             req_output=True,
             name='pull_circuit_from_stats'

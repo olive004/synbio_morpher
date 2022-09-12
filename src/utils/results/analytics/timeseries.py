@@ -127,11 +127,13 @@ class Timeseries():
         return ['fold_change',
                 'overshoot',
                 'precision',
+                'precision_estimate',
                 'response_time',
                 'response_time_high',
                 'response_time_low',
                 'RMSE',
                 'sensitivity',
+                'sensitivity_estimate',
                 'steady_states']
 
     def frequency(self):

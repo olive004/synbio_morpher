@@ -144,7 +144,6 @@ def expand_data_by_col(data: pd.DataFrame, columns: Union[str, list], column_for
         expanded_data = make_expansion_df(df_lists, col_names)
         
     expanded_data.reset_index(drop=True, inplace=True)
-    logging.info(expanded_data)
     return expanded_data
 
 
@@ -197,6 +196,7 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                         data = data.drop(col, axis=1).join(log_df)
                 else:
                     new_col = plot_kwrgs.get(col_label, col)
+
                 data = data.rename(columns={col: new_col})
             return data, new_col
 
