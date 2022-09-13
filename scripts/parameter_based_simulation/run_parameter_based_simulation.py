@@ -29,7 +29,8 @@ def main(config=None, data_writer=None):
         num_subprocesses = 1
 
     for subprocess in range(num_subprocesses):
-        data_writer.update_ensemble('subprocess_' + str(subprocess+1))
+        if num_subprocesses != 1:
+            data_writer.update_ensemble('subprocess_' + str(subprocess+1))
         p = Process(target=main_subprocess, args=(
             config, config_file, data_writer, subprocess, num_subprocesses))
         p.start()
@@ -42,7 +43,7 @@ def main_subprocess(config, config_file, data_writer, sub_process, total_process
         # Parameter space to scan
         # interaction_min = config_file['parameter_based_simulation']['interaction_min']
         # interaction_max = config_file['parameter_based_simulation']['interaction_max']
-        # interaction_step_size = config_file['parameter_based_simulation']['interaction_step_size']
+        # step_size = config_file['parameter_based_simulation']['step_size']
         interaction_strengths = create_parameter_range(
             config_file['parameter_based_simulation'])
         size_interaction_array = np.size(interaction_strengths)

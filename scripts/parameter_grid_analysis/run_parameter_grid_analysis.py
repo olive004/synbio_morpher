@@ -24,10 +24,11 @@ from src.utils.results.results import ResultCollector
 from src.utils.results.visualisation import VisODE
 
 
-def main(config=None, data_writer: ResultWriter=None):
+def main(config=None, data_writer: ResultWriter = None):
 
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
-        'scripts', 'parameter_grid_analysis', 'configs', 'heatmap_cfg.json'))
+        # 'scripts', 'parameter_grid_analysis', 'configs', 'heatmap_cfg.json'))
+        'scripts', 'parameter_grid_analysis', 'configs', 'testing.json'))
 
     # Load in parameter grid
     config_file = load_json_as_dict(config)
@@ -42,19 +43,19 @@ def main(config=None, data_writer: ResultWriter=None):
                 parameter_grid)] = DataLoader().load_data(parameter_grid)
         return all_parameter_grids
 
-    def get_sample_names(source_dir, target_purpose):
-        circuit_filepath = load_experiment_config_original(
-            source_dir, target_purpose)['data_path']
+    def get_sample_names(original_config):
+        circuit_filepath = original_config['data_path']
         data = GeneCircuitLoader().load_data(circuit_filepath)
         return data.sample_names
 
     target_purpose = 'parameter_based_simulation'
+    original_config = load_experiment_config_original(
+        source_dir, target_purpose=target_purpose)
     all_parameter_grids = load_parameter_grids()
     shape_parameter_grid = np.shape(
         all_parameter_grids[list(all_parameter_grids.keys())[0]])
     num_species = shape_parameter_grid[0]
-    sample_names = get_sample_names(
-        source_dir, target_purpose)
+    sample_names = get_sample_names(original_config)
     assert num_species == len(
         sample_names), f'Number of species in parameter grid ({num_species}) does ' \
         f'not equal number of species in original configuration file {sample_names}.'
@@ -90,14 +91,8 @@ def main(config=None, data_writer: ResultWriter=None):
                 end_value = np.float64(original_parameter_range[-1])
             return np.float64(start_value), np.float64(end_value)
 
-        def make_original_parameter_range(source_dir: str, target_purpose: str) -> np.ndarray:
-            original_config = load_experiment_config_original(
-                source_dir, target_purpose=target_purpose)
-            return create_parameter_range(
-                original_config[target_purpose])
-
-        original_parameter_range = make_original_parameter_range(
-            source_dir, target_purpose)
+        original_parameter_range = create_parameter_range(
+            original_config['parameter_based_simulation'])
         start_value, end_value = parse_parameter_range_kwargs(start_value, end_value,
                                                               original_parameter_range)
         selected_parameter_range_idxs = np.arange(len(
@@ -201,34 +196,36 @@ def main(config=None, data_writer: ResultWriter=None):
         return tuple(grid_slice)
 
     # Convenience table
-    def make_species_interaction_ref(species_interactions, parameter_config):
+    def make_species_interaction_summary(species_interactions, strength_config):
+        logging.info(strength_config)
         all_refs = {}
         for grouping, species_interaction in species_interactions.items():
             species_interactions_ref = {}
-            all_refs[tuple(species_interaction)] = species_interactions_ref
             species_interactions_ref['species_idxs'] = tuple(
                 map(lambda x: translate_species_idx(x), species_interaction))
             species_interactions_ref['species_interaction_idx'] = make_species_interactions_index_map(num_species)[
                 species_interactions_ref['species_idxs']]
-            species_interactions_ref['interaction_params'] = parameter_config[grouping]
-            parameter_creation_cfg = deepcopy(parameter_config[grouping])
-            parameter_creation_cfg['step_size'] = load_experiment_config_original(
-                source_dir, target_purpose=target_purpose)[target_purpose]['interaction_step_size']
+            species_interactions_ref['interaction_params'] = strength_config[grouping]
+            parameter_creation_cfg = strength_config[grouping]
+            for k, v in parameter_creation_cfg.items():
+                if v is None:
+                    parameter_creation_cfg[k] = original_config['parameter_based_simulation'][k]
             species_interactions_ref['parameter_range'] = create_parameter_range(
                 parameter_creation_cfg)
-            if type(parameter_config[grouping]) == dict:
+            if type(strength_config[grouping]) == dict:
                 species_interactions_ref['interaction_slice'] = convert_parameter_values_to_slice(
-                    **parameter_config[grouping])
+                    **strength_config[grouping])
             else:
                 species_interactions_ref['interaction_slice'] = convert_parameter_values_to_slice(
-                    start_value=parameter_config[grouping], end_value=parameter_config[grouping],
+                    start_value=strength_config[grouping], end_value=strength_config[grouping],
                     step_size=None)
+            all_refs[tuple(species_interaction)] = species_interactions_ref
         return all_refs
 
     def run_visualisation(all_parameter_grids, data_writer, selected_analytics,
                           selected_species_interactions, unselected_species_interactions,
                           slicing_configs, num_species, shape_parameter_grid):
-        species_interaction_refs = make_species_interaction_ref(
+        species_interaction_summary = make_species_interaction_summary(
             selected_species_interactions, slicing_configs['interactions']['strengths'])
 
         slice_indices = make_slice(selected_species_interactions, unselected_species_interactions,
@@ -243,11 +240,11 @@ def main(config=None, data_writer: ResultWriter=None):
             for i, species_name in enumerate(slicing_configs['species_choices']):
                 data_per_species = data[i]
                 species_interaction_idxs = {
-                    species_interaction_refs[k]['species_interaction_idx']: k for k in species_interaction_refs.keys()}
+                    species_interaction_summary[k]['species_interaction_idx']: k for k in species_interaction_summary.keys()}
                 sorted_species_interactions = [
                     species_interaction_idxs[k] for k in sorted(species_interaction_idxs.keys())]
                 ind, cols = list(map(
-                    lambda k: species_interaction_refs[k]['parameter_range'], sorted_species_interactions[:2]))
+                    lambda k: species_interaction_summary[k]['parameter_range'], sorted_species_interactions[:2]))
                 data_container = pd.DataFrame(
                     data=np.squeeze(data_per_species),
                     index=ind,

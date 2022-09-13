@@ -13,7 +13,7 @@ from src.utils.results.experiments import Experiment, Protocol
 def main(config=None, data_writer=None):
 
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
-        'scripts', 'parameter_grid_analysis', 'configs', 'multi_var_heatmap.json'))
+        'scripts', 'parameter_grid_analysis', 'configs', 'testing.json'))
     config_file = load_json_as_dict(config)
 
     def hash_species_in_cfg(config):

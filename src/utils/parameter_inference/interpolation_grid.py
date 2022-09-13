@@ -22,6 +22,8 @@ def parameter_range_creation(range_min, range_max, range_step, is_logscale=False
 
 
 def create_parameter_range(range_configs: dict) -> np.ndarray:
+    logging.info('create_parameter_range')
+    logging.info(range_configs)
     min_key = [k for k in range_configs.keys(
     ) if 'min' in k or 'start' in k][0]
     max_key = [k for k in range_configs.keys() if 'max' in k or 'end' in k][0]

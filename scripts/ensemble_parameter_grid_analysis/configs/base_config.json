@@ -18,7 +18,7 @@
         "parameter_based_simulation": {
             "interaction_min": 0,
             "interaction_max": 1,
-            "interaction_step_size": 0.5,
+            "step_size": 0.5,
             "log_scale": false
         },
         "signal": {
