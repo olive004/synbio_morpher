@@ -14,8 +14,8 @@ SIMULATOR_UNITS = {
             'energy': 'J/mol',
             'energy_molecular': 'J/molecule'
         },
-        'rate': 's^{-1}',
-        'coupled_rates': 's^{-1}'
+        'rate': r'$s^{-1}$',
+        'coupled_rates': r'$s^{-1}$'
     },
 }
 MIN_INTERACTION_EQCONSTANT = 0.000000001

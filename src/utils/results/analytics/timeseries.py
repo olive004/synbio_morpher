@@ -62,10 +62,10 @@ class Timeseries():
         return self.calculate_precision(output_diff, starting_states, signal_diff, signal_start)
 
     def calculate_sensitivity(self, output_diff, starting_states, signal_diff, signal_low) -> np.ndarray:
-        return np.absolute(np.divide(
+        return np.expand_dims(np.absolute(np.divide(
             output_diff / starting_states,
             signal_diff / signal_low
-        )).astype(self.num_dtype)
+        )).astype(self.num_dtype), axis=1)
 
     def get_sensitivity(self, signal_idx: int, ignore_denominator: bool = False):
         if signal_idx is None:
@@ -93,7 +93,7 @@ class Timeseries():
 
     def get_rmse(self, ref_circuit_signal):
         if ref_circuit_signal is None:
-            return np.zeros(shape=(np.shape(self.data)[0]))
+            return np.zeros(shape=(np.shape(self.data)[0], 1))
         data = self.data - ref_circuit_signal
         rmse = np.sqrt(
             np.sum(np.divide(np.power(data, 2), len(self.data)), axis=1))

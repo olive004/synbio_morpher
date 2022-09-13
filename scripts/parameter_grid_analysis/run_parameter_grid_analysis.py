@@ -24,7 +24,7 @@ from src.utils.results.results import ResultCollector
 from src.utils.results.visualisation import VisODE
 
 
-def main(config=None, data_writer=None):
+def main(config=None, data_writer: ResultWriter=None):
 
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
         'scripts', 'parameter_grid_analysis', 'configs', 'heatmap_cfg.json'))

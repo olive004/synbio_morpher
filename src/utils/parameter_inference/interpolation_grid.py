@@ -11,9 +11,6 @@ def parameter_range_creation(range_min, range_max, range_step, is_logscale=False
     to avoid numerical errors downstream """
     assert type(
         range_step) is not None, f'The step size {range_step} should have a numerical value.'
-    logging.info(range_min)
-    logging.info(range_max)
-    logging.info(range_step)
     if not is_logscale:
         parameter_range = np.arange(
             range_min, range_max, range_step).astype(np.float64)

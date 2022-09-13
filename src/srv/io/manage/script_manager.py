@@ -19,7 +19,7 @@ def import_script_func(script_name):
     return getattr(script_module, 'main')
 
 
-def script_preamble(config, data_writer, alt_cfg_filepath: str, use_resultwriter=True):
+def script_preamble(config, data_writer, alt_cfg_filepath: str, use_resultwriter=True) -> tuple(str, ResultWriter):
     writer_class = ResultWriter if use_resultwriter else DataWriter
     if config is None:
         config = alt_cfg_filepath
