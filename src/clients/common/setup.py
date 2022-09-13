@@ -38,11 +38,16 @@ def compose_kwargs(extra_configs: dict = None, config_filepath: str = None, conf
                                identities=config_file.get("identities", {}),
                                data=config_file.get("data", None),
                                sample_names=config_file.get("sample_names", None))
+
+    if type(config_file.get("molecular_params")) == dict:
+        raise ValueError(
+            f'The moelcular parameters {config_file.get("molecular_params")} supplied for the circuit should link to a file')
     kwargs = {
         "data": data_manager.data,
         "data_path": data_manager.source,
         "identities": data_manager.data.identities,
-        "interactions": config_file.get("interactions", {}), # For pre-loading interactions
+        # For pre-loading interactions
+        "interactions": config_file.get("interactions", {}),
         "interaction_simulator": config_file.get("interaction_simulator", {}),
         "molecular_params": load_json_as_dict(config_file.get("molecular_params")),
         "mutations": cast_all_values_as_list(config_file.get("mutations", {})),
