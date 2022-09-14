@@ -71,6 +71,7 @@ def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path
 
     stats = GeneCircuitLoader().load_data(stats_pathname).data
     filt_stats = filter_data(stats, filters)
+    logging.info(filt_stats)
 
     if filt_stats.empty:
         logging.warning(

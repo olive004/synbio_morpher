@@ -99,7 +99,7 @@ def main(config=None, data_writer: ResultWriter = None):
             original_parameter_range))[(original_parameter_range >= start_value) == (original_parameter_range <= end_value)]
         if len(selected_parameter_range_idxs) > 1:
             return slice(
-                selected_parameter_range_idxs[0], selected_parameter_range_idxs[-1]+1, step_size)
+                selected_parameter_range_idxs[0], selected_parameter_range_idxs[-1]+1) #, step_size)
         else:
             # Keep the rest constant - choose constant value for these
             # --> determine the index corresponding to this value
@@ -162,17 +162,19 @@ def main(config=None, data_writer: ResultWriter = None):
                         start_value=parameter_config[grouping], end_value=parameter_config[grouping],
                         step_size=None)
 
+            logging.info(parameter_config)
+
             return slice_idx_map
 
         # Convert the names of the interacting species to the index of that interacting pair in the interpolation grid
-        def collect_parameter_slices(species_interactions: dict, parameter_choices_cfg_keyname: str) -> dict:
+        def collect_parameter_slices(species_interactions: dict, parameter_choice_cfg_keyname: str) -> dict:
             species_idxs = {}
             for species_grouping, interacting_species_names in species_interactions.items():
                 species_idxs[species_grouping] = translate_species_interaction_to_idx(
                     interacting_species_names)
 
             parameters_slices = make_parameter_slice(
-                species_idxs, slicing_configs['interactions'][parameter_choices_cfg_keyname])
+                species_idxs, slicing_configs['interactions'][parameter_choice_cfg_keyname])
             return parameters_slices
 
         def make_grid_slice(species_slice, parameters_slices, shape_parameter_grid):
@@ -183,16 +185,22 @@ def main(config=None, data_writer: ResultWriter = None):
                            len(np.shape(species_slice))] = param_slice
             return grid_slice
 
+        logging.info(selected_species_interactions)
         selected_parameters_slices = collect_parameter_slices(
-            selected_species_interactions, parameter_choices_cfg_keyname='strengths')
+            selected_species_interactions, parameter_choice_cfg_keyname='strengths')
+        logging.info(selected_parameters_slices)
         unselected_parameters_slices = collect_parameter_slices(unselected_species_interactions,
-                                                                parameter_choices_cfg_keyname='non_varying_strengths')
+                                                                parameter_choice_cfg_keyname='non_varying_strengths')
+        logging.info(unselected_parameters_slices)
         parameters_slices = merge_dicts(
             selected_parameters_slices, unselected_parameters_slices)
+        logging.info(parameters_slices)
         species_slice = make_species_slice(
             slicing_configs['species_choices'], num_species)
+        logging.info(species_slice)
         grid_slice = make_grid_slice(
             species_slice, parameters_slices, shape_parameter_grid)
+        logging.info(grid_slice)
         return tuple(grid_slice)
 
     # Convenience table
@@ -201,17 +209,25 @@ def main(config=None, data_writer: ResultWriter = None):
         all_refs = {}
         for grouping, species_interaction in species_interactions.items():
             species_interactions_ref = {}
+
             species_interactions_ref['species_idxs'] = tuple(
                 map(lambda x: translate_species_idx(x), species_interaction))
             species_interactions_ref['species_interaction_idx'] = make_species_interactions_index_map(num_species)[
                 species_interactions_ref['species_idxs']]
             species_interactions_ref['interaction_params'] = strength_config[grouping]
             parameter_creation_cfg = strength_config[grouping]
+
+            key_translation = {
+                'start_value': 'interaction_min',
+                'end_value': 'interaction_max'
+            }
             for k, v in parameter_creation_cfg.items():
                 if v is None:
-                    parameter_creation_cfg[k] = original_config['parameter_based_simulation'][k]
+                    parameter_creation_cfg[k] = original_config['parameter_based_simulation'][key_translation.get(
+                        k, k)]
             species_interactions_ref['parameter_range'] = create_parameter_range(
                 parameter_creation_cfg)
+
             if type(strength_config[grouping]) == dict:
                 species_interactions_ref['interaction_slice'] = convert_parameter_values_to_slice(
                     **strength_config[grouping])
@@ -235,6 +251,8 @@ def main(config=None, data_writer: ResultWriter = None):
                 unselected_species_interactions.values(), slicing_configs['interactions']['non_varying_strengths'].values())]
         )
         for analytic_name in selected_analytics:
+            logging.info(analytic_name)
+            logging.info(slice_indices)
             data = all_parameter_grids[analytic_name][slice_indices]
             result_collector = ResultCollector()
             for i, species_name in enumerate(slicing_configs['species_choices']):
