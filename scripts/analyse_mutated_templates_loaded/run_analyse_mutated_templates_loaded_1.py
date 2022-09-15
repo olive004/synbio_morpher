@@ -8,14 +8,14 @@ import pandas as pd
 from fire import Fire
 from src.srv.io.manage.script_manager import script_preamble
 from src.utils.misc.io import get_pathnames_from_mult_dirs
-from src.utils.misc.scripts_io import load_experiment_config, load_experiment_config_original
+from src.utils.misc.scripts_io import load_experiment_config_original
 from src.utils.misc.string_handling import prettify_keys_for_label
 from src.utils.results.analytics.timeseries import Timeseries
 
 from src.utils.results.experiments import Experiment, Protocol
 from src.utils.results.result_writer import ResultWriter
 from src.utils.results.visualisation import visualise_data
-from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS, RawSimulationHandling
+from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
 from src.utils.data.data_format_tools.common import load_json_as_dict, load_json_mult
 
 
@@ -23,7 +23,9 @@ def main(config=None, data_writer=None):
     # Set configs
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
             # "scripts", "analyse_mutated_templates_loaded", "configs", "base_config_test_2.json"))
-            "scripts", "analyse_mutated_templates_loaded", "configs", "base_config.json"))
+            # "scripts", "analyse_mutated_templates_loaded", "configs", "base_config.json"))
+            "scripts", "analyse_mutated_templates_loaded", "configs", "analyse_large.json"))
+            # "scripts", "analyse_mutated_templates_loaded", "configs", "analyse_large_highmag.json"))
     config_file = load_json_as_dict(config)
 
     # Start_experiment

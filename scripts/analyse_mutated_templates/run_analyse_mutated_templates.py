@@ -24,7 +24,11 @@ def main(config=None, data_writer=None):
             # "scripts", "analyse_mutated_templates", "configs", "analyse_mutated_templates_2.json"))
             # "scripts", "analyse_mutated_templates", "configs", "analyse_mutated_templates_10.json"))
             # "scripts", "analyse_mutated_templates", "configs", "analyse_mutated_templates_20.json"))
-            "scripts", "analyse_mutated_templates", "configs", "base_config_testing.json"))
+            # "scripts", "analyse_mutated_templates", "configs", "analyse_mutated_templates_1_highmag.json"))
+            # "scripts", "analyse_mutated_templates", "configs", "analyse_mutated_templates_2_highmag.json"))
+            # "scripts", "analyse_mutated_templates", "configs", "analyse_mutated_templates_10_highmag.json"))
+            "scripts", "analyse_mutated_templates", "configs", "analyse_mutated_templates_20_highmag.json"))
+            # "scripts", "analyse_mutated_templates", "configs", "base_config_testing.json"))
             # "scripts", "analyse_mutated_templates", "configs", "base_config.json"))
     config_file = load_json_as_dict(config)
 
@@ -50,7 +54,7 @@ def main(config=None, data_writer=None):
     binding_rates_threshold_upper = np.power(10,6)
     binding_rates_threshold_upper_text = f', with cutoff at {binding_rates_threshold_upper}' if binding_rates_threshold_upper else ''
 
-    rate_unit = fr'${SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]}$'
+    rate_unit = SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]
 
     protocols = [
         Protocol(
