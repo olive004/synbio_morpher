@@ -8,14 +8,14 @@ import pandas as pd
 from fire import Fire
 from src.srv.io.manage.script_manager import script_preamble
 from src.utils.misc.io import get_pathnames_from_mult_dirs
-from src.utils.misc.scripts_io import load_experiment_config, load_experiment_config_original
+from src.utils.misc.scripts_io import load_experiment_config_original
 from src.utils.misc.string_handling import prettify_keys_for_label
 from src.utils.results.analytics.timeseries import Timeseries
 
 from src.utils.results.experiments import Experiment, Protocol
 from src.utils.results.result_writer import ResultWriter
 from src.utils.results.visualisation import visualise_data
-from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS, RawSimulationHandling
+from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
 from src.utils.data.data_format_tools.common import load_json_as_dict, load_json_mult
 
 
