@@ -191,34 +191,31 @@ class CircuitModeller():
     # @time_it
     def iterate_modelling_func(self, copynumbers, init_copynumbers,
                                modelling_func, max_time,
-                               signal=None, signal_idx: int = None):
+                               signal=None, signal_idx: int = None,
+                               dt=1):
+
         current_copynumbers = init_copynumbers.flatten()
         if signal is not None:
             for tstep in range(0, max_time-1):
                 dxdt = modelling_func(
-                    copynumbers=copynumbers[:, tstep])
+                    copynumbers=copynumbers[:, tstep]) * dt
 
                 current_copynumbers = np.add(
                     dxdt, current_copynumbers).flatten()
 
                 current_copynumbers[signal_idx] = signal[tstep]
-                current_copynumbers = zero_out_negs(current_copynumbers)
                 copynumbers[:, tstep +
                             1] = zero_out_negs(current_copynumbers)
         else:
             for tstep in range(0, max_time-1):
-                time_step = 1
                 dxdt = modelling_func(
-                    copynumbers=copynumbers[:, tstep]) * time_step
+                    copynumbers=copynumbers[:, tstep]) * dt
 
                 current_copynumbers = np.add(
                     dxdt, current_copynumbers).flatten()
 
-                if signal is not None:
-                    current_copynumbers[signal_idx] = signal[tstep]
-                current_copynumbers = zero_out_negs(current_copynumbers)
                 copynumbers[:, tstep +
-                            1] = current_copynumbers
+                            1] = zero_out_negs(current_copynumbers)
         return copynumbers
 
     # @time_it
