@@ -9,5 +9,4 @@ __pycache__
 data/*
 ./data
 data*
-data/parameter_based_simulation/*
 !data/example_data
