@@ -1,0 +1,15 @@
+{
+    "experiment": {
+        "purpose": "analyse_mutated_templates_loaded_4"
+    },
+    "source_dirs": [
+        "these are invalid rn - they're missing the sensitivity and precision estimates",
+        "data/analyse_mutated_templates/2022_09_12_134958",
+        "data/analyse_mutated_templates/2022_09_12_141731",
+        "data/analyse_mutated_templates/2022_09_12_141743",
+        "data/analyse_mutated_templates/2022_09_12_141751"
+    ],
+    "tabulated_info_differentiator": "mutation_num",
+    "preprocessing_func": null,
+    "only_visualise_circuits": false
+}
