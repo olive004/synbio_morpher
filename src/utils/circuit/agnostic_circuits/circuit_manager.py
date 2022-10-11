@@ -12,7 +12,7 @@ from src.utils.misc.type_handling import flatten_nested_dict
 from src.utils.signal.inputs import Signal
 from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS, InteractionSimulator
 from src.utils.circuit.agnostic_circuits.base_circuit import BaseCircuit
-from src.utils.circuit.agnostic_circuits.modelling import Deterministic
+from src.utils.circuit.agnostic_circuits.modelling import Deterministic, Modeller
 
 
 class SystemManager():
@@ -36,7 +36,7 @@ class CircuitModeller():
         circuit = self.find_steady_states(circuit)
         return circuit
 
-    def make_modelling_func(self, modeller: Deterministic, circuit: BaseCircuit,
+    def make_modelling_func(self, modeller: Modeller, circuit: BaseCircuit,
                             exclude_species_by_idx: Union[int, list] = None,
                             fixed_value: Timeseries(None).num_dtype = None,
                             fixed_value_idx: int = None):
@@ -108,7 +108,7 @@ class CircuitModeller():
 
     def find_steady_states(self, circuit: BaseCircuit):
         modeller_steady_state = Deterministic(
-            max_time=50, time_step=0.1)
+            max_time=50, time_interval=0.1)
 
         circuit.species.copynumbers = self.compute_steady_states(modeller_steady_state,
                                                                  circuit=circuit,
@@ -125,7 +125,7 @@ class CircuitModeller():
         circuit.species.steady_state_copynums = steady_state_analytics['steady_states']
         return circuit
 
-    def compute_steady_states(self, modeller, circuit: BaseCircuit,
+    def compute_steady_states(self, modeller: Modeller, circuit: BaseCircuit,
                               solver_type: str = 'naive',
                               exclude_species_by_idx: Union[int, list] = None):
         copynumbers = circuit.species.copynumbers[:, -1]
@@ -163,7 +163,7 @@ class CircuitModeller():
             copynumbers = steady_state_result.y
         return copynumbers
 
-    def model_circuit(self, modeller, init_copynumbers: np.ndarray, circuit: BaseCircuit,
+    def model_circuit(self, modeller: Modeller, init_copynumbers: np.ndarray, circuit: BaseCircuit,
                       signal: np.ndarray = None, signal_identity_idx: int = None,
                       exclude_species_by_idx: Union[list, int] = None):
         assert np.shape(init_copynumbers)[circuit.species.species_axis] == np.shape(
@@ -222,21 +222,20 @@ class CircuitModeller():
 
     # @time_it
     def simulate_signal(self, circuit: BaseCircuit, signal: Signal = None, save_numerical_vis_data: bool = False,
-                        use_old_steadystates: bool = False, use_solver: str = 'naive', ref_circuit: BaseCircuit = None):
-        time_step = 1
+                        use_old_steadystates: bool = False, use_solver: str = 'naive', ref_circuit: BaseCircuit = None,
+                        time_interval = 1):
         if signal is None:
-            # circuit.signal.update_time_interval(time_step)
+            circuit.signal.update_time_interval(time_interval)
             signal = circuit.signal
-        max_time = int(signal.total_time / time_step)
 
         modeller_signal = Deterministic(
-            max_time=max_time, time_step=time_step
+            max_time=signal.total_time, time_interval=time_interval
         )
         if use_old_steadystates:
             steady_states = deepcopy(circuit.species.steady_state_copynums)
         else:
             steady_states = self.compute_steady_states(Deterministic(
-                max_time=50/time_step, time_step=time_step),
+                max_time=50/time_interval, time_interval=time_interval),
                 circuit=circuit,
                 solver_type=self.steady_state_solver,
                 exclude_species_by_idx=signal.identities_idx)

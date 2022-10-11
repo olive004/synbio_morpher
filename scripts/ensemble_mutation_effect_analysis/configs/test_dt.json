@@ -3,31 +3,20 @@
         "generate_species_templates": {
             "interaction_simulator": {
                 "name": "IntaRNA",
-                "postprocess": true,
-                "simulator_kwargs": {
-                    "qidxpos0": 1,
-                    "tidxpos0": 1,
-                    "outcsvcols": "E, ED1, ED2, E_hybrid, E_norm, E_hybridNorm, Eall, Eall1, Eall2, Etotal, Zall, EallTotal, bpList, P_E, Pu1, Pu2",
-                    "threads": 0,
-                    "n": 1,
-                    "param_file": "./scripts/common/configs/simulators/intaRNA_parameterFile.sh",
-                    "query": "GGUAGGGUCCCUGGUGUUCA",
-                    "target": "GGUAGGGUCCCUGGUGUUCA"
-                }
+                "postprocess": true
             },
             "experiment": {
                 "purpose": "generate_species_templates"
             },
             "molecular_params": "./src/utils/circuit/specific_circuits/RNA/configs/RNA_system.json",
             "circuit_generation": {
-                "repetitions": 3,
+                "repetitions": 10,
                 "species_count": 3,
                 "sequence_length": 20,
                 "generator_protocol": "template_mutate",
                 "proportion_to_mutate": 0.5
             },
-            "system_type": "RNA",
-            "data_path": "data/ensemble_mutation_effect_analysis/2022_06_20_234516/generate_species_templates/circuits/toy_mRNA_circuit_2.fasta"
+            "system_type": "RNA"
         },
         "gather_interaction_stats": {
             "experiment": {
@@ -37,7 +26,7 @@
                 "is_source_dir_incomplete": true,
                 "source_dir": "./data/ensemble_mutation_effect_analysis",
                 "purpose_to_get_source_dir_from": "generate_species_templates",
-                "source_dir_actually_used_POSTERITY": "./data/ensemble_mutation_effect_analysis/2022_06_20_234516/generate_species_templates"
+                "source_dir_actually_used_POSTERITY": null
             }
         },
         "mutation_effect_on_interactions_signal": {
@@ -74,20 +63,27 @@
                 "signal_type": "abstract",
                 "total_time": 10000,
                 "magnitude": 10,
-                "time_interval": 0.1
+                "positions": [
+                    6,
+                    500
+                ],
+                "heights": [
+                    50,
+                    80
+                ],
+                "durations": [
+                    50,
+                    400
+                ]
             },
             "source_of_interaction_stats": {
                 "is_source_dir_incomplete": true,
                 "source_dir": "./data/ensemble_mutation_effect_analysis",
                 "purpose_to_get_source_dir_from": "gather_interaction_stats",
-                "source_dir_actually_used_POSTERITY": "./data/ensemble_mutation_effect_analysis/2022_06_20_234516/gather_interaction_stats"
+                "source_dir_actually_used_POSTERITY": null
             },
             "interactions_path": "./data/ensemble_mutation_effect_analysis/2022_06_20_234516/generate_species_templates/interactions/toy_mRNA_circuit_2_interactions.csv",
-            "molecular_params": {
-                "creation_rates": 50,
-                "copynumbers": 5,
-                "degradation_rates": 20
-            }
+            "molecular_params": "./src/utils/circuit/specific_circuits/RNA/configs/RNA_system.json"
         },
         "analyse_mutated_templates": {
             "source_dir":  {
