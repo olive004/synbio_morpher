@@ -25,6 +25,7 @@
             },
             "circuit_generation": {
                 "repetitions": 3,
+                "species_count": 3,
                 "sequence_length": 20,
                 "generator_protocol": "template_mutate",
                 "proportion_to_mutate": 0.5
@@ -112,12 +113,6 @@
                 "creation_rates": 50,
                 "copynumbers": 5,
                 "degradation_rates": 20
-            },
-            "circuit_generation": {
-                "repetitions": 3,
-                "sequence_length": 20,
-                "generator_protocol": "template_mutate",
-                "proportion_to_mutate": 0.5
             }
         },
         "analyse_mutated_templates": {
