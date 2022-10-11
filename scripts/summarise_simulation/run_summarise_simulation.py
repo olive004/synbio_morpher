@@ -1,5 +1,6 @@
 from functools import partial
 import os
+import pandas as pd
 
 from fire import Fire
 from src.srv.io.manage.script_manager import script_preamble
@@ -27,24 +28,6 @@ def main(config=None, data_writer=None):
             data_writer=data_writer),
             req_output=True,
             name='tabulate_mutation_info'
-        ),
-        Protocol(
-            partial(
-                get_pathnames_from_mult_dirs,
-                search_dirs=source_dirs,
-                file_key='tabulated_mutation_info.json',
-                first_only=True),
-            req_output=True,
-            name='get_pathnames_from_mult_dirs'
-        ),
-        Protocol(
-            partial(
-                load_json_mult,
-                as_type=pd.DataFrame
-            ),
-            req_input=True,
-            req_output=True,
-            name='load_json'
         ),
         Protocol(
             partial(
