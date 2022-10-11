@@ -10,7 +10,7 @@ from src.utils.results.result_writer import ResultWriter
 from src.utils.misc.numerical import make_dynamic_indexer, np_delete_axes, zero_out_negs
 from src.utils.misc.type_handling import flatten_nested_dict
 from src.utils.signal.inputs import Signal
-from src.srv.parameter_prediction.simulator import MIN_INTERACTION_EQCONSTANT, SIMULATOR_UNITS, InteractionSimulator
+from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS, InteractionSimulator
 from src.utils.circuit.agnostic_circuits.base_circuit import BaseCircuit
 from src.utils.circuit.agnostic_circuits.modelling import Deterministic
 
@@ -45,8 +45,6 @@ class CircuitModeller():
             exclude_species_by_idx)
 
         interaction_binding_rates = circuit.species.interactions
-        interaction_binding_rates[interaction_binding_rates <
-                                  MIN_INTERACTION_EQCONSTANT] = 0
         creation_rates = circuit.species.creation_rates
         degradation_rates = circuit.species.degradation_rates
 
