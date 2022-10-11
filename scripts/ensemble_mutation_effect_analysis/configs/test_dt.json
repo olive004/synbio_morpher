@@ -48,7 +48,7 @@
                 "max_self_interacting": 3
             },
             "mutations": {
-                "mutation_counts": 6,
+                "mutation_counts": 5,
                 "mutation_nums_within_sequence": 1,
                 "concurrent_species_to_mutate": "single_species_at_a_time"
             },
@@ -62,19 +62,8 @@
                 "signal_spec": "raw",
                 "signal_type": "abstract",
                 "total_time": 10000,
-                "magnitude": 10,
-                "positions": [
-                    6,
-                    500
-                ],
-                "heights": [
-                    50,
-                    80
-                ],
-                "durations": [
-                    50,
-                    400
-                ]
+                "magnitude": 100,
+                "time_interval": 1
             },
             "source_of_interaction_stats": {
                 "is_source_dir_incomplete": true,
@@ -82,7 +71,7 @@
                 "purpose_to_get_source_dir_from": "gather_interaction_stats",
                 "source_dir_actually_used_POSTERITY": null
             },
-            "interactions_path": "./data/ensemble_mutation_effect_analysis/2022_06_20_234516/generate_species_templates/interactions/toy_mRNA_circuit_2_interactions.csv",
+            "interactions_path": null,
             "molecular_params": "./src/utils/circuit/specific_circuits/RNA/configs/RNA_system.json"
         },
         "analyse_mutated_templates": {

@@ -74,7 +74,7 @@ def main(config=None, data_writer=None):
             req_output=True,
             name='concatenate_dfs'
         ),
-        # Binding rates min int's mutations
+        # Binding rates min interactions mutations
         Protocol(
             partial(
                 visualise_data, data_writer=data_writer, cols_x=[
