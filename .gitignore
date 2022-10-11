@@ -8,4 +8,6 @@ __pycache__
 *.txt
 data/*
 ./data
+data*
+data/parameter_based_simulation/*
 !data/example_data
