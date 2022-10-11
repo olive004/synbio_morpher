@@ -69,10 +69,19 @@ def dxdt_RNA(t, copynumbers, interactions, creation_rates, degradation_rates,
     return np.multiply(dxdt, time_step)
 
 
-class Deterministic():
+class Modeller():
+    """ Common modeller class. For example deterministic vs. 
+    stochastic modelling share some things """
     def __init__(self, max_time=0, time_step=1) -> None:
-        self.max_time = max_time
+        """ Time step is the dt """
+        self.max_time = int(max_time / time_step)
+        self.original_max_time = max_time
         self.time_step = time_step
+
+
+class Deterministic(Modeller):
+    def __init__(self, max_time=0, time_step=1) -> None:
+        super.__init__(max_time, time_step)
 
     def dxdt_RNA(self, t, copynumbers, full_interactions, creation_rates, degradation_rates,
                  signal=None, signal_idx=None, identity_matrix=None):
