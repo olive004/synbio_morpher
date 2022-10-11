@@ -116,14 +116,14 @@ def get_mutation_info_columns():
     return info_column_names
 
 
-def tabulate_mutation_info(source_dir, data_writer: DataWriter):
+def tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFrame:
 
     def init_info_table() -> pd.DataFrame:
         info_column_names = get_mutation_info_columns()
         info_table = pd.DataFrame(columns=info_column_names)
         return info_table
 
-    def check_coherency(table: pd.DataFrame):
+    def check_coherency(table: pd.DataFrame) -> None:
         for (target, pathname) in [('circuit_name', 'path_to_template_circuit'),
                                    ('mutation_name', 'path_to_steady_state_data'), ('mutation_name', 'path_to_signal_data')]:
             if type(table) == pd.DataFrame:
@@ -147,7 +147,7 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
             interaction_stats[interaction_type] = interactions.get_stats()
         return interaction_stats, interactions.sample_names
 
-    def upate_table_with_results(table: dict, reference_table: dict, results: dict):
+    def upate_table_with_results(table: dict, reference_table: dict, results: dict) -> dict:
         table.update(results)
         for k in results.keys():
             reference_v = reference_table[k]
@@ -164,7 +164,7 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
         return table
 
     def update_diff_to_base_circuit(curr_table: dict, int_stats: pd.DataFrame,
-                                    ref_stats: pd.DataFrame, cols: list):
+                                    ref_stats: pd.DataFrame, cols: list) -> dict:
         for i_type in INTERACTION_TYPES:
             for col in cols:
                 current_stat = np.asarray(list(int_stats[i_type][col]))
@@ -205,7 +205,7 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
         info_table = pd.concat([info_table, pd.DataFrame([curr_table])])
         return info_table
 
-    def remove_invalid_json_values(table: Union[pd.DataFrame, dict]):
+    def remove_invalid_json_values(table: Union[pd.DataFrame, dict]) -> Union[pd.DataFrame, dict]:
         if type(table) == pd.DataFrame:
             table.fillna(NUMERICAL['nan'], inplace=True)
         elif type(table) == dict:
@@ -217,7 +217,7 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter):
                     table[k] = v
         return table
 
-    def write_results(info_table: pd.DataFrame):
+    def write_results(info_table: pd.DataFrame) -> None:
         result_report_keys = Timeseries(None).get_analytics_types()
         info_table = expand_data_by_col(info_table, columns=result_report_keys, find_all_similar_columns=True,
                                         column_for_expanding_coldata='sample_names', idx_for_expanding_coldata=0)

@@ -16,7 +16,8 @@ def main(config=None, data_writer=None):
     
     if config is None:
         config = os.path.join(
-            "scripts", "ensemble_mutation_effect_analysis", "configs", "ensemble_mutation_effect_analysis_1.json")
+            # "scripts", "ensemble_mutation_effect_analysis", "configs", "ensemble_mutation_effect_analysis_1.json")
+            "scripts", "ensemble_mutation_effect_analysis", "configs", "test_dt.json")
     if type(config) == str:
         config_filepath = config
     else:

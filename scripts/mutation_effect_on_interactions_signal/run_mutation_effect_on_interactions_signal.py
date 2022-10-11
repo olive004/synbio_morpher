@@ -79,7 +79,8 @@ def main(config=None, data_writer=None):
                         write_to_subsystem=True,
                         methods={
                     "init_circuit": {},
-                    "simulate_signal": {'save_numerical_vis_data': True, 'ref_circuit': None},
+                    "simulate_signal": {'save_numerical_vis_data': True, 'ref_circuit': None, 
+                    'time_interval': config['signal']['time_interval']},
                     "write_results": {}
                 }
                 ),

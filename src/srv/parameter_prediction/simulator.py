@@ -27,7 +27,8 @@ class RawSimulationHandling():
         self.simulator_name = config_args.get('name', 'IntaRNA')
         self.postprocess = config_args.get('postprocess')
         self.sim_kwargs = config_args.get('simulator_kwargs', {})
-        self.fixed_rate_k_a = config_args.get('molecular_params').get('association_binding_rate')
+        self.fixed_rate_k_a = config_args.get(
+            'molecular_params').get('association_binding_rate')
         self.units = ''
 
     def get_protocol(self, custom_prot: str = None):
@@ -56,7 +57,6 @@ class RawSimulationHandling():
 
     def get_postprocessing(self):
 
-
         def energy_to_eqconstant(energies):
             """ Translate interaction binding energy to the
             equilibrium rate of binding. Output in mol:
@@ -82,12 +82,6 @@ class RawSimulationHandling():
         def return_both_eqconstants_and_rates(eqconstants):
             return eqconstants, eqconstant_to_rate(eqconstants)
 
-        def zero_false_eqconstants(rates):
-            """ Exponential of e^0 is equal to 1, but IntaRNA sets energies 
-            equal to 0 for non-interactions. """
-            rates[rates == 1] = MIN_INTERACTION_EQCONSTANT
-            return rates
-
         def processor(input, funcs):
             for func in funcs:
                 input = func(input)
@@ -98,7 +92,6 @@ class RawSimulationHandling():
                 self.units = SIMULATOR_UNITS[self.simulator_name]['rate']
                 return partial(processor, funcs=[
                     energy_to_eqconstant,
-                    zero_false_eqconstants,
                     return_both_eqconstants_and_rates])
             else:
                 return vanilla_return
@@ -189,8 +182,8 @@ class InteractionData():
 
     def calculate_full_coupling_of_rates(self, degradation_rates):
         self.coupled_binding_rates = self.simulation_handler.calculate_full_coupling_of_rates(
-                k_d=self.binding_rates, degradation_rates=degradation_rates
-            )
+            k_d=self.binding_rates, degradation_rates=degradation_rates
+        )
         return self.coupled_binding_rates
 
     def parse(self, data):

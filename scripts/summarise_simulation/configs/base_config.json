@@ -1,0 +1,8 @@
+{
+    "experiment": {
+        "purpose": "summarise_simulation"
+    },
+    "source_dirs": ["data/mutation_effect_on_interactions_signal/2022_08_27_103417"],
+    "preprocessing_func": null,
+    "only_visualise_circuits": false
+}

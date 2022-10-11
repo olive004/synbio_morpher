@@ -18,13 +18,10 @@
             "experiment": {
                 "purpose": "generate_species_templates"
             },
-            "molecular_params": {
-                "creation_rates": 50,
-                "copynumbers": 5,
-                "degradation_rates": 20
-            },
+            "molecular_params": "./src/utils/circuit/specific_circuits/RNA/configs/RNA_system.json",
             "circuit_generation": {
                 "repetitions": 3,
+                "species_count": 3,
                 "sequence_length": 20,
                 "generator_protocol": "template_mutate",
                 "proportion_to_mutate": 0.5
@@ -51,17 +48,7 @@
             },
             "interaction_simulator": {
                 "name": "IntaRNA",
-                "postprocess": true,
-                "simulator_kwargs": {
-                    "qidxpos0": 1,
-                    "tidxpos0": 1,
-                    "outcsvcols": "E, ED1, ED2, E_hybrid, E_norm, E_hybridNorm, Eall, Eall1, Eall2, Etotal, Zall, EallTotal, bpList, P_E, Pu1, Pu2",
-                    "threads": 0,
-                    "n": 1,
-                    "param_file": "./scripts/common/configs/simulators/intaRNA_parameterFile.sh",
-                    "query": "GGUAGGGUCCCUGGUGUUCA",
-                    "target": "GGUAGGGUCCCUGGUGUUCA"
-                }
+                "postprocess": true
             },
             "identities": {
                 "input": "RNA_0",
@@ -87,19 +74,7 @@
                 "signal_type": "abstract",
                 "total_time": 10000,
                 "magnitude": 10,
-                "positions": [
-                    6,
-                    500
-                ],
-                "heights": [
-                    50,
-                    80
-                ],
-                "durations": [
-                    50,
-                    400
-                ],
-                "identities_idx": 0
+                "time_interval": 1
             },
             "source_of_interaction_stats": {
                 "is_source_dir_incomplete": true,
@@ -112,12 +87,6 @@
                 "creation_rates": 50,
                 "copynumbers": 5,
                 "degradation_rates": 20
-            },
-            "circuit_generation": {
-                "repetitions": 3,
-                "sequence_length": 20,
-                "generator_protocol": "template_mutate",
-                "proportion_to_mutate": 0.5
             }
         },
         "analyse_mutated_templates": {
