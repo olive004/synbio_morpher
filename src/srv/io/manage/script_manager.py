@@ -42,7 +42,7 @@ class Ensembler():
     def run(self):
         for script_name in self.subscripts:
             script = import_script_func(script_name)
-            logging.info(f'\nRunning script {script_name}')
+            logging.info(f'\tRunning script {script_name}\n')
             config = self.ensemble_configs[script_name]
             if config["experiment"]["purpose"] != script_name:
                 logging.warning(

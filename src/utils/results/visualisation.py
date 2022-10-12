@@ -470,10 +470,32 @@ class VisODE():
         if title is None:
             title = plot_kwargs.get('title')
 
+        logging.info(plot_func)
+        logging.info(data)
+        logging.info(data[x])
+        logging.info(type(data[x]))
+        logging.info(x)
+        logging.info(y)
+        logging.info(title)
+        logging.info(plot_kwargs)
+        logging.info(out_path)
+
         if x is None:
             logging.warn(
                 'Make sure a column is specified for visualising with seaborn')
         f, ax = plt.subplots(figsize=figsize)
+
+        # Testing histplot
+        jk = pd.DataFrame({'a':[1,2,3,4,5]})
+        sns.histplot(data=jk, x='a')
+        plot_func(data=jk, x='a')
+        
+        datad = deepcopy(data)
+        datad[x] = datad[x].astype('int')
+        datad.rename(columns={x: 'ok'}, inplace=True)
+        plot_func(data=datad, x='ok')
+        plot_func(data=data, x=x)
+        
         plot_func(
             data=data,
             x=x,

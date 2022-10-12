@@ -71,7 +71,7 @@
                 ],
                 "signal_spec": "raw",
                 "signal_type": "abstract",
-                "total_time": 10000,
+                "total_time": 4,
                 "magnitude": 100,
                 "time_interval": 1
             },
