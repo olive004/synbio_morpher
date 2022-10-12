@@ -106,11 +106,8 @@ def get_search_dir(config_file: dict, config_searchdir_key: str = None,
 
 
 def get_root_experiment_folder(miscpath):
-    logging.info(miscpath)
     split_path = miscpath.split(os.sep)
     purposes = [p for p in split_path if p in get_purposes()]
-    logging.info(purposes)
-    logging.info(os.path.dirname(miscpath))
     if len(purposes) == 1:
         target_top_dir = os.path.join(
             *split_path[:split_path.index(purposes[0])+1])

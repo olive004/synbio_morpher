@@ -337,7 +337,8 @@ class CircuitModeller():
             self.result_writer.unsubdivide_last_dir()
         self.result_writer.unsubdivide()
 
-    def apply_to_circuit(self, circuit: BaseCircuit, methods: dict, ref_circuit: BaseCircuit):
+    def apply_to_circuit(self, circuit: BaseCircuit, _methods: dict, ref_circuit: BaseCircuit):
+        methods = deepcopy(_methods)
         for method, kwargs in methods.items():
             if hasattr(self, method):
                 if 'ref_circuit' in kwargs.keys():
@@ -353,6 +354,8 @@ class CircuitModeller():
 
     def write_results(self, circuit, new_report: bool = False, no_visualisations: bool = False,
                       only_numerical: bool = False):
+        logging.info('Writing results')
+        logging.info(self.result_writer.write_dir)
         self.result_writer.write_all(
             circuit, new_report, no_visualisations=no_visualisations, only_numerical=only_numerical)
         return circuit

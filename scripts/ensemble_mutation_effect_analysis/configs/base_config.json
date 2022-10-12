@@ -1,4 +1,7 @@
 {
+    "experiment": {
+        "purpose": "ensemble"
+    },
     "base_configs_ensemble": {
         "generate_species_templates": {
             "interaction_simulator": {

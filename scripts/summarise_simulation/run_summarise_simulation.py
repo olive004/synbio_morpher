@@ -1,4 +1,5 @@
 from functools import partial
+import logging
 import os
 import pandas as pd
 
@@ -14,6 +15,7 @@ from src.utils.data.data_format_tools.common import load_json_as_dict, load_mult
 
 def main(config=None, data_writer=None):
     # Set configs
+    logging.info(config)
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
             "scripts", "summarise_simulation", "configs", "analyse_mutated_templates_20_highmag.json"))
     config_file = load_json_as_dict(config)
@@ -25,6 +27,8 @@ def main(config=None, data_writer=None):
     source_dirs = config_file.get('source_dirs')
     config_file, source_dirs = get_search_dir(
         config_searchdir_key='source_dirs', config_file=config_file)
+    if type(source_dirs) != list:
+        source_dirs = [source_dirs]
     protocols = [
         Protocol(
             partial(load_multiple_as_list, inputs_list=source_dirs, load_func=tabulate_mutation_info, 

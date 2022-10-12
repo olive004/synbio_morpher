@@ -31,17 +31,17 @@ def script_preamble(config, data_writer, alt_cfg_filepath: str, use_resultwriter
 
 class Ensembler():
 
-    def __init__(self, data_writer: ResultWriter, config: str, subscripts: list = None) -> None:
+    def __init__(self, data_writer: ResultWriter, config: str) -> None:
         self.data_writer = data_writer
-        self.subscripts = subscripts
 
         self.config = load_json_as_dict(config)
         self.ensemble_configs = self.config["base_configs_ensemble"]
+        self.subscripts = [script for script in self.ensemble_configs.keys()]
 
     def run(self):
         for script_name in self.subscripts:
             script = import_script_func(script_name)
-            logging.info(script_name)
+            logging.info(f'\nRunning script {script_name}')
             config = self.ensemble_configs[script_name]
             self.data_writer.update_ensemble(
                 config["experiment"]["purpose"])
