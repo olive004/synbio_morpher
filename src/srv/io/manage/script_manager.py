@@ -13,7 +13,8 @@ SCRIPT_DIR = 'scripts'
 
 
 def import_script_func(script_name):
-    script_filepath = os.path.join(SCRIPT_DIR, script_name, f'run_{script_name}.py')
+    script_filepath = os.path.join(
+        SCRIPT_DIR, script_name, f'run_{script_name}.py')
     script_module = __import__(
         convert_pathname_to_module(script_filepath), fromlist=[''])
     return getattr(script_module, 'main')
@@ -43,6 +44,10 @@ class Ensembler():
             script = import_script_func(script_name)
             logging.info(f'\nRunning script {script_name}')
             config = self.ensemble_configs[script_name]
+            if config["experiment"]["purpose"] != script_name:
+                logging.warning(
+                    f'The current script being run {script_name} does not match its '
+                    f'config purpose {config["experiment"]["purpose"]}')
             self.data_writer.update_ensemble(
                 config["experiment"]["purpose"])
             # self.data_writer.update_ensemble(script_name)
