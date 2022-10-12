@@ -62,7 +62,7 @@ def filter_data(data: pd.DataFrame, filters: dict = {}):
         return data
     filt_stats = data[data['num_interacting']
                       >= filters.get("min_num_interacting")]
-    filt_stats = filt_stats[filt_stats['num_self_interacting'] < filters.get(
+    filt_stats = filt_stats[filt_stats['num_self_interacting'] <= filters.get(
         "max_self_interacting")]
     return filt_stats
 
@@ -71,7 +71,6 @@ def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path
 
     stats = GeneCircuitLoader().load_data(stats_pathname).data
     filt_stats = filter_data(stats, filters)
-    logging.info(filt_stats)
 
     if filt_stats.empty:
         logging.warning(

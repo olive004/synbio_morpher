@@ -81,7 +81,7 @@ class Modeller():
 
 class Deterministic(Modeller):
     def __init__(self, max_time=0, time_interval=1) -> None:
-        super.__init__(max_time, time_interval)
+        super().__init__(max_time, time_interval)
 
     def dxdt_RNA(self, t, copynumbers, full_interactions, creation_rates, degradation_rates,
                  signal=None, signal_idx=None, identity_matrix=None):

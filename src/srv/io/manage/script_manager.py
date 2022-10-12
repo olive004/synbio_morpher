@@ -20,12 +20,12 @@ def import_script_func(script_name):
 
 
 def script_preamble(config, data_writer, alt_cfg_filepath: str, use_resultwriter=True) -> tuple:
-    writer_class = ResultWriter if use_resultwriter else DataWriter
+    Writer = ResultWriter if use_resultwriter else DataWriter
     if config is None:
         config = alt_cfg_filepath
     config_file = load_json_as_dict(config)
     if data_writer is None:
-        data_writer = writer_class(purpose=config_file['experiment']['purpose'])
+        data_writer = Writer(purpose=config_file['experiment']['purpose'])
     return config, data_writer
 
 

@@ -10,7 +10,7 @@
             },
             "molecular_params": "./scripts/common/configs/RNA_circuit/molecular_params.json",
             "circuit_generation": {
-                "repetitions": 10,
+                "repetitions": 2,
                 "species_count": 3,
                 "sequence_length": 20,
                 "generator_protocol": "template_mutate",
@@ -38,7 +38,7 @@
         },
         "mutation_effect_on_interactions_signal": {
             "system_type": "RNA",
-            "data_path": "data/ensemble_mutation_effect_analysis/2022_06_20_234516/generate_species_templates/circuits/toy_mRNA_circuit_2.fasta",
+            "data_path": null,
             "experiment": {
                 "purpose": "generate_species_templates"
             },
@@ -85,7 +85,12 @@
             "experiment": {
                 "purpose": "summarise_simulation"
             },
-            "source_dirs": ["data/mutation_effect_on_interactions_signal/2022_08_27_103417"],
+            "source_dirs": {
+                "is_source_dir_incomplete": true,
+                "source_dir": "./data/ensemble_mutation_effect_analysis",
+                "purpose_to_get_source_dir_from": "mutation_effect_on_interactions_signal",
+                "source_dir_actually_used_POSTERITY": null
+            },
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },

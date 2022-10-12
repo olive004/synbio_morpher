@@ -325,6 +325,7 @@ class CircuitModeller():
         for i, (name, mutation) in enumerate(mutation_dict.items()):
             # logging.info(f'Running methods on mutation {name} ({i})')
             if include_normal_run and i == 0:
+                logging.info(f'Simulating original circuit with {methods}')
                 self.result_writer.unsubdivide_last_dir()
                 circuit = self.apply_to_circuit(
                     circuit, methods, ref_circuit=circuit)
@@ -332,7 +333,7 @@ class CircuitModeller():
                     'mutations', safe_dir_change=False)
             subcircuit = circuit.make_subsystem(name, mutation)
             self.result_writer.subdivide_writing(name, safe_dir_change=False)
-            self.apply_to_circuit(subcircuit, methods, circuit)
+            self.apply_to_circuit(subcircuit, methods, ref_circuit=circuit)
             self.result_writer.unsubdivide_last_dir()
         self.result_writer.unsubdivide()
 
