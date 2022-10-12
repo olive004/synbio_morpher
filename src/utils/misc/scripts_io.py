@@ -121,7 +121,7 @@ def get_root_experiment_folder(miscpath):
         experiment_folder = os.path.join(
             *split_path[:split_path.index(purposes[1])+1])
     else:
-        if len(os.path.split(miscpath)) == 1:
+        if len(os.path.split(miscpath)) == 1 or len(miscpath) == 0:
             raise ValueError(
                 f'Root experiment folder not found recursively in base {miscpath}')
         experiment_folder = get_root_experiment_folder(
