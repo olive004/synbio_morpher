@@ -31,7 +31,7 @@ def main(config=None, data_writer=None):
     # Start_experiment
     if data_writer is None:
         data_writer = ResultWriter(purpose=config_file.get(
-            'experiment', {}).get('purpose', 'analyse_mutated_templates_loaded'))
+            'experiment', {}).get('purpose', 'analyse_mutated_templates_loaded_1'))
 
     # source_dirs = config_file.get('source_dirs', [])
     config_file, source_dirs = get_search_dir(
@@ -40,6 +40,8 @@ def main(config=None, data_writer=None):
         source_dir = source_dirs[0]
     else:
         source_dir = source_dirs
+    logging.info(source_dirs)
+    logging.info(source_dir)
     source_config = load_experiment_config_original(
         source_dir, 'mutation_effect_on_interactions_signal')
 

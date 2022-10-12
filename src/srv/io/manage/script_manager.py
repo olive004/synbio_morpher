@@ -51,8 +51,8 @@ class Ensembler():
             self.data_writer.update_ensemble(
                 config["experiment"]["purpose"])
             # self.data_writer.update_ensemble(script_name)
-            current_data_writer = deepcopy(self.data_writer)
-            current_data_writer.top_write_dir = self.data_writer.ensemble_write_dir
+            # current_data_writer = deepcopy(self.data_writer)
+            # current_data_writer.top_write_dir = self.data_writer.ensemble_write_dir
             output = script(config, self.data_writer)
             if output:
                 config, self.data_writer = output

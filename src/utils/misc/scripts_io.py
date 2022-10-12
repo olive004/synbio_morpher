@@ -162,7 +162,11 @@ def load_experiment_config_original(starting_experiment_folder: str, target_purp
     original_config = load_experiment_config(starting_experiment_folder)
     current_purpose = get_purpose_from_cfg(
         original_config, starting_experiment_folder)
+    logging.info(current_purpose)
+    logging.info(target_purpose)
     while not current_purpose == target_purpose:
+        logging.info(current_purpose)
+        logging.info(target_purpose)
         try:
             original_config, original_source_dir = get_search_dir(
                 config_file=original_config)
@@ -172,8 +176,10 @@ def load_experiment_config_original(starting_experiment_folder: str, target_purp
                               f'experiment folder {starting_experiment_folder}.')
         original_config = load_experiment_config(
             original_source_dir)
+        logging.info(original_config)
         current_purpose = get_purpose_from_cfg(
             original_config, starting_experiment_folder)
+        logging.info(f'new purpose: {current_purpose}')
     if not current_purpose == target_purpose:
         logging.warning(f'Loaded wrong config from {original_source_dir} with purpose '
                         f'{current_purpose}')
