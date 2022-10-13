@@ -8,7 +8,7 @@ import pandas as pd
 from fire import Fire
 from src.srv.io.manage.script_manager import script_preamble
 from src.utils.misc.io import get_pathnames_from_mult_dirs
-from src.utils.misc.scripts_io import get_search_dir, load_experiment_config_original
+from src.utils.misc.scripts_io import get_search_dir, load_experiment_config_original_fixed
 from src.utils.misc.string_handling import prettify_keys_for_label
 from src.utils.results.analytics.timeseries import Timeseries
 
@@ -42,7 +42,7 @@ def main(config=None, data_writer=None):
         source_dir = source_dirs
     logging.info(source_dirs)
     logging.info(source_dir)
-    source_config = load_experiment_config_original(
+    source_config = load_experiment_config_original_fixed(
         source_dir, 'mutation_effect_on_interactions_signal')
 
 
