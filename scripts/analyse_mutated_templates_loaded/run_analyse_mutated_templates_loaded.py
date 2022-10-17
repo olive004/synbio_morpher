@@ -50,7 +50,6 @@ def main(config=None, data_writer=None):
     else:
         exclude_rows_via_cols = []
 
-    # num_mutations = source_config['mutations']['mutation_nums_within_sequence']
     num_mutations = 1
     plot_grammar = 's' if num_mutations > 1 else ''
 

@@ -281,7 +281,6 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFrame:
             interaction_stats_current, curr_sample_names = make_interaction_stats_and_sample_names(
                 mutation_dir, include_circuit_in_filekey=False)
 
-            # for m in source_config['mutations']['mutation_nums_within_sequence']:
             current_table = {
                 'circuit_name': circuit_name,
                 'mutation_name': mutation_name,

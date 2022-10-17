@@ -4,7 +4,7 @@ import logging
 import os
 import random
 import sys
-from typing import Tuple
+from typing import Iterator, Tuple
 import pandas as pd
 import numpy as np
 from src.srv.io.loaders.misc import load_csv
@@ -79,13 +79,13 @@ def get_mutation_type_mapping(sequence_type):
 class Mutations(Tabulated):
 
     def __init__(self, mutation_name, template_name, template_file, template_seq,
-                 positions, mutation_types, sequence_type: str, algorithm='random') -> None:
+                 positions, mutation_types, count: int, sequence_type: str, algorithm='random') -> None:
         self.mutation_name = mutation_name
         self.template_name = template_name
         self.template_seq = template_seq
         self.mutation_types = mutation_types
         self.positions = positions
-        self.count = len(positions)
+        self.count = count
         self.algorithm = algorithm
         self.sequence_type = sequence_type
         self.template_file = template_file
@@ -127,7 +127,8 @@ class Evolver():
             return False
         return True
 
-    def mutate(self, circuit: BaseCircuit, algorithm="random", write_to_subsystem=False):
+    def mutate(self, circuit: BaseCircuit, algorithm: str, write_to_subsystem=False):
+        """ algorithm can be either random or all """
         if write_to_subsystem:
             self.data_writer.subdivide_writing(circuit.name)
         if self.is_mutation_possible(circuit):
@@ -139,7 +140,7 @@ class Evolver():
 
     def get_mutator(self, algorithm):
 
-        def random_mutator(sequence, num_mutations):
+        def mutation_sampler(sequence, num_mutations):
             if len(sequence) < num_mutations:
                 logging.warning(
                     f'For sequences of length {len(sequence)}, can not mutate {num_mutations} times.')
@@ -149,28 +150,21 @@ class Evolver():
         def basic_mutator(species: BaseSpecies, position_generator, mutation_nums_within_sequence,
                           mutation_nums_per_position: list,
                           sample_idx: int = None,
-                          mutation_idx: int = None) -> Mutations:
+                          mutation_idx: int = None,
+                          positions: list = None) -> Mutations:
             sequence = species.data.get_data_by_idx(sample_idx)
             positions = position_generator(
-                sequence, mutation_nums_within_sequence)
+                sequence, mutation_nums_within_sequence) if positions is not None else positions
             mutation_types, positions = self.sample_mutations(
                 sequence, positions, mutation_nums_per_position)
 
-            mutations = Mutations(
-                mutation_name=species.data.sample_names[sample_idx]+'_' +
-                f'm{mutation_nums_within_sequence}-' + str(
-                    mutation_idx),
-                template_name=species.data.sample_names[sample_idx],
-                template_seq=sequence,
-                mutation_types=mutation_types,
-                positions=positions,
-                sequence_type=self.sequence_type,
-                template_file=species.data.source
-            )
-            self.write_mutations(mutations)
+            mutations = self.make_mutations(
+                species=species, positions=positions, sample_idx=sample_idx,
+                mutation_idx=mutation_idx, sequence=sequence,
+                mutation_types=mutation_types)
             return mutations
 
-        def full_mutator(species: BaseSpecies, sample_mutator_func):
+        def rand_mutator(species: BaseSpecies, sample_mutator_func):
             for sample_idx, sample in enumerate(species.data.sample_names):
                 species.mutations[sample] = {}
                 for m in species.mutation_nums_within_sequence:
@@ -182,9 +176,25 @@ class Evolver():
                         species.mutations[sample][mutation.mutation_name] = mutation
             return species
 
+        def all_mutator(species: BaseSpecies):
+            mutation_nums_per_position = len(
+                self.mutation_type_mapping.keys()) - 1
+            for sample_idx, sample in enumerate(species.data.sample_names):
+                species.mutations[sample] = {}
+                sequence = species.data.get_data_by_idx(sample_idx)
+
+                for positions in ([i] for i in range(len(sequence))):
+                    mutation = basic_mutator(
+                        species=species, sample_idx=sample_idx,
+                        positions=positions, mutation_nums_per_position=mutation_nums_per_position)
+                    species.mutations[sample][mutation.mutation_name] = mutation
+            return species
+
         if algorithm == "random":
-            return partial(full_mutator, sample_mutator_func=partial(basic_mutator,
-                                                                     position_generator=random_mutator))
+            return partial(rand_mutator, sample_mutator_func=partial(basic_mutator,
+                                                                     position_generator=mutation_sampler))
+        elif algorithm == "all":
+            return all_mutator
         else:
             return ValueError(f'Unrecognised mutation algorithm choice "{algorithm}"')
 
@@ -204,6 +214,24 @@ class Evolver():
             new_positions.append([p] * n)
 
         return flatten_listlike(mutation_types.values()), flatten_listlike(new_positions)
+
+    def make_mutations(self, species: BaseSpecies, positions: list, sample_idx: int,
+                       mutation_idx: int, sequence: str, mutation_types: list):
+        mutation_count = len(positions)
+        mutations = Mutations(
+            mutation_name=species.data.sample_names[sample_idx]+'_' +
+            f'm{mutation_count}-' + str(
+                mutation_idx),
+            template_name=species.data.sample_names[sample_idx],
+            template_seq=sequence,
+            mutation_types=mutation_types,
+            count=mutation_count,
+            positions=positions,
+            sequence_type=self.sequence_type,
+            template_file=species.data.source
+        )
+        self.write_mutations(mutations)
+        return mutations
 
     def write_mutations(self, mutations: Mutations, overwrite=False):
         self.data_writer.output(

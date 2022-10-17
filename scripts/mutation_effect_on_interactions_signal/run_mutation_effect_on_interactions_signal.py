@@ -69,7 +69,8 @@ def main(config=None, data_writer=None):
             # Mutate circuit
             Protocol(
                 partial(Evolver(data_writer=data_writer, sequence_type=config_file.get('system_type')).mutate,
-                        write_to_subsystem=True),
+                        write_to_subsystem=True,
+                        algorithm=config_file.get('mutations', {}).get('algorithm', 'random')),
                 req_input=True,
                 req_output=True,
                 name="generate_mutations"
