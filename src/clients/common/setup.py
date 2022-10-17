@@ -21,19 +21,23 @@ ESSENTIAL_KWARGS = [
 
 def compose_kwargs(extra_configs: dict = None, config_filepath: str = None, config_file: dict = None) -> dict:
     """ Extra configs like data paths can be supplied here, eg. for circuits that were dynamically generated. """
-    config_filepath = make_filename_safely(config_filepath)
-    if config_file is None and config_filepath:
-        config_file = load_json_as_dict(config_filepath)
-    elif config_file and config_filepath:
-        raise ValueError(
-            'Both a config and a config filepath were defined - only use one config option.')
-    elif config_file is None and config_filepath is None:
-        raise ValueError('Config file or path needed as input to function.')
+    def get_configs(config_file, config_filepath):
+        config_filepath = make_filename_safely(config_filepath)
+        if config_file is None and config_filepath:
+            config_file = load_json_as_dict(config_filepath)
+        elif config_file and config_filepath:
+            raise ValueError(
+                'Both a config and a config filepath were defined - only use one config option.')
+        elif config_file is None and config_filepath is None:
+            raise ValueError('Config file or path needed as input to function.')
+        return config_file
+    config_file = get_configs(config_file, config_filepath)
+
     if extra_configs is not None:
         for kwarg, config in extra_configs.items():
-            if config_file.get(kwarg):
+            if kwarg != 'experiment': # and config_file.get(kwarg):
                 config_file[kwarg] = config
-        config_file.update(extra_configs)
+        # config_file.update(extra_configs)
     data_manager = DataManager(filepath=make_filename_safely(config_file.get("data_path", None)),
                                identities=config_file.get("identities", {}),
                                data=config_file.get("data", None),

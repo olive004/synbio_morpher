@@ -6,6 +6,7 @@ from scripts.generate_species_templates.run_generate_species_templates import ma
 from scripts.gather_interaction_stats.run_gather_interaction_stats import main as gather_interaction_stats
 from scripts.mutation_effect_on_interactions_signal.run_mutation_effect_on_interactions_signal import main as mutation_effect_on_interactions_signal
 from src.srv.io.manage.script_manager import Ensembler, script_preamble
+from src.utils.results.experiments import Experiment
 from src.utils.results.result_writer import ResultWriter
 from src.utils.data.data_format_tools.common import load_json_as_dict
 

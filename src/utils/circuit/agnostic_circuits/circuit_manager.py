@@ -118,8 +118,10 @@ class CircuitModeller():
                                             name='steady_states',
                                             category='time_series',
                                             vis_func=modeller_steady_state.plot,
-                                            vis_kwargs={'legend': list(circuit.species.data.sample_names),
-                                                        'out_type': 'png'})
+                                            vis_kwargs={'t': np.arange(0, np.shape(circuit.species.copynumbers)[1]) *
+                                                        modeller_steady_state.time_interval,
+                                                        'legend': list(circuit.species.data.sample_names),
+                                                        'out_type': 'svg'})
         steady_state_analytics = circuit.result_collector.get_result(
             key='steady_states').analytics
         circuit.species.steady_state_copynums = steady_state_analytics['steady_states']
@@ -192,7 +194,6 @@ class CircuitModeller():
     def iterate_modelling_func(self, copynumbers, init_copynumbers,
                                modelling_func, max_time,
                                signal=None, signal_idx: int = None):
-
         """ Loop the modelling function. 
         IMPORTANT! Modeller already includes the dt, or the length of the time step taken. """
 
@@ -223,7 +224,7 @@ class CircuitModeller():
     # @time_it
     def simulate_signal(self, circuit: BaseCircuit, signal: Signal = None, save_numerical_vis_data: bool = False,
                         use_old_steadystates: bool = False, use_solver: str = 'naive', ref_circuit: BaseCircuit = None,
-                        time_interval = 1):
+                        time_interval=1):
         if signal is None:
             circuit.signal.update_time_interval(time_interval)
             signal = circuit.signal
@@ -292,21 +293,26 @@ class CircuitModeller():
                 circuit.species.time_axis: slice(1, np.shape(new_copynumbers)[
                                                  circuit.species.species_axis])
             })]), axis=circuit.species.time_axis)
-        if ref_circuit is None:
+        if ref_circuit is None or ref_circuit == circuit:
             ref_circuit_signal = None
         else:
-            ref_circuit_result = ref_circuit.result_collector.get_result('signal')
+            ref_circuit_result = ref_circuit.result_collector.get_result(
+                'signal')
             if ref_circuit_result is None:
                 ref_circuit_signal = None
             else:
                 ref_circuit_signal = ref_circuit_result.data
+
+        t = np.arange(0, np.shape(new_copynumbers)[
+                      1]) * modeller_signal.time_interval
         circuit.result_collector.add_result(new_copynumbers,
                                             name='signal',
                                             category='time_series',
                                             vis_func=Deterministic().plot,
                                             save_numerical_vis_data=save_numerical_vis_data,
-                                            vis_kwargs={'legend': list(circuit.species.data.sample_names),
-                                                        'out_type': 'png'},
+                                            vis_kwargs={'t': t,
+                                                        'legend': list(circuit.species.data.sample_names),
+                                                        'out_type': 'svg'},
                                             analytics_kwargs={'signal_idx': signal.identities_idx,
                                                               'ref_circuit_signal': ref_circuit_signal})
         return circuit
@@ -325,7 +331,6 @@ class CircuitModeller():
         for i, (name, mutation) in enumerate(mutation_dict.items()):
             # logging.info(f'Running methods on mutation {name} ({i})')
             if include_normal_run and i == 0:
-                logging.info(f'Simulating original circuit with {methods}')
                 self.result_writer.unsubdivide_last_dir()
                 circuit = self.apply_to_circuit(
                     circuit, methods, ref_circuit=circuit)

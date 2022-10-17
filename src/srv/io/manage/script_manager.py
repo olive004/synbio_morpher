@@ -58,4 +58,11 @@ class Ensembler():
                 config, self.data_writer = output
                 self.ensemble_configs[script_name] = config
         self.config["base_configs_ensemble"] = self.ensemble_configs
-        write_json(self.config, self.config_filepath, overwrite=True)
+
+        self.data_writer.reset_ensemble()
+        self.write()
+
+    def write(self):
+        self.data_writer.output(
+            out_type='json', out_name='ensemble_config', data=self.config, write_master=False,
+            write_to_top_dir=True)

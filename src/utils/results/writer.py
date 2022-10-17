@@ -120,7 +120,8 @@ class DataWriter():
         old_ensemble_write_dir = deepcopy(self.ensemble_write_dir)
         self.ensemble_script = new_ensemble
         self.ensemble_write_dir = os.path.join(self.top_write_dir, self.ensemble_script)
-        create_location(os.path.join(self.top_write_dir, self.ensemble_script))
+        if not os.path.isdir(self.ensemble_write_dir):
+            create_location(os.path.join(self.ensemble_write_dir))
         self.update_writedir(old_ensemble_write_dir)
 
     def update_writedir(self, old_ensemble_write_dir):
@@ -137,7 +138,7 @@ class DataWriter():
         if self.ensemble_write_dir not in self.write_dir:
             self.unsubdivide()
 
-    def rebase_from_ensemble(self):
+    def reset_ensemble(self):
         old_ensemble_write_dir = deepcopy(self.ensemble_write_dir)
         self.ensemble_script = ''
         self.ensemble_write_dir = deepcopy(self.top_write_dir)

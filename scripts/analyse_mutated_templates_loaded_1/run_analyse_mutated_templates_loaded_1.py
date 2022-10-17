@@ -8,7 +8,7 @@ import pandas as pd
 from fire import Fire
 from src.srv.io.manage.script_manager import script_preamble
 from src.utils.misc.io import get_pathnames_from_mult_dirs
-from src.utils.misc.scripts_io import get_search_dir, load_experiment_config_original_fixed
+from src.utils.misc.scripts_io import get_search_dir, load_experiment_config_original
 from src.utils.misc.string_handling import prettify_keys_for_label
 from src.utils.results.analytics.timeseries import Timeseries
 
@@ -36,15 +36,11 @@ def main(config=None, data_writer=None):
     # source_dirs = config_file.get('source_dirs', [])
     config_file, source_dirs = get_search_dir(
         config_searchdir_key='source_dirs', config_file=config_file)
-    if type(source_dirs) == list:
-        source_dir = source_dirs[0]
-    else:
-        source_dir = source_dirs
-    logging.info(source_dirs)
-    logging.info(source_dir)
-    source_config = load_experiment_config_original_fixed(
+    if type(source_dirs) != list:
+        source_dirs = [source_dirs]
+    source_dir = source_dirs[0]
+    source_config = load_experiment_config_original(
         source_dir, 'mutation_effect_on_interactions_signal')
-
 
     # binding_rates_threshold_upper = np.power(10, 6)
     binding_rates_threshold_upper = None
@@ -54,6 +50,7 @@ def main(config=None, data_writer=None):
         logging.info(v)
         return v
 
+    logging.info(source_dirs)
     protocols = [
         Protocol(
             partial(
