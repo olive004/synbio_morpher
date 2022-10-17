@@ -4,9 +4,11 @@ import logging
 import os
 import random
 import sys
+from typing import Tuple
 import pandas as pd
 import numpy as np
 from src.srv.io.loaders.misc import load_csv
+from src.utils.misc.type_handling import flatten_listlike
 from src.utils.results.writer import DataWriter, Tabulated
 from src.utils.misc.string_handling import add_outtype, prettify_logging_info
 
@@ -139,7 +141,8 @@ class Evolver():
 
         def random_mutator(sequence, num_mutations):
             if len(sequence) < num_mutations:
-                logging.warning(f'For sequences of length {len(sequence)}, can not mutate {num_mutations} times.')
+                logging.warning(
+                    f'For sequences of length {len(sequence)}, can not mutate {num_mutations} times.')
             positions = random.sample(range(len(sequence)), num_mutations)
             return positions
 
@@ -149,14 +152,15 @@ class Evolver():
             sequence = species.data.get_data_by_idx(sample_idx)
             positions = position_generator(
                 sequence, mutation_nums_within_sequence)
+            mutation_types, positions = self.sample_mutations(sequence, positions)
 
             mutations = Mutations(
                 mutation_name=species.data.sample_names[sample_idx]+'_' +
-                    f'm{mutation_nums_within_sequence}-' + str(
+                f'm{mutation_nums_within_sequence}-' + str(
                     mutation_idx),
                 template_name=species.data.sample_names[sample_idx],
                 template_seq=sequence,
-                mutation_types=self.sample_mutations(sequence, positions),
+                mutation_types=mutation_types,
                 positions=positions,
                 sequence_type=self.sequence_type,
                 template_file=species.data.source
@@ -183,13 +187,18 @@ class Evolver():
         else:
             return ValueError(f'Unrecognised mutation algorithm choice "{algorithm}"')
 
-    def sample_mutations(self, sequence: str, positions: list) -> list:
-        mutation_types = []
+    def sample_mutations(self, sequence: str, positions: list, num_samples_per_position=1) -> Tuple[list, list]:
+        mutation_types = {}
+        new_positions = []
         for p in positions:
             possible_transitions = self.mutation_type_mapping[sequence[p]]
-            mutation_types.append(random.choice(
-                list(possible_transitions.values())))
-        return mutation_types
+            if num_samples_per_position > len(possible_transitions):
+                logging.warning(f'Cannot pick {num_samples_per_position} when there are only {len(possible_transitions)} choices')
+            mutation_types[p] = list(np.random.choice(
+                list(possible_transitions.values()), size=num_samples_per_position, replace=False))
+            new_positions.append([p] * num_samples_per_position)
+
+        return flatten_listlike(mutation_types.values()), flatten_listlike(new_positions)
 
     def write_mutations(self, mutations: Mutations, overwrite=False):
         self.data_writer.output(
