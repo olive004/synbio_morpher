@@ -85,22 +85,17 @@ def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path
     extra_configs = []
     logging.info(filt_stats)
     for index, row in filt_stats.iterrows():
-        logging.info(row)
-        extra_config = {write_key: get_path_from_output_summary(
-            name=row["name"], output_summary=experiment_summary)}
-        logging.info(extra_config)
+        extra_config = load_experiment_config(experiment_folder) 
+        extra_config.update({write_key: get_path_from_output_summary(
+            name=row["name"], output_summary=experiment_summary)})
         extra_config.update(
             {'interactions_path': row["interactions_path"]}
         )
-        logging.info(extra_config)
-        extra_config.update(load_experiment_config(experiment_folder))
         extra_configs.append(extra_config)
     # logging.info(extra_configs)
     if filters.get('max_circuits') is not None:
         extra_configs = extra_configs[:filters.get('max_circuits')]
     
-    logging.info(extra_configs)
-    sys.exit()
     return extra_configs
 
 
