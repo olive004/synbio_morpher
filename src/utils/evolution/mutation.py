@@ -138,8 +138,9 @@ class Evolver():
     def get_mutator(self, algorithm):
 
         def random_mutator(sequence, num_mutations):
-            positions = list(np.random.randint(
-                0, len(sequence), size=num_mutations))
+            if len(sequence) < num_mutations:
+                logging.warning(f'For sequences of length {len(sequence)}, can not mutate {num_mutations} times.')
+            positions = random.sample(np.arange(len(sequence)), num_mutations)
             return positions
 
         def basic_mutator(species: BaseSpecies, position_generator, mutation_nums_within_sequence,
