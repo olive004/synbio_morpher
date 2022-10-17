@@ -104,8 +104,6 @@ class BaseSpecies():
         self.mutation_counts = extend_int_to_list(
             self.mutation_counts, self.size)
         self.mutation_nums_within_sequence = extend_int_to_list(self.mutation_nums_within_sequence, self.size)
-        if self.mutation_counts is None or self.mutation_nums_within_sequence is None:
-            logging.warning(f'Processing mutations may have gone wrong.')
 
     def mutate(self, mutation):
 

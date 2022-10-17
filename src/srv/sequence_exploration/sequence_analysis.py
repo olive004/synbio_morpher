@@ -83,7 +83,6 @@ def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path
     experiment_summary = load_experiment_output_summary(experiment_folder)
 
     extra_configs = []
-    logging.info(filt_stats)
     for index, row in filt_stats.iterrows():
         extra_config = load_experiment_config(experiment_folder) 
         extra_config.update({write_key: get_path_from_output_summary(
@@ -92,7 +91,6 @@ def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path
             {'interactions_path': row["interactions_path"]}
         )
         extra_configs.append(extra_config)
-    # logging.info(extra_configs)
     if filters.get('max_circuits') is not None:
         extra_configs = extra_configs[:filters.get('max_circuits')]
     
@@ -283,27 +281,28 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFrame:
             interaction_stats_current, curr_sample_names = make_interaction_stats_and_sample_names(
                 mutation_dir, include_circuit_in_filekey=False)
 
+            # for m in source_config['mutations']['mutation_nums_within_sequence']:
             current_table = {
                 'circuit_name': circuit_name,
                 'mutation_name': mutation_name,
                 'source_species': curr_mutation['template_name'].values[0],
                 'sample_names': curr_sample_names,
-                'mutation_num': source_config['mutations']['mutation_nums_within_sequence'],
+                'mutation_num': curr_mutation['count'].values,
                 'mutation_type': curr_mutation['mutation_types'].values,
                 'mutation_positions': curr_mutation['positions'].values,
                 'path_to_steady_state_data': get_pathnames(first_only=True,
-                                                           file_key='steady_states_data',
-                                                           search_dir=mutation_dir),
+                                                        file_key='steady_states_data',
+                                                        search_dir=mutation_dir),
                 'path_to_signal_data': get_pathnames(first_only=True,
-                                                     file_key='signal_data',
-                                                     search_dir=mutation_dir),
+                                                    file_key='signal_data',
+                                                    search_dir=mutation_dir),
                 'path_to_template_circuit': curr_mutation['template_file'].values[0]
             }
             # Expand the interaction keys in the table
             info_table = update_info_table(info_table, curr_table=current_table,
-                                           int_stats=interaction_stats_current,
-                                           ref_stats=interaction_stats, ref_table=current_og_table,
-                                           source_dir=mutation_dir, check_coherent=True)
+                                        int_stats=interaction_stats_current,
+                                        ref_stats=interaction_stats, ref_table=current_og_table,
+                                        source_dir=mutation_dir, check_coherent=True)
         if circ_idx != 0 and np.mod(circ_idx, 100) == 0:
             info_table = write_results(info_table)
             info_table = init_info_table()

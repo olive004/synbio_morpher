@@ -20,8 +20,8 @@ def cast_all_values_as_list(dict_like):
 
 
 def extend_int_to_list(int_like, target_num):
-    if int_like is None:
-        logging.warning(f'Received None for expected int or list to extend to {target_num}.')
+    # if int_like is None:
+    #     logging.warning(f'Received None for expected int or list to extend to {target_num}.')
     if type(int_like) == int:
         int_like = [int_like] * target_num
     elif type(int_like) == list and len(int_like) == 1:

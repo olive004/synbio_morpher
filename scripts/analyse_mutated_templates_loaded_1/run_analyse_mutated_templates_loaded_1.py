@@ -50,7 +50,6 @@ def main(config=None, data_writer=None):
         logging.info(v)
         return v
 
-    logging.info(source_dirs)
     protocols = [
         Protocol(
             partial(

@@ -69,7 +69,8 @@ def get_mutation_type_mapping(sequence_type):
     elif sequence_type == 'DNA':
         return mutation_type_mapping_DNA
     else:
-        logging.warning(f'Unrecognised sequence type {sequence_type} provided - should be DNA or RNA.')
+        logging.warning(
+            f'Unrecognised sequence type {sequence_type} provided - should be DNA or RNA.')
         sys.exit()
 
 
@@ -79,17 +80,17 @@ class Mutations(Tabulated):
                  positions, mutation_types, sequence_type: str, algorithm='random') -> None:
         self.mutation_name = mutation_name
         self.template_name = template_name
-        self.template_file = template_file
         self.template_seq = template_seq
         self.mutation_types = mutation_types
         self.positions = positions
         self.count = len(positions)
         self.algorithm = algorithm
         self.sequence_type = sequence_type
+        self.template_file = template_file
 
         super().__init__()
 
-    def get_props_as_split_dict(self):
+    def get_table_properties(self):
         return list(self.__dict__.keys()), list(self.__dict__.values())
 
     def get_sequence(self):
@@ -125,8 +126,6 @@ class Evolver():
         return True
 
     def mutate(self, circuit: BaseCircuit, algorithm="random", write_to_subsystem=False):
-        logging.info('\n\n\n\n\n\nMutating')
-        logging.info(circuit)
         if write_to_subsystem:
             self.data_writer.subdivide_writing(circuit.name)
         if self.is_mutation_possible(circuit):
@@ -143,32 +142,41 @@ class Evolver():
                 0, len(sequence), size=num_mutations))
             return positions
 
-        def basic_mutator(species: BaseSpecies, position_generator, sample_idx: int = None,
+        def basic_mutator(species: BaseSpecies, position_generator, mutation_nums_within_sequence,
+                          sample_idx: int = None,
                           mutation_idx=None) -> Mutations:
             sequence = species.data.get_data_by_idx(sample_idx)
             positions = position_generator(
-                sequence, species.mutation_nums_within_sequence[sample_idx])
+                sequence, mutation_nums_within_sequence)
+
+            logging.info(mutation_nums_within_sequence)
+            logging.info(positions)
+            logging.info(sequence)
 
             mutations = Mutations(
-                mutation_name=species.data.sample_names[sample_idx]+'_'+str(
+                mutation_name=species.data.sample_names[sample_idx]+'_' +
+                    f'm{mutation_nums_within_sequence}-' + str(
                     mutation_idx),
                 template_name=species.data.sample_names[sample_idx],
-                template_file=species.data.source,
                 template_seq=sequence,
                 mutation_types=self.sample_mutations(sequence, positions),
                 positions=positions,
-                sequence_type=self.sequence_type
+                sequence_type=self.sequence_type,
+                template_file=species.data.source
             )
+            logging.info(mutations.__dict__)
             self.write_mutations(mutations)
             return mutations
 
         def full_mutator(species: BaseSpecies, sample_mutator_func):
-            for sample_idx, sample in enumerate(species.data.sample_names):
-                species.mutations[sample] = {}
-                for c in range(species.mutation_counts[sample_idx]):
-                    mutation = sample_mutator_func(
-                        species=species, sample_idx=sample_idx, mutation_idx=c)
-                    species.mutations[sample][mutation.mutation_name] = mutation
+            for m in species.mutation_nums_within_sequence:
+                for sample_idx, sample in enumerate(species.data.sample_names):
+                    species.mutations[sample] = {}
+                    for c in range(species.mutation_counts[sample_idx]):
+                        mutation = sample_mutator_func(
+                            species=species, sample_idx=sample_idx, mutation_idx=c,
+                            mutation_nums_within_sequence=m)
+                        species.mutations[sample][mutation.mutation_name] = mutation
             return species
 
         if algorithm == "random":
@@ -186,9 +194,6 @@ class Evolver():
         return mutation_types
 
     def write_mutations(self, mutations: Mutations, overwrite=False):
-        logging.info(mutations.as_table())
-        logging.info(mutations)
-        logging.info(type(mutations))
         self.data_writer.output(
             out_type=self.out_type, out_name=self.out_name, data=mutations.as_table(), overwrite=overwrite)
 

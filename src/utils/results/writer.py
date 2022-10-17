@@ -157,12 +157,12 @@ class DataWriter():
 class Tabulated(ABC):
 
     def __init__(self) -> None:
-        self.column_names, self.data = self.get_props_as_split_dict()
+        self.column_names, self.data = self.get_table_properties()
         self.max_table_length = find_sublist_max(self.data)
 
     def as_table(self):
         return pd.DataFrame.from_dict(dict(zip(self.column_names, self.data)))
 
     @abstractmethod
-    def get_props_as_split_dict(self):
+    def get_table_properties(self):
         pass
