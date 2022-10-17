@@ -46,9 +46,11 @@ class BaseSpecies():
         # Nums: mutations within a sequence
         self.mutation_nums_within_sequence = config_args.get(
             "mutations", {}).get("mutation_nums_within_sequence")
+        logging.info(self.mutation_nums_within_sequence)
         # Counts: mutated iterations of a sequence
         self.mutation_counts = config_args.get(
             "mutations", {}).get("mutation_counts")
+        logging.info(self.mutation_counts)
 
         self.process_mutations()
         self.initial_values = self.save_initial_values()
@@ -102,8 +104,10 @@ class BaseSpecies():
 
     def process_mutations(self):
         self.mutation_counts = extend_int_to_list(
-            self.mutation_counts, self.count)
-        self.mutation_nums_within_sequence = extend_int_to_list(self.mutation_nums_within_sequence, self.count)
+            self.mutation_counts, self.size)
+        self.mutation_nums_within_sequence = extend_int_to_list(self.mutation_nums_within_sequence, self.size)
+        if self.mutation_counts is None or self.mutation_nums_within_sequence is None:
+            logging.warning(f'Processing mutations may have gone wrong.')
 
     def mutate(self, mutation):
 
@@ -183,7 +187,7 @@ class BaseSpecies():
         self._copynumbers = value
 
     @property
-    def count(self):
+    def size(self):
         return self.data.size
 
 
