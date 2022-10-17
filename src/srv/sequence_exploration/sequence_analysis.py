@@ -287,7 +287,7 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFrame:
                 'mutation_name': mutation_name,
                 'source_species': curr_mutation['template_name'].values[0],
                 'sample_names': curr_sample_names,
-                'mutation_num': curr_mutation['count'].values,
+                'mutation_num': curr_mutation['count'].unique()[0],
                 'mutation_type': curr_mutation['mutation_types'].values,
                 'mutation_positions': curr_mutation['positions'].values,
                 'path_to_steady_state_data': get_pathnames(first_only=True,

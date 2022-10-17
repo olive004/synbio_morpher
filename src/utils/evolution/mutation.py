@@ -149,10 +149,6 @@ class Evolver():
             positions = position_generator(
                 sequence, mutation_nums_within_sequence)
 
-            logging.info(mutation_nums_within_sequence)
-            logging.info(positions)
-            logging.info(sequence)
-
             mutations = Mutations(
                 mutation_name=species.data.sample_names[sample_idx]+'_' +
                     f'm{mutation_nums_within_sequence}-' + str(
@@ -164,7 +160,6 @@ class Evolver():
                 sequence_type=self.sequence_type,
                 template_file=species.data.source
             )
-            logging.info(mutations.__dict__)
             self.write_mutations(mutations)
             return mutations
 
@@ -194,6 +189,7 @@ class Evolver():
         return mutation_types
 
     def write_mutations(self, mutations: Mutations, overwrite=False):
+        logging.info(mutations.as_table())
         self.data_writer.output(
             out_type=self.out_type, out_name=self.out_name, data=mutations.as_table(), overwrite=overwrite)
 
