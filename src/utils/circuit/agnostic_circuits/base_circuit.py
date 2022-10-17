@@ -46,11 +46,9 @@ class BaseSpecies():
         # Nums: mutations within a sequence
         self.mutation_nums_within_sequence = config_args.get(
             "mutations", {}).get("mutation_nums_within_sequence")
-        logging.info(self.mutation_nums_within_sequence)
         # Counts: mutated iterations of a sequence
         self.mutation_counts = config_args.get(
             "mutations", {}).get("mutation_counts")
-        logging.info(self.mutation_counts)
 
         self.process_mutations()
         self.initial_values = self.save_initial_values()

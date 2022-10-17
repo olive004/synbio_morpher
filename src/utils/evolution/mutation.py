@@ -184,6 +184,9 @@ class Evolver():
         return mutation_types
 
     def write_mutations(self, mutations: Mutations, overwrite=False):
+        logging.info(mutations.as_table())
+        logging.info(mutations)
+        logging.info(type(mutations))
         self.data_writer.output(
             out_type=self.out_type, out_name=self.out_name, data=mutations.as_table(), overwrite=overwrite)
 
