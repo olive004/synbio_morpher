@@ -140,7 +140,7 @@ class Evolver():
         def random_mutator(sequence, num_mutations):
             if len(sequence) < num_mutations:
                 logging.warning(f'For sequences of length {len(sequence)}, can not mutate {num_mutations} times.')
-            positions = random.sample(np.arange(len(sequence)), num_mutations)
+            positions = random.sample(range(len(sequence)), num_mutations)
             return positions
 
         def basic_mutator(species: BaseSpecies, position_generator, mutation_nums_within_sequence,
