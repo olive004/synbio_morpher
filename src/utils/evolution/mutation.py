@@ -124,15 +124,17 @@ class Evolver():
             return False
         return True
 
-    def mutate(self, system: BaseCircuit, algorithm="random", write_to_subsystem=False):
+    def mutate(self, circuit: BaseCircuit, algorithm="random", write_to_subsystem=False):
+        logging.info('\n\n\n\n\n\nMutating')
+        logging.info(circuit)
         if write_to_subsystem:
-            self.data_writer.subdivide_writing(system.name)
-        if self.is_mutation_possible(system):
+            self.data_writer.subdivide_writing(circuit.name)
+        if self.is_mutation_possible(circuit):
             mutator = self.get_mutator(algorithm)
-            system.species = mutator(system.species)
+            circuit.species = mutator(circuit.species)
         else:
             logging.info('No mutation settings found, did not mutate.')
-        return system
+        return circuit
 
     def get_mutator(self, algorithm):
 
