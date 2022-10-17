@@ -165,12 +165,16 @@ class Evolver():
 
         def full_mutator(species: BaseSpecies, sample_mutator_func):
             for m in species.mutation_nums_within_sequence:
+                logging.info(m)
                 for sample_idx, sample in enumerate(species.data.sample_names):
+                    logging.info(sample)
                     species.mutations[sample] = {}
                     for c in range(species.mutation_counts[sample_idx]):
                         mutation = sample_mutator_func(
                             species=species, sample_idx=sample_idx, mutation_idx=c,
                             mutation_nums_within_sequence=m)
+                        logging.info(c)
+                        logging.info(mutation.__dict__)
                         species.mutations[sample][mutation.mutation_name] = mutation
             return species
 
@@ -189,7 +193,7 @@ class Evolver():
         return mutation_types
 
     def write_mutations(self, mutations: Mutations, overwrite=False):
-        logging.info(mutations.as_table())
+        logging.info(f'Writing mut {mutations.mutation_name}')
         self.data_writer.output(
             out_type=self.out_type, out_name=self.out_name, data=mutations.as_table(), overwrite=overwrite)
 
