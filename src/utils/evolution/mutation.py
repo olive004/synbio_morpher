@@ -147,12 +147,14 @@ class Evolver():
             return positions
 
         def basic_mutator(species: BaseSpecies, position_generator, mutation_nums_within_sequence,
+                          mutation_nums_per_position: list,
                           sample_idx: int = None,
-                          mutation_idx=None) -> Mutations:
+                          mutation_idx: int = None) -> Mutations:
             sequence = species.data.get_data_by_idx(sample_idx)
             positions = position_generator(
                 sequence, mutation_nums_within_sequence)
-            mutation_types, positions = self.sample_mutations(sequence, positions)
+            mutation_types, positions = self.sample_mutations(
+                sequence, positions, mutation_nums_per_position)
 
             mutations = Mutations(
                 mutation_name=species.data.sample_names[sample_idx]+'_' +
@@ -175,10 +177,9 @@ class Evolver():
                     for c in range(species.mutation_counts[sample_idx]):
                         mutation = sample_mutator_func(
                             species=species, sample_idx=sample_idx, mutation_idx=c,
-                            mutation_nums_within_sequence=m)
-                        logging.info(mutation.mutation_name)
+                            mutation_nums_within_sequence=m,
+                            mutation_nums_per_position=species.mutation_nums_per_position)
                         species.mutations[sample][mutation.mutation_name] = mutation
-            logging.info(species.mutations)
             return species
 
         if algorithm == "random":
@@ -187,16 +188,20 @@ class Evolver():
         else:
             return ValueError(f'Unrecognised mutation algorithm choice "{algorithm}"')
 
-    def sample_mutations(self, sequence: str, positions: list, num_samples_per_position=1) -> Tuple[list, list]:
+    def sample_mutations(self, sequence: str, positions: list, mutation_nums_per_position: list) -> Tuple[list, list]:
         mutation_types = {}
         new_positions = []
-        for p in positions:
+        mutation_nums_per_position = mutation_nums_per_position * \
+            len(positions) if len(
+                mutation_nums_per_position) == 1 else mutation_nums_per_position
+        for p, n in zip(positions, mutation_nums_per_position):
             possible_transitions = self.mutation_type_mapping[sequence[p]]
-            if num_samples_per_position > len(possible_transitions):
-                logging.warning(f'Cannot pick {num_samples_per_position} when there are only {len(possible_transitions)} choices')
+            if n > len(possible_transitions):
+                logging.warning(
+                    f'Cannot pick {n} when there are only {len(possible_transitions)} choices')
             mutation_types[p] = list(np.random.choice(
-                list(possible_transitions.values()), size=num_samples_per_position, replace=False))
-            new_positions.append([p] * num_samples_per_position)
+                list(possible_transitions.values()), size=n, replace=False))
+            new_positions.append([p] * n)
 
         return flatten_listlike(mutation_types.values()), flatten_listlike(new_positions)
 
