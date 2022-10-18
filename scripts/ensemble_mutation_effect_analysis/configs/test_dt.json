@@ -67,15 +67,13 @@
             "signal": {
                 "signal": [
                     1,
-                    0,
-                    1,
                     0
                 ],
                 "signal_spec": "raw",
                 "signal_type": "abstract",
                 "total_time": 4,
                 "magnitude": 100,
-                "time_interval": 0.1
+                "time_interval": 0.01
             },
             "source_of_interaction_stats": {
                 "is_source_dir_incomplete": true,
