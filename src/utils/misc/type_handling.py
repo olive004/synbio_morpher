@@ -8,10 +8,20 @@ def assert_uniform_type(list_like, target_type):
 
 
 def cast_all_values_as_list(dict_like):
-    return {k: [v] for k, v in dict_like.items() if not type(v) == list}
+    new_dict = {}
+    for k, v in dict_like.items():
+        if not type(v) == list:
+            new_dict[k] = [v] 
+        else:
+            new_dict[k] = v
+    return new_dict
+    # return {k: [v] for k, v in dict_like.items() if not type(v) == list}
+    # return {k: [v] for k, v in dict_like.items()}
 
 
 def extend_int_to_list(int_like, target_num):
+    # if int_like is None:
+    #     logging.warning(f'Received None for expected int or list to extend to {target_num}.')
     if type(int_like) == int:
         int_like = [int_like] * target_num
     elif type(int_like) == list and len(int_like) == 1:

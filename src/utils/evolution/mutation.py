@@ -4,9 +4,11 @@ import logging
 import os
 import random
 import sys
+from typing import Iterator, Tuple
 import pandas as pd
 import numpy as np
 from src.srv.io.loaders.misc import load_csv
+from src.utils.misc.type_handling import flatten_listlike
 from src.utils.results.writer import DataWriter, Tabulated
 from src.utils.misc.string_handling import add_outtype, prettify_logging_info
 
@@ -69,27 +71,28 @@ def get_mutation_type_mapping(sequence_type):
     elif sequence_type == 'DNA':
         return mutation_type_mapping_DNA
     else:
-        logging.warning(f'Unrecognised sequence type {sequence_type} provided - should be DNA or RNA.')
+        logging.warning(
+            f'Unrecognised sequence type {sequence_type} provided - should be DNA or RNA.')
         sys.exit()
 
 
 class Mutations(Tabulated):
 
     def __init__(self, mutation_name, template_name, template_file, template_seq,
-                 positions, mutation_types, sequence_type: str, algorithm='random') -> None:
+                 positions, mutation_types, count: int, sequence_type: str, algorithm: str) -> None:
         self.mutation_name = mutation_name
         self.template_name = template_name
-        self.template_file = template_file
         self.template_seq = template_seq
         self.mutation_types = mutation_types
         self.positions = positions
-        self.count = len(positions)
+        self.count = count
         self.algorithm = algorithm
         self.sequence_type = sequence_type
+        self.template_file = template_file
 
         super().__init__()
 
-    def get_props_as_split_dict(self):
+    def get_table_properties(self):
         return list(self.__dict__.keys()), list(self.__dict__.values())
 
     def get_sequence(self):
@@ -124,64 +127,107 @@ class Evolver():
             return False
         return True
 
-    def mutate(self, system: BaseCircuit, algorithm="random", write_to_subsystem=False):
+    def mutate(self, circuit: BaseCircuit, algorithm: str, write_to_subsystem=False):
+        """ algorithm can be either random or all """
         if write_to_subsystem:
-            self.data_writer.subdivide_writing(system.name)
-        if self.is_mutation_possible(system):
+            self.data_writer.subdivide_writing(circuit.name)
+        if self.is_mutation_possible(circuit):
             mutator = self.get_mutator(algorithm)
-            system.species = mutator(system.species)
+            circuit.species = mutator(circuit.species)
         else:
             logging.info('No mutation settings found, did not mutate.')
-        return system
+        return circuit
 
     def get_mutator(self, algorithm):
 
-        def random_mutator(sequence, num_mutations):
-            positions = list(np.random.randint(
-                0, len(sequence), size=num_mutations))
+        def mutation_sampler(sequence, num_mutations):
+            if len(sequence) < num_mutations:
+                logging.warning(
+                    f'For sequences of length {len(sequence)}, can not mutate {num_mutations} times.')
+            positions = random.sample(range(len(sequence)), num_mutations)
             return positions
 
-        def basic_mutator(species: BaseSpecies, position_generator, sample_idx: int = None,
-                          mutation_idx=None) -> Mutations:
-            sequence = species.data.get_data_by_idx(sample_idx)
-            positions = position_generator(
-                sequence, species.mutation_nums_within_sequence[sample_idx])
-
-            mutations = Mutations(
-                mutation_name=species.data.sample_names[sample_idx]+'_'+str(
-                    mutation_idx),
-                template_name=species.data.sample_names[sample_idx],
-                template_file=species.data.source,
-                template_seq=sequence,
-                mutation_types=self.sample_mutations(sequence, positions),
-                positions=positions,
-                sequence_type=self.sequence_type
-            )
-            self.write_mutations(mutations)
-            return mutations
-
-        def full_mutator(species: BaseSpecies, sample_mutator_func):
+        def rand_mutator(species: BaseSpecies, algorithm: str):
             for sample_idx, sample in enumerate(species.data.sample_names):
                 species.mutations[sample] = {}
-                for c in range(species.mutation_counts[sample_idx]):
-                    mutation = sample_mutator_func(
-                        species=species, sample_idx=sample_idx, mutation_idx=c)
-                    species.mutations[sample][mutation.mutation_name] = mutation
+                for mutation_nums_within_sequence in species.mutation_nums_within_sequence:
+                    for mutation_idx in range(species.mutation_counts[sample_idx]):
+
+                        sequence = species.data.get_data_by_idx(sample_idx)
+                        positions = positions if positions is not None else mutation_sampler(
+                            sequence, mutation_nums_within_sequence)
+                        mutation_types, positions = self.sample_mutations(
+                            sequence, positions, species.mutation_nums_per_position)
+
+                        mutation = self.make_mutations(
+                            species=species, positions=positions, sample_idx=sample_idx,
+                            mutation_idx=mutation_idx, sequence=sequence,
+                            mutation_types=mutation_types, algorithm=algorithm)
+
+                        species.mutations[sample][mutation.mutation_name] = mutation
+            return species
+
+        def all_mutator(species: BaseSpecies, algorithm: str):
+            mutation_nums_per_position = [len(
+                self.mutation_type_mapping.keys()) - 1]
+            for sample_idx, sample in enumerate(species.data.sample_names):
+                species.mutations[sample] = {}
+                sequence = species.data.get_data_by_idx(sample_idx)
+                for positions in ([i] for i in range(len(sequence))):
+                    mutation_types, positions = self.sample_mutations(
+                        sequence, positions, mutation_nums_per_position)
+                    for i, (mt, p) in enumerate(zip(mutation_types, positions)):
+                        mutation_idx = mutation_nums_per_position[0]*p + i
+                        mutations = self.make_mutations(
+                            species=species, sample_idx=sample_idx, positions=[
+                                p], mutation_idx=mutation_idx, sequence=sequence, mutation_types=[
+                                mt], algorithm=algorithm)
+                        species.mutations[sample][mutations.mutation_name] = mutations
             return species
 
         if algorithm == "random":
-            return partial(full_mutator, sample_mutator_func=partial(basic_mutator,
-                                                                     position_generator=random_mutator))
+            return partial(rand_mutator, algorithm=algorithm)
+        elif algorithm == "all":
+            return partial(all_mutator, algorithm=algorithm)
         else:
             return ValueError(f'Unrecognised mutation algorithm choice "{algorithm}"')
 
-    def sample_mutations(self, sequence: str, positions: list) -> list:
-        mutation_types = []
-        for p in positions:
+    def sample_mutations(self, sequence: str, positions: list, mutation_nums_per_position: list) -> Tuple[list, list]:
+        mutation_types = {}
+        new_positions = []
+        mutation_nums_per_position = mutation_nums_per_position * \
+            len(positions) if len(
+                mutation_nums_per_position) == 1 else mutation_nums_per_position
+        for p, n in zip(positions, mutation_nums_per_position):
             possible_transitions = self.mutation_type_mapping[sequence[p]]
-            mutation_types.append(random.choice(
-                list(possible_transitions.values())))
-        return mutation_types
+            if n > len(possible_transitions):
+                logging.warning(
+                    f'Cannot pick {n} when there are only {len(possible_transitions)} choices')
+            mutation_types[p] = list(np.random.choice(
+                list(possible_transitions.values()), size=n, replace=False))
+            new_positions.append([p] * n)
+
+        return flatten_listlike(mutation_types.values()), flatten_listlike(new_positions)
+
+    def make_mutations(self, species: BaseSpecies, positions: list, sample_idx: int,
+                       mutation_idx: int, sequence: str, mutation_types: list,
+                       algorithm: str):
+        mutation_count = len(positions)
+        mutations = Mutations(
+            mutation_name=species.data.sample_names[sample_idx]+'_' +
+            f'm{mutation_count}-' + str(
+                mutation_idx),
+            template_name=species.data.sample_names[sample_idx],
+            template_seq=sequence,
+            mutation_types=mutation_types,
+            count=mutation_count,
+            positions=positions,
+            sequence_type=self.sequence_type,
+            template_file=species.data.source,
+            algorithm=algorithm
+        )
+        self.write_mutations(mutations)
+        return mutations
 
     def write_mutations(self, mutations: Mutations, overwrite=False):
         self.data_writer.output(

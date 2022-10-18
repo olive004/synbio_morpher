@@ -62,7 +62,7 @@ def filter_data(data: pd.DataFrame, filters: dict = {}):
         return data
     filt_stats = data[data['num_interacting']
                       >= filters.get("min_num_interacting")]
-    filt_stats = filt_stats[filt_stats['num_self_interacting'] < filters.get(
+    filt_stats = filt_stats[filt_stats['num_self_interacting'] <= filters.get(
         "max_self_interacting")]
     return filt_stats
 
@@ -71,7 +71,6 @@ def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path
 
     stats = GeneCircuitLoader().load_data(stats_pathname).data
     filt_stats = filter_data(stats, filters)
-    logging.info(filt_stats)
 
     if filt_stats.empty:
         logging.warning(
@@ -85,16 +84,16 @@ def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path
 
     extra_configs = []
     for index, row in filt_stats.iterrows():
-        extra_config = {write_key: get_path_from_output_summary(
-            name=row["name"], output_summary=experiment_summary)}
+        extra_config = load_experiment_config(experiment_folder) 
+        extra_config.update({write_key: get_path_from_output_summary(
+            name=row["name"], output_summary=experiment_summary)})
         extra_config.update(
             {'interactions_path': row["interactions_path"]}
         )
-        extra_config.update(load_experiment_config(experiment_folder))
         extra_configs.append(extra_config)
-    # logging.info(extra_configs)
     if filters.get('max_circuits') is not None:
         extra_configs = extra_configs[:filters.get('max_circuits')]
+    
     return extra_configs
 
 
@@ -287,22 +286,22 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFrame:
                 'mutation_name': mutation_name,
                 'source_species': curr_mutation['template_name'].values[0],
                 'sample_names': curr_sample_names,
-                'mutation_num': source_config['mutations']['mutation_nums_within_sequence'],
+                'mutation_num': curr_mutation['count'].unique()[0],
                 'mutation_type': curr_mutation['mutation_types'].values,
                 'mutation_positions': curr_mutation['positions'].values,
                 'path_to_steady_state_data': get_pathnames(first_only=True,
-                                                           file_key='steady_states_data',
-                                                           search_dir=mutation_dir),
+                                                        file_key='steady_states_data',
+                                                        search_dir=mutation_dir),
                 'path_to_signal_data': get_pathnames(first_only=True,
-                                                     file_key='signal_data',
-                                                     search_dir=mutation_dir),
+                                                    file_key='signal_data',
+                                                    search_dir=mutation_dir),
                 'path_to_template_circuit': curr_mutation['template_file'].values[0]
             }
             # Expand the interaction keys in the table
             info_table = update_info_table(info_table, curr_table=current_table,
-                                           int_stats=interaction_stats_current,
-                                           ref_stats=interaction_stats, ref_table=current_og_table,
-                                           source_dir=mutation_dir, check_coherent=True)
+                                        int_stats=interaction_stats_current,
+                                        ref_stats=interaction_stats, ref_table=current_og_table,
+                                        source_dir=mutation_dir, check_coherent=True)
         if circ_idx != 0 and np.mod(circ_idx, 100) == 0:
             info_table = write_results(info_table)
             info_table = init_info_table()

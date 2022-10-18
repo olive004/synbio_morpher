@@ -1,9 +1,11 @@
 from functools import partial
+import logging
 import os
 import pandas as pd
 
 from fire import Fire
 from src.srv.io.manage.script_manager import script_preamble
+from src.utils.misc.scripts_io import get_search_dir
 
 from src.utils.results.experiments import Experiment, Protocol
 from src.utils.results.result_writer import ResultWriter
@@ -21,7 +23,10 @@ def main(config=None, data_writer=None):
     if data_writer is None:
         data_writer = ResultWriter(purpose=config_file.get('experiment', {}).get('purpose'))
 
-    source_dirs = config_file.get('source_dirs')
+    config_file, source_dirs = get_search_dir(
+        config_searchdir_key='source_dirs', config_file=config_file)
+    if type(source_dirs) != list:
+        source_dirs = [source_dirs]
     protocols = [
         Protocol(
             partial(load_multiple_as_list, inputs_list=source_dirs, load_func=tabulate_mutation_info, 
