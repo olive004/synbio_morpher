@@ -10,9 +10,9 @@ from src.utils.results.result_writer import ResultWriter
 from src.utils.misc.numerical import make_dynamic_indexer, np_delete_axes, zero_out_negs
 from src.utils.misc.type_handling import flatten_nested_dict
 from src.utils.signal.inputs import Signal
-from src.srv.parameter_prediction.simulator import MIN_INTERACTION_EQCONSTANT, SIMULATOR_UNITS, InteractionSimulator
+from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS, InteractionSimulator
 from src.utils.circuit.agnostic_circuits.base_circuit import BaseCircuit
-from src.utils.circuit.agnostic_circuits.modelling import Deterministic
+from src.utils.circuit.agnostic_circuits.modelling import Deterministic, Modeller
 
 
 class SystemManager():
@@ -36,7 +36,7 @@ class CircuitModeller():
         circuit = self.find_steady_states(circuit)
         return circuit
 
-    def make_modelling_func(self, modeller: Deterministic, circuit: BaseCircuit,
+    def make_modelling_func(self, modeller: Modeller, circuit: BaseCircuit,
                             exclude_species_by_idx: Union[int, list] = None,
                             fixed_value: Timeseries(None).num_dtype = None,
                             fixed_value_idx: int = None):
@@ -45,8 +45,6 @@ class CircuitModeller():
             exclude_species_by_idx)
 
         interaction_binding_rates = circuit.species.interactions
-        interaction_binding_rates[interaction_binding_rates <
-                                  MIN_INTERACTION_EQCONSTANT] = 0
         creation_rates = circuit.species.creation_rates
         degradation_rates = circuit.species.degradation_rates
 
@@ -110,7 +108,7 @@ class CircuitModeller():
 
     def find_steady_states(self, circuit: BaseCircuit):
         modeller_steady_state = Deterministic(
-            max_time=50, time_step=0.1)
+            max_time=50, time_interval=0.1)
 
         circuit.species.copynumbers = self.compute_steady_states(modeller_steady_state,
                                                                  circuit=circuit,
@@ -120,14 +118,16 @@ class CircuitModeller():
                                             name='steady_states',
                                             category='time_series',
                                             vis_func=modeller_steady_state.plot,
-                                            vis_kwargs={'legend': list(circuit.species.data.sample_names),
-                                                        'out_type': 'png'})
+                                            vis_kwargs={'t': np.arange(0, np.shape(circuit.species.copynumbers)[1]) *
+                                                        modeller_steady_state.time_interval,
+                                                        'legend': list(circuit.species.data.sample_names),
+                                                        'out_type': 'svg'})
         steady_state_analytics = circuit.result_collector.get_result(
             key='steady_states').analytics
         circuit.species.steady_state_copynums = steady_state_analytics['steady_states']
         return circuit
 
-    def compute_steady_states(self, modeller, circuit: BaseCircuit,
+    def compute_steady_states(self, modeller: Modeller, circuit: BaseCircuit,
                               solver_type: str = 'naive',
                               exclude_species_by_idx: Union[int, list] = None):
         copynumbers = circuit.species.copynumbers[:, -1]
@@ -165,7 +165,7 @@ class CircuitModeller():
             copynumbers = steady_state_result.y
         return copynumbers
 
-    def model_circuit(self, modeller, init_copynumbers: np.ndarray, circuit: BaseCircuit,
+    def model_circuit(self, modeller: Modeller, init_copynumbers: np.ndarray, circuit: BaseCircuit,
                       signal: np.ndarray = None, signal_identity_idx: int = None,
                       exclude_species_by_idx: Union[list, int] = None):
         assert np.shape(init_copynumbers)[circuit.species.species_axis] == np.shape(
@@ -194,6 +194,9 @@ class CircuitModeller():
     def iterate_modelling_func(self, copynumbers, init_copynumbers,
                                modelling_func, max_time,
                                signal=None, signal_idx: int = None):
+        """ Loop the modelling function. 
+        IMPORTANT! Modeller already includes the dt, or the length of the time step taken. """
+
         current_copynumbers = init_copynumbers.flatten()
         if signal is not None:
             for tstep in range(0, max_time-1):
@@ -204,42 +207,36 @@ class CircuitModeller():
                     dxdt, current_copynumbers).flatten()
 
                 current_copynumbers[signal_idx] = signal[tstep]
-                current_copynumbers = zero_out_negs(current_copynumbers)
                 copynumbers[:, tstep +
                             1] = zero_out_negs(current_copynumbers)
         else:
             for tstep in range(0, max_time-1):
-                time_step = 1
                 dxdt = modelling_func(
-                    copynumbers=copynumbers[:, tstep]) * time_step
+                    copynumbers=copynumbers[:, tstep])
 
                 current_copynumbers = np.add(
                     dxdt, current_copynumbers).flatten()
 
-                if signal is not None:
-                    current_copynumbers[signal_idx] = signal[tstep]
-                current_copynumbers = zero_out_negs(current_copynumbers)
                 copynumbers[:, tstep +
-                            1] = current_copynumbers
+                            1] = zero_out_negs(current_copynumbers)
         return copynumbers
 
     # @time_it
     def simulate_signal(self, circuit: BaseCircuit, signal: Signal = None, save_numerical_vis_data: bool = False,
-                        use_old_steadystates: bool = False, use_solver: str = 'naive', ref_circuit: BaseCircuit = None):
-        time_step = 1
+                        use_old_steadystates: bool = False, use_solver: str = 'naive', ref_circuit: BaseCircuit = None,
+                        time_interval=1):
         if signal is None:
-            # circuit.signal.update_time_interval(time_step)
+            circuit.signal.update_time_interval(time_interval)
             signal = circuit.signal
-        max_time = int(signal.total_time / time_step)
 
         modeller_signal = Deterministic(
-            max_time=max_time, time_step=time_step
+            max_time=signal.total_time, time_interval=time_interval
         )
         if use_old_steadystates:
             steady_states = deepcopy(circuit.species.steady_state_copynums)
         else:
             steady_states = self.compute_steady_states(Deterministic(
-                max_time=50/time_step, time_step=time_step),
+                max_time=50/time_interval, time_interval=time_interval),
                 circuit=circuit,
                 solver_type=self.steady_state_solver,
                 exclude_species_by_idx=signal.identities_idx)
@@ -296,21 +293,26 @@ class CircuitModeller():
                 circuit.species.time_axis: slice(1, np.shape(new_copynumbers)[
                                                  circuit.species.species_axis])
             })]), axis=circuit.species.time_axis)
-        if ref_circuit is None:
+        if ref_circuit is None or ref_circuit == circuit:
             ref_circuit_signal = None
         else:
-            ref_circuit_result = ref_circuit.result_collector.get_result('signal')
+            ref_circuit_result = ref_circuit.result_collector.get_result(
+                'signal')
             if ref_circuit_result is None:
                 ref_circuit_signal = None
             else:
                 ref_circuit_signal = ref_circuit_result.data
+
+        t = np.arange(0, np.shape(new_copynumbers)[
+                      1]) * modeller_signal.time_interval
         circuit.result_collector.add_result(new_copynumbers,
                                             name='signal',
                                             category='time_series',
                                             vis_func=Deterministic().plot,
                                             save_numerical_vis_data=save_numerical_vis_data,
-                                            vis_kwargs={'legend': list(circuit.species.data.sample_names),
-                                                        'out_type': 'png'},
+                                            vis_kwargs={'t': t,
+                                                        'legend': list(circuit.species.data.sample_names),
+                                                        'out_type': 'svg'},
                                             analytics_kwargs={'signal_idx': signal.identities_idx,
                                                               'ref_circuit_signal': ref_circuit_signal})
         return circuit
@@ -336,11 +338,12 @@ class CircuitModeller():
                     'mutations', safe_dir_change=False)
             subcircuit = circuit.make_subsystem(name, mutation)
             self.result_writer.subdivide_writing(name, safe_dir_change=False)
-            self.apply_to_circuit(subcircuit, methods, circuit)
+            self.apply_to_circuit(subcircuit, methods, ref_circuit=circuit)
             self.result_writer.unsubdivide_last_dir()
         self.result_writer.unsubdivide()
 
-    def apply_to_circuit(self, circuit: BaseCircuit, methods: dict, ref_circuit: BaseCircuit):
+    def apply_to_circuit(self, circuit: BaseCircuit, _methods: dict, ref_circuit: BaseCircuit):
+        methods = deepcopy(_methods)
         for method, kwargs in methods.items():
             if hasattr(self, method):
                 if 'ref_circuit' in kwargs.keys():

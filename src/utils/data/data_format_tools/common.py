@@ -59,25 +59,26 @@ def load_json_as_df(json_pathname: str) -> pd.DataFrame:
     return pd.read_json(json_pathname)
 
 
-def load_multiple_as_list(inputs_list: list, load_func, **kwargs):
+def load_multiple_as_list(inputs_list: list, load_func, **kwargs) -> list:
     collection_list = []
+    assert type(inputs_list) == list, f'Input type of {inputs_list} should be list and not {type(inputs_list)}'
     for inp in inputs_list:
         collection_list.append(load_func(inp, **kwargs))
     return collection_list
 
 
-def load_csv_mult(file_paths):
+def load_csv_mult(file_paths) -> list:
     return load_multiple_as_list(file_paths, load_csv)
 
 
-def load_json_mult(file_paths: list, as_type=dict):
+def load_json_mult(file_paths: list, as_type=dict) -> list:
     if as_type == dict:
         return load_multiple_as_list(file_paths, load_json_as_dict)
     elif as_type == pd.DataFrame:
         return load_multiple_as_list(file_paths, load_json_as_df)
 
 
-def load_csv(file_path, **kwargs):
+def load_csv(file_path, **kwargs) -> pd.DataFrame:
     loaded = pd.read_csv(file_path, **kwargs)
     return loaded
 

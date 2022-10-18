@@ -36,8 +36,8 @@ class ResultCollector():
 
         self.results = {}
 
-    def add_result(self, data, category, vis_func, name, save_numerical_vis_data=False,
-                   vis_kwargs=None, analytics_kwargs=None, analytics=None):
+    def add_result(self, data, category: str, vis_func, name: str, save_numerical_vis_data: bool = False,
+                   vis_kwargs: dict = None, analytics_kwargs: dict = None, analytics=None) -> None:
         """ category: 'time_series', 'graph' """
         name = f'Result_{len(self.results.keys())}' if not name else name
         result_entry = Result(name, data, category, vis_func, save_numerical_vis_data,

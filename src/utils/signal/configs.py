@@ -2,7 +2,7 @@ import inspect
 from src.utils.signal.inputs import Signal, AdaptationTarget, OscillatingSignal
 
 
-def get_signal_type(signal_type) -> Signal:
+def get_signal_type(signal_type: str) -> Signal:
     if signal_type == 'abstract':
         return Signal
     if signal_type == 'adaptation':
@@ -12,7 +12,7 @@ def get_signal_type(signal_type) -> Signal:
     raise ValueError(f'Could not identify signal of type {signal_type}.')
 
 
-def parse_sig_args(kwargs):
+def parse_sig_args(kwargs: dict):
     SignalType = get_signal_type(kwargs.get("signal_type"))
     signal_init_args = inspect.getfullargspec(SignalType.__init__).args
     sig_kwargs = {}

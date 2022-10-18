@@ -1,8 +1,10 @@
 from functools import partial
+import logging
 import os
 
 from fire import Fire
 from scripts.common.circuit import construct_circuit_from_cfg
+from src.srv.io.manage.script_manager import script_preamble
 
 from src.utils.results.experiments import Experiment, Protocol
 from src.utils.results.result_writer import ResultWriter
@@ -16,8 +18,7 @@ from src.utils.circuit.agnostic_circuits.circuit_manager import CircuitModeller
 
 def main(config=None, data_writer=None):
     # Set configs
-    if config is None:
-        config = os.path.join(
+    config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
             # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_test.json")
             # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_1.json")
             # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_2.json")
@@ -26,7 +27,7 @@ def main(config=None, data_writer=None):
             # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_1_highmag.json")
             # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_2_highmag.json")
             # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_10_highmag.json")
-            "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_20_highmag.json")
+            "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_20_highmag.json"))
     config_file = load_json_as_dict(config)
 
     # Start_experiment
@@ -68,7 +69,8 @@ def main(config=None, data_writer=None):
             # Mutate circuit
             Protocol(
                 partial(Evolver(data_writer=data_writer, sequence_type=config_file.get('system_type')).mutate,
-                        write_to_subsystem=True),
+                        write_to_subsystem=True,
+                        algorithm=config_file.get('mutations', {}).get('algorithm', 'random')),
                 req_input=True,
                 req_output=True,
                 name="generate_mutations"
@@ -79,7 +81,8 @@ def main(config=None, data_writer=None):
                         write_to_subsystem=True,
                         methods={
                     "init_circuit": {},
-                    "simulate_signal": {'save_numerical_vis_data': True, 'ref_circuit': None},
+                    "simulate_signal": {'save_numerical_vis_data': True, 'ref_circuit': None, 
+                    'time_interval': config['signal']['time_interval']},
                     "write_results": {}
                 }
                 ),

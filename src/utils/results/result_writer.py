@@ -18,11 +18,11 @@ class ResultWriter(DataWriter):
         self.report = {}
 
     def make_metric_visualisation(self, result, keys, source: dict, new_report: bool):
-        for plotable in keys:
-            if plotable in source.keys():
-                out_name = f'{result.name}_{plotable}'
+        for plottable in keys:
+            if plottable in source.keys():
+                out_name = f'{result.name}_{plottable}'
                 result.vis_kwargs.update({
-                    'data': source.get(plotable),
+                    'data': source.get(plottable),
                     'new_vis': new_report
                 })
                 self.output(out_name=out_name,
@@ -48,7 +48,7 @@ class ResultWriter(DataWriter):
 
         return report
 
-    def write_report(self, writeables: list, analytics: dict, new_report: bool, out_name: str='report', out_type: str='json'):
+    def write_report(self, writeables: list, analytics: dict, new_report: bool, out_name: str = 'report', out_type: str = 'json'):
         report = self.make_report(writeables, analytics)
 
         if new_report:
@@ -63,7 +63,8 @@ class ResultWriter(DataWriter):
     def write_analytics(self, result: Result, new_report=False):
         analytics = result.analytics
         writeables = Timeseries(data=None).get_analytics_types()
-        self.write_report(writeables, analytics, new_report, out_name=f'report_{result.name}')
+        self.write_report(writeables, analytics, new_report,
+                          out_name=f'report_{result.name}')
 
     def write_results(self, results: dict, new_report=False, no_visualisations=False,
                       only_numerical=False, no_analytics=False, no_numerical=False):
@@ -79,9 +80,10 @@ class ResultWriter(DataWriter):
                 if not no_visualisations:
                     self.visualise(out_name=result.name,
                                    writer=result.vis_func, vis_kwargs=result.vis_kwargs)
-                    plottables = ['first_derivative']
-                    self.make_metric_visualisation(
-                        result, plottables, result.analytics, new_report)
+                    if result.analytics is not None:
+                        plottables = ['first_derivative']
+                        self.make_metric_visualisation(
+                            result, plottables, result.analytics, new_report)
                 if not no_analytics:
                     self.write_analytics(result, new_report=new_report)
 

@@ -14,7 +14,10 @@ class Signal():
         self.total_time = total_time
         self.magnitude = magnitude
         self.time_interval = time_interval
-        self.time_steps = total_time / time_interval
+        self.time_steps = self.get_time_steps()
+
+    def get_time_steps(self):
+        return self.total_time / self.time_interval
 
     @property
     def abstract_signal(self):
@@ -31,7 +34,7 @@ class Signal():
 
     def update_time_interval(self, new_time_interval):
         self.time_interval = new_time_interval
-        self.time_steps = self.total_time / new_time_interval
+        self.time_steps = self.get_time_steps()
 
     @property
     def real_signal(self) -> np.ndarray:

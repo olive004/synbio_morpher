@@ -382,7 +382,7 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                     logging.warning(f'Unknown plot type given "{plot_type}"')
 
                 if not data.empty:
-                    data_writer.output(out_type='png', out_name=out_name,
+                    data_writer.output(out_type='svg', out_name=out_name,
                                        write_func=write_func,
                                        **merge_dicts({'x': col_x, 'y': col_y, 'data': data,
                                                       'hue': hue},
@@ -446,12 +446,14 @@ class VisODE():
         for t, l in zip(leg.texts, new_labels):
             t.set_text(l)
 
-    def plot(self, data, y=None, new_vis=False, out_path='test_plot', out_type='png',
+    def plot(self, data, y=None, new_vis=False, t=None, out_path='test_plot', out_type='png',
              **plot_kwrgs) -> None:
         from matplotlib import pyplot as plt
         plt.figure()
         if y is not None:
             plt.plot(data, y)
+        elif t is not None:
+            plt.plot(t, data)
         else:
             plt.plot(data)
         self.add_kwrgs(plt, **plot_kwrgs)
@@ -474,6 +476,7 @@ class VisODE():
             logging.warn(
                 'Make sure a column is specified for visualising with seaborn')
         f, ax = plt.subplots(figsize=figsize)
+
         plot_func(
             data=data,
             x=x,
@@ -492,10 +495,6 @@ class VisODE():
         import seaborn as sns
         plot_kwargs.update({'errwidth': 1})
 
-        if not plot_kwargs.get('hue') in data.columns:
-            logging.info(data)
-            logging.info(x)
-            logging.info(y)
         if plot_kwargs.get('hue'):
             plot_kwargs.update({
                 # 'palette': sns.color_palette("husl", len(data[plot_kwargs.get('hue')].unique()))

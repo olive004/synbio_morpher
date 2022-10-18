@@ -1,0 +1,11 @@
+argparse
+biopython
+fire
+jax
+matplotlib==3.6.0
+networkx
+numba
+numpy
+pandas
+pyvis
+seaborn

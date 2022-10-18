@@ -53,7 +53,7 @@ def fast_matmul(A, B, C):
 
 # @jit(nopython=True)
 def dxdt_RNA(t, copynumbers, interactions, creation_rates, degradation_rates,
-             num_samples, time_step, signal=None, signal_idx=None):
+             num_samples, time_interval, signal=None, signal_idx=None):
     """ dx_dt = a - x * I * k * x' - x * ∂   for x=[A, B] 
     Data in format [sample, timestep] or [sample,]"""
     if signal_idx is not None:
@@ -66,13 +66,25 @@ def dxdt_RNA(t, copynumbers, interactions, creation_rates, degradation_rates,
     dxdt = creation_rates.flatten() - coupling.flatten() - \
         copynumbers.flatten() * degradation_rates.flatten()
 
-    return np.multiply(dxdt, time_step)
+    return np.multiply(dxdt, time_interval)
 
 
-class Deterministic():
-    def __init__(self, max_time=0, time_step=1) -> None:
-        self.max_time = max_time
-        self.time_step = time_step
+class Modeller():
+    """ Common modeller class. For example deterministic vs. 
+    stochastic modelling share some things """
+    def __init__(self, max_time=0, time_interval=1) -> None:
+        """ Time step is the dt """
+        self.max_time = int(max_time / time_interval)
+        self.original_max_time = max_time
+        self.time_interval = time_interval
+
+    def dxdt_RNA(self):
+        pass
+
+
+class Deterministic(Modeller):
+    def __init__(self, max_time=0, time_interval=1) -> None:
+        super().__init__(max_time, time_interval)
 
     def dxdt_RNA(self, t, copynumbers, full_interactions, creation_rates, degradation_rates,
                  signal=None, signal_idx=None, identity_matrix=None):
@@ -101,12 +113,12 @@ class Deterministic():
         dxdt = creation_rates - coupling.flatten() - \
             copynumbers.flatten() * degradation_rates
 
-        return dxdt
-        # return np.multiply(dxdt, self.time_step)
+        # return dxdt
+        return np.multiply(dxdt, self.time_interval)
 
-    def plot(self, data, y=None, out_path='test_plot', new_vis=False, out_type='png',
+    def plot(self, data, y=None, out_path='test_plot', new_vis=False, out_type='svg',
              **plot_kwrgs):
         from src.utils.results.visualisation import VisODE
         data = data.T if len(plot_kwrgs.get('legend', [])
                              ) == np.shape(data)[0] else data
-        VisODE().plot(data, y, new_vis, out_path=out_path, out_type=out_type, **plot_kwrgs)
+        VisODE().plot(data, y, new_vis=new_vis, out_path=out_path, out_type=out_type, **plot_kwrgs)
