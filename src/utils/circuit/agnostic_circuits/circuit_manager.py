@@ -12,7 +12,7 @@ from src.utils.misc.type_handling import flatten_nested_dict
 from src.utils.signal.inputs import Signal
 from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS, InteractionSimulator
 from src.utils.circuit.agnostic_circuits.base_circuit import BaseCircuit
-from src.utils.modelling.modelling import Deterministic, Modeller
+from src.utils.modelling.deterministic import Deterministic, Modeller
 
 
 class SystemManager():
