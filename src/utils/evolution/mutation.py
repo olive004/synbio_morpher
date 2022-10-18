@@ -147,25 +147,11 @@ class Evolver():
             positions = random.sample(range(len(sequence)), num_mutations)
             return positions
 
-        def basic_mutator(species: BaseSpecies, position_generator,
-                          mutation_nums_within_sequence,
-                          mutation_nums_per_position: list,
-                          sample_idx: int = None,
-                          mutation_idx: int = None,
-                          positions: list = None) -> Mutations:
-            
-            return mutations
-
-        def rand_mutator(species: BaseSpecies, sample_mutator_func, algorithm):
+        def rand_mutator(species: BaseSpecies, algorithm: str):
             for sample_idx, sample in enumerate(species.data.sample_names):
                 species.mutations[sample] = {}
                 for mutation_nums_within_sequence in species.mutation_nums_within_sequence:
                     for mutation_idx in range(species.mutation_counts[sample_idx]):
-                        # mutation = sample_mutator_func(
-                        #     species=species, sample_idx=sample_idx, mutation_idx=mutation_idx,
-                        #     mutation_nums_within_sequence=mutation_nums_within_sequence,
-                        #     mutation_nums_per_position=species.mutation_nums_per_position,
-                        #     algorithm=algorithm)
 
                         sequence = species.data.get_data_by_idx(sample_idx)
                         positions = positions if positions is not None else mutation_sampler(
@@ -176,7 +162,7 @@ class Evolver():
                         mutation = self.make_mutations(
                             species=species, positions=positions, sample_idx=sample_idx,
                             mutation_idx=mutation_idx, sequence=sequence,
-                            mutation_types=mutation_types)
+                            mutation_types=mutation_types, algorithm=algorithm)
 
                         species.mutations[sample][mutation.mutation_name] = mutation
             return species
@@ -200,9 +186,7 @@ class Evolver():
             return species
 
         if algorithm == "random":
-            return partial(rand_mutator, algorithm=algorithm,
-                           sample_mutator_func=partial(basic_mutator,
-                                                       position_generator=mutation_sampler))
+            return partial(rand_mutator, algorithm=algorithm)
         elif algorithm == "all":
             return partial(all_mutator, algorithm=algorithm)
         else:
