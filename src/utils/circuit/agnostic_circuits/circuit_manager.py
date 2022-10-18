@@ -76,7 +76,7 @@ class CircuitModeller():
 
     # @time_it
     def compute_interaction_strengths(self, circuit: BaseCircuit):
-        if not circuit.species.loaded_interactions:
+        if not circuit.species.are_interactions_loaded:
             interactions = self.run_interaction_simulator(circuit,
                                                           circuit.species.data.data)
             circuit.species.eqconstants = interactions.eqconstants
