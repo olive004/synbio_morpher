@@ -70,7 +70,7 @@ class Deterministic(Modeller):
             copynumbers.flatten() * degradation_rates
 
         # return dxdt
-        return np.multiply(dxdt, self.time_interval)
+        return np.multiply(dxdt, self.time_interval) 
 
     def plot(self, data, y=None, out_path='test_plot', new_vis=False, out_type='svg',
              **plot_kwrgs):
