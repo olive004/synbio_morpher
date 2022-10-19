@@ -9,10 +9,12 @@ from src.utils.results.result_writer import ResultWriter
 
 from src.utils.misc.numerical import make_dynamic_indexer, np_delete_axes, zero_out_negs
 from src.utils.misc.type_handling import flatten_nested_dict
+from src.utils.results.visualisation import VisODE
 from src.utils.signal.inputs import Signal
 from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS, InteractionSimulator
 from src.utils.circuit.agnostic_circuits.base_circuit import BaseCircuit
-from src.utils.modelling.deterministic import Deterministic, Modeller
+from src.utils.modelling.deterministic import Deterministic
+from src.utils.modelling.base import Modeller
 
 
 class SystemManager():
@@ -117,7 +119,7 @@ class CircuitModeller():
         circuit.result_collector.add_result(circuit.species.copynumbers,
                                             name='steady_states',
                                             category='time_series',
-                                            vis_func=modeller_steady_state.plot,
+                                            vis_func=VisODE.plot,
                                             vis_kwargs={'t': np.arange(0, np.shape(circuit.species.copynumbers)[1]) *
                                                         modeller_steady_state.time_interval,
                                                         'legend': list(circuit.species.data.sample_names),
@@ -223,7 +225,7 @@ class CircuitModeller():
 
     # @time_it
     def simulate_signal(self, circuit: BaseCircuit, signal: Signal = None, save_numerical_vis_data: bool = False,
-                        use_old_steadystates: bool = False, use_solver: str = 'naive', ref_circuit: BaseCircuit = None,
+                        use_solver: str = 'naive', ref_circuit: BaseCircuit = None,
                         time_interval=1):
         if signal is None:
             circuit.signal.update_time_interval(time_interval)
@@ -232,7 +234,7 @@ class CircuitModeller():
         modeller_signal = Deterministic(
             max_time=signal.total_time, time_interval=time_interval
         )
-        if use_old_steadystates:
+        if circuit.result_collector.get_result('steady_states'):
             steady_states = deepcopy(circuit.species.steady_state_copynums)
         else:
             steady_states = self.compute_steady_states(Deterministic(
@@ -308,7 +310,7 @@ class CircuitModeller():
         circuit.result_collector.add_result(new_copynumbers,
                                             name='signal',
                                             category='time_series',
-                                            vis_func=Deterministic().plot,
+                                            vis_func=VisODE.plot,
                                             save_numerical_vis_data=save_numerical_vis_data,
                                             vis_kwargs={'t': t,
                                                         'legend': list(circuit.species.data.sample_names),
