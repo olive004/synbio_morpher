@@ -4,7 +4,8 @@
 	"name": "genecircuitglitchprediction",
 	"build": {
 		"dockerfile": "Dockerfile",
-		"context": ".."
+		"context": "..",
+		"target": "development"
 	},
 		
 	// Configure tool-specific properties.
@@ -16,6 +17,9 @@
 				"terminal.integrated.profiles.linux": {
 					"bash": {
 						"path": "/bin/bash"
+					},
+					"sh": {
+						"path": "/bin/sh"
 					}
 				},
 				"python.defaultInterpreterPath": "/usr/local/bin/python",
