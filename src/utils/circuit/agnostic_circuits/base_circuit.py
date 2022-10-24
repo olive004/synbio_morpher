@@ -51,25 +51,6 @@ class BaseSpecies():
         self.degradation_rates = self.init_matrix(ndims=1, init_type="uniform")
         self.creation_rates = self.init_matrix(ndims=1, init_type="uniform")
 
-    def make_interactions(self, config):
-        cfg_interactions = config.get("interactions")
-        if cfg_interactions:
-            if cfg_interactions.get("interactions_path", None):
-                matrix, interaction_units = InteractionMatrix().load(
-                    cfg_interactions.get("interactions_path"))
-                self.are_interactions_loaded = True
-            elif cfg_interactions.get("interactions_matrix", None) is not None:
-                matrix, interaction_units = InteractionMatrix(
-                    matrix=cfg_interactions.get("interactions_matrix")).matrix, \
-                    cfg_interactions.get("interactions_units", '')
-                self.are_interactions_loaded = True
-            else:
-                logging.warning(f'No interactions could be loaded.')
-        else:
-            matrix, interaction_units = self.init_matrix(
-                ndims=2, init_type="zeros"), ''
-        return (matrix, interaction_units)
-
     def init_state(self):
         self.copynumbers = None
         self.current_copynumbers = None
@@ -109,6 +90,25 @@ class BaseSpecies():
         self.mutation_counts = config.get(
             "mutations", {}).get("mutation_counts")
         self.process_mutations()
+
+    def make_interactions(self, config):
+        cfg_interactions = config.get("interactions")
+        if cfg_interactions:
+            if cfg_interactions.get("interactions_path", None):
+                matrix, interaction_units = InteractionMatrix().load(
+                    cfg_interactions.get("interactions_path"))
+                self.are_interactions_loaded = True
+            elif cfg_interactions.get("interactions_matrix", None) is not None:
+                matrix, interaction_units = InteractionMatrix(
+                    matrix=cfg_interactions.get("interactions_matrix")).matrix, \
+                    cfg_interactions.get("interactions_units", '')
+                self.are_interactions_loaded = True
+            else:
+                logging.warning(f'No interactions could be loaded.')
+        else:
+            matrix, interaction_units = self.init_matrix(
+                ndims=2, init_type="zeros"), ''
+        return (matrix, interaction_units)
 
     def process_mutations(self):
         self.mutation_counts = extend_int_to_list(
