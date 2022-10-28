@@ -13,7 +13,7 @@ from src.utils.results.visualisation import VisODE
 from src.utils.signal.inputs import Signal
 from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS, InteractionSimulator
 from src.utils.circuit.agnostic_circuits.base_circuit import BaseCircuit
-from src.utils.modelling.deterministic import Deterministic
+from src.utils.modelling.deterministic import Deterministic, simulate_signal_scan
 from src.utils.modelling.base import Modeller
 
 
@@ -253,6 +253,7 @@ class CircuitModeller():
             circuit.species.species_axis: np.shape(steady_states)[circuit.species.species_axis],
             circuit.species.time_axis: 1
         }))
+        
         if use_solver == 'naive':
             new_copynumbers = self.model_circuit(modeller_signal,
                                                  steady_states,
@@ -288,6 +289,8 @@ class CircuitModeller():
                                time_span - np.shape(steady_state_result.y)[1])])
                 new_copynumbers[:,
                                 time_start:time_end] = expanded_steady_states
+        elif use_solver == 'jax':
+            simulate_signal_scan(copynumbers=steady_states, t1=)
 
         circuit.species.copynumbers = np.concatenate(
             (circuit.species.copynumbers, new_copynumbers[make_dynamic_indexer({

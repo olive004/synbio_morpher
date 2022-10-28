@@ -1,5 +1,7 @@
 import logging
 import numpy as np
+import jax
+import jax.numpy as jnp
 from src.utils.modelling.base import Modeller
 
 
@@ -20,7 +22,6 @@ class Deterministic(Modeller):
         ∂: the 'destruction' rate, or for RNA samples, the (uncoupled) degradation rate
         Data in format [sample, timestep] or [sample,]"""
 
-
         if signal_idx is not None:
             copynumbers[signal_idx] = signal
 
@@ -29,4 +30,30 @@ class Deterministic(Modeller):
         dxdt = creation_rates - coupling.flatten() - \
             copynumbers.flatten() * degradation_rates
 
-        return np.multiply(dxdt, self.time_interval) 
+        return np.multiply(dxdt, self.time_interval)
+
+
+    def dxdt_RNA_jnp(self, copynumbers, t, full_interactions, creation_rates, degradation_rates,
+                identity_matrix, signal=None, signal_idx=None):
+
+        if signal_idx is not None:
+            copynumbers = copynumbers.at[signal_idx].set(signal)
+
+        xI = copynumbers * identity_matrix
+        coupling = jnp.matmul(jnp.matmul(xI, full_interactions), copynumbers.T)
+
+        dxdt = creation_rates - coupling - \
+            copynumbers * degradation_rates
+        new_copynumbers = copynumbers + dxdt
+
+        return new_copynumbers
+
+
+def simulate_signal_scan(copynumbers, t1, full_interactions, creation_rates, degradation_rates,
+                        identity_matrix, signal, signal_idx, one_step_func):
+    def to_scan(carry, thingy):
+        t, s = thingy
+        return one_step_func(carry, t, full_interactions, creation_rates, degradation_rates,
+                        identity_matrix, s, signal_idx), carry
+
+    return jax.lax.scan(to_scan, copynumbers, (t1, signal))
