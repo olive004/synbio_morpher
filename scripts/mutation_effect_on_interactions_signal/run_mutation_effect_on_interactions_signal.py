@@ -19,15 +19,15 @@ from src.utils.circuit.agnostic_circuits.circuit_manager import CircuitModeller
 def main(config=None, data_writer=None):
     # Set configs
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
-            # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_test.json")
-            # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_1.json")
-            # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_2.json")
-            # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_10.json")
-            # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_20.json")
-            # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_1_highmag.json")
-            # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_2_highmag.json")
-            # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_10_highmag.json")
-            "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_20_highmag.json"))
+        # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_test.json")
+        # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_1.json")
+        # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_2.json")
+        # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_10.json")
+        # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_20.json")
+        # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_1_highmag.json")
+        # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_2_highmag.json")
+        # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_10_highmag.json")
+        "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_20_highmag.json"))
     config_file = load_json_as_dict(config)
 
     # Start_experiment
@@ -81,8 +81,9 @@ def main(config=None, data_writer=None):
                         write_to_subsystem=True,
                         methods={
                     "init_circuit": {},
-                    "simulate_signal": {'save_numerical_vis_data': True, 'ref_circuit': None, 
-                    'time_interval': config['signal']['time_interval']},
+                    "simulate_signal": {'save_numerical_vis_data': True, 'ref_circuit': None,
+                                        'time_interval': config['signal']['time_interval'],
+                                        'use_solver': config['signal'].get('solver', 'naive')},
                     "write_results": {}
                 }
                 ),

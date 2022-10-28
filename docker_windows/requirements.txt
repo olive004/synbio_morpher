@@ -2,6 +2,7 @@ argparse
 biopython
 fire
 jax
+jaxlib
 matplotlib==3.6.0
 networkx
 numba

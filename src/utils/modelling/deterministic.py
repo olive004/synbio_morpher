@@ -49,11 +49,11 @@ class Deterministic(Modeller):
         return new_copynumbers
 
 
-def simulate_signal_scan(copynumbers, t1, full_interactions, creation_rates, degradation_rates,
+def simulate_signal_scan(copynumbers, time, full_interactions, creation_rates, degradation_rates,
                         identity_matrix, signal, signal_idx, one_step_func):
     def to_scan(carry, thingy):
         t, s = thingy
         return one_step_func(carry, t, full_interactions, creation_rates, degradation_rates,
                         identity_matrix, s, signal_idx), carry
 
-    return jax.lax.scan(to_scan, copynumbers, (t1, signal))
+    return jax.lax.scan(to_scan, copynumbers, (time, signal))

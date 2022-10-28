@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import Union
+from typing import List, Union
 from functools import partial
 import logging
 import numpy as np
@@ -38,7 +38,7 @@ class CircuitModeller():
         circuit = self.find_steady_states(circuit)
         return circuit
 
-    def make_modelling_func(self, modeller: Modeller, circuit: BaseCircuit,
+    def make_modelling_func(self, modelling_func, circuit: BaseCircuit,
                             exclude_species_by_idx: Union[int, list] = None,
                             fixed_value: Timeseries(None).num_dtype = None,
                             fixed_value_idx: int = None):
@@ -62,7 +62,7 @@ class CircuitModeller():
                 degradation_rates = np.delete(
                     degradation_rates, exclude, axis=circuit.species.species_axis)
 
-        return partial(modeller.dxdt_RNA, full_interactions=interaction_binding_rates,
+        return partial(modelling_func, full_interactions=interaction_binding_rates,
                        creation_rates=creation_rates.flatten(),
                        degradation_rates=degradation_rates.flatten(),
                        signal=fixed_value,
@@ -119,7 +119,7 @@ class CircuitModeller():
         circuit.result_collector.add_result(circuit.species.copynumbers,
                                             name='steady_states',
                                             category='time_series',
-                                            vis_func=VisODE.plot,
+                                            vis_func=VisODE().plot,
                                             vis_kwargs={'t': np.arange(0, np.shape(circuit.species.copynumbers)[1]) *
                                                         modeller_steady_state.time_interval,
                                                         'legend': list(circuit.species.data.sample_names),
@@ -156,7 +156,7 @@ class CircuitModeller():
                 logging.warning(f'Interactions in units of {circuit.species.interaction_units} may not be suitable for '
                                 'solving with IVP')
             y0 = copynumbers[idxs]
-            steady_state_result = integrate.solve_ivp(self.make_modelling_func(modeller, circuit,
+            steady_state_result = integrate.solve_ivp(self.make_modelling_func(modeller.dxdt_RNA, circuit,
                                                                                exclude_species_by_idx),
                                                       (0, modeller.max_time),
                                                       y0=y0)
@@ -175,7 +175,7 @@ class CircuitModeller():
             f'initial copynumbers instead of {np.shape(init_copynumbers)}'
 
         modelling_func = partial(self.make_modelling_func(
-            modeller, circuit, exclude_species_by_idx), t=None)
+            modeller.dxdt_RNA, circuit, exclude_species_by_idx), t=None)
         copynumbers = np.concatenate((init_copynumbers, np.zeros(
             (np.shape(init_copynumbers)[circuit.species.species_axis], modeller.max_time-1))
         ), axis=1)
@@ -196,7 +196,7 @@ class CircuitModeller():
     def iterate_modelling_func(self, copynumbers, init_copynumbers,
                                modelling_func, max_time,
                                signal=None, signal_idx: int = None):
-        """ Loop the modelling function. 
+        """ Loop the modelling function.
         IMPORTANT! Modeller already includes the dt, or the length of the time step taken. """
 
         current_copynumbers = init_copynumbers.flatten()
@@ -253,7 +253,7 @@ class CircuitModeller():
             circuit.species.species_axis: np.shape(steady_states)[circuit.species.species_axis],
             circuit.species.time_axis: 1
         }))
-        
+
         if use_solver == 'naive':
             new_copynumbers = self.model_circuit(modeller_signal,
                                                  steady_states,
@@ -273,7 +273,7 @@ class CircuitModeller():
                 y0 = steady_states.flatten()
                 steady_state_result = integrate.solve_ivp(
                     self.make_modelling_func(
-                        modeller=modeller_signal,
+                        modelling_func=modeller_signal.dxdt_RNA,
                         circuit=circuit,
                         fixed_value=signal_component,
                         fixed_value_idx=circuit.species.identities.get('input')),
@@ -290,7 +290,17 @@ class CircuitModeller():
                 new_copynumbers[:,
                                 time_start:time_end] = expanded_steady_states
         elif use_solver == 'jax':
-            simulate_signal_scan(copynumbers=steady_states, t1=)
+            new_copynumbers = simulate_signal_scan(
+                copynumbers=steady_states.flatten(), time=np.arange(modeller_signal.max_time),
+                full_interactions=circuit.species.interactions,
+                creation_rates=circuit.species.creation_rates.flatten(),
+                degradation_rates=circuit.species.degradation_rates.flatten(),
+                identity_matrix=np.identity(
+                    circuit.species.size),
+                signal=signal.real_signal, signal_idx=circuit.species.identities.get(
+                    'input'),
+                one_step_func=modeller_signal.dxdt_RNA_jnp)
+            new_copynumbers = np.array(new_copynumbers[1]).T
 
         circuit.species.copynumbers = np.concatenate(
             (circuit.species.copynumbers, new_copynumbers[make_dynamic_indexer({
@@ -309,11 +319,11 @@ class CircuitModeller():
                 ref_circuit_signal = ref_circuit_result.data
 
         t = np.arange(0, np.shape(new_copynumbers)[
-                      1]) * modeller_signal.time_interval
+            1]) * modeller_signal.time_interval
         circuit.result_collector.add_result(new_copynumbers,
                                             name='signal',
                                             category='time_series',
-                                            vis_func=VisODE.plot,
+                                            vis_func=VisODE().plot,
                                             save_numerical_vis_data=save_numerical_vis_data,
                                             vis_kwargs={'t': t,
                                                         'legend': list(circuit.species.data.sample_names),
@@ -321,6 +331,27 @@ class CircuitModeller():
                                             analytics_kwargs={'signal_idx': signal.identities_idx,
                                                               'ref_circuit_signal': ref_circuit_signal})
         return circuit
+
+    def simulate_signal_batch(self, circuits: List[BaseCircuit], signal: Signal = None, save_numerical_vis_data: bool = False,
+                        use_solver: str = 'naive', ref_circuit: BaseCircuit = None,
+                        time_interval=1, batch=True):
+        if signal is None:
+            circuit.signal.update_time_interval(time_interval)
+            signal = circuit.signal
+        modeller_signal = Deterministic(
+            max_time=signal.total_time, time_interval=time_interval
+        )
+        all_copynumbers = simulate_signal_scan(
+                copynumbers=steady_states.flatten(), time=np.arange(modeller_signal.max_time),
+                full_interactions=circuit.species.interactions,
+                creation_rates=circuit.species.creation_rates.flatten(),
+                degradation_rates=circuit.species.degradation_rates.flatten(),
+                identity_matrix=np.identity(
+                    circuit.species.size),
+                signal=signal.real_signal, signal_idx=circuit.species.identities.get(
+                    'input'),
+                one_step_func=modeller_signal.dxdt_RNA_jnp)
+            new_copynumbers = np.array(new_copynumbers[1]).T 
 
     # @time_it
     def wrap_mutations(self, circuit: BaseCircuit, methods: dict, include_normal_run=True,
@@ -341,11 +372,30 @@ class CircuitModeller():
                     circuit, methods, ref_circuit=circuit)
                 self.result_writer.subdivide_writing(
                     'mutations', safe_dir_change=False)
-            subcircuit = circuit.make_subsystem(name, mutation)
+            subcircuit = circuit.make_subcircuit(name, mutation)
             self.result_writer.subdivide_writing(name, safe_dir_change=False)
             self.apply_to_circuit(subcircuit, methods, ref_circuit=circuit)
             self.result_writer.unsubdivide_last_dir()
         self.result_writer.unsubdivide()
+
+    def batch_mutations(self, circuit: BaseCircuit, methods: dict, include_normal_run=True,
+                       write_to_subsystem=False):
+        if write_to_subsystem:
+            self.result_writer.subdivide_writing(circuit.name)
+
+        mutation_dict = flatten_nested_dict(circuit.species.mutations.items())
+        subcircuits = [(name, circuit.make_subcircuit(name, mutation)) for name, mutation in mutation_dict.items()]
+        if include_normal_run:
+            subcircuits.insert(0, circuit)
+
+        for method, kwargs in methods.items():
+            if kwargs.get('batch') == True:
+                pass
+            else:
+                for name, subcircuit in subcircuits:
+                    self.result_writer.subdivide_writing(name, safe_dir_change=False)
+                    self.apply_to_circuit(subcircuit, {method, kwargs}, ref_circuit=circuit)
+                    self.result_writer.unsubdivide_last_dir()
 
     def apply_to_circuit(self, circuit: BaseCircuit, _methods: dict, ref_circuit: BaseCircuit):
         methods = deepcopy(_methods)

@@ -237,17 +237,17 @@ class BaseCircuit():
         self.species.reset_to_initial_state()
         self.result_collector.reset()
 
-    def make_subsystem(self, mutation_name: str, mutation=None):
-        subsystem = deepcopy(self)
-        subsystem.reset_to_initial_state()
-        subsystem.species.are_interactions_loaded = False
+    def make_subcircuit(self, mutation_name: str, mutation=None):
+        subcircuit = deepcopy(self)
+        subcircuit.reset_to_initial_state()
+        subcircuit.species.are_interactions_loaded = False
 
         if mutation is None:
             mutation = self.species.mutations.get(mutation_name)
 
-        subsystem.species.mutate(mutation)
+        subcircuit.species.mutate(mutation)
 
-        return subsystem
+        return subcircuit
 
     @property
     def graph(self):
