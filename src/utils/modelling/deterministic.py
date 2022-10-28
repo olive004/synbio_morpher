@@ -55,8 +55,4 @@ def simulate_signal_scan(copynumbers, time, full_interactions, creation_rates, d
         t, s = thingy
         return one_step_func(carry, t, full_interactions, creation_rates, degradation_rates,
                         identity_matrix, s, signal_idx), carry
-
-    logging.info(copynumbers)
-    logging.info(time)
-    logging.info(signal)
     return jax.lax.scan(to_scan, copynumbers, (time, signal))
