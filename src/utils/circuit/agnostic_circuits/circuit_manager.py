@@ -1,8 +1,9 @@
 from copy import deepcopy
-from typing import List, Union
+from typing import List, Tuple, Union
 from functools import partial
 import logging
 import numpy as np
+import jax
 from scipy import integrate
 from src.utils.results.analytics.timeseries import Timeseries
 from src.utils.results.result_writer import ResultWriter
@@ -313,10 +314,7 @@ class CircuitModeller():
         else:
             ref_circuit_result = ref_circuit.result_collector.get_result(
                 'signal')
-            if ref_circuit_result is None:
-                ref_circuit_signal = None
-            else:
-                ref_circuit_signal = ref_circuit_result.data
+            ref_circuit_signal = None if ref_circuit_result is None else ref_circuit_result.data
 
         t = np.arange(0, np.shape(new_copynumbers)[
             1]) * modeller_signal.time_interval
@@ -332,26 +330,67 @@ class CircuitModeller():
                                                               'ref_circuit_signal': ref_circuit_signal})
         return circuit
 
-    def simulate_signal_batch(self, circuits: List[BaseCircuit], signal: Signal = None, save_numerical_vis_data: bool = False,
-                        use_solver: str = 'naive', ref_circuit: BaseCircuit = None,
-                        time_interval=1, batch=True):
-        if signal is None:
-            circuit.signal.update_time_interval(time_interval)
-            signal = circuit.signal
+    def simulate_signal_batch(self, circuits: Tuple[str, List[BaseCircuit]], circuit_idx: int = 0,
+                              save_numerical_vis_data: bool = False,
+                              ref_circuit: BaseCircuit = None,
+                              time_interval=1, batch=True):
+        names = list([n for n, c in circuits])
+        circuits = list([c for n, c in circuits])
+        if circuit_idx < len(circuits):
+            signal = circuits[circuit_idx].signal
+            signal.update_time_interval(time_interval)
+        else:
+            raise ValueError(
+                f'The chosen circuit index {circuit_idx} exceeds the circuit list (len {len(circuits)}')
+
         modeller_signal = Deterministic(
             max_time=signal.total_time, time_interval=time_interval
         )
-        all_copynumbers = simulate_signal_scan(
-                copynumbers=steady_states.flatten(), time=np.arange(modeller_signal.max_time),
-                full_interactions=circuit.species.interactions,
-                creation_rates=circuit.species.creation_rates.flatten(),
-                degradation_rates=circuit.species.degradation_rates.flatten(),
-                identity_matrix=np.identity(
-                    circuit.species.size),
-                signal=signal.real_signal, signal_idx=circuit.species.identities.get(
-                    'input'),
-                one_step_func=modeller_signal.dxdt_RNA_jnp)
-            new_copynumbers = np.array(new_copynumbers[1]).T 
+
+        # Batch
+        t = np.arange(modeller_signal.max_time)
+        b_starting_copynumbers = np.array(
+            [c.species.steady_state_copynums.flatten() for c in circuits])
+        b_interactions = np.array([c.species.interactions for c in circuits])
+        b_creation_rates = np.array(
+            [c.species.creation_rates.flatten() for c in circuits])
+        b_degradation_rates = np.array(
+            [c.species.degradation_rates.flatten() for c in circuits])
+
+        logging.info(b_starting_copynumbers)
+        logging.info(np.shape(b_starting_copynumbers))
+        b_new_copynumbers = jax.vmap(partial(simulate_signal_scan,
+            time=t,
+            full_interactions=b_interactions,
+            creation_rates=b_creation_rates,
+            degradation_rates=b_degradation_rates,
+            identity_matrix=np.identity(
+                circuits[circuit_idx].species.size),
+            signal=signal.real_signal, signal_idx=circuits[circuit_idx].species.identities.get(
+                'input'),
+            one_step_func=modeller_signal.dxdt_RNA_jnp))(copynumbers=b_starting_copynumbers)
+        b_new_copynumbers = np.array(b_new_copynumbers[1]).T
+
+        # Apply to all circuits
+        if ref_circuit is None or ref_circuit == circuit:
+            ref_circuit_signal = None
+        else:
+            ref_circuit_result = ref_circuit.result_collector.get_result(
+                'signal')
+            ref_circuit_signal = None if ref_circuit_result is None else ref_circuit_result.data
+        for i, circuit in enumerate(circuits):
+            circuits[i].result_collector.add_result(b_new_copynumbers[i],
+                                                name='signal',
+                                                category='time_series',
+                                                vis_func=VisODE().plot,
+                                                save_numerical_vis_data=save_numerical_vis_data,
+                                                vis_kwargs={'t': t,
+                                                            'legend': list(circuit.species.data.sample_names),
+                                                            'out_type': 'svg'},
+                                                analytics_kwargs={'signal_idx': signal.identities_idx,
+                                                                  'ref_circuit_signal': ref_circuit_signal})
+        logging.info(list(zip(names, circuits)))
+        return list(zip(names, circuits))
 
     # @time_it
     def wrap_mutations(self, circuit: BaseCircuit, methods: dict, include_normal_run=True,
@@ -379,23 +418,36 @@ class CircuitModeller():
         self.result_writer.unsubdivide()
 
     def batch_mutations(self, circuit: BaseCircuit, methods: dict, include_normal_run=True,
-                       write_to_subsystem=False):
+                        write_to_subsystem=False):
         if write_to_subsystem:
             self.result_writer.subdivide_writing(circuit.name)
 
         mutation_dict = flatten_nested_dict(circuit.species.mutations.items())
-        subcircuits = [(name, circuit.make_subcircuit(name, mutation)) for name, mutation in mutation_dict.items()]
+        subcircuits = [(name, circuit.make_subcircuit(name, mutation))
+                       for name, mutation in mutation_dict.items()]
         if include_normal_run:
-            subcircuits.insert(0, circuit)
+            subcircuits.insert(0, ('ref_circuit', circuit))
 
+        logging.info('batching')
         for method, kwargs in methods.items():
+            logging.info(method)
+            logging.info(kwargs)
             if kwargs.get('batch') == True:
-                pass
+                if hasattr(self, method):
+                    logging.info(subcircuits)
+                    logging.info(type(subcircuits))
+                    subcircuits = getattr(self, method)(subcircuits, **kwargs)
+                else:
+                    logging.warning(
+                        f'Could not find method @{method} in class {self}')
             else:
                 for name, subcircuit in subcircuits:
-                    self.result_writer.subdivide_writing(name, safe_dir_change=False)
-                    self.apply_to_circuit(subcircuit, {method, kwargs}, ref_circuit=circuit)
+                    self.result_writer.subdivide_writing(
+                        name, safe_dir_change=False)
+                    self.apply_to_circuit(
+                        subcircuit, {method: kwargs}, ref_circuit=circuit)
                     self.result_writer.unsubdivide_last_dir()
+                self.result_writer.unsubdivide()
 
     def apply_to_circuit(self, circuit: BaseCircuit, _methods: dict, ref_circuit: BaseCircuit):
         methods = deepcopy(_methods)

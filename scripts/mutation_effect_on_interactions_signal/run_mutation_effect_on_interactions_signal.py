@@ -38,6 +38,29 @@ def main(config=None, data_writer=None):
 
     config_file, source_experiment_dir = get_search_dir(
         config_searchdir_key='source_of_interaction_stats', config_file=config_file)
+
+
+    if config['signal'].get('solver', 'naive') != 'jax':
+        simulation_func = partial(CircuitModeller(result_writer=data_writer, config=config_file).wrap_mutations,
+                                  write_to_subsystem=True,
+                                  methods={
+            "init_circuit": {},
+            "simulate_signal": {'save_numerical_vis_data': True, 'ref_circuit': None,
+                                'time_interval': config['signal']['time_interval'],
+                                'use_solver': config['signal'].get('solver', 'naive')},
+            "write_results": {}
+        })
+    else:
+        simulation_func = partial(CircuitModeller(result_writer=data_writer, config=config_file).batch_mutations,
+                                  write_to_subsystem=True,
+                                  methods={
+            "init_circuit": {},
+            "simulate_signal_batch": {'save_numerical_vis_data': True, 'ref_circuit': None,
+                                      'time_interval': config['signal']['time_interval'],
+                                      'batch': True},
+            "write_results": {}
+        })
+
     protocols = [
         # Load in templates: pathname for circuit stats is in config
         Protocol(
@@ -76,20 +99,10 @@ def main(config=None, data_writer=None):
                 name="generate_mutations"
             ),
             # Simulate signal and write results
-            Protocol(
-                partial(CircuitModeller(result_writer=data_writer, config=config_file).wrap_mutations,
-                        write_to_subsystem=True,
-                        methods={
-                    "init_circuit": {},
-                    "simulate_signal": {'save_numerical_vis_data': True, 'ref_circuit': None,
-                                        'time_interval': config['signal']['time_interval'],
-                                        'use_solver': config['signal'].get('solver', 'naive')},
-                    "write_results": {}
-                }
-                ),
-                req_input=True,
-                name="simulate_visualisations"
-            )
+            Protocol(simulation_func,
+                     req_input=True,
+                     name="simulate_visualisations"
+                     )
         ]
     ]
     experiment = Experiment(config=config, config_file=config_file, protocols=protocols,
