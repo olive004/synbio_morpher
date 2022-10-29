@@ -18,6 +18,9 @@ from src.utils.modelling.deterministic import Deterministic, simulate_signal_sca
 from src.utils.modelling.base import Modeller
 
 
+TEST_MODE = True
+
+
 class SystemManager():
 
     def __init__(self, circuits) -> None:
@@ -80,14 +83,20 @@ class CircuitModeller():
     # @time_it
     def compute_interaction_strengths(self, circuit: BaseCircuit):
         if not circuit.species.are_interactions_loaded:
-            interactions = self.run_interaction_simulator(circuit,
-                                                          circuit.species.data.data)
-            circuit.species.eqconstants = interactions.eqconstants
-            circuit.species.binding_rates_dissociation = interactions.binding_rates
-            circuit.species.interactions = interactions.calculate_full_coupling_of_rates(
-                degradation_rates=circuit.species.degradation_rates.flatten()
-            )
-            circuit.species.interaction_units = interactions.units
+            if not TEST_MODE:
+                interactions = self.run_interaction_simulator(circuit,
+                                                            circuit.species.data.data)
+                circuit.species.eqconstants = interactions.eqconstants
+                circuit.species.binding_rates_dissociation = interactions.binding_rates
+                circuit.species.interactions = interactions.calculate_full_coupling_of_rates(
+                    degradation_rates=circuit.species.degradation_rates.flatten()
+                )
+                circuit.species.interaction_units = interactions.units
+            else:
+                circuit.species.eqconstants = np.random.rand(circuit.species.size, circuit.species.size)
+                circuit.species.binding_rates_dissociation = np.random.rand(circuit.species.size, circuit.species.size)
+                circuit.species.interactions = np.random.rand(circuit.species.size, circuit.species.size)
+                circuit.species.interaction_units = 'test'
 
             # TODO: In the InteractionMatrix, put these addons better somehow
             filename_addon_eqconstants = 'eqconstants'
