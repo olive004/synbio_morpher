@@ -47,8 +47,7 @@ def main(config=None, data_writer=None):
             "simulate_signal": {'save_numerical_vis_data': True, 'ref_circuit': None,
                                 'time_interval': config_file['signal']['time_interval'],
                                 'use_solver': config_file['signal'].get('solver', 'naive')},
-            "write_results": {'no_visualisations': config_file['experiment'].get('no_visualisations', False),
-                              'no_numerical': config_file['experiment'].get('no_numerical', False)}
+            "write_results": {'no_visualisations': config_file['experiment'].get('no_visualisations', False)}
         })
     else:
         simulation_func = partial(CircuitModeller(result_writer=data_writer, config=config_file).batch_mutations,
@@ -58,8 +57,7 @@ def main(config=None, data_writer=None):
             "simulate_signal_batch": {'save_numerical_vis_data': True, 'ref_circuit': None,
                                       'time_interval': config_file['signal']['time_interval'],
                                       'batch': True},
-            "write_results": {'no_visualisations': config_file['experiment'].get('no_visualisations', True),
-                              'no_numerical': config_file['experiment'].get('no_numerical', True)}
+            "write_results": {'no_visualisations': config_file['experiment'].get('no_visualisations', True)}
         })
 
     protocols = [
