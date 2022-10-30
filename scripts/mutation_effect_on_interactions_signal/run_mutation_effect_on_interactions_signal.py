@@ -39,16 +39,16 @@ def main(config=None, data_writer=None):
     config_file, source_experiment_dir = get_search_dir(
         config_searchdir_key='source_of_interaction_stats', config_file=config_file)
 
-
-    if config['signal'].get('solver', 'naive') != 'jax':
+    if not config_file['signal']['use_batching']:
         simulation_func = partial(CircuitModeller(result_writer=data_writer, config=config_file).wrap_mutations,
                                   write_to_subsystem=True,
                                   methods={
             "init_circuit": {},
             "simulate_signal": {'save_numerical_vis_data': True, 'ref_circuit': None,
-                                'time_interval': config['signal']['time_interval'],
-                                'use_solver': config['signal'].get('solver', 'naive')},
-            "write_results": {}
+                                'time_interval': config_file['signal']['time_interval'],
+                                'use_solver': config_file['signal'].get('solver', 'naive')},
+            "write_results": {'no_visualisations': config_file['experiment'].get('no_visualisations', False),
+                              'no_numerical': config_file['experiment'].get('no_numerical', False)}
         })
     else:
         simulation_func = partial(CircuitModeller(result_writer=data_writer, config=config_file).batch_mutations,
@@ -56,9 +56,10 @@ def main(config=None, data_writer=None):
                                   methods={
             "init_circuit": {},
             "simulate_signal_batch": {'save_numerical_vis_data': True, 'ref_circuit': None,
-                                      'time_interval': config['signal']['time_interval'],
+                                      'time_interval': config_file['signal']['time_interval'],
                                       'batch': True},
-            "write_results": {}
+            "write_results": {'no_visualisations': config_file['experiment'].get('no_visualisations', True),
+                              'no_numerical': config_file['experiment'].get('no_numerical', True)}
         })
 
     protocols = [

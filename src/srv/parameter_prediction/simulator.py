@@ -175,9 +175,9 @@ class InteractionData():
         self.simulation_protocol = simulation_handler.get_protocol()
         self.simulation_postproc = simulation_handler.get_postprocessing()
         if not test_mode:
-            self.data, self.eqconstants, self.binding_rates = self.parse(data)
+            self.interactions, self.eqconstants, self.binding_rates = self.parse(data)
         else:
-            self.data = self.simulation_protocol()
+            self.interactions = self.simulation_protocol()
         self.units = simulation_handler.units
 
     def calculate_full_coupling_of_rates(self, degradation_rates):

@@ -32,9 +32,8 @@ class Deterministic(Modeller):
 
         return np.multiply(dxdt, self.time_interval)
 
-
     def dxdt_RNA_jnp(self, copynumbers, t, full_interactions, creation_rates, degradation_rates,
-                identity_matrix, signal=None, signal_idx=None):
+                     identity_matrix, signal=None, signal_idx=None):
 
         if signal_idx is not None:
             copynumbers = copynumbers.at[signal_idx].set(signal)
@@ -46,13 +45,16 @@ class Deterministic(Modeller):
             copynumbers * degradation_rates
         new_copynumbers = copynumbers + dxdt
 
-        return new_copynumbers
+        if signal_idx is not None:
+            new_copynumbers = new_copynumbers.at[signal_idx].set(signal)
+
+        return jnp.where(new_copynumbers < 0, 0, new_copynumbers)
 
 
 def simulate_signal_scan(copynumbers, time, full_interactions, creation_rates, degradation_rates,
-                        identity_matrix, signal, signal_idx, one_step_func):
+                         identity_matrix, signal, signal_idx, one_step_func):
     def to_scan(carry, thingy):
         t, s = thingy
         return one_step_func(carry, t, full_interactions, creation_rates, degradation_rates,
-                        identity_matrix, s, signal_idx), carry
+                             identity_matrix, s, signal_idx), carry
     return jax.lax.scan(to_scan, copynumbers, (time, signal))

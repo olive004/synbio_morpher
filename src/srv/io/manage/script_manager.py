@@ -1,6 +1,7 @@
 
 
 from copy import deepcopy
+from datetime import datetime
 import logging
 import os
 from src.utils.results.writer import DataWriter
@@ -38,6 +39,7 @@ class Ensembler():
         self.config = load_json_as_dict(config)
         self.ensemble_configs = self.config["base_configs_ensemble"]
         self.subscripts = [script for script in self.ensemble_configs.keys()]
+        self.start_time = datetime.now()
 
     def run(self):
         for script_name in self.subscripts:
@@ -60,6 +62,7 @@ class Ensembler():
         self.config["base_configs_ensemble"] = self.ensemble_configs
 
         self.data_writer.reset_ensemble()
+        self.config['total_time'] = str(datetime.now() - self.start_time)
         self.write()
 
     def write(self):

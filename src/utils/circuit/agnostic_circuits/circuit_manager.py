@@ -18,7 +18,7 @@ from src.utils.modelling.deterministic import Deterministic, simulate_signal_sca
 from src.utils.modelling.base import Modeller
 
 
-TEST_MODE = True
+TEST_MODE = False
 
 
 class SystemManager():
@@ -85,7 +85,7 @@ class CircuitModeller():
         if not circuit.species.are_interactions_loaded:
             if not TEST_MODE:
                 interactions = self.run_interaction_simulator(circuit,
-                                                            circuit.species.data.data)
+                                                              circuit.species.data.data)
                 circuit.species.eqconstants = interactions.eqconstants
                 circuit.species.binding_rates_dissociation = interactions.binding_rates
                 circuit.species.interactions = interactions.calculate_full_coupling_of_rates(
@@ -93,9 +93,14 @@ class CircuitModeller():
                 )
                 circuit.species.interaction_units = interactions.units
             else:
-                circuit.species.eqconstants = np.random.rand(circuit.species.size, circuit.species.size)
-                circuit.species.binding_rates_dissociation = np.random.rand(circuit.species.size, circuit.species.size)
-                circuit.species.interactions = np.random.rand(circuit.species.size, circuit.species.size)
+                logging.warning(
+                    'RUNNING IN TEST MODE - interaction rates are fake.')
+                circuit.species.eqconstants = np.random.rand(
+                    circuit.species.size, circuit.species.size)
+                circuit.species.binding_rates_dissociation = np.random.rand(
+                    circuit.species.size, circuit.species.size)
+                circuit.species.interactions = np.random.rand(
+                    circuit.species.size, circuit.species.size)
                 circuit.species.interaction_units = 'test'
 
             # TODO: In the InteractionMatrix, put these addons better somehow
@@ -465,7 +470,7 @@ class CircuitModeller():
                     self.result_writer.unsubdivide_last_dir()
                     subcircuits[i] = (name, subcircuit)
                 self.result_writer.unsubdivide_last_dir()
-        
+
         self.result_writer.unsubdivide()
 
     def apply_to_circuit(self, circuit: BaseCircuit, _methods: dict, ref_circuit: BaseCircuit):
@@ -484,7 +489,8 @@ class CircuitModeller():
         self.result_writer.visualise_graph(circuit, mode, new_vis)
 
     def write_results(self, circuit, new_report: bool = False, no_visualisations: bool = False,
-                      only_numerical: bool = False):
+                      only_numerical: bool = False, no_numerical: bool = False):
         self.result_writer.write_all(
-            circuit, new_report, no_visualisations=no_visualisations, only_numerical=only_numerical)
+            circuit, new_report, no_visualisations=no_visualisations, only_numerical=only_numerical,
+            no_numerical=no_numerical)
         return circuit
