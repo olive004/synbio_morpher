@@ -65,6 +65,7 @@ def filter_data(data: pd.DataFrame, filters: dict = {}):
                       >= filters.get("min_num_interacting")]
     filt_stats = filt_stats[filt_stats['num_self_interacting'] <= filters.get(
         "max_self_interacting")]
+    filt_stats = filt_stats.iloc[:filters.get('max_total', -1)]
     return filt_stats
 
 

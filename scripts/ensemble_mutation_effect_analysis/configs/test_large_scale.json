@@ -13,7 +13,7 @@
             },
             "molecular_params": "./scripts/common/configs/RNA_circuit/molecular_params.json",
             "circuit_generation": {
-                "repetitions": 20,
+                "repetitions": 200,
                 "species_count": 3,
                 "sequence_length": 20,
                 "generator_protocol": "template_mutate",
@@ -56,7 +56,8 @@
             },
             "filters": {
                 "min_num_interacting": 2,
-                "max_self_interacting": 3
+                "max_self_interacting": 3,
+                "max_total": 200
             },
             "mutations": {
                 "algorithm": "random",
