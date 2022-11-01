@@ -71,7 +71,9 @@ def filter_data(data: pd.DataFrame, filters: dict = {}):
 def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path') -> list:
 
     stats = GeneCircuitLoader().load_data(stats_pathname).data
+    logging.info(stats_pathname)
     filt_stats = filter_data(stats, filters)
+    logging.info(filt_stats['num_interacting'])
 
     if filt_stats.empty:
         logging.warning(
@@ -318,8 +320,7 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFrame:
                                            int_stats=interaction_stats_current,
                                            ref_stats=interaction_stats, ref_table=current_og_table,
                                            source_dir=mutation_dir, check_coherent=True)
-        if circ_idx != 0 and np.mod(circ_idx, 2) == 0:
-            logging.info('writing')
+        if circ_idx != 0 and np.mod(circ_idx, 10) == 0:
             info_table = write_results(info_table)
             info_table = init_info_table()
 

@@ -52,7 +52,7 @@ def main(config=None, data_writer=None):
         exclude_rows_via_cols = []
 
     num_mutations = source_config['mutations']['mutation_nums_within_sequence']
-    plot_grammar = 's' if num_mutations > 1 else ''
+    plot_grammar = 's' if type(num_mutations) == list or num_mutations > 1 else ''
 
     binding_rates_threshold_upper = np.power(10, 6)
     binding_rates_threshold_upper_text = f', with cutoff at {binding_rates_threshold_upper}' if binding_rates_threshold_upper else ''

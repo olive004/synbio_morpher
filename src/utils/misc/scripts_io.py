@@ -105,7 +105,7 @@ def get_search_dir(config_file: dict, config_searchdir_key: str = None,
         return config_file, source_dir
 
 
-def get_root_experiment_folder(miscpath):
+def get_root_experiment_folder(miscpath: str):
     split_path = miscpath.split(os.sep)
     purposes = [p for p in split_path if p in get_purposes()]
     if len(purposes) == 1:
@@ -201,6 +201,9 @@ def load_experiment_config_original(starting_experiment_folder: str, target_purp
             raise ConfigError('Could not find the original configuration file used '
                               f'for purpose {target_purpose} when starting from '
                               f'experiment folder {starting_experiment_folder}.')
+        if type(original_source_dir) == list and len(original_source_dir) == 1:
+            logging.warning(f'Expected string for {original_source_dir} but got list')
+            original_source_dir = original_source_dir[0]
         original_config = load_experiment_config(
             original_source_dir)
         current_purpose = get_purpose_from_cfg(

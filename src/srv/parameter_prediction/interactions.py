@@ -73,6 +73,9 @@ class InteractionMatrix():
             else:
                 return SIMULATOR_UNITS['IntaRNA']['energy']
         else:
+            for i in self.interaction_file_addons:
+                if i in filepath:
+                    return i
             return 'unknown'
 
     def isolate_circuit_name(self, circuit_filepath, filetype):
@@ -131,6 +134,9 @@ class InteractionMatrix():
             idxs_interacting = sorted([tuple(sorted(i)) for i in idxs_interacting])
         elif self.units == SIMULATOR_UNITS['IntaRNA']['rate']:
             idxs_interacting = np.argwhere(self.matrix > 0.000000001)
+            idxs_interacting = sorted([tuple(sorted(i)) for i in idxs_interacting])
+        elif self.units == 'eqconstants':
+            idxs_interacting = np.argwhere(self.matrix > 1)
             idxs_interacting = sorted([tuple(sorted(i)) for i in idxs_interacting])
         else:
             raise ValueError(f'Cannot determine interaction properties from units "{self.units}"')
