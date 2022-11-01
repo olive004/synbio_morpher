@@ -65,16 +65,14 @@ def filter_data(data: pd.DataFrame, filters: dict = {}):
                       >= filters.get("min_num_interacting")]
     filt_stats = filt_stats[filt_stats['num_self_interacting'] <= filters.get(
         "max_self_interacting")]
-    filt_stats = filt_stats.iloc[:filters.get('max_total', -1)]
+    filt_stats = filt_stats.iloc[:min(filters.get('max_total', len(filt_stats)), len(filt_stats))]
     return filt_stats
 
 
 def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path') -> list:
 
     stats = GeneCircuitLoader().load_data(stats_pathname).data
-    logging.info(stats_pathname)
     filt_stats = filter_data(stats, filters)
-    logging.info(filt_stats['num_interacting'])
 
     if filt_stats.empty:
         logging.warning(

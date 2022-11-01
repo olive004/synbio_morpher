@@ -384,7 +384,9 @@ class CircuitModeller():
                                                  'input'),
                                              one_step_func=modeller_signal.dxdt_RNA_jnp))(b_starting_copynumbers, full_interactions=b_interactions)
         b_new_copynumbers = np.array(b_new_copynumbers[1])
-
+        if np.shape(b_new_copynumbers)[1] != circuits[circuit_idx].species.size and np.shape(b_new_copynumbers)[-1] == circuits[circuit_idx].species.size:
+            b_new_copynumbers = np.swapaxes(b_new_copynumbers, 1, 2)
+        
         # Apply to all circuits
         if ref_circuit is None or ref_circuit == circuit:
             ref_circuit_signal = None
@@ -441,9 +443,7 @@ class CircuitModeller():
         if include_normal_run:
             subcircuits.insert(0, ('ref_circuit', circuit))
 
-        logging.info('batching')
         for method, kwargs in methods.items():
-            logging.info(method)
             if kwargs.get('batch') == True:
                 if hasattr(self, method):
                     subcircuits = getattr(self, method)(subcircuits, **kwargs)

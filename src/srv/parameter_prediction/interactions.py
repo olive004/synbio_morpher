@@ -29,11 +29,11 @@ class InteractionMatrix():
         self.units = units
         self.experiment_dir = experiment_dir
 
-        self.interaction_file_addons = [
-            'interactions',
-            'binding_rates',
-            'eqconstants'
-        ]
+        self.interaction_file_addons = {
+            'interactions': SIMULATOR_UNITS['IntaRNA']['rate'],
+            'binding_rates': SIMULATOR_UNITS['IntaRNA']['rate'],
+            'eqconstants': 'eqconstants'
+        }
 
         self.sample_names = None
 
@@ -68,10 +68,10 @@ class InteractionMatrix():
                              f'experiment directory instead of {self.experiment_dir}')
         simulator_cfgs = experiment_config.get('interaction_simulator')
         
-        if any([i for i in self.interaction_file_addons if i in filepath]):
-            for i in self.interaction_file_addons:
+        if any([i for i in self.interaction_file_addons.keys() if i in filepath]):
+            for i, u in self.interaction_file_addons.items():
                 if i in filepath:
-                    return i
+                    return u
         elif simulator_cfgs.get('name') == 'IntaRNA':
             if simulator_cfgs.get('postprocess'):
                 return SIMULATOR_UNITS['IntaRNA']['rate']
@@ -82,7 +82,7 @@ class InteractionMatrix():
 
     def isolate_circuit_name(self, circuit_filepath, filetype):
         circuit_name = None
-        for faddon in self.interaction_file_addons:
+        for faddon in self.interaction_file_addons.keys():
             base_name = os.path.basename(circuit_filepath).replace('.'+filetype, '').replace(
                 faddon+'_', '').replace('_'+faddon, '')
             circuit_name = base_name if type(base_name) == str else circuit_name

@@ -60,6 +60,10 @@ def main(config=None, data_writer=None):
             "write_results": {'no_visualisations': config_file['experiment'].get('no_visualisations', True)}
         })
 
+    def logging_circuit(clist: list):
+        logging.info(f'Simulating {len(clist)} circuits')
+        return clist
+
     protocols = [
         # Load in templates: pathname for circuit stats is in config
         Protocol(
@@ -79,6 +83,7 @@ def main(config=None, data_writer=None):
             req_output=True,
             name='pull_circuit_from_stats'
         ),
+        Protocol(logging_circuit, req_input=True, req_output=True, name='logging'),
         [  # for each circuit
             # Construct circuit
             Protocol(
