@@ -53,6 +53,7 @@ def main(config=None, data_writer=None):
 
     num_mutations = source_config['mutations']['mutation_nums_within_sequence']
     plot_grammar = 's' if type(num_mutations) == list or num_mutations > 1 else ''
+    logging.warning('Not implemented: number of mutations varying in config')
 
     binding_rates_threshold_upper = np.power(10, 6)
     binding_rates_threshold_upper_text = f', with cutoff at {binding_rates_threshold_upper}' if binding_rates_threshold_upper else ''
