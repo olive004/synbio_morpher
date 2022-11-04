@@ -89,7 +89,7 @@ class CircuitModeller():
                 circuit.species.eqconstants = interactions.eqconstants
                 circuit.species.binding_rates_dissociation = interactions.binding_rates
                 circuit.species.interactions = interactions.calculate_full_coupling_of_rates(
-                    degradation_rates=circuit.species.eqconstants
+                    eqconstants=circuit.species.eqconstants
                 )
                 circuit.species.interaction_units = interactions.units
             else:

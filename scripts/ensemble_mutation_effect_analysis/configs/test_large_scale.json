@@ -57,12 +57,12 @@
             "filters": {
                 "min_num_interacting": 2,
                 "max_self_interacting": 3,
-                "max_total": 5
+                "max_total": 2
             },
             "mutations": {
                 "algorithm": "random",
-                "mutation_counts": 8,
-                "mutation_nums_within_sequence": [1,2],
+                "mutation_counts": 2,
+                "mutation_nums_within_sequence": 1,
                 "mutation_nums_within_sequencex": [1, 2, 3, 5, 7, 10, 15, 20],
                 "mutation_nums_per_position": 1,
                 "concurrent_species_to_mutate": "single_species_at_a_time"

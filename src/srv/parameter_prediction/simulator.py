@@ -117,7 +117,7 @@ class RawSimulationHandling():
 
     def calculate_full_coupling_of_rates(self, k_d, eqconstants):
         k_a = per_mol_to_per_molecules(self.fixed_rate_k_a)
-        full_interactions = np.divide(k_a, (k_d + eqconstants.flatten()))
+        full_interactions = np.divide(k_a, (k_d + eqconstants)) #.flatten()))
         return full_interactions
 
     # def calculate_full_coupling_of_rates(self, k_d, degradation_rates):
