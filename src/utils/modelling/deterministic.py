@@ -58,3 +58,15 @@ def simulate_signal_scan(copynumbers, time, full_interactions, creation_rates, d
         return one_step_func(carry, t, full_interactions, creation_rates, degradation_rates,
                              identity_matrix, s, signal_idx), carry
     return jax.lax.scan(to_scan, copynumbers, (time, signal))
+
+
+def bioreaction_sim_full(t1, dt0):
+    import bioreaction
+
+    from bioreaction.simulation.simfuncs.basic_de import bioreaction_sim
+
+    signal = partial(step_function, total_time=t1, step_num=2, dt=dt0, target=10)
+    term = dfx.ODETerm(partial(bioreaction_sim, reactions=qreactions.reactions, signal=signal,
+                   signal_onehot=signal_onehot, dt=dt0))
+    
+    bioreaction_sim

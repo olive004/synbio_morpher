@@ -5,6 +5,7 @@ import pandas as pd
 import networkx as nx
 import logging
 
+from src.utils.misc.numerical import square_matrix_rand
 from src.srv.parameter_prediction.interactions import InteractionMatrix
 from src.utils.results.results import ResultCollector
 from src.utils.misc.type_handling import extend_int_to_list
@@ -71,7 +72,7 @@ class BaseSpecies():
             matrix_shape = (matrix_size, 1)
 
         if init_type == "rand":
-            return InteractionMatrix(num_nodes=matrix_size).matrix
+            return square_matrix_rand(matrix_size)
         elif init_type == "randint":
             return np.random.randint(10, 1000, matrix_shape).astype(np.float64)
         elif init_type == "uniform":

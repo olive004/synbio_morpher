@@ -305,17 +305,26 @@ class CircuitModeller():
                 new_copynumbers[:,
                                 time_start:time_end] = expanded_steady_states
         elif use_solver == 'jax':
-            new_copynumbers = simulate_signal_scan(
-                copynumbers=steady_states.flatten(), time=np.arange(modeller_signal.max_time),
-                full_interactions=circuit.species.interactions,
-                creation_rates=circuit.species.creation_rates.flatten(),
-                degradation_rates=circuit.species.degradation_rates.flatten(),
-                identity_matrix=np.identity(
-                    circuit.species.size),
-                signal=signal.real_signal, signal_idx=circuit.species.identities.get(
-                    'input'),
-                one_step_func=modeller_signal.dxdt_RNA_jnp)
-            new_copynumbers = np.array(new_copynumbers[1]).T
+            # new_copynumbers = simulate_signal_scan(
+            #     copynumbers=steady_states.flatten(), time=np.arange(modeller_signal.max_time),
+            #     full_interactions=circuit.species.interactions,
+            #     creation_rates=circuit.species.creation_rates.flatten(),
+            #     degradation_rates=circuit.species.degradation_rates.flatten(),
+            #     identity_matrix=np.identity(
+            #         circuit.species.size),
+            #     signal=signal.real_signal, signal_idx=circuit.species.identities.get(
+            #         'input'),
+            #     one_step_func=modeller_signal.dxdt_RNA_jnp)
+            # new_copynumbers = np.array(new_copynumbers[1]).T
+            def translate_circuit_to_bioreaction(circuit):
+                import bioreaction
+
+                
+            model = construct_model(config)
+
+            qreactions = QuantifiedReactions()
+            qreactions.init_properties(model, config)
+            new_copynumbers = 
 
         circuit.species.copynumbers = np.concatenate(
             (circuit.species.copynumbers, new_copynumbers[make_dynamic_indexer({
