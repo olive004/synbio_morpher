@@ -1,3 +1,4 @@
+import operator
 from functools import partial
 import logging
 import os
@@ -7,8 +8,9 @@ import pandas as pd
 
 from fire import Fire
 from src.srv.io.manage.script_manager import script_preamble
-from src.utils.misc.scripts_io import get_search_dir
+from src.utils.misc.scripts_io import get_search_dir, load_experiment_config_original
 from src.utils.misc.string_handling import prettify_keys_for_label
+from src.utils.misc.type_handling import flatten_listlike
 from src.utils.results.analytics.timeseries import Timeseries
 
 from src.utils.results.experiments import Experiment, Protocol
@@ -50,8 +52,13 @@ def main(config=None, data_writer=None):
     else:
         exclude_rows_via_cols = []
 
-    num_mutations = 1
-    plot_grammar = 's' if num_mutations > 1 else ''
+    source_config = load_experiment_config_original(source_dirs[0], target_purpose='mutation_effect_on_interactions_signal')
+    logging.warning('The source configuration is being chosen as that from the first source directory supplied: '+\
+        f'{source_dirs[0]} \nIf multiple directories were used to generate mutations, modify the script.')
+    num_mutations = source_config['mutations']['mutation_nums_within_sequence']
+    num_mutations = [num_mutations] if type(num_mutations) != list else num_mutations
+    plot_grammar = 's' if type(num_mutations) == list or num_mutations > 1 else ''
+    # plot_grammar = 's' if num_mutations > 1 else ''
 
     # binding_rates_threshold_upper = np.power(10, 6)
     binding_rates_threshold_upper = None
@@ -105,43 +112,6 @@ def main(config=None, data_writer=None):
             req_input=True,
             name='visualise_circuit_interactions'
         ),
-        # Binding rates max int's mutations
-        Protocol(
-            partial(visualise_data, data_writer=data_writer, cols_x=['binding_rates_max_interaction'],
-                    plot_type='histplot',
-                    out_name='binding_rates_max_freqs_mutations',
-                    preprocessor_func_x=preprocessing_func,
-                    exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
-                    threshold_value_max=binding_rates_threshold_upper,
-                    log_axis=(False, False),
-                    use_sns=True,
-                    title=f'Maximum ' + r'$k_d$' + \
-                    f' strength, {num_mutations} mutation{plot_grammar}',
-                    xlabel='Dissociation rate' + r'$k_d$' + '(' +
-                    f'{rate_unit})' +
-                    f'{binding_rates_threshold_upper_text}'),
-            req_input=True,
-            name='visualise_mutated_interactions'
-        ),
-        # Binding rates max int's diff
-        Protocol(
-            partial(visualise_data, data_writer=data_writer, cols_x=['binding_rates_max_interaction_diff_to_base_circuit'],
-                    plot_type='histplot',
-                    out_name='binding_rates_max_freqs_diffs',
-                    preprocessor_func_x=preprocessing_func,
-                    exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
-                    log_axis=(False, False),
-                    use_sns=True,
-                    title=f'Difference between circuit\nand mutated (maximum ' + \
-                    r'$k_d$' + f'), {num_mutations} mutation{plot_grammar}',
-                    xlabel='Difference in ' + r'$k_d$' + ' (' +
-                    f'{rate_unit})' +
-                    f'{binding_rates_threshold_upper_text}'),
-            req_input=True,
-            name='visualise_interactions_difference',
-            skip=config_file.get('only_visualise_circuits', False)
-        ),
-
         # Binding rates min int's og
         Protocol(
             partial(visualise_data, data_writer=data_writer, cols_x=['binding_rates_min_interaction'],
@@ -158,7 +128,46 @@ def main(config=None, data_writer=None):
                     f'{binding_rates_threshold_upper_text}'),
             req_input=True,
             name='visualise_circuit_interactions'
-        )]
+        )
+    ]
+
+    for m in num_mutations:
+        # Binding rates max int's mutations
+        protocols.append(Protocol(
+            partial(visualise_data, data_writer=data_writer, cols_x=['binding_rates_max_interaction'],
+                    plot_type='histplot',
+                    out_name=f'binding_rates_max_freqs_mutations_m{m}',
+                    preprocessor_func_x=preprocessing_func,
+                    exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
+                    threshold_value_max=binding_rates_threshold_upper,
+                    log_axis=(False, False),
+                    use_sns=True,
+                    title=f'Maximum ' + r'$k_d$' + \
+                    f' strength, {m} mutation{plot_grammar}',
+                    xlabel='Dissociation rate' + r'$k_d$' + '(' +
+                    f'{rate_unit})' +
+                    f'{binding_rates_threshold_upper_text}'),
+            req_input=True,
+            name='visualise_mutated_interactions'
+        ))
+        # Binding rates max int's diff
+        protocols.append(Protocol(
+            partial(visualise_data, data_writer=data_writer, cols_x=['binding_rates_max_interaction_diff_to_base_circuit'],
+                    plot_type='histplot',
+                    out_name=f'binding_rates_max_freqs_diffs_m{m}',
+                    preprocessor_func_x=preprocessing_func,
+                    exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
+                    log_axis=(False, False),
+                    use_sns=True,
+                    title=f'Difference between circuit\nand mutated (maximum ' + \
+                    r'$k_d$' + f'), {m} mutation{plot_grammar}',
+                    xlabel='Difference in ' + r'$k_d$' + ' (' +
+                    f'{rate_unit})' +
+                    f'{binding_rates_threshold_upper_text}'),
+            req_input=True,
+            name='visualise_interactions_difference',
+            skip=config_file.get('only_visualise_circuits', False)
+        ))
 
     # Interaction histplots og
     protocols.append(
@@ -205,53 +214,57 @@ def main(config=None, data_writer=None):
     # With mutated circuits
     for log_opt in [(False, False)]:
         log_text = '_log' if log_opt[0] or log_opt[1] else ''
+        for m in num_mutations:
 
-        titles = [
-            f'Maximum ' + r'$k_d$' +
-            f' strength, {num_mutations} mutation{plot_grammar}',
-            f'Difference between circuit\nand mutated (maximum ' +
-            r'$k_d$' + f'), {num_mutations} mutation{plot_grammar}',
-            f'Ratio between mutated and \noriginal circuit (maximum ' +
-            r'$k_d$' + f'), {num_mutations} mutation{plot_grammar}',
-            f'Minimum ' + r'$k_d$' +
-            f' strength, {num_mutations} mutation{plot_grammar}',
-            f'Difference between circuit\nand mutated (minimum ' +
-            r'$k_d$' + f'), {num_mutations} mutation{plot_grammar}',
-            f'Ratio between mutated and \noriginal circuit (minimum ' +
-            r'$k_d$' + f'), {num_mutations} mutation{plot_grammar}',
-            f'Maximum equilibrium constant, {num_mutations} mutation{plot_grammar}',
-            f'Difference between circuit\nand mutated equilibrium constant, {num_mutations} mutation{plot_grammar}',
-            f'Ratio between mutated and original circuit\nequilibrium constant, {num_mutations} mutation{plot_grammar}'
-        ]
-        title_count = 0
-        for interaction_type in interaction_types:
-            for visualisation_type in visualisation_types:
-                if interaction_type == 'eqconstants_max_interaction':
-                    xlabel = 'Equilibrium constant'
-                else:
-                    xlabel = 'Dissociation rate ' + r'$k_d$' + ' (' \
-                        f'{rate_unit})' \
-                        f'{binding_rates_threshold_upper_text}'
+            titles = [
+                f'Maximum ' + r'$k_d$' +
+                f' strength, {m} mutation{plot_grammar}',
+                f'Difference between circuit\nand mutated (maximum ' +
+                r'$k_d$' + f'), {m} mutation{plot_grammar}',
+                f'Ratio between mutated and \noriginal circuit (maximum ' +
+                r'$k_d$' + f'), {m} mutation{plot_grammar}',
+                f'Minimum ' + r'$k_d$' +
+                f' strength, {m} mutation{plot_grammar}',
+                f'Difference between circuit\nand mutated (minimum ' +
+                r'$k_d$' + f'), {m} mutation{plot_grammar}',
+                f'Ratio between mutated and \noriginal circuit (minimum ' +
+                r'$k_d$' + f'), {m} mutation{plot_grammar}',
+                f'Maximum equilibrium constant, {m} mutation{plot_grammar}',
+                f'Difference between circuit\nand mutated equilibrium constant, {m} mutation{plot_grammar}',
+                f'Ratio between mutated and original circuit\nequilibrium constant, {m} mutation{plot_grammar}'
+            ]
+            title_count = 0
+            for interaction_type in interaction_types:
+                for visualisation_type in visualisation_types:
+                    if interaction_type == 'eqconstants_max_interaction':
+                        xlabel = 'Equilibrium constant'
+                    else:
+                        xlabel = 'Dissociation rate ' + r'$k_d$' + ' (' \
+                            f'{rate_unit})' \
+                            f'{binding_rates_threshold_upper_text}'
 
-                cols_x = f'{interaction_type}{visualisation_type}'
-                out_name = f'{cols_x}{log_text}'
-                protocols.append(
-                    Protocol(
-                        partial(visualise_data, data_writer=data_writer, cols_x=[cols_x],
-                                plot_type='histplot',
-                                out_name=out_name,
-                                preprocessor_func_x=preprocessing_func,
-                                exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
-                                threshold_value_max=binding_rates_threshold_upper,
-                                log_axis=log_opt,
-                                use_sns=True,
-                                title=titles[title_count],
-                                xlabel=xlabel),
-                        req_input=True,
-                        name='visualise_mutated_interactions'
+                    cols_x = f'{interaction_type}{visualisation_type}'
+                    out_name = f'{cols_x}{log_text}_m{m}'
+                    protocols.append(
+                        Protocol(
+                            partial(visualise_data, data_writer=data_writer, cols_x=[cols_x],
+                                    plot_type='histplot',
+                                    out_name=out_name,
+                                    preprocessor_func_x=preprocessing_func,
+                                    exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
+                                    threshold_value_max=binding_rates_threshold_upper,
+                                    selection_conditions=[(
+                                        'mutation_num', operator.eq, m
+                                    )],
+                                    log_axis=log_opt,
+                                    use_sns=True,
+                                    title=titles[title_count],
+                                    xlabel=xlabel),
+                            req_input=True,
+                            name='visualise_mutated_interactions'
+                        )
                     )
-                )
-                title_count += 1
+                    title_count += 1
 
         # Without mutated circuits
         titles = [
@@ -287,33 +300,34 @@ def main(config=None, data_writer=None):
     # Analytics histplots
     analytics_types = Timeseries(data=None).get_analytics_types()
     for log_opt in [(False, False)]:
-        for analytics_type, cols_x, title, xlabel in [
-                [
-                    analytics_type,
-                    f'{analytics_type}_diff_to_base_circuit',
-                    f'{prettify_keys_for_label(analytics_type)} difference between circuit\nand mutated counterparts, {num_mutations} mutation{plot_grammar}',
-                    f'{prettify_keys_for_label(analytics_type)} difference'
-                ] for analytics_type in analytics_types]:
+        for m in num_mutations:
+            for analytics_type, cols_x, title, xlabel in [
+                    [
+                        analytics_type,
+                        f'{analytics_type}_diff_to_base_circuit',
+                        f'{prettify_keys_for_label(analytics_type)} difference between circuit\nand mutated counterparts, {m} mutation{plot_grammar}',
+                        f'{prettify_keys_for_label(analytics_type)} difference'
+                    ] for analytics_type in analytics_types]:
 
-            log_text = '_log' if log_opt[0] or log_opt[1] else ''
-            protocols.append(
-                Protocol(
-                    partial(
-                        visualise_data,
-                        data_writer=data_writer, cols_x=[cols_x],
-                        plot_type='histplot',
-                        out_name=f'{analytics_type}{log_text}',
-                        preprocessor_func_x=preprocessing_func,
-                        exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
-                        log_axis=log_opt,
-                        use_sns=True,
-                        title=title,
-                        xlabel=xlabel),
-                    req_input=True,
-                    name='visualise_interactions_difference',
-                    skip=config_file.get('only_visualise_circuits', False)
+                log_text = '_log' if log_opt[0] or log_opt[1] else ''
+                protocols.append(
+                    Protocol(
+                        partial(
+                            visualise_data,
+                            data_writer=data_writer, cols_x=[cols_x],
+                            plot_type='histplot',
+                            out_name=f'{analytics_type}{log_text}_m{m}',
+                            preprocessor_func_x=preprocessing_func,
+                            exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
+                            log_axis=log_opt,
+                            use_sns=True,
+                            title=title,
+                            xlabel=xlabel),
+                        req_input=True,
+                        name='visualise_interactions_difference',
+                        skip=config_file.get('only_visualise_circuits', False)
+                    )
                 )
-            )
 
     experiment = Experiment(config=config, config_file=config_file, protocols=protocols,
                             data_writer=data_writer)

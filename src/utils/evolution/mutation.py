@@ -147,14 +147,14 @@ class Evolver():
             positions = random.sample(range(len(sequence)), num_mutations)
             return positions
 
-        def rand_mutator(species: BaseSpecies, algorithm: str):
+        def rand_mutator(species: BaseSpecies, algorithm: str, positions_chosen=None):
             for sample_idx, sample in enumerate(species.data.sample_names):
                 species.mutations[sample] = {}
                 for mutation_nums_within_sequence in species.mutation_nums_within_sequence:
                     for mutation_idx in range(species.mutation_counts[sample_idx]):
 
                         sequence = species.data.get_data_by_idx(sample_idx)
-                        positions = positions if positions is not None else mutation_sampler(
+                        positions = positions if positions_chosen is not None else mutation_sampler(
                             sequence, mutation_nums_within_sequence)
                         mutation_types, positions = self.sample_mutations(
                             sequence, positions, species.mutation_nums_per_position)

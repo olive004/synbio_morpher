@@ -88,12 +88,12 @@ class ResultWriter(DataWriter):
                     self.write_analytics(result, new_report=new_report)
 
     def write_all(self, circuit: BaseCircuit, new_report: bool, no_visualisations: bool = False,
-                  only_numerical: bool = False):
+                  only_numerical: bool = False, no_numerical: bool = False):
         if not no_visualisations:
             self.visualise_graph(circuit)
         self.write_results(circuit.result_collector.results,
                            new_report=new_report, no_visualisations=no_visualisations,
-                           only_numerical=only_numerical)
+                           only_numerical=only_numerical, no_numerical=no_numerical)
 
     def visualise(self, out_name, writer, vis_kwargs):
         self.output(out_name=out_name, write_func=writer, **vis_kwargs)

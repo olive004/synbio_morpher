@@ -29,11 +29,11 @@ class InteractionMatrix():
         self.units = units
         self.experiment_dir = experiment_dir
 
-        self.interaction_file_addons = [
-            'interactions',
-            'binding_rates',
-            'eqconstants'
-        ]
+        self.interaction_file_addons = {
+            'interactions': SIMULATOR_UNITS['IntaRNA']['rate'],
+            'binding_rates': SIMULATOR_UNITS['IntaRNA']['rate'],
+            'eqconstants': 'eqconstants'
+        }
 
         self.sample_names = None
 
@@ -67,7 +67,12 @@ class InteractionMatrix():
             raise ValueError(f'For loading units into {self}, supply a valid '
                              f'experiment directory instead of {self.experiment_dir}')
         simulator_cfgs = experiment_config.get('interaction_simulator')
-        if simulator_cfgs.get('name') == 'IntaRNA':
+        
+        if any([i for i in self.interaction_file_addons.keys() if i in filepath]):
+            for i, u in self.interaction_file_addons.items():
+                if i in filepath:
+                    return u
+        elif simulator_cfgs.get('name') == 'IntaRNA':
             if simulator_cfgs.get('postprocess'):
                 return SIMULATOR_UNITS['IntaRNA']['rate']
             else:
@@ -77,7 +82,7 @@ class InteractionMatrix():
 
     def isolate_circuit_name(self, circuit_filepath, filetype):
         circuit_name = None
-        for faddon in self.interaction_file_addons:
+        for faddon in self.interaction_file_addons.keys():
             base_name = os.path.basename(circuit_filepath).replace('.'+filetype, '').replace(
                 faddon+'_', '').replace('_'+faddon, '')
             circuit_name = base_name if type(base_name) == str else circuit_name
@@ -131,6 +136,9 @@ class InteractionMatrix():
             idxs_interacting = sorted([tuple(sorted(i)) for i in idxs_interacting])
         elif self.units == SIMULATOR_UNITS['IntaRNA']['rate']:
             idxs_interacting = np.argwhere(self.matrix > 0.000000001)
+            idxs_interacting = sorted([tuple(sorted(i)) for i in idxs_interacting])
+        elif self.units == 'eqconstants':
+            idxs_interacting = np.argwhere(self.matrix < 1)
             idxs_interacting = sorted([tuple(sorted(i)) for i in idxs_interacting])
         else:
             raise ValueError(f'Cannot determine interaction properties from units "{self.units}"')

@@ -19,15 +19,15 @@ from src.utils.circuit.agnostic_circuits.circuit_manager import CircuitModeller
 def main(config=None, data_writer=None):
     # Set configs
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
-            # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_test.json")
-            # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_1.json")
-            # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_2.json")
-            # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_10.json")
-            # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_20.json")
-            # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_1_highmag.json")
-            # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_2_highmag.json")
-            # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_10_highmag.json")
-            "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_20_highmag.json"))
+        # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_test.json")
+        # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_1.json")
+        # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_2.json")
+        # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_10.json")
+        # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_20.json")
+        # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_1_highmag.json")
+        # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_2_highmag.json")
+        # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_10_highmag.json")
+        "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_20_highmag.json"))
     config_file = load_json_as_dict(config)
 
     # Start_experiment
@@ -38,6 +38,32 @@ def main(config=None, data_writer=None):
 
     config_file, source_experiment_dir = get_search_dir(
         config_searchdir_key='source_of_interaction_stats', config_file=config_file)
+
+    if not config_file['signal']['use_batching']:
+        simulation_func = partial(CircuitModeller(result_writer=data_writer, config=config_file).wrap_mutations,
+                                  write_to_subsystem=True,
+                                  methods={
+            "init_circuit": {},
+            "simulate_signal": {'save_numerical_vis_data': True, 'ref_circuit': None,
+                                'time_interval': config_file['signal']['time_interval'],
+                                'use_solver': config_file['signal'].get('solver', 'naive')},
+            "write_results": {'no_visualisations': config_file['experiment'].get('no_visualisations', False)}
+        })
+    else:
+        simulation_func = partial(CircuitModeller(result_writer=data_writer, config=config_file).batch_mutations,
+                                  write_to_subsystem=True,
+                                  methods={
+            "init_circuit": {},
+            "simulate_signal_batch": {'save_numerical_vis_data': True, 'ref_circuit': None,
+                                      'time_interval': config_file['signal']['time_interval'],
+                                      'batch': True},
+            "write_results": {'no_visualisations': config_file['experiment'].get('no_visualisations', True)}
+        })
+
+    def logging_circuit(clist: list):
+        logging.info(f'Simulating {len(clist)} circuits')
+        return clist
+
     protocols = [
         # Load in templates: pathname for circuit stats is in config
         Protocol(
@@ -57,6 +83,7 @@ def main(config=None, data_writer=None):
             req_output=True,
             name='pull_circuit_from_stats'
         ),
+        Protocol(logging_circuit, req_input=True, req_output=True, name='logging'),
         [  # for each circuit
             # Construct circuit
             Protocol(
@@ -76,19 +103,10 @@ def main(config=None, data_writer=None):
                 name="generate_mutations"
             ),
             # Simulate signal and write results
-            Protocol(
-                partial(CircuitModeller(result_writer=data_writer, config=config_file).wrap_mutations,
-                        write_to_subsystem=True,
-                        methods={
-                    "init_circuit": {},
-                    "simulate_signal": {'save_numerical_vis_data': True, 'ref_circuit': None, 
-                    'time_interval': config['signal']['time_interval']},
-                    "write_results": {}
-                }
-                ),
-                req_input=True,
-                name="simulate_visualisations"
-            )
+            Protocol(simulation_func,
+                     req_input=True,
+                     name="simulate_visualisations"
+                     )
         ]
     ]
     experiment = Experiment(config=config, config_file=config_file, protocols=protocols,

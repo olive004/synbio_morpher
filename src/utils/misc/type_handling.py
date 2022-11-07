@@ -42,9 +42,10 @@ def flatten_listlike(listlike, safe=False):
         flat_list = []
         for l in listlike:
             if type(l) == tuple or type(l) == list:
-                flat_list.extend(*l)
+                flat_list.extend(l)
             else:
                 flat_list.append(l)
+        return flat_list
     else:
         return [item for sublist in listlike for item in sublist]
 

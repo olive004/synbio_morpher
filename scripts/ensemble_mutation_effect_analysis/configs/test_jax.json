@@ -43,7 +43,8 @@
             "system_type": "RNA",
             "data_path": null,
             "experiment": {
-                "purpose": "mutation_effect_on_interactions_signal"
+                "purpose": "mutation_effect_on_interactions_signal",
+                "no_visualisations": true
             },
             "interaction_simulator": {
                 "name": "IntaRNA",
@@ -71,7 +72,7 @@
                 ],
                 "signal_spec": "raw",
                 "signal_type": "abstract",
-                "total_time": 1000,
+                "total_time": 100,
                 "magnitude": 100,
                 "solver": "jax",
                 "use_batching": true,

@@ -115,10 +115,15 @@ class RawSimulationHandling():
             from src.srv.parameter_prediction.simulator import simulate_vanilla
             return simulate_vanilla
 
-    def calculate_full_coupling_of_rates(self, k_d, degradation_rates):
+    def calculate_full_coupling_of_rates(self, k_d, eqconstants):
         k_a = per_mol_to_per_molecules(self.fixed_rate_k_a)
-        full_interactions = np.divide(k_a, (k_d + degradation_rates.flatten()))
+        full_interactions = np.divide(k_a, (k_d + eqconstants)) #.flatten()))
         return full_interactions
+
+    # def calculate_full_coupling_of_rates(self, k_d, degradation_rates):
+    #     k_a = per_mol_to_per_molecules(self.fixed_rate_k_a)
+    #     full_interactions = np.divide(k_a, (k_d + degradation_rates.flatten()))
+    #     return full_interactions
 
 
 class InteractionSimulator():
@@ -175,14 +180,14 @@ class InteractionData():
         self.simulation_protocol = simulation_handler.get_protocol()
         self.simulation_postproc = simulation_handler.get_postprocessing()
         if not test_mode:
-            self.data, self.eqconstants, self.binding_rates = self.parse(data)
+            self.interactions, self.eqconstants, self.binding_rates = self.parse(data)
         else:
-            self.data = self.simulation_protocol()
+            self.interactions = self.simulation_protocol()
         self.units = simulation_handler.units
 
-    def calculate_full_coupling_of_rates(self, degradation_rates):
+    def calculate_full_coupling_of_rates(self, eqconstants):
         self.coupled_binding_rates = self.simulation_handler.calculate_full_coupling_of_rates(
-            k_d=self.binding_rates, degradation_rates=degradation_rates
+            k_d=self.binding_rates, eqconstants=eqconstants
         )
         return self.coupled_binding_rates
 

@@ -2,7 +2,12 @@
     "experiment": {
         "purpose": "summarise_simulation"
     },
-    "source_dirs": ["data/mutation_effect_on_interactions_signal/2022_08_27_103417"],
+    "source_dirs": {
+        "is_source_dir_incomplete": false,
+        "source_dir": ["data/mutation_effect_on_interactions_signal/2022_10_30_191420"],
+        "purpose_to_get_source_dir_from": null,
+        "source_dir_actually_used_POSTERITY": null
+    },
     "preprocessing_func": null,
     "only_visualise_circuits": false
 }

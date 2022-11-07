@@ -22,38 +22,20 @@ class BaseSpecies():
     species_axis = 0
     time_axis = 1
 
-    def __init__(self, config_args: dict) -> None:
+    def __init__(self, config: dict) -> None:
 
-        # Probability distribution for each interaction component?
+        # TODO: Probability distribution for each interaction component?
         # Can also use different types of moments of prob distribution
         # for each
 
-        self.data = config_args.get("data")  # Data common class
-        self.identities = self.process_identities(config_args.get("identities"))
+        self.data = config.get("data")  # Data common class
+        self.identities = self.process_identities(config.get("identities"))
 
-        self.loaded_interactions = False
-        self.interactions, self.interaction_units = self.make_interactions(
-            config_args)
-        self.degradation_rates = self.init_matrix(ndims=1, init_type="uniform")
-        self.creation_rates = self.init_matrix(ndims=1, init_type="uniform")
-
-        self.copynumbers = None
-        self.current_copynumbers = None
-        self.steady_state_copynums = self.init_matrix(
-            ndims=1, init_type="zeros")
-
-        self.mutations = {}
-        # Nums: mutations within a sequence
-        self.mutation_nums_within_sequence = config_args.get(
-            "mutations", {}).get("mutation_nums_within_sequence")
-        self.mutation_nums_per_position = config_args.get(
-            "mutations", {}).get("mutation_nums_per_position")
-        # Counts: mutated iterations of a sequence
-        self.mutation_counts = config_args.get(
-            "mutations", {}).get("mutation_counts")
-
-        self.process_mutations()
-        self.initial_values = self.save_initial_values()
+        self.init_state()
+        self.init_rates(config)
+        self.init_mutations(config)
+        
+        self.initial_values = self.save_all_values()
 
     def process_identities(self, identities: dict):
         """ Make sure identities are indices of the sample names list """
@@ -62,22 +44,18 @@ class BaseSpecies():
                 identities[category] = self.data.sample_names.index(identity)
         return identities
 
-    def make_interactions(self, config_args):
-        cfg_interactions = config_args.get("interactions")
-        if cfg_interactions:
-            if cfg_interactions.get("interactions_path", None):
-                self.loaded_interactions = True
-                matrix, interaction_units = InteractionMatrix().load(
-                    cfg_interactions.get("interactions_path"))
-            elif cfg_interactions.get("interactions_matrix", None) is not None:
-                self.loaded_interactions = True
-                matrix, interaction_units = InteractionMatrix(
-                    matrix=cfg_interactions.get("interactions_matrix")).matrix, \
-                    cfg_interactions.get("interactions_units", '')
-        else:
-            matrix, interaction_units = self.init_matrix(
-                ndims=2, init_type="zeros"), ''
-        return (matrix, interaction_units)
+    def init_rates(self, config):
+        self.are_interactions_loaded = False
+        self.interactions, self.interaction_units = self.make_interactions(
+            config)
+        self.degradation_rates = self.init_matrix(ndims=1, init_type="uniform")
+        self.creation_rates = self.init_matrix(ndims=1, init_type="uniform")
+
+    def init_state(self):
+        self.copynumbers = None
+        self.current_copynumbers = None
+        self.steady_state_copynums = self.init_matrix(
+            ndims=1, init_type="zeros")
 
     def init_matrices(self, uniform_vals, ndims=2, init_type="rand") -> List[np.array]:
         matrices = (self.init_matrix(ndims, init_type, val)
@@ -102,6 +80,36 @@ class BaseSpecies():
             return np.zeros(matrix_shape)
         raise ValueError(f"Matrix init type {init_type} not recognised.")
 
+    def init_mutations(self, config: dict):
+        self.mutations = {}
+        self.mutation_nums_within_sequence = config.get(
+            "mutations", {}).get("mutation_nums_within_sequence")
+        self.mutation_nums_per_position = config.get(
+            "mutations", {}).get("mutation_nums_per_position")
+        # Counts: mutated iterations of a sequence
+        self.mutation_counts = config.get(
+            "mutations", {}).get("mutation_counts")
+        self.process_mutations()
+
+    def make_interactions(self, config):
+        cfg_interactions = config.get("interactions")
+        if cfg_interactions:
+            if cfg_interactions.get("interactions_path", None):
+                matrix, interaction_units = InteractionMatrix().load(
+                    cfg_interactions.get("interactions_path"))
+                self.are_interactions_loaded = True
+            elif cfg_interactions.get("interactions_matrix", None) is not None:
+                matrix, interaction_units = InteractionMatrix(
+                    matrix=cfg_interactions.get("interactions_matrix")).matrix, \
+                    cfg_interactions.get("interactions_units", '')
+                self.are_interactions_loaded = True
+            else:
+                logging.warning(f'No interactions could be loaded.')
+        else:
+            matrix, interaction_units = self.init_matrix(
+                ndims=2, init_type="zeros"), ''
+        return (matrix, interaction_units)
+
     def process_mutations(self):
         self.mutation_counts = extend_int_to_list(
             self.mutation_counts, self.size)
@@ -123,30 +131,18 @@ class BaseSpecies():
 
         self.data.sample_names = self.data.make_sample_names()
 
-    @property
-    def interactions(self):
-        return self._interactions
-
-    @interactions.setter
-    def interactions(self, new_interactions):
-        if type(new_interactions) == np.ndarray:
-            self._interactions = new_interactions
-        else:
-            raise ValueError('Cannot set interactions to' +
-                             f' type {type(new_interactions)}.')
-
-    def interactions_to_df(self, interactions):
+    def interactions_to_df(self, interactions: np.ndarray):
         interactions_df = pd.DataFrame.from_dict(self.interactions_to_dict(interactions))
         return interactions_df
 
-    def interactions_to_dict(self, interactions):
+    def interactions_to_dict(self, interactions: np.ndarray):
         interactions_dict = {}
         for i, sample in enumerate(self.data.sample_names):
             interactions_dict[sample] = {s: interactions[i, j]
                                          for j, s in enumerate(self.data.sample_names)}
         return interactions_dict
 
-    def save_initial_values(self):
+    def save_all_values(self):
         return {prop: deepcopy(val) for prop, val in self.__dict__.items()}
 
     def reset_to_initial_state(self):
@@ -183,6 +179,18 @@ class BaseSpecies():
         if value is not None:
             value[value < 0] = 0
         self._copynumbers = value
+
+    @property
+    def interactions(self):
+        return self._interactions
+
+    @interactions.setter
+    def interactions(self, new_interactions):
+        if type(new_interactions) == np.ndarray:
+            self._interactions = new_interactions
+        else:
+            raise ValueError('Cannot set interactions to' +
+                             f' type {type(new_interactions)}.')
 
     @property
     def size(self):
@@ -229,17 +237,17 @@ class BaseCircuit():
         self.species.reset_to_initial_state()
         self.result_collector.reset()
 
-    def make_subsystem(self, mutation_name: str, mutation=None):
-        subsystem = deepcopy(self)
-        subsystem.reset_to_initial_state()
-        subsystem.species.loaded_interactions = False
+    def make_subcircuit(self, mutation_name: str, mutation=None):
+        subcircuit = deepcopy(self)
+        subcircuit.reset_to_initial_state()
+        subcircuit.species.are_interactions_loaded = False
 
         if mutation is None:
             mutation = self.species.mutations.get(mutation_name)
 
-        subsystem.species.mutate(mutation)
+        subcircuit.species.mutate(mutation)
 
-        return subsystem
+        return subcircuit
 
     @property
     def graph(self):

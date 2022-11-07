@@ -1,7 +1,5 @@
-from cmath import log
 from copy import deepcopy
 from functools import partial
-import sys
 from typing import List, Union
 import networkx as nx
 import numpy as np
@@ -301,39 +299,6 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
         return data
 
     visualiser = VisODE()
-    # if plot_type == 'histplot':
-    #     for col_x in cols_x:
-    #         for col_y in cols_y:
-
-    #             data, col_x, col_y = preprocess_data_histplot(
-    #                 data, preprocessor_func_x, threshold_value_max,
-    #                 expand_xcoldata_using_col, expand_ycoldata_using_col,
-    #                 col_x, col_y,
-    #                 normalise_data_x, normalise_data_y,
-    #                 column_name_for_expanding_xcoldata,
-    #                 exclude_rows_nonempty_in_cols, exclude_rows_zero_in_cols,
-    #                 selection_conditions)
-
-    #             if use_sns:
-    #                 data, col_x, col_y = process_log_sns(
-    #                     data, col_x, col_y, plot_kwargs, log_axis)
-
-    #                 plot_kwargs.update({'column_x': col_x, 'data': data})
-    #                 plot_kwargs.update({'column_y': col_y, 'data': data})
-    #             else:
-    #                 plot_kwargs.update({'data': data[col_x]})
-
-    #             data_writer.output(out_type='png', out_name=out_name,
-    #                                write_func=visualiser.histplot,
-    #                                **merge_dicts({'data': data,
-    #                                               'x': col_x,
-    #                                               'y': col_y,
-    #                                               'use_sns': use_sns,
-    #                                               'log_axis': log_axis,
-    #                                               'bin_count': bin_count,
-    #                                               'histplot_kwargs': misc_histplot_kwargs
-    #                                               },
-    #                                              plot_kwargs))
     if plot_type == 'plot':
         for col_x in cols_x:
             for col_y in cols_y:
@@ -409,8 +374,8 @@ def visualise_graph_pyvis(graph: nx.DiGraph,
     interactive_graph.set_edge_smooth('dynamic')
     interactive_graph.save_graph(out_path)
 
-    web_filename = 'file:///' + os.getcwd() + '/' + out_path
-    webbrowser.open(web_filename, new=1, autoraise=True)
+    # web_filename = 'file:///' + os.getcwd() + '/' + out_path
+    # # webbrowser.open(web_filename, new=1, autoraise=True)
 
 
 def visualise_graph_pyplot(graph: nx.DiGraph):
@@ -446,9 +411,11 @@ class VisODE():
         for t, l in zip(leg.texts, new_labels):
             t.set_text(l)
 
-    def plot(self, data, y=None, new_vis=False, t=None, out_path='test_plot', out_type='png',
+    def plot(self, data, y=None, new_vis=False, t=None, out_path='test_plot', out_type='svg',
              **plot_kwrgs) -> None:
         from matplotlib import pyplot as plt
+        data = data.T if len(plot_kwrgs.get('legend', [])
+                             ) == np.shape(data)[0] else data
         plt.figure()
         if y is not None:
             plt.plot(data, y)

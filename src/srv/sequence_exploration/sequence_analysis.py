@@ -3,6 +3,7 @@
 import itertools
 import logging
 import os
+from re import I
 import sys
 from typing import Union
 import numpy as np
@@ -64,6 +65,7 @@ def filter_data(data: pd.DataFrame, filters: dict = {}):
                       >= filters.get("min_num_interacting")]
     filt_stats = filt_stats[filt_stats['num_self_interacting'] <= filters.get(
         "max_self_interacting")]
+    filt_stats = filt_stats.iloc[:min(filters.get('max_total', len(filt_stats)), len(filt_stats))]
     return filt_stats
 
 
@@ -84,7 +86,7 @@ def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path
 
     extra_configs = []
     for index, row in filt_stats.iterrows():
-        extra_config = load_experiment_config(experiment_folder) 
+        extra_config = load_experiment_config(experiment_folder)
         extra_config.update({write_key: get_path_from_output_summary(
             name=row["name"], output_summary=experiment_summary)})
         extra_config.update(
@@ -93,7 +95,7 @@ def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path
         extra_configs.append(extra_config)
     if filters.get('max_circuits') is not None:
         extra_configs = extra_configs[:filters.get('max_circuits')]
-    
+
     return extra_configs
 
 
@@ -148,15 +150,28 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFrame:
 
     def upate_table_with_results(table: dict, reference_table: dict, results: dict) -> dict:
         table.update(results)
+        max_len = 0
         for k in results.keys():
+            if type(table[k]) == np.ndarray and max_len < len(table[k]):
+                max_len = len(table[k])
+
             reference_v = reference_table[k]
             diff = np.asarray(table[k]) - np.asarray(reference_v)
+            if np.shape(np.asarray(table[k])) < np.shape(np.asarray(reference_v)):
+                table[k] = np.repeat(table[k], repeats=len(reference_v))
             ratio = np.divide(np.asarray(table[k]), np.asarray(reference_v),
                               out=np.zeros_like(np.asarray(table[k])), where=np.asarray(reference_v) != 0)
-            if np.size(diff) == 1:
+            ratio = np.expand_dims(
+                ratio, axis=0) if not np.shape(ratio) else ratio
+            if np.size(diff) == 1 and type(diff) == np.ndarray:
                 diff = diff[0]
-            if np.size(ratio) == 1:
+            # elif np.size(diff) == 1:
+            #     diff = np.repeat(diff, repeats=max_len)
+            if np.size(ratio) == 1 and type(ratio) == np.ndarray and np.shape(ratio):
                 ratio = ratio[0]
+            # elif np.size(ratio) == 1 and not np.shape(ratio):
+            #     ratio = np.repeat(ratio, repeats=max_len)
+
             table[f'{k}_diff_to_base_circuit'] = diff
             table[f'{k}_ratio_from_mutation_to_base'] = ratio
         table = remove_invalid_json_values(table)
@@ -174,7 +189,8 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFrame:
                     curr_table[f'{i_type}_{col}_diff_to_base_circuit'] = diff
 
                     ratio = np.divide(np.asarray(
-                        current_stat), np.asarray(ref_stat))
+                        current_stat), np.asarray(ref_stat),
+                        out=np.zeros_like(np.asarray(current_stat)), where=np.asarray(ref_stat) != 0)
                     curr_table[f'{i_type}_{col}_ratio_from_mutation_to_base'] = ratio
                 else:
                     diff = current_stat - ref_stat
@@ -196,7 +212,8 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFrame:
         curr_table = update_diff_to_base_circuit(curr_table, int_stats,
                                                  ref_stats, cols=diff_cols)
         result_report = load_result_report(source_dir)
-        result_report = remove_invalid_json_values(load_result_report(source_dir))
+        result_report = remove_invalid_json_values(
+            load_result_report(source_dir))
         curr_table = upate_table_with_results(
             curr_table, reference_table=ref_table, results=result_report)
         if check_coherent:
@@ -290,19 +307,19 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFrame:
                 'mutation_type': curr_mutation['mutation_types'].values,
                 'mutation_positions': curr_mutation['positions'].values,
                 'path_to_steady_state_data': get_pathnames(first_only=True,
-                                                        file_key='steady_states_data',
-                                                        search_dir=mutation_dir),
+                                                           file_key='steady_states_data',
+                                                           search_dir=mutation_dir),
                 'path_to_signal_data': get_pathnames(first_only=True,
-                                                    file_key='signal_data',
-                                                    search_dir=mutation_dir),
+                                                     file_key='signal_data',
+                                                     search_dir=mutation_dir),
                 'path_to_template_circuit': curr_mutation['template_file'].values[0]
             }
             # Expand the interaction keys in the table
             info_table = update_info_table(info_table, curr_table=current_table,
-                                        int_stats=interaction_stats_current,
-                                        ref_stats=interaction_stats, ref_table=current_og_table,
-                                        source_dir=mutation_dir, check_coherent=True)
-        if circ_idx != 0 and np.mod(circ_idx, 100) == 0:
+                                           int_stats=interaction_stats_current,
+                                           ref_stats=interaction_stats, ref_table=current_og_table,
+                                           source_dir=mutation_dir, check_coherent=True)
+        if circ_idx != 0 and np.mod(circ_idx, 10) == 0:
             info_table = write_results(info_table)
             info_table = init_info_table()
 

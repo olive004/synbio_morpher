@@ -13,7 +13,7 @@
             },
             "molecular_params": "./scripts/common/configs/RNA_circuit/molecular_params.json",
             "circuit_generation": {
-                "repetitions": 10000,
+                "repetitions": 200,
                 "species_count": 3,
                 "sequence_length": 20,
                 "generator_protocol": "template_mutate",
@@ -43,7 +43,8 @@
             "system_type": "RNA",
             "data_path": null,
             "experiment": {
-                "purpose": "mutation_effect_on_interactions_signal"
+                "purpose": "mutation_effect_on_interactions_signal",
+                "no_visualisations": true
             },
             "interaction_simulator": {
                 "name": "IntaRNA",
@@ -58,22 +59,24 @@
                 "max_self_interacting": 3
             },
             "mutations": {
-                "algorithm": "random",
-                "mutation_counts": 4,
-                "mutation_nums_within_sequence": [1, 2, 5],
-                "mutation_nums_per_position": 1,
+                "algorithm": "all",
+                "mutation_counts": 2,
+                "mutation_nums_within_sequence": 0,
+                "mutation_nums_per_position": 3,
                 "concurrent_species_to_mutate": "single_species_at_a_time"
             },
             "signal": {
                 "signal": [
-                    1,
-                    0
+                    0,
+                    1
                 ],
                 "signal_spec": "raw",
                 "signal_type": "abstract",
-                "total_time": 4,
+                "total_time": 100,
                 "magnitude": 100,
-                "time_interval": 0.01
+                "solver": "jax",
+                "use_batching": true,
+                "time_interval": 0.1
             },
             "source_of_interaction_stats": {
                 "is_source_dir_incomplete": true,
