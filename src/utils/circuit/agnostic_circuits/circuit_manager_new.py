@@ -18,15 +18,33 @@ from src.utils.signal.signals import Signal
 from src.utils.circuit.agnostic_circuits.circuit_new import Circuit
 from src.utils.modelling.deterministic import Deterministic, simulate_signal_scan, bioreaction_sim_full
 from src.utils.modelling.base import Modeller
+from src.clients.common.setup import compose_kwargs, instantiate_system, construct_signal
 
 
-TEST_MODE = False
+TEST_MODE = Falseimport logging
+
+
+# @time_it
+def construct_circuit_from_cfg(extra_configs: dict, config_filepath: str = None, config_file: dict = None):
+
+    kwargs = compose_kwargs(config_filepath=config_filepath,
+                            extra_configs=extra_configs, config_file=config_file)
+    circuit = instantiate_system(kwargs)
+
+    if kwargs.get("signal"):
+        kwargs.get("signal")[
+            "identities_idx"] = circuit.species.identities['input']
+        signal = construct_signal(kwargs.get("signal"))
+        circuit.signal = signal
+    return circuit
+
 
 
 class CircuitModeller():
 
     def __init__(self, result_writer=None, config: dict = {}) -> None:
         self.steady_state_solver = config.get("steady_state_solver", 'ivp')
+        self.simulator_args = config['interaction_simulator']
         self.result_writer = ResultWriter() if result_writer is None else result_writer
 
     def init_circuit(self, circuit: Circuit):
@@ -55,28 +73,24 @@ class CircuitModeller():
     def compute_interaction_strengths(self, circuit: Circuit):
         if not circuit.species.are_interactions_loaded:
             if not TEST_MODE:
-                interactions = self.run_interaction_simulator(circuit,
-                                                              circuit.species.data.data)
+                interactions = self.run_interaction_simulator(circuit.species.data.data)
                 circuit.interactions = interactions
             else:
                 logging.warning(
                     'RUNNING IN TEST MODE - interaction rates are fake.')
-                eqconstants = np.random.rand(
-                    circuit.species.size, circuit.species.size)
-                binding_rates_dissociation = np.random.rand(
-                    circuit.species.size, circuit.species.size)
-                interactions = np.random.rand(
-                    circuit.species.size, circuit.species.size)
+                eqconstants = np.random.rand(circuit.circuit_size, circuit.circuit_size)
+                binding_rates_dissociation = np.random.rand(circuit.circuit_size, circuit.circuit_size)
+                interactions = np.random.rand(circuit.circuit_size, circuit.circuit_size)
                 interaction_units = 'test'
                 circuit.interactions = MolecularInteractions(
                     interactions=interactions, binding_rates_dissociation=binding_rates_dissociation,
                     eqconstants=eqconstants, units = interaction_units
                 )
 
-            filename_addons = ['eqconstants', 'binding_rates', 'interactions']
+            filename_addons = ['eqconstants', 'binding_rates_dissociation', 'interactions']
             for interaction_matrix, filename_addon in zip(
-                [circuit.species.eqconstants, circuit.species.binding_rates_dissociation,
-                 circuit.species.interactions], filename_addons
+                [circuit.interactions.eqconstants, circuit.interactions.binding_rates_dissociation,
+                 circuit.interactions.interactions], filename_addons
             ):
                 self.result_writer.output(
                     out_type='csv', out_name=circuit.name, data=interactions_to_df(
@@ -84,8 +98,8 @@ class CircuitModeller():
                     new_file=True, filename_addon=filename_addon, subfolder=filename_addon)
         return circuit
 
-    def run_interaction_simulator(self, circuit: Circuit, data):
-        simulator = InteractionSimulator(circuit.simulator_args)
+    def run_interaction_simulator(self, data):
+        simulator = InteractionSimulator(self.simulator_args)
         return simulator.run(data)
 
     def find_steady_states(self, circuit: Circuit):

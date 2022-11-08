@@ -6,13 +6,13 @@ import unittest
 import inspect
 
 import numpy as np
-from scripts.common.circuit import construct_circuit_from_cfg
 from src.srv.io.manage.sys_interface import make_filename_safely
 from src.utils.results.result_writer import ResultWriter
 from src.utils.data.data_format_tools.common import load_json_as_dict
 
 from src.utils.misc.io import convert_pathname_to_module, get_pathnames, get_subdirectories
 from src.utils.misc.numerical import make_symmetrical_matrix_from_sequence, triangular_sequence
+from src.utils.circuit.agnostic_circuits.circuit_manager_new import construct_circuit_from_cfg
 from src.utils.circuit.agnostic_circuits.circuit_manager import CircuitModeller
 
 

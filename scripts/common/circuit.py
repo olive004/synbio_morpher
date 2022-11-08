@@ -1,6 +1,6 @@
 import logging
 from src.clients.common.setup import compose_kwargs, instantiate_system, construct_signal
-
+from src.utils.circuit.agnostic_circuits.circuit_manager_new import construct_circuit_from_cfg
 
 # @time_it
 def construct_circuit_from_cfg(extra_configs: dict, config_filepath: str = None, config_file: dict = None):

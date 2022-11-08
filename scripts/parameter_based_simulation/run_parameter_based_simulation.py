@@ -3,10 +3,10 @@ from multiprocessing import Process
 import os
 from typing import List
 import numpy as np
-from scripts.common.circuit import construct_circuit_from_cfg
 from src.srv.io.manage.script_manager import script_preamble
 from src.srv.io.manage.sys_interface import make_filename_safely
 from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
+from src.utils.circuit.agnostic_circuits.circuit_manager_new import construct_circuit_from_cfg
 from src.utils.misc.decorators import time_it
 from src.utils.results.analytics.timeseries import Timeseries
 from src.utils.results.experiments import Experiment, Protocol
