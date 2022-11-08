@@ -9,11 +9,12 @@ from src.utils.results.analytics.timeseries import Timeseries
 from src.utils.results.result_writer import ResultWriter
 from src.utils.circuit.agnostic_circuits.circuit_new import interactions_to_df
 
+from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS, InteractionSimulator
+from src.srv.parameter_prediction.interactions import MolecularInteractions
 from src.utils.misc.numerical import make_dynamic_indexer, np_delete_axes, zero_out_negs
 from src.utils.misc.type_handling import flatten_nested_dict
 from src.utils.results.visualisation import VisODE
 from src.utils.signal.signals import Signal
-from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS, InteractionSimulator
 from src.utils.circuit.agnostic_circuits.circuit_new import Circuit
 from src.utils.modelling.deterministic import Deterministic, simulate_signal_scan, bioreaction_sim_full
 from src.utils.modelling.base import Modeller
@@ -50,32 +51,27 @@ class CircuitModeller():
                        identity_matrix=np.identity(num_samples)
                        )
 
-    def update_interactions(self, circuit: Circuit, interactions):
-        
-        circuit.interactions.eqconstants = interactions.eqconstants
-        circuit.interactions.binding_rates_dissociation = interactions.binding_rates
-        circuit.interactions.interactions = interactions.calculate_full_coupling_of_rates(
-            eqconstants=circuit.interactions.eqconstants
-        )
-        circuit.interactions.units = interactions.units
-
     # @time_it
     def compute_interaction_strengths(self, circuit: Circuit):
         if not circuit.species.are_interactions_loaded:
             if not TEST_MODE:
                 interactions = self.run_interaction_simulator(circuit,
                                                               circuit.species.data.data)
-                circuit = self.update_interactions(circuit, interactions)
+                circuit.interactions = interactions
             else:
                 logging.warning(
                     'RUNNING IN TEST MODE - interaction rates are fake.')
-                circuit.species.eqconstants = np.random.rand(
+                eqconstants = np.random.rand(
                     circuit.species.size, circuit.species.size)
-                circuit.species.binding_rates_dissociation = np.random.rand(
+                binding_rates_dissociation = np.random.rand(
                     circuit.species.size, circuit.species.size)
-                circuit.species.interactions = np.random.rand(
+                interactions = np.random.rand(
                     circuit.species.size, circuit.species.size)
-                circuit.species.interaction_units = 'test'
+                interaction_units = 'test'
+                circuit.interactions = MolecularInteractions(
+                    interactions=interactions, binding_rates_dissociation=binding_rates_dissociation,
+                    eqconstants=eqconstants, units = interaction_units
+                )
 
             filename_addons = ['eqconstants', 'binding_rates', 'interactions']
             for interaction_matrix, filename_addon in zip(
@@ -137,26 +133,20 @@ class CircuitModeller():
         return copynumbers
 
     def model_circuit(self, modeller: Modeller, y0: np.ndarray, circuit: Circuit,
-                      signal: np.ndarray = None, signal_identity_idx: int = None):
+                      signal_identity_idx: int = None):
         assert np.shape(y0)[circuit.species.time_axis] == 1, 'Please only use 1-d ' \
             f'initial copynumbers instead of {np.shape(y0)}'
 
         modelling_func = partial(
-            bioreaction_sim_full,)
-        copynumbers = np.concatenate((y0, np.zeros(
-            (np.shape(y0)[circuit.species.species_axis], modeller.max_time-1))
-        ), axis=1)
+            bioreaction_sim_full, 
+            qreactions=circuit.reactions, 
+            t0=0, t1=modeller.max_time, dt0=modeller.time_interval, 
+            signal_onehot=circuit.signal.onehot,
+            signal=circuit.signal)
 
-        if signal is not None:
-            if not np.shape(y0)[circuit.species.species_axis] == circuit.species.data.size:
-                logging.warning('Shape of copynumbers is not consistent with number of species - make sure '
-                                f'that the index for the species serving as the signal ({signal_identity_idx}) '
-                                'is not misaligned due to exclusion of another species.')
-            y0[signal_identity_idx] = signal[0]
-
-        copynumbers = self.iterate_modelling_func(copynumbers, y0, modelling_func,
+        copynumbers = self.iterate_modelling_func(y0, modelling_func,
                                                   max_time=modeller.max_time,
-                                                  signal=signal, signal_idx=signal_identity_idx)
+                                                  signal=circuit.signal, signal_idx=signal_identity_idx)
         return copynumbers
 
     # @time_it
@@ -202,18 +192,12 @@ class CircuitModeller():
             max_time=signal.total_time, time_interval=time_interval
         )
         if circuit.result_collector.get_result('steady_states'):
-            steady_states = deepcopy(circuit.species.steady_state_copynums)
+            steady_states = deepcopy(circuit.result_collector.get_result('steady_states'))
         else:
             steady_states = self.compute_steady_states(Deterministic(
                 max_time=50/time_interval, time_interval=time_interval),
                 circuit=circuit,
-                solver_type=self.steady_state_solver)
-            steady_states = steady_states[make_dynamic_indexer({
-                circuit.species.species_axis: slice(np.shape(steady_states)[circuit.species.species_axis]),
-                circuit.species.time_axis: -1
-            })]
-            steady_states = np.insert(steady_states, signal.identities_idx,
-                                      signal.real_signal[0], axis=circuit.species.species_axis)
+                solver_type=self.steady_state_solver)[:, -1]
 
         steady_states = steady_states.reshape(make_dynamic_indexer({
             circuit.species.species_axis: np.shape(steady_states)[circuit.species.species_axis],

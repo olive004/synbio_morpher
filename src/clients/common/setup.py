@@ -67,6 +67,8 @@ def compose_kwargs(extra_configs: dict = None, config_filepath: str = None, conf
 def construct_signal(kwargs) -> Signal:
     signal_kwargs = parse_sig_args(kwargs)
     SignalType = get_signal_type(kwargs.get("signal_type"))
+    # signal = partial(step_function, total_time=modeller.max_time, 
+    #         step_num=2, dt=modeller.time_interval, target=10)
     return SignalType(**signal_kwargs)
 
 
