@@ -1,7 +1,9 @@
 import logging
+from functools import partial
 import numpy as np
 import jax
 import jax.numpy as jnp
+import diffrax as dfx
 from src.utils.modelling.base import Modeller
 
 
@@ -60,9 +62,7 @@ def simulate_signal_scan(copynumbers, time, full_interactions, creation_rates, d
     return jax.lax.scan(to_scan, copynumbers, (time, signal))
 
 
-def bioreaction_sim_full(t1, dt0):
-    import bioreaction
-
+def bioreaction_sim_full(qreactions, t1, dt0, signal_onehot):
     from bioreaction.simulation.simfuncs.basic_de import bioreaction_sim
 
     signal = partial(step_function, total_time=t1, step_num=2, dt=dt0, target=10)

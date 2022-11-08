@@ -5,6 +5,7 @@ from functools import partial
 from src.utils.misc.helper import vanilla_return
 from src.utils.misc.numerical import SCIENTIFIC
 from src.utils.misc.units import per_mol_to_per_molecules
+from src.srv.parameter_prediction.interactions import MolecularInteractions
 
 
 SIMULATOR_UNITS = {
@@ -180,10 +181,11 @@ class InteractionData():
         self.simulation_protocol = simulation_handler.get_protocol()
         self.simulation_postproc = simulation_handler.get_postprocessing()
         if not test_mode:
-            self.interactions, self.eqconstants, self.binding_rates = self.parse(data)
+            self.interactions = self.parse(data)
         else:
-            self.interactions = self.simulation_protocol()
-        self.units = simulation_handler.units
+            interactions = self.simulation_protocol()
+            self.interactions = MolecularInteractions(interactions=interactions)
+        self.interactions.units = simulation_handler.units
 
     def calculate_full_coupling_of_rates(self, eqconstants):
         self.coupled_binding_rates = self.simulation_handler.calculate_full_coupling_of_rates(
@@ -193,7 +195,7 @@ class InteractionData():
 
     def parse(self, data):
         matrix, rates = self.make_matrix(data)
-        return data, matrix, rates
+        return MolecularInteractions(interactions=data, binding_rates_dissociation=rates, eqconstants=matrix)
 
     def make_matrix(self, data):
         matrix = np.zeros((len(data), len(data)))

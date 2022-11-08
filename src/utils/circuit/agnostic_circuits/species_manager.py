@@ -11,6 +11,9 @@ import bioreaction
 
 class Species(bioreaction.model.data_containers.Species):
 
+    species_axis = 0 
+    time_axis = 1
+
     def __init__(self, name, identity=None) -> None:
         super(self).__init__(name)
         self.identity = identity

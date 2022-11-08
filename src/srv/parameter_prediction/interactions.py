@@ -13,6 +13,16 @@ from src.utils.misc.numerical import square_matrix_rand
 from src.utils.misc.type_handling import flatten_listlike
 
 
+class MolecularInteractions():
+
+    def __init__(self, interactions, binding_rates_dissociation=None, 
+    eqconstants=None, units=None) -> None:
+        self.interactions = interactions
+        self.binding_rates_dissociation = binding_rates_dissociation
+        self.eqconstants = eqconstants
+        self.units = units
+
+
 class InteractionMatrix():
 
     def __init__(self,  # config_args=None,
@@ -38,13 +48,14 @@ class InteractionMatrix():
         self.sample_names = None
 
         if matrix is not None:
-            self.matrix = matrix
+            self.interactions = MolecularInteractions(interactions=matrix)
         elif matrix_path is not None:
-            self.matrix, self.units, self.sample_names = self.load(matrix_path)
+            loaded_matrix, self.units, self.sample_names = self.load(matrix_path)
+            self.interactions = MolecularInteractions(interactions=loaded_matrix, units=self.units)
         elif toy:
-            self.matrix = self.make_toy_matrix(num_nodes)
+            self.interactions = MolecularInteractions(interactions=self.make_toy_matrix(num_nodes))
         else:
-            self.matrix = self.make_rand_matrix(num_nodes)
+            self.interactions = MolecularInteractions(interactions=self.make_rand_matrix(num_nodes))
 
     def load(self, filepath):
         filetype = determine_file_format(filepath)
@@ -105,11 +116,11 @@ class InteractionMatrix():
         interacting = self.get_interacting_species(idxs_interacting)
         self_interacting = self.get_selfinteracting_species(idxs_interacting)
 
-        nonzero_matrix = self.matrix[np.where(self.matrix > 0)]
+        nonzero_matrix = self.interactions[np.where(self.interactions > 0)]
         if len(nonzero_matrix):
             min_interaction = np.min(nonzero_matrix)
         else:
-            min_interaction = np.min(self.matrix)
+            min_interaction = np.min(self.interactions)
 
         stats = {
             "name": self.name,
@@ -117,7 +128,7 @@ class InteractionMatrix():
             "self_interacting": self_interacting,
             "num_interacting": len(set(flatten_listlike(interacting))),
             "num_self_interacting": len(set(self_interacting)),
-            "max_interaction": np.max(self.matrix),
+            "max_interaction": np.max(self.interactions),
             "min_interaction": min_interaction
         }
         stats = {k: [v] for k, v in stats.items()}
@@ -132,13 +143,13 @@ class InteractionMatrix():
 
     def get_unique_interacting_idxs(self):
         if self.units == SIMULATOR_UNITS['IntaRNA']['energy']:
-            idxs_interacting = np.argwhere(self.matrix < 0)
+            idxs_interacting = np.argwhere(self.interactions < 0)
             idxs_interacting = sorted([tuple(sorted(i)) for i in idxs_interacting])
         elif self.units == SIMULATOR_UNITS['IntaRNA']['rate']:
-            idxs_interacting = np.argwhere(self.matrix > 0.000000001)
+            idxs_interacting = np.argwhere(self.interactions > 0.000000001)
             idxs_interacting = sorted([tuple(sorted(i)) for i in idxs_interacting])
         elif self.units == 'eqconstants':
-            idxs_interacting = np.argwhere(self.matrix < 1)
+            idxs_interacting = np.argwhere(self.interactions < 1)
             idxs_interacting = sorted([tuple(sorted(i)) for i in idxs_interacting])
         else:
             raise ValueError(f'Cannot determine interaction properties from units "{self.units}"')

@@ -14,58 +14,33 @@ from src.utils.misc.type_handling import flatten_nested_dict
 from src.utils.results.visualisation import VisODE
 from src.utils.signal.signals import Signal
 from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS, InteractionSimulator
-from src.utils.circuit.agnostic_circuits.base_circuit import BaseCircuit
-from src.utils.modelling.deterministic import Deterministic, simulate_signal_scan
+from src.utils.circuit.agnostic_circuits.circuit_new import Circuit
+from src.utils.modelling.deterministic import Deterministic, simulate_signal_scan, bioreaction_sim_full
 from src.utils.modelling.base import Modeller
 
 
 TEST_MODE = False
 
 
-class SystemManager():
-
-    def __init__(self, circuits) -> None:
-        self.circuits = circuits
-
-
 class CircuitModeller():
 
     def __init__(self, result_writer=None, config: dict = {}) -> None:
         self.steady_state_solver = config.get("steady_state_solver", 'ivp')
+        self.result_writer = ResultWriter() if result_writer is None else result_writer
 
-        if result_writer is None:
-            self.result_writer = ResultWriter()
-        else:
-            self.result_writer = result_writer
-
-    def init_circuit(self, circuit: BaseCircuit):
+    def init_circuit(self, circuit: Circuit):
         circuit = self.compute_interaction_strengths(circuit)
         circuit = self.find_steady_states(circuit)
         return circuit
 
-    def make_modelling_func(self, modelling_func, circuit: BaseCircuit,
-                            exclude_species_by_idx: Union[int, list] = None,
+    def make_modelling_func(self, modelling_func, circuit: Circuit,
                             fixed_value: Timeseries(None).num_dtype = None,
                             fixed_value_idx: int = None):
-        num_samples = circuit.species.data.size
-        exclude_species_by_idx = self.process_exclude_species_by_idx(
-            exclude_species_by_idx)
+        num_samples = circuit.circuit_size
 
         interaction_binding_rates = circuit.species.interactions
         creation_rates = circuit.species.creation_rates
         degradation_rates = circuit.species.degradation_rates
-
-        if exclude_species_by_idx is not None:
-            num_samples -= len(exclude_species_by_idx)
-            for exclude in exclude_species_by_idx:
-                if exclude is None:
-                    continue
-                interaction_binding_rates = np_delete_axes(
-                    interaction_binding_rates, exclude, axes=[circuit.species.species_axis, circuit.species.time_axis])
-                creation_rates = np.delete(
-                    creation_rates, exclude, axis=circuit.species.species_axis)
-                degradation_rates = np.delete(
-                    degradation_rates, exclude, axis=circuit.species.species_axis)
 
         return partial(modelling_func, full_interactions=interaction_binding_rates,
                        creation_rates=creation_rates.flatten(),
@@ -75,24 +50,22 @@ class CircuitModeller():
                        identity_matrix=np.identity(num_samples)
                        )
 
-    @staticmethod
-    def process_exclude_species_by_idx(exclude_species_by_idx):
-        if type(exclude_species_by_idx) == int:
-            exclude_species_by_idx = [exclude_species_by_idx]
-        return exclude_species_by_idx
+    def update_interactions(self, circuit: Circuit, interactions):
+        
+        circuit.interactions.eqconstants = interactions.eqconstants
+        circuit.interactions.binding_rates_dissociation = interactions.binding_rates
+        circuit.interactions.interactions = interactions.calculate_full_coupling_of_rates(
+            eqconstants=circuit.interactions.eqconstants
+        )
+        circuit.interactions.units = interactions.units
 
     # @time_it
-    def compute_interaction_strengths(self, circuit: BaseCircuit):
+    def compute_interaction_strengths(self, circuit: Circuit):
         if not circuit.species.are_interactions_loaded:
             if not TEST_MODE:
                 interactions = self.run_interaction_simulator(circuit,
                                                               circuit.species.data.data)
-                circuit.species.eqconstants = interactions.eqconstants
-                circuit.species.binding_rates_dissociation = interactions.binding_rates
-                circuit.species.interactions = interactions.calculate_full_coupling_of_rates(
-                    eqconstants=circuit.species.eqconstants
-                )
-                circuit.species.interaction_units = interactions.units
+                circuit = self.update_interactions(circuit, interactions)
             else:
                 logging.warning(
                     'RUNNING IN TEST MODE - interaction rates are fake.')
@@ -104,15 +77,10 @@ class CircuitModeller():
                     circuit.species.size, circuit.species.size)
                 circuit.species.interaction_units = 'test'
 
-            # TODO: In the InteractionMatrix, put these addons better somehow
-            filename_addon_eqconstants = 'eqconstants'
-            filename_addon_binding_rates = 'binding_rates'
-            filename_addon_coupled_rates = 'interactions'
+            filename_addons = ['eqconstants', 'binding_rates', 'interactions']
             for interaction_matrix, filename_addon in zip(
                 [circuit.species.eqconstants, circuit.species.binding_rates_dissociation,
-                 circuit.species.interactions],
-                [filename_addon_eqconstants, filename_addon_binding_rates,
-                 filename_addon_coupled_rates]
+                 circuit.species.interactions], filename_addons
             ):
                 self.result_writer.output(
                     out_type='csv', out_name=circuit.name, data=interactions_to_df(
@@ -120,60 +88,45 @@ class CircuitModeller():
                     new_file=True, filename_addon=filename_addon, subfolder=filename_addon)
         return circuit
 
-    def run_interaction_simulator(self, circuit: BaseCircuit, data):
+    def run_interaction_simulator(self, circuit: Circuit, data):
         simulator = InteractionSimulator(circuit.simulator_args)
         return simulator.run(data)
 
-    def find_steady_states(self, circuit: BaseCircuit):
+    def find_steady_states(self, circuit: Circuit):
         modeller_steady_state = Deterministic(
             max_time=50, time_interval=0.1)
 
-        circuit.species.copynumbers = self.compute_steady_states(modeller_steady_state,
+        circuit.reactions.quantities = self.compute_steady_states(modeller_steady_state,
                                                                  circuit=circuit,
                                                                  solver_type=self.steady_state_solver)
 
-        circuit.result_collector.add_result(circuit.species.copynumbers,
+        circuit.result_collector.add_result(circuit.reactions.quantities,
                                             name='steady_states',
                                             category='time_series',
                                             vis_func=VisODE().plot,
-                                            vis_kwargs={'t': np.arange(0, np.shape(circuit.species.copynumbers)[1]) *
+                                            vis_kwargs={'t': np.arange(0, circuit.circuit_size) *
                                                         modeller_steady_state.time_interval,
-                                                        'legend': list(circuit.species.data.sample_names),
+                                                        'legend': [s.name for s in circuit.species],
                                                         'out_type': 'svg'})
-        steady_state_analytics = circuit.result_collector.get_result(
-            key='steady_states').analytics
-        circuit.species.steady_state_copynums = steady_state_analytics['steady_states']
         return circuit
 
-    def compute_steady_states(self, modeller: Modeller, circuit: BaseCircuit,
-                              solver_type: str = 'naive',
-                              exclude_species_by_idx: Union[int, list] = None):
+    def compute_steady_states(self, modeller: Modeller, circuit: Circuit,
+                              solver_type: str = 'naive'):
         copynumbers = circuit.species.copynumbers[:, -1]
-        if exclude_species_by_idx is not None:
-            exclude_species_by_idx = self.process_exclude_species_by_idx(
-                exclude_species_by_idx)
-            for excluded in exclude_species_by_idx:
-                copynumbers = np.delete(
-                    copynumbers, excluded, axis=circuit.species.species_axis)
-        copynumbers = np.reshape(copynumbers, (np.shape(copynumbers)[0], 1))
-
-        idxs = make_dynamic_indexer({
-            circuit.species.species_axis: slice(0, np.shape(copynumbers)[circuit.species.species_axis], 1),
-            circuit.species.time_axis: -1})
+        copynumbers = np.reshape(copynumbers, (circuit.circuit_size, 1))
 
         if solver_type == 'naive':
             copynumbers = self.model_circuit(
-                modeller, copynumbers, circuit=circuit, exclude_species_by_idx=exclude_species_by_idx)
+                modeller, copynumbers, circuit=circuit)
             copynumbers = copynumbers
 
         elif solver_type == 'ivp':
 
-            if circuit.species.interaction_units == SIMULATOR_UNITS['IntaRNA']['energy']:
-                logging.warning(f'Interactions in units of {circuit.species.interaction_units} may not be suitable for '
+            if circuit.interactions.units == SIMULATOR_UNITS['IntaRNA']['energy']:
+                logging.warning(f'Interactions in units of {circuit.interactions.units} may not be suitable for '
                                 'solving with IVP')
-            y0 = copynumbers[idxs]
-            steady_state_result = integrate.solve_ivp(self.make_modelling_func(modeller.dxdt_RNA, circuit,
-                                                                               exclude_species_by_idx),
+            y0 = copynumbers[:, -1]
+            steady_state_result = integrate.solve_ivp(self.make_modelling_func(modeller.dxdt_RNA, circuit),
                                                       (0, modeller.max_time),
                                                       y0=y0)
             if not steady_state_result.success:
@@ -183,27 +136,25 @@ class CircuitModeller():
             copynumbers = steady_state_result.y
         return copynumbers
 
-    def model_circuit(self, modeller: Modeller, init_copynumbers: np.ndarray, circuit: BaseCircuit,
-                      signal: np.ndarray = None, signal_identity_idx: int = None,
-                      exclude_species_by_idx: Union[list, int] = None):
-        assert np.shape(init_copynumbers)[circuit.species.species_axis] == np.shape(
-            init_copynumbers)[circuit.species.species_axis], 'Please only use 1-d ' \
-            f'initial copynumbers instead of {np.shape(init_copynumbers)}'
+    def model_circuit(self, modeller: Modeller, y0: np.ndarray, circuit: Circuit,
+                      signal: np.ndarray = None, signal_identity_idx: int = None):
+        assert np.shape(y0)[circuit.species.time_axis] == 1, 'Please only use 1-d ' \
+            f'initial copynumbers instead of {np.shape(y0)}'
 
-        modelling_func = partial(self.make_modelling_func(
-            modeller.dxdt_RNA, circuit, exclude_species_by_idx), t=None)
-        copynumbers = np.concatenate((init_copynumbers, np.zeros(
-            (np.shape(init_copynumbers)[circuit.species.species_axis], modeller.max_time-1))
+        modelling_func = partial(
+            bioreaction_sim_full,)
+        copynumbers = np.concatenate((y0, np.zeros(
+            (np.shape(y0)[circuit.species.species_axis], modeller.max_time-1))
         ), axis=1)
 
         if signal is not None:
-            if not np.shape(init_copynumbers)[circuit.species.species_axis] == circuit.species.data.size:
+            if not np.shape(y0)[circuit.species.species_axis] == circuit.species.data.size:
                 logging.warning('Shape of copynumbers is not consistent with number of species - make sure '
                                 f'that the index for the species serving as the signal ({signal_identity_idx}) '
                                 'is not misaligned due to exclusion of another species.')
-            init_copynumbers[signal_identity_idx] = signal[0]
+            y0[signal_identity_idx] = signal[0]
 
-        copynumbers = self.iterate_modelling_func(copynumbers, init_copynumbers, modelling_func,
+        copynumbers = self.iterate_modelling_func(copynumbers, y0, modelling_func,
                                                   max_time=modeller.max_time,
                                                   signal=signal, signal_idx=signal_identity_idx)
         return copynumbers
@@ -240,8 +191,8 @@ class CircuitModeller():
         return copynumbers
 
     # @time_it
-    def simulate_signal(self, circuit: BaseCircuit, signal: Signal = None, save_numerical_vis_data: bool = False,
-                        use_solver: str = 'naive', ref_circuit: BaseCircuit = None,
+    def simulate_signal(self, circuit: Circuit, signal: Signal = None, save_numerical_vis_data: bool = False,
+                        use_solver: str = 'naive', ref_circuit: Circuit = None,
                         time_interval=1):
         if signal is None:
             circuit.signal.update_time_interval(time_interval)
@@ -256,8 +207,7 @@ class CircuitModeller():
             steady_states = self.compute_steady_states(Deterministic(
                 max_time=50/time_interval, time_interval=time_interval),
                 circuit=circuit,
-                solver_type=self.steady_state_solver,
-                exclude_species_by_idx=signal.identities_idx)
+                solver_type=self.steady_state_solver)
             steady_states = steady_states[make_dynamic_indexer({
                 circuit.species.species_axis: slice(np.shape(steady_states)[circuit.species.species_axis]),
                 circuit.species.time_axis: -1
@@ -354,9 +304,9 @@ class CircuitModeller():
                                                               'ref_circuit_signal': ref_circuit_signal})
         return circuit
 
-    def simulate_signal_batch(self, circuits: List[Tuple[str, BaseCircuit]], circuit_idx: int = 0,
+    def simulate_signal_batch(self, circuits: List[Tuple[str, Circuit]], circuit_idx: int = 0,
                               save_numerical_vis_data: bool = False,
-                              ref_circuit: BaseCircuit = None,
+                              ref_circuit: Circuit = None,
                               time_interval=1, batch=True):
         names = list([n for n, c in circuits])
         circuits = list([c for n, c in circuits])
@@ -418,7 +368,7 @@ class CircuitModeller():
         return list(zip(names, circuits))
 
     # @time_it
-    def wrap_mutations(self, circuit: BaseCircuit, methods: dict, include_normal_run=True,
+    def wrap_mutations(self, circuit: Circuit, methods: dict, include_normal_run=True,
                        write_to_subsystem=False):
         if write_to_subsystem:
             self.result_writer.subdivide_writing(circuit.name)
@@ -442,7 +392,7 @@ class CircuitModeller():
             self.result_writer.unsubdivide_last_dir()
         self.result_writer.unsubdivide()
 
-    def batch_mutations(self, circuit: BaseCircuit, methods: dict, include_normal_run=True,
+    def batch_mutations(self, circuit: Circuit, methods: dict, include_normal_run=True,
                         write_to_subsystem=False):
         if write_to_subsystem:
             self.result_writer.subdivide_writing(circuit.name)
@@ -483,7 +433,7 @@ class CircuitModeller():
 
         self.result_writer.unsubdivide()
 
-    def apply_to_circuit(self, circuit: BaseCircuit, _methods: dict, ref_circuit: BaseCircuit):
+    def apply_to_circuit(self, circuit: Circuit, _methods: dict, ref_circuit: Circuit):
         methods = deepcopy(_methods)
         for method, kwargs in methods.items():
             if hasattr(self, method):
@@ -495,7 +445,7 @@ class CircuitModeller():
                     f'Could not find method @{method} in class {self}')
         return circuit
 
-    def visualise_graph(self, circuit: BaseCircuit, mode="pyvis", new_vis=False):
+    def visualise_graph(self, circuit: Circuit, mode="pyvis", new_vis=False):
         self.result_writer.visualise_graph(circuit, mode, new_vis)
 
     def write_results(self, circuit, new_report: bool = False, no_visualisations: bool = False,

@@ -1,5 +1,5 @@
 import inspect
-from src.utils.signal.inputs import Signal, AdaptationTarget, OscillatingSignal
+from src.utils.signal.signals import Signal, AdaptationTarget, OscillatingSignal
 
 
 def get_signal_type(signal_type: str) -> Signal:

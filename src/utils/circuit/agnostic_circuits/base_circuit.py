@@ -101,7 +101,7 @@ class BaseSpecies():
                 self.are_interactions_loaded = True
             elif cfg_interactions.get("interactions_matrix", None) is not None:
                 matrix, interaction_units = InteractionMatrix(
-                    matrix=cfg_interactions.get("interactions_matrix")).matrix, \
+                    matrix=cfg_interactions.get("interactions_matrix")).interactions, \
                     cfg_interactions.get("interactions_units", '')
                 self.are_interactions_loaded = True
             else:
