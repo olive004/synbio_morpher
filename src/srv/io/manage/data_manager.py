@@ -6,7 +6,7 @@ from src.utils.data.common import Data
 
 
 class DataManager():
-    def __init__(self, filepath: str = None, identities: dict = None, data=None, sample_names: list = None):
+    def __init__(self, filepath: str = None, identities: dict = None, data=None):
         self.loader = GeneCircuitLoader()
         self.source = filepath
         self.data = data

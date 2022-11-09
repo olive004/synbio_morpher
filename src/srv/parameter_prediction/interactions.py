@@ -17,7 +17,7 @@ class MolecularInteractions():
 
     def __init__(self, interactions, binding_rates_dissociation=None, 
     eqconstants=None, units=None) -> None:
-        self.interactions = interactions
+        self.full_interactions = interactions
         self.binding_rates_dissociation = binding_rates_dissociation
         self.eqconstants = eqconstants
         self.units = units

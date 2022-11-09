@@ -108,7 +108,7 @@ def init_matrix(self, ndims=2, init_type="rand", uniform_val=1) -> np.array:
         matrix_shape = (matrix_size, 1)
 
     if init_type == "rand":
-        return InteractionMatrix(num_nodes=matrix_size).matrix
+        return square_matrix_rand(matrix_size)
     elif init_type == "randint":
         return np.random.randint(10, 1000, matrix_shape).astype(np.float64)
     elif init_type == "uniform":
@@ -116,6 +116,10 @@ def init_matrix(self, ndims=2, init_type="rand", uniform_val=1) -> np.array:
     elif init_type == "zeros":
         return np.zeros(matrix_shape)
     raise ValueError(f"Matrix init type {init_type} not recognised.")
+
+
+def invert_onehot(onehot):
+    return (onehot == 0).astype(onehot.dtype)
 
 
 def make_symmetrical_matrix_from_sequence(arr, side_length: int, total_dimensions: int = 2, sequence: str = 'triangular'):
