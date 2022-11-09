@@ -34,20 +34,8 @@ def construct_bioreaction_model(sample_names, molecular_params):
     return model
 
 
-def compose_kwargs(internal_configs: dict = None, config_filepath: str = None, config_file: dict = None) -> dict:
+def compose_kwargs(internal_configs: dict = None, config_file: dict = None) -> dict:
     """ Extra configs like data paths can be supplied here, eg. for circuits that were dynamically generated. """
-    def get_configs(config_file, config_filepath):
-        config_filepath = make_filename_safely(config_filepath)
-        if config_file is None and config_filepath:
-            config_file = load_json_as_dict(config_filepath)
-        elif config_file and config_filepath:
-            raise ValueError(
-                'Both a config and a config filepath were defined - only use one config option.')
-        elif config_file is None and config_filepath is None:
-            raise ValueError('Config file or path needed as input to function.')
-        return config_file
-
-    config_file = get_configs(config_file, config_filepath)
 
     if internal_configs is not None:
         for kwarg, config in internal_configs.items():
