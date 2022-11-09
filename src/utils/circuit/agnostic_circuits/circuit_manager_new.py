@@ -51,21 +51,26 @@ class CircuitModeller():
     def compute_interaction_strengths(self, circuit: Circuit):
         if not circuit.species.are_interactions_loaded:
             if not TEST_MODE:
-                interactions = self.run_interaction_simulator(circuit.species.data.data)
+                interactions = self.run_interaction_simulator(
+                    circuit.species.data.data)
                 circuit.interactions = interactions
             else:
                 logging.warning(
                     'RUNNING IN TEST MODE - interaction rates are fake.')
-                eqconstants = np.random.rand(circuit.circuit_size, circuit.circuit_size)
-                binding_rates_dissociation = np.random.rand(circuit.circuit_size, circuit.circuit_size)
-                interactions = np.random.rand(circuit.circuit_size, circuit.circuit_size)
+                eqconstants = np.random.rand(
+                    circuit.circuit_size, circuit.circuit_size)
+                binding_rates_dissociation = np.random.rand(
+                    circuit.circuit_size, circuit.circuit_size)
+                interactions = np.random.rand(
+                    circuit.circuit_size, circuit.circuit_size)
                 interaction_units = 'test'
                 circuit.interactions = MolecularInteractions(
                     interactions=interactions, binding_rates_dissociation=binding_rates_dissociation,
-                    eqconstants=eqconstants, units = interaction_units
+                    eqconstants=eqconstants, units=interaction_units
                 )
 
-            filename_addons = ['eqconstants', 'binding_rates_dissociation', 'interactions']
+            filename_addons = ['eqconstants',
+                               'binding_rates_dissociation', 'interactions']
             for interaction_matrix, filename_addon in zip(
                 [circuit.interactions.eqconstants, circuit.interactions.binding_rates_dissociation,
                  circuit.interactions.full_interactions], filename_addons
@@ -85,8 +90,8 @@ class CircuitModeller():
             max_time=50, time_interval=0.1)
 
         circuit.reactions.quantities = self.compute_steady_states(modeller_steady_state,
-                                                                 circuit=circuit,
-                                                                 solver_type=self.steady_state_solver)
+                                                                  circuit=circuit,
+                                                                  solver_type=self.steady_state_solver)
 
         circuit.result_collector.add_result(circuit.reactions.quantities,
                                             name='steady_states',
@@ -108,10 +113,10 @@ class CircuitModeller():
         elif solver_type == 'ivp':
             steady_state_result = integrate.solve_ivp(
                 partial(modeller.dxdt_RNA, full_interactions=circuit.interactions.full_interactions,
-                       creation_rates=circuit.reactions.forward_rates.flatten(),
-                       degradation_rates=circuit.species.reverse_rates.flatten(),
-                       identity_matrix=np.identity(circuit.circuit_size)
-                ),
+                        creation_rates=circuit.reactions.forward_rates.flatten(),
+                        degradation_rates=circuit.species.reverse_rates.flatten(),
+                        identity_matrix=np.identity(circuit.circuit_size)
+                        ),
                 (0, modeller.max_time),
                 y0=circuit.reactions.quantities)
             if not steady_state_result.success:
@@ -126,9 +131,9 @@ class CircuitModeller():
             f'initial copynumbers instead of {np.shape(y0)}'
 
         modelling_func = partial(
-            bioreaction_sim_full, 
-            qreactions=circuit.reactions, 
-            t0=0, t1=modeller.max_time, dt0=modeller.time_interval, 
+            bioreaction_sim_full,
+            qreactions=circuit.reactions,
+            t0=0, t1=modeller.max_time, dt0=modeller.time_interval,
             signal_onehot=circuit.signal.onehot,
             signal=circuit.signal)
 
@@ -168,7 +173,8 @@ class CircuitModeller():
             max_time=signal.total_time, time_interval=time_interval
         )
         if circuit.result_collector.get_result('steady_states'):
-            steady_states = deepcopy(circuit.result_collector.get_result('steady_states'))
+            steady_states = deepcopy(
+                circuit.result_collector.get_result('steady_states'))
         else:
             steady_states = self.compute_steady_states(Deterministic(
                 max_time=50/time_interval, time_interval=time_interval),
@@ -301,7 +307,7 @@ class CircuitModeller():
         b_new_copynumbers = np.array(b_new_copynumbers[1])
         if np.shape(b_new_copynumbers)[1] != circuits[circuit_idx].species.size and np.shape(b_new_copynumbers)[-1] == circuits[circuit_idx].species.size:
             b_new_copynumbers = np.swapaxes(b_new_copynumbers, 1, 2)
-        
+
         # Apply to all circuits
         if ref_circuit is None or ref_circuit == circuit:
             ref_circuit_signal = None
