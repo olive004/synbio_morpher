@@ -1,4 +1,5 @@
 import logging
+import bioreaction
 from src.srv.io.manage.sys_interface import make_filename_safely
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.srv.io.manage.data_manager import DataManager
@@ -8,6 +9,7 @@ from src.utils.signal.configs import get_signal_type, parse_sig_args
 from src.utils.signal.signals import Signal
 from src.utils.circuit.config import parse_cfg_args
 from src.utils.circuit.setup import get_system_type
+from src.utils.misc.type_handling import flatten_listlike
 
 
 ESSENTIAL_KWARGS = [
@@ -17,35 +19,6 @@ ESSENTIAL_KWARGS = [
     # "mutations",
     "system_type",
 ]
-
-
-def compose_bioreaction_kwargs(data_manager: DataManager) -> dict:
-    kwargs = {}
-    def specify_creation(samples: list) -> dict:
-        kwargs['inputs'].append([[]] * len(samples))
-        kwargs['outputs'].append(samples)
-        return kwargs
-
-    def specify_removal(samples: list) -> dict:
-        kwargs['inputs'].append(samples)
-        kwargs['outputs'].append([[]] * len(samples))
-        return kwargs
-
-    def pairup_combination(samples, astype=list):
-        combination = []
-        for si in samples:
-            for sj in samples:
-                combination.append(tuple(sorted([si, sj])))
-        return sorted([astype(s) for s in (set(combination))])
-
-    kwargs['inputs'] = []
-    kwargs['ouptuts'] = []
-
-    kwargs = specify_creation(kwargs, data_manager.data.sample_names)
-    kwargs['inputs'].append(pairup_combination(data_manager.data.sample_names))
-    kwargs['ouptuts'].append(pairup_combination(data_manager.data.sample_names, astype = str))
-    kwargs = specify_removal(kwargs, data_manager.data.sample_names)
-    return kwargs
 
 
 def compose_kwargs(extra_configs: dict = None, config_filepath: str = None, config_file: dict = None) -> dict:
@@ -71,7 +44,8 @@ def compose_kwargs(extra_configs: dict = None, config_filepath: str = None, conf
                                identities=config_file.get("identities", {}),
                                data=config_file.get("data", None),
                                sample_names=config_file.get("sample_names", None))
-    model_kwargs = compose_bioreaction_kwargs(data_manager)
+    molecular_params = load_json_as_dict(config_file.get("molecular_params"))
+    model_kwargs = compose_reaction_kwargs(data_manager)
     bioreaction_model = construct_model(config)
 
     if type(config_file.get("molecular_params")) == dict:
@@ -85,7 +59,7 @@ def compose_kwargs(extra_configs: dict = None, config_filepath: str = None, conf
         "interactions": config_file.get("interactions", {}),
         "interaction_simulator": config_file.get("interaction_simulator", {}),
         "model": bioreaction_model,
-        "molecular_params": load_json_as_dict(config_file.get("molecular_params")),
+        "molecular_params": molecular_params,
         "mutations": cast_all_values_as_list(config_file.get("mutations", {})),
         "name": isolate_filename(data_manager.data.source),
         "signal": load_json_as_dict(config_file.get("signal")),
@@ -105,3 +79,41 @@ def instantiate_system(kwargs):
     system_cfg_args = parse_cfg_args(kwargs)
     SystemType = get_system_type(kwargs["system_type"])
     return SystemType(system_cfg_args)
+
+
+def compose_reaction_kwargs(sample_names: list) -> dict:
+    kwargs = {}
+    kwargs['inputs'] = sample_names + pairup_combination(sample_names) + [[]] * len(sample_names)
+    kwargs['ouptuts'] = [[]] * len(sample_names) + pairup_combination(sample_names, astype=str) + sample_names
+
+    return kwargs
+
+
+def pairup_combination(samples, astype=list):
+    combination = []
+    for si in samples:
+        for sj in samples:
+            combination.append(tuple(sorted([si, sj])))
+    return sorted([astype(s) for s in (set(combination))])
+
+
+def construct_model(config: dict, sample_names):
+    from bioreaction.model.data_containers import BasicModel, Species, Reaction
+
+    model = BasicModel()
+
+    inputs = pairup_combination(sample_names)
+    outputs = pairup_combination(sample_names, astype=str)
+    ref_species = {s: Species(s) for s in set(
+        flatten_listlike(inputs + outputs, safe=True)) if s is not None}
+    for idx, (i, o) in enumerate(zip(inputs, outputs)):
+        reaction = Reaction()
+        reaction.input = make_species(i, ref_species)
+        reaction.output = combine_species(
+            i, ref_species) if o is None else make_species(o, ref_species)
+        reaction.forward_rate = forward_rates[idx]
+        reaction.reverse_rate = reverse_rates[idx]
+        model.reactions.append(reaction)
+
+    model.species = retrieve_species_from_reactions(model)
+    return model
