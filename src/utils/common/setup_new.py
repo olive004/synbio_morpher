@@ -47,7 +47,7 @@ def compose_kwargs(internal_configs: dict = None, config_file: dict = None) -> d
                                data=config_file.get("data", None),
                                sample_names=config_file.get("sample_names", None))
     molecular_params = load_json_as_dict(config_file.get("molecular_params"))
-
+ 
     if type(config_file.get("molecular_params")) == dict:
         raise ValueError(
             f'The moelcular parameters {config_file.get("molecular_params")} supplied for the circuit should link to a file')
