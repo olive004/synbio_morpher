@@ -7,9 +7,8 @@ from src.utils.misc.io import isolate_filename
 from src.utils.misc.type_handling import cast_all_values_as_list
 from src.utils.signal.configs import get_signal_type, parse_sig_args
 from src.utils.signal.signals import Signal
-from src.utils.circuit.config import parse_cfg_args
-from src.utils.circuit.setup import get_system_type
-from src.utils.misc.type_handling import flatten_listlike
+from src.utils.circuit.common.config import parse_cfg_args, get_configs
+from src.utils.circuit.common.setup import get_system_type
 
 
 ESSENTIAL_KWARGS = [
@@ -68,6 +67,22 @@ def compose_kwargs(internal_configs: dict = None, config_file: dict = None) -> d
     assert all([e in kwargs for e in ESSENTIAL_KWARGS]), 'Some of the kwargs for composing ' \
         f'a circuit are not listed in essential kwargs {ESSENTIAL_KWARGS}: {dict({e: e in kwargs for e in ESSENTIAL_KWARGS})}'
     return kwargs
+
+
+def construct_circuit_from_cfg(extra_configs: dict, config_filepath: str = None, config_file: dict = None):
+
+    config_file = get_configs(config_file, config_filepath)
+    kwargs = compose_kwargs(config_filepath=config_filepath,
+                            extra_configs=extra_configs, config_file=config_file)
+    circuit = instantiate_system(kwargs)
+
+    if kwargs.get("signal"):
+        kwargs.get("signal")[
+            "identities_idx"] = circuit.species.identities['input']
+        signal = construct_signal(kwargs.get("signal"))
+        circuit.signal = signal
+    return circuit
+
 
 
 def construct_signal(kwargs) -> Signal:

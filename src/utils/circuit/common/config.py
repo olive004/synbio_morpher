@@ -7,10 +7,20 @@ from src.srv.parameter_prediction.simulator_loading import find_simulator_loader
 from src.utils.misc.io import get_pathnames
 from src.utils.misc.string_handling import remove_special_py_functions
 from src.utils.data.data_format_tools.common import load_json_as_dict
-from src.utils.misc.type_handling import merge_dicts
+from src.srv.io.manage.sys_interface import make_filename_safely
+from src.utils.data.data_format_tools.common import load_json_as_dict
 
 
-# ROOT_DIR = os.environ['ROOT_DIR']
+def get_configs(config_file, config_filepath):
+    config_filepath = make_filename_safely(config_filepath)
+    if config_file is None and config_filepath:
+        config_file = load_json_as_dict(config_filepath)
+    elif config_file and config_filepath:
+        raise ValueError(
+            'Both a config and a config filepath were defined - only use one config option.')
+    elif config_file is None and config_filepath is None:
+        raise ValueError('Config file or path needed as input to function.')
+    return config_file
 
 
 def create_argparse_from_dict(dict_args: Dict):
