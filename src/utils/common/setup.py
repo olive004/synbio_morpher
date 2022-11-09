@@ -7,7 +7,7 @@ from src.utils.misc.type_handling import cast_all_values_as_list
 from src.utils.signal.configs import get_signal_type, parse_sig_args
 from src.utils.signal.signals import Signal
 from src.utils.circuit.common.config import parse_cfg_args
-from src.utils.circuit.common.setup import get_system_type
+from src.utils.circuit.common.system_setup import get_system_type
 
 
 ESSENTIAL_KWARGS = [
@@ -29,13 +29,14 @@ def compose_kwargs(extra_configs: dict = None, config_filepath: str = None, conf
             raise ValueError(
                 'Both a config and a config filepath were defined - only use one config option.')
         elif config_file is None and config_filepath is None:
-            raise ValueError('Config file or path needed as input to function.')
+            raise ValueError(
+                'Config file or path needed as input to function.')
         return config_file
     config_file = get_configs(config_file, config_filepath)
 
     if extra_configs is not None:
         for kwarg, config in extra_configs.items():
-            if kwarg != 'experiment': # and config_file.get(kwarg):
+            if kwarg != 'experiment':  # and config_file.get(kwarg):
                 config_file[kwarg] = config
         # config_file.update(extra_configs)
     data_manager = DataManager(filepath=make_filename_safely(config_file.get("data_path", None)),

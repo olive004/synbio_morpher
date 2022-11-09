@@ -35,7 +35,7 @@ class BaseSpecies():
         self.init_state()
         self.init_rates(config)
         self.init_mutations(config)
-        
+
         self.initial_values = self.save_all_values()
 
     def process_identities(self, identities: dict):
@@ -114,7 +114,8 @@ class BaseSpecies():
     def process_mutations(self):
         self.mutation_counts = extend_int_to_list(
             self.mutation_counts, self.size)
-        self.mutation_nums_within_sequence = extend_int_to_list(self.mutation_nums_within_sequence, self.size)
+        self.mutation_nums_within_sequence = extend_int_to_list(
+            self.mutation_nums_within_sequence, self.size)
 
     def mutate(self, mutation):
 
@@ -133,7 +134,8 @@ class BaseSpecies():
         self.data.sample_names = self.data.make_sample_names()
 
     def interactions_to_df(self, interactions: np.ndarray):
-        interactions_df = pd.DataFrame.from_dict(self.interactions_to_dict(interactions))
+        interactions_df = pd.DataFrame.from_dict(
+            self.interactions_to_dict(interactions))
         return interactions_df
 
     def interactions_to_dict(self, interactions: np.ndarray):
@@ -286,9 +288,10 @@ class BaseCircuit():
     @signal.getter
     def signal(self):
         if self._signal is None:
-            logging.warning(f'Trying to retrieve None signal from circuit. Make sure signal specified in circuit config')
+            logging.warning(
+                f'Trying to retrieve None signal from circuit. Make sure signal specified in circuit config')
         return self._signal
-    
+
     @signal.setter
     def signal(self, value):
         self._signal = value

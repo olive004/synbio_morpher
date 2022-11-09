@@ -11,7 +11,7 @@ import bioreaction
 
 class Species(bioreaction.model.data_containers.Species):
 
-    species_axis = 0 
+    species_axis = 0
     time_axis = 1
 
     def __init__(self, name, identity=None) -> None:
@@ -106,7 +106,8 @@ class SpeciesManager():
     def process_mutations(self):
         self.mutation_counts = extend_int_to_list(
             self.mutation_counts, self.size)
-        self.mutation_nums_within_sequence = extend_int_to_list(self.mutation_nums_within_sequence, self.size)
+        self.mutation_nums_within_sequence = extend_int_to_list(
+            self.mutation_nums_within_sequence, self.size)
 
     def mutate(self, mutation):
 
@@ -125,7 +126,8 @@ class SpeciesManager():
         self.data.sample_names = self.data.make_sample_names()
 
     def interactions_to_df(self, interactions: np.ndarray):
-        interactions_df = pd.DataFrame.from_dict(self.interactions_to_dict(interactions))
+        interactions_df = pd.DataFrame.from_dict(
+            self.interactions_to_dict(interactions))
         return interactions_df
 
     def interactions_to_dict(self, interactions: np.ndarray):

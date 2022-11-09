@@ -320,12 +320,11 @@ class CircuitModeller():
             def translate_circuit_to_bioreaction(circuit):
                 import bioreaction
 
-
             model = construct_model(config)
 
             qreactions = QuantifiedReactions()
             qreactions.init_properties(model, config)
-            new_copynumbers = 
+            new_copynumbers =1
 
         circuit.species.copynumbers = np.concatenate(
             (circuit.species.copynumbers, new_copynumbers[make_dynamic_indexer({
@@ -396,7 +395,7 @@ class CircuitModeller():
         b_new_copynumbers = np.array(b_new_copynumbers[1])
         if np.shape(b_new_copynumbers)[1] != circuits[circuit_idx].species.size and np.shape(b_new_copynumbers)[-1] == circuits[circuit_idx].species.size:
             b_new_copynumbers = np.swapaxes(b_new_copynumbers, 1, 2)
-        
+
         # Apply to all circuits
         if ref_circuit is None or ref_circuit == circuit:
             ref_circuit_signal = None

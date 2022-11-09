@@ -21,19 +21,20 @@ def interactions_to_dict(self, interactions: np.ndarray, labels: list):
     interactions_dict = {}
     for i, sample in enumerate(labels):
         interactions_dict[sample] = {s: interactions[i, j]
-                                        for j, s in enumerate(labels)}
+                                     for j, s in enumerate(labels)}
     return interactions_dict
 
 
 def interactions_to_df(interactions: np.ndarray, labels: list):
-    interactions_df = pd.DataFrame.from_dict(interactions_to_dict(interactions, labels))
+    interactions_df = pd.DataFrame.from_dict(
+        interactions_to_dict(interactions, labels))
     return interactions_df
 
 
 class Graph():
 
     def __init__(self, source_matrix=None) -> None:
-         self.build_graph()
+        self.build_graph()
 
     def build_graph(self, source_matrix=None) -> nx.DiGraph:
         if source_matrix is not None:
@@ -85,7 +86,8 @@ class Circuit():
         self.result_collector = ResultCollector()
         self.species = model.species
         self.reactions = self.init_reactions(model, config)
-        self.interactions = MolecularInteractions(interactions=self.reactions.rates)
+        self.interactions = MolecularInteractions(
+            interactions=self.reactions.rates)
 
         self.graph = Graph(self.species, self.interactions)
         self.circuit_size = len(self.species)
@@ -117,9 +119,10 @@ class Circuit():
     @signal.getter
     def signal(self):
         if self._signal is None:
-            logging.warning(f'Trying to retrieve None signal from circuit. Make sure signal specified in circuit config')
+            logging.warning(
+                f'Trying to retrieve None signal from circuit. Make sure signal specified in circuit config')
         return self._signal
-    
+
     @signal.setter
     def signal(self, value):
         self._signal = value

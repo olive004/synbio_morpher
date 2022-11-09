@@ -8,7 +8,7 @@ from src.utils.misc.type_handling import cast_all_values_as_list
 from src.utils.signal.configs import get_signal_type, parse_sig_args
 from src.utils.signal.signals import Signal
 from src.utils.circuit.common.config import parse_cfg_args, get_configs
-from src.utils.circuit.common.setup import get_system_type
+from src.utils.circuit.common.system_setup import get_system_type
 
 
 ESSENTIAL_KWARGS = [
