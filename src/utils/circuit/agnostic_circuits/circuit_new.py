@@ -7,7 +7,7 @@ import logging
 
 from src.srv.parameter_prediction.interactions import MolecularInteractions
 from src.utils.results.results import ResultCollector
-import bioreactions
+import bioreaction
 
 
 FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
@@ -79,7 +79,7 @@ class Graph():
 
 
 class Circuit():
-    def __init__(self, config: dict, model: bioreactions.model.data_containers.BasicModel):
+    def __init__(self, config: dict, model: bioreaction.model.data_containers.BasicModel):
 
         self.name = config.get("name")
 
@@ -93,7 +93,7 @@ class Circuit():
         self.circuit_size = len(self.species)
 
     def init_reactions(self, model, config):
-        from bioreactions.model.data_containers import QuantifiedReactions
+        from bioreaction.model.data_containers import QuantifiedReactions
         qreactions = QuantifiedReactions()
         qreactions.init_properties(model, config)
         return qreactions
