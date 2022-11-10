@@ -7,7 +7,7 @@ import logging
 
 from src.srv.parameter_prediction.interactions import MolecularInteractions
 from src.utils.results.results import ResultCollector
-import bioreaction
+from bioreaction.model.data_containers import BasicModel
 
 
 FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
@@ -79,15 +79,14 @@ class Graph():
 
 
 class Circuit():
-    def __init__(self, config: dict, model: bioreaction.model.data_containers.BasicModel):
+    def __init__(self, config: dict, model: BasicModel):
 
         self.name = config.get("name")
 
         self.result_collector = ResultCollector()
         self.species = model.species
         self.reactions = self.init_reactions(model, config)
-        self.interactions = MolecularInteractions(
-            interactions=self.reactions.rates)
+        self.interactions = self.init_interactions() 
 
         self.graph = Graph(self.species, self.interactions)
         self.circuit_size = len(self.species)
@@ -97,6 +96,17 @@ class Circuit():
         qreactions = QuantifiedReactions()
         qreactions.init_properties(model, config)
         return qreactions
+
+    def init_interactions(self):
+        matrix = np.zeros((len(self.species), len(self.species)))
+        for si in self.species:
+            for sj in self.species:
+                r_idx = index of the current reaction
+                forward_rates = [r.forward_rates for r in self.reactions.reactions if si ]
+                fr = self.reactions.reactions.forward_rates
+                matrix[self.species.index(si), self.species.index(sj)] = 
+        MolecularInteractions(
+            interactions=self.reactions.reactions.forward_rates)
 
     def reset_to_initial_state(self):
         self.result_collector.reset()
