@@ -49,7 +49,7 @@ class CircuitModeller():
 
     # @time_it
     def compute_interaction_strengths(self, circuit: Circuit):
-        if not circuit.species.are_interactions_loaded:
+        if circuit.model_state == 'uninitialised':
             if not TEST_MODE:
                 interactions = self.run_interaction_simulator(
                     circuit.species.data.data)

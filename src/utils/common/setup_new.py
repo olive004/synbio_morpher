@@ -23,28 +23,33 @@ ESSENTIAL_KWARGS = [
 
 def construct_bioreaction_model(sample_names, molecular_params):
     model = construct_model_fromnames(sample_names)
-    # Add rates...
-    for i in range(len(model.reactions)):
-        if model.reactions[i].input == []:
-            model.reactions[i].forward_rate = molecular_params.get(
-                'creation_rates')
-            model.reactions[i].reverse_rate = 0
-        elif model.reactions[i].output == []:
-            model.reactions[i].reverse_rate = molecular_params.get(
-                'degradation_rates')
-            model.reactions[i].forward_rate = 0
-        else:
-            model.reactions[i].forward_rate = None
-            model.reactions[i].reverse_rate = None
+    def specify_model_rates(model, molecular_params):
+        for i in range(len(model.reactions)):
+            if model.reactions[i].input == []:
+                model.reactions[i].forward_rate = molecular_params.get(
+                    'creation_rates')
+                model.reactions[i].reverse_rate = 0
+            elif model.reactions[i].output == []:
+                model.reactions[i].reverse_rate = molecular_params.get(
+                    'degradation_rates')
+                model.reactions[i].forward_rate = 0
+            else:
+                model.reactions[i].forward_rate = None
+                model.reactions[i].reverse_rate = None
     return model
 
 
 def expand_model_config(config: dict, model: BasicModel) -> dict:
-    if ['starting_concentration'] not in config.keys():
+    if 'starting_concentration' not in config.keys():
         config['starting_concentration'] = {}
         for s in model.species:
             config['starting_concentration'][s.name] = config['molecular_params'].get(
                 'starting_copynumbers', 1)
+    if config.get('interactions', {}).get('interactions_path') or config.get('interactions_path'):
+        config['model_state'] = 'loaded'
+        logging.warning('\n\n\n\nNot implemented yet - to load interactions, modify model construciton\n\n\n\n')
+    else:
+        config['model_state'] = 'uninitialised'
     return config
 
 

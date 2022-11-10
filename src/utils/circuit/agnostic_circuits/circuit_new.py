@@ -87,6 +87,7 @@ class Circuit():
         self.species = model.species
         self.reactions = self.init_reactions(model, config)
         self.interactions = self.init_interactions() 
+        self.model_state = config.get('model_state', 'uninitialised')
 
         self.graph = Graph(self.species, self.interactions)
         self.circuit_size = len(self.species)
@@ -101,12 +102,14 @@ class Circuit():
         matrix = np.zeros((len(self.species), len(self.species)))
         for si in self.species:
             for sj in self.species:
-                r_idx = index of the current reaction
-                forward_rates = [r.forward_rates for r in self.reactions.reactions if si ]
-                fr = self.reactions.reactions.forward_rates
-                matrix[self.species.index(si), self.species.index(sj)] = 
-        MolecularInteractions(
-            interactions=self.reactions.reactions.forward_rates)
+                candidate_reactions = [r for r in self.reactions.reactions if si in r.inputs and sj in r.inputs]
+                if candidate_reactions.empty():
+                    raise ValueError(f'The species {si} and {sj} were not in any reaction inputs')
+                if len(candidate_reactions) > 1:
+                    raise ValueError(f'Multiple reactions found in unique list {candidate_reactions}')
+                matrix[self.species.index(si), self.species.index(sj)] = candidate_reactions[0].forward_rate
+        return MolecularInteractions(
+            interactions=matrix)
 
     def reset_to_initial_state(self):
         self.result_collector.reset()
