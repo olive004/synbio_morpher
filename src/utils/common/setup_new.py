@@ -1,6 +1,7 @@
 import logging
 from bioreaction.model.data_tools import construct_model_fromnames
 from bioreaction.model.data_containers import BasicModel
+from src.utils.data.common import Data
 from src.srv.io.manage.sys_interface import make_filename_safely
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.srv.io.manage.data_manager import DataManager
@@ -21,8 +22,16 @@ ESSENTIAL_KWARGS = [
 ]
 
 
-def construct_bioreaction_model(sample_names, molecular_params):
-    model = construct_model_fromnames(sample_names)
+def add_data_to_species(model, data: Data):
+    for s in model.species:
+        if s.name in data.data.keys():
+            s.physical_data = data.data[s.name]
+    return model
+
+
+def construct_bioreaction_model(data: Data, molecular_params):
+    model = construct_model_fromnames(data.sample_names)
+    model = add_data_to_species(model, data)
     def specify_model_rates(model, molecular_params):
         for i in range(len(model.reactions)):
             if model.reactions[i].input == []:
@@ -67,7 +76,7 @@ def compose_kwargs(internal_configs: dict = None, config: dict = None) -> dict:
                                sample_names=config.get("sample_names", None))
     molecular_params = load_json_as_dict(config.get("molecular_params"))
     model = construct_bioreaction_model(
-        data_manager.data.sample_names, molecular_params)
+        data_manager.data, molecular_params)
     config = expand_model_config(config, model)
 
     if type(config.get("molecular_params")) == dict:
