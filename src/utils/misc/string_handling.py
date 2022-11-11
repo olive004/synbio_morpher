@@ -72,7 +72,7 @@ def remove_file_extension(filename: str) -> str:
 
 
 def remove_special_py_functions(string_list: list) -> list:
-    return [s for s in string_list if '__' not in s]
+    return [s for s in string_list if '__' not in s or '.py' not in s]
 
 
 def remove_element_from_list_by_substring(string_list, exclude):

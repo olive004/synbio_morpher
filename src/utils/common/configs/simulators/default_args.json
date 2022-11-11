@@ -1,3 +1,3 @@
 {
-    "IntaRNA": "./scripts/common/configs/simulators/intaRNA_args.json"
+    "IntaRNA": "./src/utils/common/configs/simulators/intaRNA_args.json"
 }

@@ -65,12 +65,13 @@ def load_simulator_kwargs(default_args: dict, config_args: str = None) -> Dict:
         if kwarg_condition:
             simulator_kwargs = handle_simulator_cfgs(
                 simulator_name, default_args[simulator_name])
+            break
     return simulator_kwargs
 
 
 def retrieve_default_arg_filenames() -> Dict:
     fn = get_pathnames(file_key='default_args', search_dir=os.path.join(
-        'src', 'utils', 'common', 'configs'), first_only=True)
+        'src', 'utils', 'common', 'configs', 'simulators'), first_only=True)
     default_args = load_json_as_dict(fn)
     return default_args
 

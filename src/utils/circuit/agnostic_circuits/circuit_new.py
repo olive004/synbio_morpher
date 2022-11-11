@@ -101,18 +101,25 @@ class Circuit():
 
     def init_interactions(self):
         matrix = np.zeros((len(self.model.species), len(self.model.species)))
-        for si in self.model.species:
-            for sj in self.model.species:
-                candidate_reactions = [
-                    r for r in self.reactions.reactions if si in r.inputs and sj in r.inputs]
-                if candidate_reactions.empty():
-                    raise ValueError(
-                        f'The species {si} and {sj} were not in any reaction inputs')
-                if len(candidate_reactions) > 1:
-                    raise ValueError(
-                        f'Multiple reactions found in unique list {candidate_reactions}')
+        for r in self.model.reactions:
+            if len(r.input) == 2:
+                si = r.input[0]
+                sj = r.input[1]
                 matrix[self.model.species.index(si), self.model.species.index(
-                    sj)] = candidate_reactions[0].forward_rate
+                    sj)] = r.forward_rate
+        # for si in self.model.species:
+        #     for sj in self.model.species:
+        #         candidate_reactions = [
+        #             r for r in self.model.reactions if si in r.input and sj in r.input]
+        #         if len(candidate_reactions) == 0:
+        #             continue
+        #             # raise ValueError(
+        #             #     f'The species {si} and {sj} were not in any reaction inputs')
+        #         if len(candidate_reactions) > 1:
+        #             raise ValueError(
+        #                 f'Multiple reactions found in unique list {candidate_reactions}')
+        #         matrix[self.model.species.index(si), self.model.species.index(
+        #             sj)] = candidate_reactions[0].forward_rate
         return MolecularInteractions(
             coupled_binding_rates=matrix)
 

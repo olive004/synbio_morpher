@@ -1,10 +1,13 @@
 from bioreaction.model.data_tools import construct_model_fromnames
-from src.utils.circuit.specific_circuits.RNA.RNA_circuit import RNACircuit
 from src.utils.data.common import Data
 
 
-def get_system_type(sys_type):
+def get_system_type(sys_type, use_updated = True):
+    if sys_type == "RNA" and use_updated:
+        from src.utils.circuit.agnostic_circuits.circuit_new import Circuit
+        return Circuit
     if sys_type == "RNA":
+        from src.utils.circuit.specific_circuits.RNA.RNA_circuit import RNACircuit
         return RNACircuit
     else:
         raise NotImplementedError(
@@ -24,13 +27,13 @@ def construct_bioreaction_model(data: Data, molecular_params):
     for i in range(len(model.reactions)):
         if model.reactions[i].input == []:
             model.reactions[i].forward_rate = molecular_params.get(
-                'creation_rates')
+                'creation_rate')
             model.reactions[i].reverse_rate = 0
         elif model.reactions[i].output == []:
             model.reactions[i].reverse_rate = molecular_params.get(
-                'degradation_rates')
+                'degradation_rate')
             model.reactions[i].forward_rate = 0
         else:
-            model.reactions[i].forward_rate = None
-            model.reactions[i].reverse_rate = None
+            model.reactions[i].forward_rate = 0
+            model.reactions[i].reverse_rate = 0
     return model
