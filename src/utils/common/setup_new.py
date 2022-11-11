@@ -57,6 +57,7 @@ def compose_kwargs(internal_configs: dict = None, config: dict = None) -> dict:
         # For pre-loading interactions
         "interactions": config.get("interactions", {}),
         "interaction_simulator": config.get("interaction_simulator", {}),
+        "molecular_params": config["molecular_params"],
         "mutations": cast_all_values_as_list(config.get("mutations", {})),
         "name": isolate_filename(data_manager.data.source),
         "signal": load_json_as_dict(config.get("signal")),

@@ -18,7 +18,7 @@
         "input": "RNA_0",
         "output": "RNA_2"
     },
-    "molecular_params": "./scripts/common/configs/RNA_circuit/molecular_params.json",
+    "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
     "mutations": {
         "mutation_counts": 10,
         "mutation_nums_within_sequence": 1,

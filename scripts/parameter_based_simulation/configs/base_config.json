@@ -13,7 +13,7 @@
         "name": "IntaRNA",
         "postprocess": "True"
     },
-    "molecular_params": "./scripts/common/configs/RNA_circuit/molecular_params.json",
+    "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
     "parameter_based_simulation": {
         "interaction_min": 0,
         "interaction_max": 1,
