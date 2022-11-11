@@ -18,7 +18,7 @@ class DataWriter():
         self.purpose = purpose
         self.script_dir = os.path.join('scripts')
         self.root_output_dir = os.path.join('data')
-        self.exception_dirs = os.path.join('example_data')
+        self.exception_dirs = os.path.join('example')
 
         if out_location is None:
             self.top_write_dir = self.make_location_from_purpose(purpose)

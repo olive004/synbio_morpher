@@ -1,6 +1,6 @@
 {
     "system_type": "RNA",
-    "data_path": "./data/example_data/toy_mRNA_circuit_big.fasta",
+    "data_path": "./data/example/toy_mRNA_circuit_big.fasta",
     "experiment": {
         "purpose": "RNA_circuit_simulation"
     },

@@ -4,7 +4,9 @@ import logging
 import numpy as np
 import os
 import pandas as pd
-from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
+from typing import Tuple
+
+from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS, RawSimulationHandling
 from src.utils.misc.scripts_io import get_root_experiment_folder, load_experiment_config
 from src.utils.misc.type_handling import flatten_listlike
 from src.srv.io.loaders.misc import load_csv
@@ -157,3 +159,49 @@ class InteractionMatrix():
         else:
             raise ValueError(f'Cannot determine interaction properties from units "{self.units}"')
         return list(set(idxs_interacting))
+
+
+class InteractionData():
+
+    def __init__(self, data: dict, simulation_handler: RawSimulationHandling,
+                 test_mode=False):
+        self.simulation_handler = simulation_handler
+        self.simulation_protocol = simulation_handler.get_sim_interpretation_protocol()
+        self.simulation_postproc = simulation_handler.get_postprocessing()
+        if not test_mode:
+            self.interactions = self.parse(data)
+        else:
+            self.interactions = MolecularInteractions(
+                coupled_binding_rates=np.random.rand(len(data), len(data)),
+                binding_rates_association=np.random.rand(len(data), len(data)),
+                binding_rates_dissociation=np.random.rand(
+                    len(data), len(data)),
+                eqconstants=np.random.rand(len(data), len(data)),
+            )
+        self.interactions.units = simulation_handler.units
+
+    def calculate_full_coupling_of_rates(self, eqconstants):
+        self.coupled_binding_rates = self.simulation_handler.calculate_full_coupling_of_rates(
+            k_d=self.binding_rates, eqconstants=eqconstants
+        )
+        return self.coupled_binding_rates
+
+    def parse(self, data: dict) -> MolecularInteractions:
+        matrix, rates = self.make_matrix(data)
+        return MolecularInteractions(
+            coupled_binding_rates=data, binding_rates_association=rates[0],
+            binding_rates_dissociation=rates[1], eqconstants=matrix)
+
+    def make_matrix(self, data: dict) -> Tuple[np.ndarray, np.ndarray]:
+        matrix = np.zeros((len(data), len(data)))
+        for i, (name_i, sample) in enumerate(data.items()):
+            for j, (name_j, raw_sample) in enumerate(sample.items()):
+                matrix[i, j] = self.process_interaction(raw_sample)
+        matrix, rates = self.simulation_postproc(matrix)
+        return matrix, rates
+
+    def process_interaction(self, sample):
+        if sample == False:
+            logging.warning('Interaction simulation went wrong.')
+            return 0
+        return self.simulation_protocol(sample)

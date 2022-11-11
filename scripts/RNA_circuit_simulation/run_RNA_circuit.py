@@ -16,7 +16,7 @@ from src.utils.circuit.agnostic_circuits.circuit_manager import CircuitModeller
 def main(config=None, data_writer=None):
 
     # from src.utils.data.fake_data_generation.seq_generator import RNAGenerator
-    # RNAGenerator(purpose='example_data').generate_circuit(
+    # RNAGenerator(purpose='example').generate_circuit(
     #     count=3, slength=25, protocol="template_mix")
 
     config, data_writer = script_preamble(config=config, data_writer=data_writer, alt_cfg_filepath=os.path.join(

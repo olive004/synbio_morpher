@@ -1,5 +1,5 @@
 {
-    "data_path": "./data/example_data/toy_mRNA_circuit.fasta",
+    "data_path": "./data/example/toy_mRNA_circuit.fasta",
     "experiment": {
         "purpose": "RNA_circuit_simulation"
     },

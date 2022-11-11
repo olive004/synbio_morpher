@@ -6,6 +6,7 @@ import networkx as nx
 import logging
 
 from src.srv.parameter_prediction.interactions import MolecularInteractions
+from src.utils.circuit.common.system_setup import construct_bioreaction_model
 from src.utils.results.results import ResultCollector
 from bioreaction.model.data_containers import BasicModel, QuantifiedReactions
 
@@ -79,14 +80,15 @@ class Graph():
 
 
 class Circuit():
-    def __init__(self, config: dict, model: BasicModel):
+    def __init__(self, config: dict):
 
         self.name = config.get("name")
 
         self.result_collector = ResultCollector()
-        self.model = model
-        self.reactions = self.init_reactions(model, config)
-        self.interactions = self.init_interactions() 
+        self.model = construct_bioreaction_model(
+            config.get('data'), config.get('molecular_params'))
+        self.reactions = self.init_reactions(self.model, config)
+        self.interactions = self.init_interactions()
         self.species_state = config.get('species_state', 'uninitialised')
 
         self.graph = Graph(self.model.species, self.interactions)
@@ -101,12 +103,16 @@ class Circuit():
         matrix = np.zeros((len(self.model.species), len(self.model.species)))
         for si in self.model.species:
             for sj in self.model.species:
-                candidate_reactions = [r for r in self.reactions.reactions if si in r.inputs and sj in r.inputs]
+                candidate_reactions = [
+                    r for r in self.reactions.reactions if si in r.inputs and sj in r.inputs]
                 if candidate_reactions.empty():
-                    raise ValueError(f'The species {si} and {sj} were not in any reaction inputs')
+                    raise ValueError(
+                        f'The species {si} and {sj} were not in any reaction inputs')
                 if len(candidate_reactions) > 1:
-                    raise ValueError(f'Multiple reactions found in unique list {candidate_reactions}')
-                matrix[self.model.species.index(si), self.model.species.index(sj)] = candidate_reactions[0].forward_rate
+                    raise ValueError(
+                        f'Multiple reactions found in unique list {candidate_reactions}')
+                matrix[self.model.species.index(si), self.model.species.index(
+                    sj)] = candidate_reactions[0].forward_rate
         return MolecularInteractions(
             coupled_binding_rates=matrix)
 

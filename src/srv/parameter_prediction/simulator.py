@@ -6,7 +6,6 @@ from functools import partial
 from src.utils.misc.helper import vanilla_return, processor
 from src.utils.misc.numerical import SCIENTIFIC
 from src.utils.misc.units import per_mol_to_per_molecules
-from src.srv.parameter_prediction.interactions import MolecularInteractions
 
 
 SIMULATOR_UNITS = {
@@ -151,49 +150,3 @@ def simulate_intaRNA_data(batch: dict, allow_self_interaction: bool, sim_kwargs:
     else:
         data = simulator.run(**sim_kwargs)
     return data
-
-
-class InteractionData():
-
-    def __init__(self, data: dict, simulation_handler: RawSimulationHandling,
-                 test_mode=False):
-        self.simulation_handler = simulation_handler
-        self.simulation_protocol = simulation_handler.get_sim_interpretation_protocol()
-        self.simulation_postproc = simulation_handler.get_postprocessing()
-        if not test_mode:
-            self.interactions = self.parse(data)
-        else:
-            self.interactions = MolecularInteractions(
-                coupled_binding_rates=np.random.rand(len(data), len(data)),
-                binding_rates_association=np.random.rand(len(data), len(data)),
-                binding_rates_dissociation=np.random.rand(
-                    len(data), len(data)),
-                eqconstants=np.random.rand(len(data), len(data)),
-            )
-        self.interactions.units = simulation_handler.units
-
-    def calculate_full_coupling_of_rates(self, eqconstants):
-        self.coupled_binding_rates = self.simulation_handler.calculate_full_coupling_of_rates(
-            k_d=self.binding_rates, eqconstants=eqconstants
-        )
-        return self.coupled_binding_rates
-
-    def parse(self, data: dict) -> MolecularInteractions:
-        matrix, rates = self.make_matrix(data)
-        return MolecularInteractions(
-            coupled_binding_rates=data, binding_rates_association=rates[0],
-            binding_rates_dissociation=rates[1], eqconstants=matrix)
-
-    def make_matrix(self, data: dict) -> Tuple[np.ndarray, np.ndarray]:
-        matrix = np.zeros((len(data), len(data)))
-        for i, (name_i, sample) in enumerate(data.items()):
-            for j, (name_j, raw_sample) in enumerate(sample.items()):
-                matrix[i, j] = self.process_interaction(raw_sample)
-        matrix, rates = self.simulation_postproc(matrix)
-        return matrix, rates
-
-    def process_interaction(self, sample):
-        if sample == False:
-            logging.warning('Interaction simulation went wrong.')
-            return 0
-        return self.simulation_protocol(sample)
