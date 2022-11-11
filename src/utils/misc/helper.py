@@ -10,3 +10,9 @@ def none_func(input):
 
 def vanilla_return(input):
     return input
+
+
+def processor(input, funcs):
+    for func in funcs:
+        input = func(input)
+    return input

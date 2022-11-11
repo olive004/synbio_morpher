@@ -5,7 +5,7 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import logging
-from src.utils.misc.type_funcs import get_unique
+from src.utils.misc.type_handling import get_unique
 from src.utils.results.writer import DataWriter
 from src.utils.misc.string_handling import add_outtype, get_all_similar, make_time_str, prettify_keys_for_label
 from pyvis.network import Network

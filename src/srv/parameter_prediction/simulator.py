@@ -1,8 +1,9 @@
 
 import logging
+from typing import Tuple
 import numpy as np
 from functools import partial
-from src.utils.misc.helper import vanilla_return
+from src.utils.misc.helper import vanilla_return, processor
 from src.utils.misc.numerical import SCIENTIFIC
 from src.utils.misc.units import per_mol_to_per_molecules
 from src.srv.parameter_prediction.interactions import MolecularInteractions
@@ -32,14 +33,12 @@ class RawSimulationHandling():
             'molecular_params').get('association_binding_rate')
         self.units = ''
 
-    def get_protocol(self, custom_prot: str = None):
+    def get_protocol(self):
 
-        def intaRNA_calculator(sample):
+        def intaRNA_calculator(sample: dict):
+            """ There are a variety of parameters that IntaRNA spits out. E is hybridisation energy"""
             raw_sample = sample.get('E', 0)
             return raw_sample
-
-        def intaRNA_test_protocol(sample):
-            return sample
 
         if self.simulator_name == "IntaRNA":
             return intaRNA_calculator
@@ -83,11 +82,6 @@ class RawSimulationHandling():
         def return_both_eqconstants_and_rates(eqconstants):
             return eqconstants, eqconstant_to_rate(eqconstants)
 
-        def processor(input, funcs):
-            for func in funcs:
-                input = func(input)
-            return input
-
         if self.simulator_name == "IntaRNA":
             if self.postprocess:
                 self.units = SIMULATOR_UNITS[self.simulator_name]['rate']
@@ -118,7 +112,7 @@ class RawSimulationHandling():
 
     def calculate_full_coupling_of_rates(self, k_d, eqconstants):
         k_a = per_mol_to_per_molecules(self.fixed_rate_k_a)
-        full_interactions = np.divide(k_a, (k_d + eqconstants)) #.flatten()))
+        full_interactions = np.divide(k_a, (k_d + eqconstants))  # .flatten()))
         return full_interactions
 
     # def calculate_full_coupling_of_rates(self, k_d, degradation_rates):
@@ -154,11 +148,9 @@ def simulate_intaRNA_data(batch: dict, allow_self_interaction: bool, sim_kwargs:
     simulator = IntaRNA()
     if batch is not None:
         data = {}
-        batch_data, batch_labels = list(
-            batch.values()), list(batch.keys())
-        for i, (label_i, sample_i) in enumerate(zip(batch_labels, batch_data)):
+        for i, (label_i, sample_i) in enumerate(batch.items()):
             current_pair = {}
-            for j, (label_j, sample_j) in enumerate(zip(batch_labels, batch_data)):
+            for j, (label_j, sample_j) in enumerate(batch.items()):
                 if not allow_self_interaction and i == j:
                     continue
                 if i > j:  # Skip symmetrical
@@ -175,7 +167,7 @@ def simulate_intaRNA_data(batch: dict, allow_self_interaction: bool, sim_kwargs:
 
 class InteractionData():
 
-    def __init__(self, data, simulation_handler: RawSimulationHandling,
+    def __init__(self, data: dict, simulation_handler: RawSimulationHandling,
                  test_mode=False):
         self.simulation_handler = simulation_handler
         self.simulation_protocol = simulation_handler.get_protocol()
@@ -184,7 +176,8 @@ class InteractionData():
             self.interactions = self.parse(data)
         else:
             interactions = self.simulation_protocol()
-            self.interactions = MolecularInteractions(interactions=interactions)
+            self.interactions = MolecularInteractions(
+                interactions=interactions)
         self.interactions.units = simulation_handler.units
 
     def calculate_full_coupling_of_rates(self, eqconstants):
@@ -193,19 +186,20 @@ class InteractionData():
         )
         return self.coupled_binding_rates
 
-    def parse(self, data):
+    def parse(self, data: dict) -> MolecularInteractions:
         matrix, rates = self.make_matrix(data)
         return MolecularInteractions(interactions=data, binding_rates_dissociation=rates, eqconstants=matrix)
 
-    def make_matrix(self, data):
+    def make_matrix(self, data: dict) -> Tuple[np.ndarray, np.ndarray]:
         matrix = np.zeros((len(data), len(data)))
-        for i, (sample_i, sample_interactions) in enumerate(data.items()):
-            for j, (sample_j, raw_sample) in enumerate(sample_interactions.items()):
-                matrix[i, j] = self.get_interaction(raw_sample)
+        for i, (name_i, sample) in enumerate(data.items()):
+            for j, (name_j, raw_sample) in enumerate(sample.items()):
+                matrix[i, j] = self.process_interaction(raw_sample)
         matrix, rates = self.simulation_postproc(matrix)
         return matrix, rates
 
-    def get_interaction(self, sample):
+    def process_interaction(self, sample):
         if sample == False:
+            logging.warning('Interaction simulation went wrong.')
             return 0
         return self.simulation_protocol(sample)
