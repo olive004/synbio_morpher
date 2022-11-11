@@ -32,19 +32,18 @@ def add_data_to_species(model, data: Data):
 def construct_bioreaction_model(data: Data, molecular_params):
     model = construct_model_fromnames(data.sample_names)
     model = add_data_to_species(model, data)
-    def specify_model_rates(model, molecular_params):
-        for i in range(len(model.reactions)):
-            if model.reactions[i].input == []:
-                model.reactions[i].forward_rate = molecular_params.get(
-                    'creation_rates')
-                model.reactions[i].reverse_rate = 0
-            elif model.reactions[i].output == []:
-                model.reactions[i].reverse_rate = molecular_params.get(
-                    'degradation_rates')
-                model.reactions[i].forward_rate = 0
-            else:
-                model.reactions[i].forward_rate = None
-                model.reactions[i].reverse_rate = None
+    for i in range(len(model.reactions)):
+        if model.reactions[i].input == []:
+            model.reactions[i].forward_rate = molecular_params.get(
+                'creation_rates')
+            model.reactions[i].reverse_rate = 0
+        elif model.reactions[i].output == []:
+            model.reactions[i].reverse_rate = molecular_params.get(
+                'degradation_rates')
+            model.reactions[i].forward_rate = 0
+        else:
+            model.reactions[i].forward_rate = None
+            model.reactions[i].reverse_rate = None
     return model
 
 
