@@ -10,8 +10,8 @@ from bioreaction.model.data_containers import Species
 from src.utils.results.analytics.timeseries import Timeseries
 from src.utils.results.result_writer import ResultWriter
 from src.utils.circuit.agnostic_circuits.circuit_new import interactions_to_df
-from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS, InteractionSimulator, InteractionData
-from src.srv.parameter_prediction.interactions import MolecularInteractions
+from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS, InteractionSimulator
+from src.srv.parameter_prediction.interactions import MolecularInteractions, InteractionData
 from src.utils.misc.numerical import make_dynamic_indexer, invert_onehot, zero_out_negs
 from src.utils.misc.type_handling import flatten_nested_dict
 from src.utils.results.visualisation import VisODE

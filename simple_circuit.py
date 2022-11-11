@@ -5,6 +5,7 @@
 
 # %%
 from src.utils.common.setup_new import construct_circuit_from_cfg
+from src.utils.circuit.agnostic_circuits.circuit_manager_new import CircuitModeller
 
 # %%
 config = {}

@@ -34,15 +34,12 @@ def interactions_to_df(interactions: np.ndarray, labels: list):
 
 class Graph():
 
-    def __init__(self, source_matrix=None) -> None:
-        self.build_graph()
-
-    def build_graph(self, source_matrix=None) -> nx.DiGraph:
+    def __init__(self, source_matrix: np.ndarray = None) -> None:
         if source_matrix is not None:
-            inters = source_matrix
-        else:
-            inters = self.species.interactions
-        graph = nx.from_numpy_matrix(inters, create_using=nx.DiGraph)
+            self.build_graph(source_matrix)
+
+    def build_graph(self, source_matrix: np.ndarray) -> nx.DiGraph:
+        graph = nx.from_numpy_matrix(self.source_matrix, create_using=nx.DiGraph)
         if self.node_labels is not None:
             graph = nx.relabel_nodes(graph, self.node_labels)
         return graph
@@ -91,7 +88,7 @@ class Circuit():
         self.interactions = self.init_interactions()
         self.species_state = config.get('species_state', 'uninitialised')
 
-        self.graph = Graph(self.model.species, self.interactions)
+        self.graph = Graph(source_matrix=self.interactions.eqconstants)
         self.circuit_size = len(self.model.species)
 
     def init_reactions(self, model: BasicModel, config: dict) -> QuantifiedReactions:
