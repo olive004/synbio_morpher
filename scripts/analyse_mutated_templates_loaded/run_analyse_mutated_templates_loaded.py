@@ -38,14 +38,7 @@ def main(config=None, data_writer=None):
         config_searchdir_key='source_dirs', config_file=config_file)
     if type(source_dirs) != list:
         source_dirs = [source_dirs]
-    # source_dir = source_dirs[0]
-    # source_config = load_experiment_config_original(
-    #     source_dir, 'mutation_effect_on_interactions_signal')
 
-    if config_file.get('preprocessing_func') == 'rate_to_energy':
-        preprocessing_func = RawSimulationHandling().rate_to_energy,
-    else:
-        preprocessing_func = None
 
     if config_file.get('only_visualise_circuits', False):
         exclude_rows_via_cols = ['mutation_name']

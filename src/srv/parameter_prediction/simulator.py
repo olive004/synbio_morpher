@@ -33,7 +33,7 @@ class RawSimulationHandling():
             'molecular_params').get('association_binding_rate')
         self.units = ''
 
-    def get_protocol(self):
+    def get_sim_interpretation_protocol(self):
 
         def intaRNA_calculator(sample: dict):
             """ There are a variety of parameters that IntaRNA spits out. E is hybridisation energy"""
@@ -42,18 +42,6 @@ class RawSimulationHandling():
 
         if self.simulator_name == "IntaRNA":
             return intaRNA_calculator
-
-    @staticmethod
-    def rate_to_energy(rate):
-        """ Reverse translation of interaction binding energy to binding rate:
-        AG = RT ln(K)
-        AG = RT ln(kb/kd)
-        K = e^(G / RT)
-        """
-        rate[rate == 0] = 1
-        energy = np.multiply(SCIENTIFIC['RT'], np.log(rate.astype('float64')))
-        energy = energy / 1000
-        return energy
 
     def get_postprocessing(self):
 
@@ -68,7 +56,7 @@ class RawSimulationHandling():
             K = np.exp(np.divide(energies, SCIENTIFIC['RT']))
             return K
 
-        def eqconstant_to_rate(eqconstants):
+        def eqconstant_to_rates(eqconstants):
             """ Translate the equilibrium rate of binding to
             the rate of binding (either association or dissociation
             rate - in this case dissociation). Input in mol, output in molecules:
@@ -77,10 +65,10 @@ class RawSimulationHandling():
             k_d: unbinding rate per s"""
             k_a = per_mol_to_per_molecules(self.fixed_rate_k_a)
             k_d = np.divide(k_a, eqconstants)
-            return k_d
+            return k_a, k_d
 
         def return_both_eqconstants_and_rates(eqconstants):
-            return eqconstants, eqconstant_to_rate(eqconstants)
+            return eqconstants, eqconstant_to_rates(eqconstants)
 
         if self.simulator_name == "IntaRNA":
             if self.postprocess:
@@ -170,14 +158,18 @@ class InteractionData():
     def __init__(self, data: dict, simulation_handler: RawSimulationHandling,
                  test_mode=False):
         self.simulation_handler = simulation_handler
-        self.simulation_protocol = simulation_handler.get_protocol()
+        self.simulation_protocol = simulation_handler.get_sim_interpretation_protocol()
         self.simulation_postproc = simulation_handler.get_postprocessing()
         if not test_mode:
             self.interactions = self.parse(data)
         else:
-            interactions = self.simulation_protocol()
             self.interactions = MolecularInteractions(
-                interactions=interactions)
+                coupled_binding_rates=np.random.rand(len(data), len(data)),
+                binding_rates_association=np.random.rand(len(data), len(data)),
+                binding_rates_dissociation=np.random.rand(
+                    len(data), len(data)),
+                eqconstants=np.random.rand(len(data), len(data)),
+            )
         self.interactions.units = simulation_handler.units
 
     def calculate_full_coupling_of_rates(self, eqconstants):
@@ -188,7 +180,9 @@ class InteractionData():
 
     def parse(self, data: dict) -> MolecularInteractions:
         matrix, rates = self.make_matrix(data)
-        return MolecularInteractions(interactions=data, binding_rates_dissociation=rates, eqconstants=matrix)
+        return MolecularInteractions(
+            coupled_binding_rates=data, binding_rates_association=rates[0],
+            binding_rates_dissociation=rates[1], eqconstants=matrix)
 
     def make_matrix(self, data: dict) -> Tuple[np.ndarray, np.ndarray]:
         matrix = np.zeros((len(data), len(data)))

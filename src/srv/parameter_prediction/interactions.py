@@ -15,9 +15,12 @@ from src.utils.misc.type_handling import flatten_listlike
 
 class MolecularInteractions():
 
-    def __init__(self, interactions, binding_rates_dissociation=None, 
+    def __init__(self, coupled_binding_rates, 
+    binding_rates_association=None, 
+    binding_rates_dissociation=None, 
     eqconstants=None, units=None) -> None:
-        self.full_interactions = interactions
+        self.coupled_binding_rates = coupled_binding_rates
+        self.binding_rates_association = binding_rates_association
         self.binding_rates_dissociation = binding_rates_dissociation
         self.eqconstants = eqconstants
         self.units = units
@@ -48,14 +51,14 @@ class InteractionMatrix():
         self.sample_names = None
 
         if matrix is not None:
-            self.interactions = MolecularInteractions(interactions=matrix)
+            self.interactions = MolecularInteractions(coupled_binding_rates=matrix)
         elif matrix_path is not None:
             loaded_matrix, self.units, self.sample_names = self.load(matrix_path)
-            self.interactions = MolecularInteractions(interactions=loaded_matrix, units=self.units)
+            self.interactions = MolecularInteractions(coupled_binding_rates=loaded_matrix, units=self.units)
         elif toy:
-            self.interactions = MolecularInteractions(interactions=self.make_toy_matrix(num_nodes))
+            self.interactions = MolecularInteractions(coupled_binding_rates=self.make_toy_matrix(num_nodes))
         else:
-            self.interactions = MolecularInteractions(interactions=self.make_rand_matrix(num_nodes))
+            self.interactions = MolecularInteractions(coupled_binding_rates=self.make_rand_matrix(num_nodes))
 
     def load(self, filepath):
         filetype = determine_file_format(filepath)

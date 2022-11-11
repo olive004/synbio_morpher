@@ -41,10 +41,6 @@ def main(config=None, data_writer=None):
 
     source_dir = config_file.get('source_dir')
     source_config = load_experiment_config(source_dir)
-    if config_file.get('preprocessing_func') == 'rate_to_energy':
-        preprocessing_func = RawSimulationHandling().rate_to_energy,
-    else:
-        preprocessing_func = None
 
     if config_file.get('only_visualise_circuits', False):
         exclude_rows_via_cols = ['mutation_name']

@@ -54,10 +54,10 @@ def expand_model_config(config: dict, model: BasicModel) -> dict:
             config['starting_concentration'][s.name] = config['molecular_params'].get(
                 'starting_copynumbers', 1)
     if config.get('interactions', {}).get('interactions_path') or config.get('interactions_path'):
-        config['model_state'] = 'loaded'
+        config['species_state'] = 'loaded'
         logging.warning('\n\n\n\nNot implemented yet - to load interactions, modify model construciton\n\n\n\n')
     else:
-        config['model_state'] = 'uninitialised'
+        config['species_state'] = 'uninitialised'
     return config
 
 

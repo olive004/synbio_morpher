@@ -7,7 +7,7 @@ import logging
 
 from src.srv.parameter_prediction.interactions import MolecularInteractions
 from src.utils.results.results import ResultCollector
-from bioreaction.model.data_containers import BasicModel
+from bioreaction.model.data_containers import BasicModel, QuantifiedReactions
 
 
 FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
@@ -84,32 +84,31 @@ class Circuit():
         self.name = config.get("name")
 
         self.result_collector = ResultCollector()
-        self.species = model.species
+        self.model = model
         self.reactions = self.init_reactions(model, config)
         self.interactions = self.init_interactions() 
-        self.model_state = config.get('model_state', 'uninitialised')
+        self.species_state = config.get('species_state', 'uninitialised')
 
-        self.graph = Graph(self.species, self.interactions)
-        self.circuit_size = len(self.species)
+        self.graph = Graph(self.model.species, self.interactions)
+        self.circuit_size = len(self.model.species)
 
-    def init_reactions(self, model, config):
-        from bioreaction.model.data_containers import QuantifiedReactions
+    def init_reactions(self, model: BasicModel, config: dict) -> QuantifiedReactions:
         qreactions = QuantifiedReactions()
         qreactions.init_properties(model, config)
         return qreactions
 
     def init_interactions(self):
-        matrix = np.zeros((len(self.species), len(self.species)))
-        for si in self.species:
-            for sj in self.species:
+        matrix = np.zeros((len(self.model.species), len(self.model.species)))
+        for si in self.model.species:
+            for sj in self.model.species:
                 candidate_reactions = [r for r in self.reactions.reactions if si in r.inputs and sj in r.inputs]
                 if candidate_reactions.empty():
                     raise ValueError(f'The species {si} and {sj} were not in any reaction inputs')
                 if len(candidate_reactions) > 1:
                     raise ValueError(f'Multiple reactions found in unique list {candidate_reactions}')
-                matrix[self.species.index(si), self.species.index(sj)] = candidate_reactions[0].forward_rate
+                matrix[self.model.species.index(si), self.model.species.index(sj)] = candidate_reactions[0].forward_rate
         return MolecularInteractions(
-            interactions=matrix)
+            coupled_binding_rates=matrix)
 
     def reset_to_initial_state(self):
         self.result_collector.reset()
@@ -117,12 +116,12 @@ class Circuit():
     def make_subcircuit(self, mutation_name: str, mutation=None):
         subcircuit = deepcopy(self)
         subcircuit.reset_to_initial_state()
-        subcircuit.species.are_interactions_loaded = False
+        subcircuit.species_state = 'uninitialised'
 
         if mutation is None:
-            mutation = self.species.mutations.get(mutation_name)
+            mutation = self.model.species.mutations.get(mutation_name)
 
-        subcircuit.species.mutate(mutation)
+        subcircuit.model.species.mutate(mutation)
         return subcircuit
 
     @property
