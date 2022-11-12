@@ -56,7 +56,6 @@ def compose_kwargs(internal_configs: dict = None, config: dict = None) -> dict:
     kwargs.update({
         "data": data_manager.data,
         "data_path": data_manager.source,
-        "identities": data_manager.data.identities,
         # For pre-loading interactions
         "interactions": config.get("interactions", {}),
         "interaction_simulator": config.get("interaction_simulator", {"name": "IntaRNA"}),
@@ -78,16 +77,14 @@ def construct_circuit_from_cfg(extra_configs: dict, config_filepath: str = None,
     circuit = instantiate_system(kwargs)
 
     if kwargs.get("signal"):
-        kwargs.get("signal")[
-            "identities_idx"] = circuit.species.identities['input']
-        signal = construct_signal(kwargs.get("signal"))
+        signal = construct_signal(kwargs.get("signal"), circuit)
         circuit.signal = signal
     return circuit
 
 
-def construct_signal(kwargs) -> Signal:
+def construct_signal(kwargs: dict, circuit) -> Signal:
     SignalType = get_signal_type(kwargs.get("signal_type"))
-    return SignalType(**parse_sig_args(kwargs))
+    return SignalType(**parse_sig_args(kwargs, circuit))
 
 
 def instantiate_system(kwargs):

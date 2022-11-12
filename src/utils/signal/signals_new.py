@@ -8,10 +8,12 @@ import jax.numpy as jnp
 
 # Various signal functions
 class SignalFuncs():
-    def step_function(t, total_time, step_num, dt, target):
-        return (jnp.sin(t) + 1)* jnp.where((10 < t) & (t < 130), target/24, 0)
+    def step_function(t, impulse_center, impulse_halfwidth, dt, target):
+        return (jnp.sin(t) + 1)* jnp.where(
+            (impulse_center-impulse_halfwidth < t) & (t < impulse_center+impulse_halfwidth), 
+            target/(2*impulse_halfwidth*dt), 0)
 
-    def adapt_pulse(self, time_points, height, pulse_type):
+    def adapt_pulse(self, time_points, height, pulse_type, dt):
         ''' Adaptation response curves
         From Shen et al. 2021 https://doi.org/10.1038/s41467-021-23420-5 
         https://github.com/sjx93/rnn_for_gene_network_2020/blob/main/fig1-2_adaptation/target_response_curves.py '''
@@ -37,7 +39,7 @@ class SignalFuncs():
         else:
             raise ValueError(f'Could not recognise pulse type {pulse_type}')
 
-    def spikes(self, positions: list, heights: list, durations: list) -> np.array:
+    def spikes(self, positions: list, heights: list, durations: list, dt) -> np.array:
         # inputs: np.array of position,height,duration for each triangular pulse
         # pulse positions arranged in ascending order
 
@@ -62,16 +64,18 @@ class SignalFuncs():
 class Signal():
     def __init__(self, 
                  onehot: np.ndarray,
-                 signal_cfg: dict=None,
+                 config: dict=None,
                  time_interval=1) -> None:
         self.onehot = onehot
         self.time_interval = time_interval
-        self.func = self.choose_func(signal_cfg)
+        self.func = self.choose_func(config)
 
-    def choose_func(signal_cfg: dict):
+    def choose_func(self, config: dict):
+        
         return partial(
-            SignalFuncs.__getattribute__(signal_cfg['function_name']),
-            **signal_cfg['function_kwargs']
+            SignalFuncs.__getattribute__(config['function_name']),
+            dt=self.time_interval,
+            **config['function_kwargs']
         )
 
     def get_time_steps(self, total_time):
