@@ -4,6 +4,8 @@ import numpy as np
 import jax
 import jax.numpy as jnp
 import diffrax as dfx
+from bioreaction.simulation.simfuncs.basic_de import bioreaction_sim
+from bioreaction.model.data_containers import QuantifiedReactions
 from src.utils.modelling.base import Modeller
 
 
@@ -62,10 +64,11 @@ def simulate_signal_scan(copynumbers, time, full_interactions, creation_rates, d
     return jax.lax.scan(to_scan, copynumbers, (time, signal))
 
 
-def bioreaction_sim_full(qreactions, t0, t1, dt0, signal, signal_onehot, 
+def bioreaction_sim_full(qreactions: QuantifiedReactions, t0, t1, dt0, 
+    signal, signal_onehot: np.ndarray, 
     solver=dfx.Tsit5(), 
     saveat=dfx.SaveAt(t0=True, t1=True, steps=True)):
-    from bioreaction.simulation.simfuncs.basic_de import bioreaction_sim
+    """ The signal is a function that takes in t """
 
     term = dfx.ODETerm(partial(bioreaction_sim, reactions=qreactions.reactions, signal=signal,
                    signal_onehot=signal_onehot, dt=dt0))

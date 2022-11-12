@@ -16,13 +16,16 @@ config = {
         "purpose": "example"
     },
     "molecular_params": "src/utils/common/configs/RNA_circuit/molecular_params.json",
+    "signal": {
+        
+    },
     "system_type": "RNA"
 }
 
 circuit = construct_circuit_from_cfg(config_file=config, extra_configs=None)
-
-# %%
 circuit.__dict__
+# %%
+
 
 # %%
 
