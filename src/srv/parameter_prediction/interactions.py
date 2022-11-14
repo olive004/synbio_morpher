@@ -182,7 +182,7 @@ class InteractionData():
 
     def calculate_full_coupling_of_rates(self, eqconstants):
         self.coupled_binding_rates = self.simulation_handler.calculate_full_coupling_of_rates(
-            k_d=self.binding_rates, eqconstants=eqconstants
+            k_d=self.interactions.binding_rates_dissociation, eqconstants=eqconstants
         )
         return self.coupled_binding_rates
 
@@ -205,3 +205,20 @@ class InteractionData():
             logging.warning('Interaction simulation went wrong.')
             return 0
         return self.simulation_protocol(sample)
+
+
+class InteractionSimulator():
+    def __init__(self, sim_args: dict = None):
+
+        self.simulation_handler = RawSimulationHandling(sim_args)
+
+    def run(self, batch: dict = None, allow_self_interaction=True):
+        """ Makes nested dictionary for querying interactions as 
+        {sample1: {sample2: interaction}} """
+
+        simulator = self.simulation_handler.get_simulator(
+            allow_self_interaction)
+        data = simulator(batch)
+        data = InteractionData(
+            data, simulation_handler=self.simulation_handler)
+        return data

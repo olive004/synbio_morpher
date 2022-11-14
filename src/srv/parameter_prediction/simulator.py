@@ -64,7 +64,7 @@ class RawSimulationHandling():
             k_d: unbinding rate per s"""
             k_a = per_mol_to_per_molecules(self.fixed_rate_k_a)
             k_d = np.divide(k_a, eqconstants)
-            return k_a, k_d
+            return k_a*np.ones_like(k_d), k_d
 
         def return_both_eqconstants_and_rates(eqconstants):
             return eqconstants, eqconstant_to_rates(eqconstants)
@@ -106,23 +106,6 @@ class RawSimulationHandling():
     #     k_a = per_mol_to_per_molecules(self.fixed_rate_k_a)
     #     full_interactions = np.divide(k_a, (k_d + degradation_rates.flatten()))
     #     return full_interactions
-
-
-class InteractionSimulator():
-    def __init__(self, sim_args: dict = None):
-
-        self.simulation_handler = RawSimulationHandling(sim_args)
-
-    def run(self, batch: dict = None, allow_self_interaction=True):
-        """ Makes nested dictionary for querying interactions as 
-        {sample1: {sample2: interaction}} """
-
-        simulator = self.simulation_handler.get_simulator(
-            allow_self_interaction)
-        data = simulator(batch)
-        data = InteractionData(
-            data, simulation_handler=self.simulation_handler)
-        return data
 
 
 def simulate_vanilla(batch):

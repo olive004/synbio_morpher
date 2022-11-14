@@ -10,10 +10,10 @@ from bioreaction.model.data_containers import Species
 from src.utils.results.analytics.timeseries import Timeseries
 from src.utils.results.result_writer import ResultWriter
 from src.utils.circuit.agnostic_circuits.circuit_new import interactions_to_df
-from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS, InteractionSimulator
-from src.srv.parameter_prediction.interactions import MolecularInteractions, InteractionData
+from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
+from src.srv.parameter_prediction.interactions import MolecularInteractions, InteractionData, InteractionSimulator
 from src.utils.misc.numerical import make_dynamic_indexer, invert_onehot, zero_out_negs
-from src.utils.misc.type_handling import flatten_nested_dict
+from src.utils.misc.type_handling import flatten_nested_dict, flatten_listlike, get_unique
 from src.utils.results.visualisation import VisODE
 from src.utils.signal.signals import Signal
 from src.utils.circuit.agnostic_circuits.circuit_new import Circuit
@@ -51,7 +51,7 @@ class CircuitModeller():
     def update_species_simulated_rates(self, circuit: Circuit,
                                        interactions: MolecularInteractions) -> Circuit:
         for r in circuit.model.reactions:
-            if len(r.inputs) == 2:
+            if len(r.input) == 2:
                 si = r.input[0]
                 sj = r.input[1]
                 r.forward_rate = interactions.binding_rates_association[circuit.model.species.index(
@@ -64,7 +64,7 @@ class CircuitModeller():
         if circuit.species_state == 'uninitialised':
             if not TEST_MODE:
                 interactions = self.run_interaction_simulator(
-                    circuit.model.species)
+                    get_unique(flatten_listlike([r.input for r in circuit.model.reactions])))
                 circuit = self.update_species_simulated_rates(
                     circuit, interactions.interactions)
                 circuit.interactions = interactions.interactions
@@ -96,8 +96,7 @@ class CircuitModeller():
         return circuit
 
     def run_interaction_simulator(self, species: List[Species]) -> InteractionData:
-        data = {}
-        {s.name: s.physical_data for s in species}
+        data = {s.name: s.physical_data for s in species}
         simulator = InteractionSimulator(self.simulator_args)
         return simulator.run(data)
 
