@@ -49,6 +49,7 @@ circuit.__dict__
 
 modeller = CircuitModeller(result_writer=data_writer, config=config)
 circuit = modeller.init_circuit(circuit=circuit)
+modeller.write_results(circuit)
 
 # %%
 

@@ -106,7 +106,7 @@ class Timeseries():
 
     def get_response_times(self, steady_states, first_derivative, signal_idx):
         if signal_idx is None:
-            return np.zeros(np.shape(steady_states)[0])
+            return [np.zeros(np.shape(steady_states)[0])] * 3
 
         def get_response_time_thresholded(threshold):
             """ The response time is calculated as the time from the last point

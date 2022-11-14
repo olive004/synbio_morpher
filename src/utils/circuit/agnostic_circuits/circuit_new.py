@@ -1,8 +1,8 @@
 from copy import deepcopy
-from typing import List
-import numpy as np
+from typing import List, Union
 import pandas as pd
 import networkx as nx
+import numpy as np
 import logging
 
 from src.srv.parameter_prediction.interactions import MolecularInteractions
@@ -35,9 +35,10 @@ def interactions_to_df(interactions: np.ndarray, labels: list):
 
 class Graph():
 
-    def __init__(self, source_matrix: np.ndarray = None) -> None:
-        if source_matrix is not None:
-            self.build_graph(source_matrix)
+    def __init__(self, labels: List[str], source_matrix: np.ndarray = None) -> None:
+        source_matrix = np.zeros((len(labels), len(labels))) if source_matrix is None else source_matrix
+        self._node_labels = labels
+        self.build_graph(source_matrix)
 
     def build_graph(self, source_matrix: np.ndarray) -> nx.DiGraph:
         graph = nx.from_numpy_matrix(source_matrix, create_using=nx.DiGraph)
@@ -45,8 +46,8 @@ class Graph():
             graph = nx.relabel_nodes(graph, self.node_labels)
         return graph
 
-    def refresh_graph(self):
-        self.graph = self.build_graph()
+    def refresh_graph(self, source_matrix: np.ndarray):
+        self.graph = self.build_graph(source_matrix)
 
     def get_graph_labels(self) -> dict:
         return sorted(self.graph)
@@ -63,10 +64,12 @@ class Graph():
 
     @property
     def node_labels(self):
+        if type(self._node_labels) == list:
+            return {i: n for i, n in enumerate(self._node_labels)}
         return self._node_labels
 
     @node_labels.setter
-    def node_labels(self, labels: dict):
+    def node_labels(self, labels: Union[dict, list]):
 
         current_nodes = self.get_graph_labels()
         if type(labels) == list:
@@ -95,7 +98,7 @@ class Circuit():
         self.signal: Signal = None
         self.mutations: dict = config.get('mutations', {})
 
-        self.graph = Graph(source_matrix=self.interactions.eqconstants)
+        self.graph = Graph(source_matrix=self.interactions.eqconstants, labels=[s.name for s in self.model.species])
         self.circuit_size = len(self.model.species)
 
     def init_reactions(self, model: BasicModel, config: dict) -> QuantifiedReactions:
