@@ -8,6 +8,8 @@ import jax.numpy as jnp
 
 # Various signal functions
 class SignalFuncs():
+
+    @staticmethod
     def step_function(t, impulse_center, impulse_halfwidth, dt, target):
         return (jnp.sin(t) + 1)* jnp.where(
             (impulse_center-impulse_halfwidth < t) & (t < impulse_center+impulse_halfwidth), 
@@ -74,7 +76,7 @@ class Signal():
     def make_func(self, function_name: str, function_kwargs: dict):
         
         return partial(
-            SignalFuncs.__getattribute__(function_name),
+            SignalFuncs().__getattribute__(function_name),
             dt=self.time_interval,
             **function_kwargs
         )
