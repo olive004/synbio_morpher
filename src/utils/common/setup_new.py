@@ -63,6 +63,7 @@ def compose_kwargs(internal_configs: dict = None, config: dict = None) -> dict:
         "mutations": cast_all_values_as_list(config.get("mutations", {})),
         "name": isolate_filename(data_manager.data.source),
         "signal": load_json_as_dict(config.get("signal")),
+        "simulation": config.get("simulation", {}),
         "system_type": config.get("system_type")
     })
     assert all([e in kwargs for e in ESSENTIAL_KWARGS]), 'Some of the kwargs for composing ' \
@@ -77,13 +78,13 @@ def construct_circuit_from_cfg(extra_configs: dict, config_filepath: str = None,
     circuit = instantiate_system(kwargs)
 
     if kwargs.get("signal"):
-        signal = construct_signal(kwargs["signal"], circuit)
+        signal = construct_signal(kwargs, circuit)
         circuit.signal = signal
     return circuit
 
 
 def construct_signal(kwargs: dict, circuit) -> Signal:
-    SignalType = get_signal_type(kwargs.get("signal_type"))
+    SignalType = get_signal_type(kwargs["signal"].get("signal_type"))
     return SignalType(**parse_sig_args(kwargs, circuit))
 
 

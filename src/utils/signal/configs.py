@@ -30,9 +30,9 @@ def make_onehot_signals(circuit: Circuit, species_chosen: List[str]):
 def parse_sig_args(kwargs: dict, circuit: Circuit, SignalType = Signal):
     signal_init_args = inspect.getfullargspec(SignalType.__init__).args
     sig_kwargs = {}
-    sig_kwargs['onehot'] = make_onehot_signals(circuit=circuit, species_chosen=kwargs['inputs'])
-    sig_kwargs['time_interval'] = kwargs.get('simulation', {}).get('dt')
-    for k, v in kwargs.items():
+    sig_kwargs['onehot'] = make_onehot_signals(circuit=circuit, species_chosen=kwargs["signal"]['inputs'])
+    sig_kwargs['time_interval'] = kwargs.get('simulation', {}).get('dt', 1)
+    for k, v in kwargs["signal"].items():
         if k in signal_init_args:
             sig_kwargs[k] = v
     if any([k not in sig_kwargs for k in signal_init_args if k != 'self']):
