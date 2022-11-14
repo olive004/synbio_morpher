@@ -6,6 +6,7 @@ import numpy as np
 import jax
 from scipy import integrate
 from bioreaction.model.data_containers import Species
+from bioreaction.simulation.simfuncs.basic_de import bioreaction_sim
 
 from src.utils.results.analytics.timeseries import Timeseries
 from src.utils.results.result_writer import ResultWriter
@@ -14,14 +15,15 @@ from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
 from src.srv.parameter_prediction.interactions import MolecularInteractions, InteractionData, InteractionSimulator
 from src.utils.misc.numerical import make_dynamic_indexer, invert_onehot, zero_out_negs
 from src.utils.misc.type_handling import flatten_nested_dict, flatten_listlike, get_unique
+from src.utils.misc.helper import vanilla_return
 from src.utils.results.visualisation import VisODE
-from src.utils.signal.signals import Signal
+from src.utils.signal.signals_new import Signal
 from src.utils.circuit.agnostic_circuits.circuit_new import Circuit
 from src.utils.modelling.deterministic import Deterministic, simulate_signal_scan, bioreaction_sim_full
 from src.utils.modelling.base import Modeller
 
 
-TEST_MODE = False
+TEST_MODE = True
 
 
 class CircuitModeller():
@@ -29,6 +31,7 @@ class CircuitModeller():
     def __init__(self, result_writer=None, config: dict = {}) -> None:
         self.steady_state_solver = config.get("steady_state_solver", 'ivp')
         self.simulator_args = config['interaction_simulator']
+        self.simulation = config.get('simulation', {})
         self.result_writer = ResultWriter() if result_writer is None else result_writer
 
     def init_circuit(self, circuit: Circuit):
@@ -37,12 +40,12 @@ class CircuitModeller():
         return circuit
 
     def make_modelling_func(self, modelling_func, circuit: Circuit,
-                            fixed_value: Timeseries(None).num_dtype = None,
+                            fixed_value = None,
                             fixed_value_idx: int = None):
 
         return partial(modelling_func, full_interactions=circuit.interactions.coupled_binding_rates,
-                       creation_rates=circuit.reactions.forward_rates.flatten(),
-                       degradation_rates=circuit.model.species.reverse_rates.flatten(),
+                       creation_rates=circuit.qreactions.reactions.forward_rates.flatten(),
+                       degradation_rates=circuit.qreactions.reactions.reverse_rates.flatten(),
                        signal=fixed_value,
                        signal_idx=fixed_value_idx,
                        identity_matrix=np.identity(circuit.circuit_size)
@@ -91,7 +94,7 @@ class CircuitModeller():
             ):
                 self.result_writer.output(
                     out_type='csv', out_name=circuit.name, data=interactions_to_df(
-                        interaction_matrix), overwrite=False,
+                        interaction_matrix, labels=[s.name for s in circuit.model.species]), overwrite=False,
                     new_file=True, filename_addon=filename_addon, subfolder=filename_addon)
         return circuit
 
@@ -104,11 +107,11 @@ class CircuitModeller():
         modeller_steady_state = Deterministic(
             max_time=50, time_interval=0.1)
 
-        circuit.reactions.quantities = self.compute_steady_states(modeller_steady_state,
-                                                                  circuit=circuit,
-                                                                  solver_type=self.steady_state_solver)
+        circuit.qreactions.quantities = self.compute_steady_states(modeller_steady_state,
+                                                                   circuit=circuit,
+                                                                   solver_type=self.steady_state_solver)
 
-        circuit.result_collector.add_result(circuit.reactions.quantities,
+        circuit.result_collector.add_result(circuit.qreactions.quantities,
                                             name='steady_states',
                                             category='time_series',
                                             vis_func=VisODE().plot,
@@ -122,22 +125,19 @@ class CircuitModeller():
                               solver_type: str = 'naive'):
         if solver_type == 'naive':
             copynumbers = self.model_circuit(
-                modeller, y0=circuit.reactions.quantities, circuit=circuit)
+                modeller, y0=circuit.qreactions.quantities, circuit=circuit)
             # TODO: reshape to copynumbers[1] or copynumbers[0][1]
             copynumbers = copynumbers
         elif solver_type == 'ivp':
             steady_state_result = integrate.solve_ivp(
-                partial(modeller.dxdt_RNA, full_interactions=circuit.interactions.coupled_binding_rates,
-                        creation_rates=circuit.reactions.forward_rates.flatten(),
-                        degradation_rates=circuit.model.species.reverse_rates.flatten(),
-                        identity_matrix=np.identity(circuit.circuit_size)
-                        ),
+                partial(bioreaction_sim, args=None, reactions=circuit.qreactions.reactions, signal=vanilla_return,
+                        signal_onehot=np.zeros_like(circuit.signal.onehot), dt=modeller.time_interval),
                 (0, modeller.max_time),
-                y0=circuit.reactions.quantities)
+                y0=circuit.qreactions.quantities)
             if not steady_state_result.success:
                 raise ValueError(
                     'Steady state could not be found through solve_ivp - possibly because units '
-                    f'are in {circuit.model.species.interaction_units}. {SIMULATOR_UNITS}')
+                    f'are in {circuit.interactions.units}. {SIMULATOR_UNITS}')
             copynumbers = steady_state_result.y
         return copynumbers
 
@@ -147,7 +147,7 @@ class CircuitModeller():
 
         modelling_func = partial(
             bioreaction_sim_full,
-            qreactions=circuit.reactions,
+            qreactions=circuit.qreactions,
             t0=0, t1=modeller.max_time, dt0=modeller.time_interval,
             signal_onehot=circuit.signal.onehot,
             signal=circuit.signal)
@@ -250,7 +250,7 @@ class CircuitModeller():
             # new_copynumbers = np.array(new_copynumbers[1]).T
 
             new_copynumbers = bioreaction_sim_full(
-                circuit.reactions, t0=0, t1=modeller_signal.max_time, dt0=modeller_signal.time_interval,
+                circuit.qreactions, t0=0, t1=modeller_signal.max_time, dt0=modeller_signal.time_interval,
                 signal=signal, signal_onehot=signal.onehot)
 
         circuit.model.species.copynumbers = np.concatenate(
@@ -280,27 +280,28 @@ class CircuitModeller():
                                                               'ref_circuit_signal': ref_circuit_signal})
         return circuit
 
-    def simulate_signal_batch(self, circuits: List[Tuple[str, Circuit]], circuit_idx: int = 0,
+    def simulate_signal_batch(self, circuits: List[Circuit], max_time,
+                              circuit_idx: int = 0,
                               save_numerical_vis_data: bool = False,
                               ref_circuit: Circuit = None,
-                              time_interval=1, batch=True):
+                              dt=1, as_batch=True):
         names = list([n for n, c in circuits])
         circuits = list([c for n, c in circuits])
         if circuit_idx < len(circuits):
             signal = circuits[circuit_idx].signal
-            signal.update_time_interval(time_interval)
+            signal.update_time_interval(dt)
         else:
             raise ValueError(
                 f'The chosen circuit index {circuit_idx} exceeds the circuit list (len {len(circuits)}')
 
         modeller_signal = Deterministic(
-            max_time=signal.total_time, time_interval=time_interval
+            max_time=max_time, time_interval=dt
         )
 
         # Batch
         t = np.arange(modeller_signal.max_time)
         b_starting_copynumbers = np.array(
-            [c.species.steady_state_copynums.flatten() for c in circuits])
+            [c.model.species.steady_state_copynums.flatten() for c in circuits])
         b_interactions = np.array([c.species.interactions for c in circuits])
         # b_creation_rates = np.array(
         #     [c.species.creation_rates.flatten() for c in circuits])
@@ -337,7 +338,7 @@ class CircuitModeller():
                                                     vis_func=VisODE().plot,
                                                     save_numerical_vis_data=save_numerical_vis_data,
                                                     vis_kwargs={'t': t,
-                                                                'legend': list(circuit.species.data.sample_names),
+                                                                'legend': [s.name for s in circuit.model.species],
                                                                 'out_type': 'svg'},
                                                     analytics_kwargs={'signal_idx': signal.identities_idx,
                                                                       'ref_circuit_signal': ref_circuit_signal})
@@ -375,7 +376,7 @@ class CircuitModeller():
             self.result_writer.subdivide_writing(circuit.name)
 
         mutation_dict = flatten_nested_dict(
-            circuit.model.species.mutations.items())
+            circuit.mutations.items())
         subcircuits = [(name, circuit.make_subcircuit(name, mutation))
                        for name, mutation in mutation_dict.items()]
         if include_normal_run:

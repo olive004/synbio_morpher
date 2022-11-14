@@ -99,7 +99,7 @@ class ResultWriter(DataWriter):
         self.output(out_name=out_name, write_func=writer, **vis_kwargs)
 
     def visualise_graph(self, circuit: BaseCircuit, mode="pyvis", new_vis=False):
-        circuit.refresh_graph()
+        circuit.graph.refresh_graph()
 
         out_path = os.path.join(self.write_dir, 'graph')
         if mode == 'pyvis':

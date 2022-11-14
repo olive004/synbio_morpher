@@ -8,6 +8,7 @@ import logging
 from src.srv.parameter_prediction.interactions import MolecularInteractions
 from src.utils.circuit.common.system_setup import construct_bioreaction_model
 from src.utils.results.results import ResultCollector
+from src.utils.signal.signals_new import Signal
 from bioreaction.model.data_containers import BasicModel, QuantifiedReactions
 
 
@@ -18,7 +19,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-def interactions_to_dict(self, interactions: np.ndarray, labels: list):
+def interactions_to_dict(interactions: np.ndarray, labels: list):
     interactions_dict = {}
     for i, sample in enumerate(labels):
         interactions_dict[sample] = {s: interactions[i, j]
@@ -39,7 +40,7 @@ class Graph():
             self.build_graph(source_matrix)
 
     def build_graph(self, source_matrix: np.ndarray) -> nx.DiGraph:
-        graph = nx.from_numpy_matrix(self.source_matrix, create_using=nx.DiGraph)
+        graph = nx.from_numpy_matrix(source_matrix, create_using=nx.DiGraph)
         if self.node_labels is not None:
             graph = nx.relabel_nodes(graph, self.node_labels)
         return graph
@@ -71,12 +72,16 @@ class Graph():
         if type(labels) == list:
             self._node_labels = dict(zip(current_nodes, labels))
         else:
-            labels = list(range(len(self.species.interactions)))
+            labels = len(labels)
             self._node_labels = dict(zip(current_nodes, labels))
         self.graph = nx.relabel_nodes(self.graph, self.node_labels)
 
 
 class Circuit():
+
+    species_axis = 0
+    time_axis = 1
+
     def __init__(self, config: dict):
 
         self.name = config.get("name")
@@ -84,9 +89,11 @@ class Circuit():
         self.result_collector = ResultCollector()
         self.model = construct_bioreaction_model(
             config.get('data'), config.get('molecular_params'))
-        self.reactions = self.init_reactions(self.model, config)
+        self.qreactions = self.init_reactions(self.model, config)
         self.interactions = self.init_interactions()
-        self.species_state = config.get('species_state', 'uninitialised')
+        self.species_state: str = config.get('species_state', 'uninitialised')
+        self.signal: Signal = None
+        self.mutations: dict = config.get('mutations', {})
 
         self.graph = Graph(source_matrix=self.interactions.eqconstants)
         self.circuit_size = len(self.model.species)
