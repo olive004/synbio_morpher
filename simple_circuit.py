@@ -23,6 +23,8 @@ config = {
         "t1": 100
     },
     "signal": {
+        "inputs": ["RNA0"],
+        "outputs": ["RNA1"],
         "function_name": "step_function",
         "function_kwargs": {
             "impulse_center": 40, 

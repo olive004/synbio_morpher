@@ -1,4 +1,5 @@
 import inspect
+import logging
 import numpy as np
 from typing import List
 # from src.utils.signal.signals import Signal, AdaptationTarget, OscillatingSignal
@@ -7,7 +8,8 @@ from src.utils.circuit.agnostic_circuits.circuit_manager_new import Circuit
 
 
 # TODO: Delete
-# def get_signal_type(signal_type: str) -> Signal:
+def get_signal_type(signal_type: str) -> Signal:
+    return Signal
 #     if signal_type == 'abstract':
 #         return Signal
 #     if signal_type == 'adaptation':
@@ -25,13 +27,14 @@ def make_onehot_signals(circuit: Circuit, species_chosen: List[str]):
     onehot[idxs] = 1
     return onehot
 
-def parse_sig_args(kwargs: dict, circuit: Circuit):
-    SignalType = Signal
+def parse_sig_args(kwargs: dict, circuit: Circuit, SignalType = Signal):
     signal_init_args = inspect.getfullargspec(SignalType.__init__).args
     sig_kwargs = {}
-    sig_kwargs['onehot'] = make_onehot_signals(inputs=kwargs['inputs'], outputs=kwargs['outputs'])
+    sig_kwargs['onehot'] = make_onehot_signals(circuit=circuit, species_chosen=kwargs['inputs'])
     for k, v in kwargs.items():
         if k in signal_init_args:
             sig_kwargs[k] = v
+    if any([k not in sig_kwargs for k in signal_init_args]):
+        logging.warning(f'Signal init kwargs missing from {sig_kwargs}')
     return sig_kwargs
 

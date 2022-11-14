@@ -64,18 +64,19 @@ class SignalFuncs():
 class Signal():
     def __init__(self, 
                  onehot: np.ndarray,
-                 config: dict=None,
+                 function_name: str,
+                 function_kwargs: dict,
                  time_interval=1) -> None:
         self.onehot = onehot
         self.time_interval = time_interval
-        self.func = self.choose_func(config)
+        self.func = self.make_func(function_name, function_kwargs)
 
-    def choose_func(self, config: dict):
+    def make_func(self, function_name: str, function_kwargs: dict):
         
         return partial(
-            SignalFuncs.__getattribute__(config['function_name']),
+            SignalFuncs.__getattribute__(function_name),
             dt=self.time_interval,
-            **config['function_kwargs']
+            **function_kwargs
         )
 
     def get_time_steps(self, total_time):

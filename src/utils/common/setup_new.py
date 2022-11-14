@@ -77,7 +77,7 @@ def construct_circuit_from_cfg(extra_configs: dict, config_filepath: str = None,
     circuit = instantiate_system(kwargs)
 
     if kwargs.get("signal"):
-        signal = construct_signal(kwargs.get("signal"), circuit)
+        signal = construct_signal(kwargs["signal"], circuit)
         circuit.signal = signal
     return circuit
 
