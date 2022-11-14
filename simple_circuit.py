@@ -7,6 +7,7 @@
 from functools import partial
 from src.utils.common.setup_new import construct_circuit_from_cfg
 from src.utils.circuit.agnostic_circuits.circuit_manager_new import CircuitModeller
+from src.srv.io.manage.script_manager import script_preamble
 
 # %%
 config = {}
@@ -15,6 +16,10 @@ config = {
     "data_path": "data/example/toy_mRNA_circuit.fasta",
     "experiment": {
         "purpose": "example"
+    },
+    "interaction_simulator": {
+        "name": "IntaRNA",
+        "postprocess": True
     },
     "molecular_params": "src/utils/common/configs/RNA_circuit/molecular_params.json",
     "simulation": {
@@ -35,12 +40,15 @@ config = {
     "system_type": "RNA"
 }
 
+config, data_writer = script_preamble(config=config, data_writer=None, alt_cfg_filepath=None)
+
+# %%
+
 circuit = construct_circuit_from_cfg(config_file=config, extra_configs=None)
 circuit.__dict__
-# %%
-from src.utils.signal.signals_new import SignalFuncs
-signal = partial(SignalFuncs().__getattribute__("step_function"), impulse_center=t1/3, impulse_halfwidth=20, dt=dt0, target=0.5)
 
+modeller = CircuitModeller(result_writer=data_writer, config=config)
+circuit = modeller.init_circuit(circuit=circuit)
 
 # %%
 

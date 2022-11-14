@@ -6,7 +6,7 @@ import logging
 import os
 from src.utils.results.writer import DataWriter
 from src.utils.results.result_writer import ResultWriter
-from src.utils.data.data_format_tools.common import load_json_as_dict, write_json
+from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.misc.io import convert_pathname_to_module
 
 
