@@ -201,9 +201,11 @@ class CircuitModeller():
 
         elif solver == 'jax':
             new_copynumbers = bioreaction_sim_full(
-                y0=steady_states,
+                y0=steady_states.flatten(),
                 qreactions=circuit.qreactions, t0=0, t1=self.t1, dt0=self.dt,
-                signal=signal, signal_onehot=signal.onehot)
+                signal=signal.func, signal_onehot=signal.onehot).ys
+            if np.shape(new_copynumbers)[0] != circuit.circuit_size:
+                new_copynumbers = np.rollaxis(new_copynumbers, axis=1)
 
         if ref_circuit is None or ref_circuit == circuit:
             ref_circuit_signal = None
@@ -213,7 +215,7 @@ class CircuitModeller():
             ref_circuit_signal = None if ref_circuit_result is None else ref_circuit_result.data
 
         t = np.arange(0, np.shape(new_copynumbers)[
-            1]) * self.dt
+            1]) * self.t1 / np.shape(new_copynumbers)[1]  # Accounting for Runge-Kutta solver dt modification
         circuit.result_collector.add_result(new_copynumbers,
                                             name='signal',
                                             category='time_series',

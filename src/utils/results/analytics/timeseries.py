@@ -124,21 +124,26 @@ class Timeseries():
             all_deriv_change_points = [np.where(np.gradient(zero_deriv, axis=1)[
                 i] != 0)[0] for i in range(species_num)]
             response_times = [None] * species_num
-            for i in range(species_num):
-                if len(all_deriv_change_points[i]) != 0 and i != signal_idx:
-                    response_times[i] = self.time[all_deriv_change_points[signal_idx][-1]] - \
-                        self.time[all_deriv_change_points[i][-1]]
+            if len(all_deriv_change_points[signal_idx]) != 0:
+                for i in range(species_num):
+                    if len(all_deriv_change_points[i]) != 0 and i != signal_idx:
+                        response_times[i] = self.time[all_deriv_change_points[signal_idx][-1]] - \
+                            self.time[all_deriv_change_points[i][-1]]
             return response_times
         margin = 0.05
+        clean_derivative = first_derivative[np.where(first_derivative < 1e20)]
+        threshold = max(
+            0.001 * np.max(clean_derivative), 
+        0.001) # avoid inf
         response_time = get_response_time_thresholded(
-            threshold=0.001, signal_idx=signal_idxs[0])
+            threshold=threshold, signal_idx=signal_idxs[0])
         response_time_high = get_response_time_thresholded(
             threshold=first_derivative[np.where(
-                steady_states <= margin*steady_states+steady_states)][-1],
+                clean_derivative <= margin*clean_derivative+clean_derivative)][-1],
             signal_idx=signal_idxs[0])
         response_time_low = get_response_time_thresholded(
-            threshold=first_derivative[np.where(
-                steady_states >= -margin*steady_states+steady_states)][-1],
+            threshold=clean_derivative[np.where(
+                clean_derivative >= -margin*clean_derivative+clean_derivative)][-1],
             signal_idx=signal_idxs[0])
 
         return response_time, response_time_high, response_time_low
