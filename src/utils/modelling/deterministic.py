@@ -64,15 +64,16 @@ def simulate_signal_scan(copynumbers, time, full_interactions, creation_rates, d
     return jax.lax.scan(to_scan, copynumbers, (time, signal))
 
 
-def bioreaction_sim_full(qreactions: QuantifiedReactions, t0, t1, dt0, 
-    signal, signal_onehot: np.ndarray, 
-    solver=dfx.Tsit5(), 
-    saveat=dfx.SaveAt(t0=True, t1=True, steps=True)):
+def bioreaction_sim_full(qreactions: QuantifiedReactions, t0, t1, dt0,
+                         signal, signal_onehot: np.ndarray,
+                         y0=None,
+                         solver=dfx.Tsit5(),
+                         saveat=dfx.SaveAt(t0=True, t1=True, steps=True)):
     """ The signal is a function that takes in t """
 
     term = dfx.ODETerm(partial(bioreaction_sim, reactions=qreactions.reactions, signal=signal,
-                   signal_onehot=signal_onehot, dt=dt0))
-    
+                               signal_onehot=signal_onehot, dt=dt0))
+    y0 = qreactions.quantities if y0 is None else y0
+
     return dfx.diffeqsolve(term, solver, t0=t0, t1=t1, dt0=dt0,
-                                y0=qreactions.quantities,
-                                saveat=saveat, max_steps=16**4)
+                           y0=y0, saveat=saveat, max_steps=16**4)

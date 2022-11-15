@@ -104,32 +104,42 @@ class Timeseries():
             np.sum(np.divide(np.power(data, 2), len(self.data)), axis=1))
         return rmse
 
-    def get_response_times(self, steady_states, first_derivative, signal_idx):
-        if signal_idx is None:
-            return [np.zeros(np.shape(steady_states)[0])] * 3
+    def get_response_times(self, steady_states, first_derivative, signal_idxs: np.ndarray):
+        species_num = np.shape(steady_states)[0]
+        if signal_idxs is None:
+            return [None] * 3
 
-        def get_response_time_thresholded(threshold):
+        def get_response_time_thresholded(threshold, signal_idx):
             """ The response time is calculated as the time from the last point
             where the signal changed to the point where the output steadied. This 
             is the same as the last stationary point of the output minus the 
             last stationary point of the signal derivative. """
             zero_deriv = np.logical_and(first_derivative <= 0 +
                                         threshold, first_derivative >= 0-threshold).astype(int)
-            logging.info(np.gradient(zero_deriv, axis=1) != 0, axis=1)
-            logging.info(np.sum(np.gradient(zero_deriv, axis=1) != 0, axis=1))
-            logging.info(np.sum(np.gradient(zero_deriv, axis=1) != 0, axis=1))
-            if np.any(np.sum(np.gradient(zero_deriv, axis=1) != 0, axis=1) == 1):
-                return [None] * np.shape(first_derivative)[0]
-            last_deriv_change_points = [np.where(np.gradient(zero_deriv, axis=1)[
-                                                 i] != 0)[0][-1] for i in range(np.shape(first_derivative)[0])]
-            return [self.time[last_deriv_change_points[signal_idx]] -
-                    self.time[last_deriv_change_points[i]] for i in range(np.shape(steady_states)[0])]
+            signal_mask = np.ones(species_num)
+            signal_mask[signal_idx] = 0
+            if np.all(np.sum(np.gradient(zero_deriv, axis=1) != 0, axis=1) * signal_mask == 0):
+                # If no species responded to the signal
+                return [None] * species_num
+            all_deriv_change_points = [np.where(np.gradient(zero_deriv, axis=1)[
+                i] != 0)[0] for i in range(species_num)]
+            response_times = [None] * species_num
+            for i in range(species_num):
+                if len(all_deriv_change_points[i]) != 0 and i != signal_idx:
+                    response_times[i] = self.time[all_deriv_change_points[signal_idx][-1]] - \
+                        self.time[all_deriv_change_points[i][-1]]
+            return response_times
         margin = 0.05
-        response_time = get_response_time_thresholded(threshold=0.001)
+        response_time = get_response_time_thresholded(
+            threshold=0.001, signal_idx=signal_idxs[0])
         response_time_high = get_response_time_thresholded(
-            threshold=first_derivative[np.where(steady_states <= margin*steady_states+steady_states)][-1])
+            threshold=first_derivative[np.where(
+                steady_states <= margin*steady_states+steady_states)][-1],
+            signal_idx=signal_idxs[0])
         response_time_low = get_response_time_thresholded(
-            threshold=first_derivative[np.where(steady_states >= -margin*steady_states+steady_states)][-1])
+            threshold=first_derivative[np.where(
+                steady_states >= -margin*steady_states+steady_states)][-1],
+            signal_idx=signal_idxs[0])
 
         return response_time, response_time_high, response_time_low
 
@@ -214,7 +224,7 @@ class Timeseries():
         analytics['response_time'], \
             analytics['response_time_high'], \
             analytics['response_time_low'] = self.get_response_times(
-            analytics['steady_states'], analytics['first_derivative'], signal_idx=signal_idx)
+            analytics['steady_states'], analytics['first_derivative'], signal_idxs=signal_idx)
 
         analytics['overshoot'] = self.get_overshoot(
             analytics['steady_states'])

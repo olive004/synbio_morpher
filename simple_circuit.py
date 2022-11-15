@@ -25,7 +25,8 @@ config = {
     "simulation": {
         "dt": 0.1,
         "t0": 0,
-        "t1": 100
+        "t1": 100,
+        "solver": "jax"
     },
     "signal": {
         "inputs": ["RNA_0"],
@@ -49,6 +50,7 @@ circuit.__dict__
 
 modeller = CircuitModeller(result_writer=data_writer, config=config)
 circuit = modeller.init_circuit(circuit=circuit)
+circuit = modeller.simulate_signal(circuit=circuit, signal=circuit.signal, solver=config['simulation']['solver'])
 modeller.write_results(circuit)
 
 # %%

@@ -372,7 +372,10 @@ def visualise_graph_pyvis(graph: nx.DiGraph,
     interactive_graph.from_nx(graph, edge_weight_transf=lambda x: round(x, 4))
     interactive_graph.inherit_edge_colors(True)
     interactive_graph.set_edge_smooth('dynamic')
-    interactive_graph.save_graph(out_path)
+    try:
+        interactive_graph.save_graph(out_path)
+    except PermissionError:
+        logging.warning(f'The graph at {out_path} may not have saved properly.')
 
     # web_filename = 'file:///' + os.getcwd() + '/' + out_path
     # # webbrowser.open(web_filename, new=1, autoraise=True)
@@ -420,6 +423,8 @@ class VisODE():
         if y is not None:
             plt.plot(data, y)
         elif t is not None:
+            # if np.shape(t)[0] != np.shape(data)[0] and len(np.shape(data)) == 2:
+            #     logging.warning()
             plt.plot(t, data)
         else:
             plt.plot(data)
