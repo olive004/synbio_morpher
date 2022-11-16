@@ -1,5 +1,6 @@
 import logging
 import numpy as np
+from typing import List
 
 
 class Timeseries():
@@ -12,13 +13,12 @@ class Timeseries():
                                   1]) if time is None else time
         self.num_dtype = np.float32
 
-        self.stability_threshold = 0.01
-
     def get_steady_state(self):
         """ Last 5% of data considered steady state """
+        stability_threshold = 0.01
         final_deriv = np.average(
             self.get_derivative()[:, :-2])
-        is_steady_state_reached = final_deriv < self.stability_threshold
+        is_steady_state_reached = final_deriv < stability_threshold
         steady_states = np.expand_dims(
             self.data[:, -1], axis=1).astype(np.float32)
         return steady_states, is_steady_state_reached, final_deriv
@@ -104,49 +104,74 @@ class Timeseries():
             np.sum(np.divide(np.power(data, 2), len(self.data)), axis=1))
         return rmse
 
-    def get_response_times(self, steady_states, first_derivative, signal_idxs: np.ndarray):
-        species_num = np.shape(steady_states)[0]
-        if signal_idxs is None:
-            return [None] * 3
-
-        def get_response_time_thresholded(threshold, signal_idx):
-            """ The response time is calculated as the time from the last point
-            where the signal changed to the point where the output steadied. This 
-            is the same as the last stationary point of the output minus the 
-            last stationary point of the signal derivative. """
-            zero_deriv = np.logical_and(first_derivative <= 0 +
-                                        threshold, first_derivative >= 0-threshold).astype(int)
-            signal_mask = np.ones(species_num)
-            signal_mask[signal_idx] = 0
-            if np.all(np.sum(np.gradient(zero_deriv, axis=1) != 0, axis=1) * signal_mask == 0):
-                # If no species responded to the signal
-                return [None] * species_num
-            all_deriv_change_points = [np.where(np.gradient(zero_deriv, axis=1)[
-                i] != 0)[0] for i in range(species_num)]
-            response_times = [None] * species_num
-            if len(all_deriv_change_points[signal_idx]) != 0:
-                for i in range(species_num):
-                    if len(all_deriv_change_points[i]) != 0 and i != signal_idx:
-                        response_times[i] = self.time[all_deriv_change_points[signal_idx][-1]] - \
-                            self.time[all_deriv_change_points[i][-1]]
-            return response_times
+    def get_response_times(self, steady_states, first_derivative, signal_idx: np.ndarray):
+        """ """
         margin = 0.05
-        clean_derivative = first_derivative[np.where(first_derivative < 1e20)]
-        threshold = max(
-            0.001 * np.max(clean_derivative), 
-        0.001) # avoid inf
-        response_time = get_response_time_thresholded(
-            threshold=threshold, signal_idx=signal_idxs[0])
-        response_time_high = get_response_time_thresholded(
-            threshold=first_derivative[np.where(
-                clean_derivative <= margin*clean_derivative+clean_derivative)][-1],
-            signal_idx=signal_idxs[0])
-        response_time_low = get_response_time_thresholded(
-            threshold=clean_derivative[np.where(
-                clean_derivative >= -margin*clean_derivative+clean_derivative)][-1],
-            signal_idx=signal_idxs[0])
+        sm = steady_states * margin
+        cond_out = steady_states > (steady_states + sm) & steady_states < (steady_states - sm)
 
-        return response_time, response_time_high, response_time_low
+        zd = first_derivative == 0
+        second_derivative = self.get_derivative(self.get_derivative(self.data))
+        t0 = self.time[np.where(zd)[0]]
+
+        def find_final_time(fd, sd):
+            cond_out_fd = fd == 0 & cond_out
+            if any(self.time[zd] > t0):
+                t_out = self.time[np.logical_and(cond_out_fd, self.time > t0)]
+                ty_f = self.time[np.logical_and(fd == 0, self.time > t0)][0]
+                ty = max(ty_f, t_out[0])
+            else:
+                zd2 = sd == 0
+                ty = self.time[np.logical_and(zd2, self.time > t0)]
+            return ty
+
+        t_signal = find_final_time(first_derivative[signal_idx, :], second_derivative[signal_idx, :])
+        ty = find_final_time(first_derivative, second_derivative)
+        return t_signal - ty
+
+    # def get_response_times(self, steady_states, first_derivative, signal_idxs: np.ndarray):
+    #     species_num = np.shape(steady_states)[0]
+    #     if signal_idxs is None:
+    #         return [None] * 3
+
+    #     def get_response_time_thresholded(threshold, signal_idx):
+    #         """ The response time is calculated as the time from the last point
+    #         where the signal changed to the point where the output steadied. This 
+    #         is the same as the last stationary point of the output minus the 
+    #         last stationary point of the signal derivative. """
+    #         zero_deriv = np.logical_and(first_derivative <= 0 +
+    #                                     threshold, first_derivative >= 0-threshold).astype(int)
+    #         signal_mask = np.ones(species_num)
+    #         signal_mask[signal_idx] = 0
+    #         if np.all(np.sum(np.gradient(zero_deriv, axis=1) != 0, axis=1) * signal_mask == 0):
+    #             # If no species responded to the signal
+    #             return [None] * species_num
+    #         all_deriv_change_points = [np.where(np.gradient(zero_deriv, axis=1)[
+    #             i] != 0)[0] for i in range(species_num)]
+    #         response_times = [None] * species_num
+    #         if len(all_deriv_change_points[signal_idx]) != 0:
+    #             for i in range(species_num):
+    #                 if len(all_deriv_change_points[i]) != 0 and i != signal_idx:
+    #                     response_times[i] = self.time[all_deriv_change_points[signal_idx][-1]] - \
+    #                         self.time[all_deriv_change_points[i][-1]]
+    #         return response_times
+    #     margin = 0.05
+    #     clean_derivative = first_derivative[np.where(first_derivative < 1e20)]
+    #     threshold = max(
+    #         0.001 * np.max(clean_derivative), 
+    #     0.001) # avoid inf
+    #     response_time = get_response_time_thresholded(
+    #         threshold=threshold, signal_idx=signal_idxs[0])
+    #     response_time_high = get_response_time_thresholded(
+    #         threshold=first_derivative[np.where(
+    #             clean_derivative <= margin*clean_derivative+clean_derivative)][-1],
+    #         signal_idx=signal_idxs[0])
+    #     response_time_low = get_response_time_thresholded(
+    #         threshold=clean_derivative[np.where(
+    #             clean_derivative >= -margin*clean_derivative+clean_derivative)][-1],
+    #         signal_idx=signal_idxs[0])
+
+    #     return response_time, response_time_high, response_time_low
 
     # def get_response_times_og(self, final_steady_states):
     #     margin_high = 1.05
@@ -215,27 +240,42 @@ class Timeseries():
         freq = np.fft.fftfreq(len(spectrum))
         return freq
 
-    def generate_analytics(self, signal_idx=None, ref_circuit_signal=None):
+    def generate_analytics(self, labels: List[str], signal_onehot=None, ref_circuit_signal=None):
+        signal_idxs = np.where(signal_onehot == 1)[0]
+        signal_idxs = signal_idxs if len(signal_idxs) >= 1 else None
         analytics = {
             'first_derivative': self.get_derivative(),
             'fold_change': self.fold_change(),
             'RMSE': self.get_rmse(ref_circuit_signal),
-            'sensitivity': self.get_sensitivity(signal_idx),
-            'sensitivity_estimate': self.get_sensitivity(signal_idx, ignore_denominator=True)
+            'sensitivity': self.get_sensitivity(signal_idxs),
+            'sensitivity_estimate': self.get_sensitivity(signal_idxs, ignore_denominator=True)
         }
         analytics['steady_states'], \
             analytics['is_steady_state_reached'], \
             analytics['final_deriv'] = self.get_steady_state()
-        analytics['response_time'], \
-            analytics['response_time_high'], \
-            analytics['response_time_low'] = self.get_response_times(
-            analytics['steady_states'], analytics['first_derivative'], signal_idxs=signal_idx)
-
         analytics['overshoot'] = self.get_overshoot(
             analytics['steady_states'])
-        analytics['precision'] = self.get_precision(
-            analytics['steady_states'], signal_idx)
-        analytics['precision_estimate'] = self.get_precision(
-            analytics['steady_states'], signal_idx, ignore_denominator=True)
+        
+        analytics['response_time'] = {}
+        analytics['precision'] = {}
+        analytics['precision_estimate'] = {}
+        if signal_onehot is not None:
+            signal_labels = labels[signal_idxs]
+            for s, s_idx in zip(signal_labels, signal_idxs):
+                # analytics['response_time'], \
+                #     analytics['response_time_high'], \
+                #     analytics['response_time_low'] = self.get_response_times(
+                #     analytics['steady_states'], analytics['first_derivative'], signal_idxs=signal_onehot)
+
+                analytics['response_time'][s] = self.get_response_times(
+                    analytics['steady_states'], analytics['first_derivative'], signal_idxs=s_idx)
+                analytics['precision'][s] = self.get_precision(
+                    analytics['steady_states'], s_idx)
+                analytics['precision_estimate'][s] = self.get_precision(
+                    analytics['steady_states'], s_idx, ignore_denominator=True)
+        else:
+            analytics['response_time'] = {s: None for s in labels}
+            analytics['precision'] = {s: None for s in labels}
+            analytics['precision_estimate'] = {s: None for s in labels}
 
         return analytics

@@ -80,7 +80,7 @@ class CircuitModeller():
                 random_matrices = np.random.rand(
                     circuit.circuit_size, circuit.circuit_size, 4)
                 circuit.interactions = MolecularInteractions(
-                    coupled_binding_rates=random_matrices[:, :, 0], 
+                    coupled_binding_rates=random_matrices[:, :, 0],
                     binding_rates_association=random_matrices[:, :, 1],
                     binding_rates_dissociation=random_matrices[:, :, 2],
                     eqconstants=random_matrices[:, :, 3], units='test'
@@ -113,14 +113,16 @@ class CircuitModeller():
                                                    circuit=circuit,
                                                    solver_type=self.steady_state_solver)
 
-        circuit.result_collector.add_result(steady_states,
-                                            name='steady_states',
-                                            category='time_series',
-                                            vis_func=VisODE().plot,
-                                            vis_kwargs={'t': np.arange(0, np.shape(steady_states)[circuit.time_axis]) *
-                                                        modeller_steady_state.time_interval,
-                                                        'legend': [s.name for s in circuit.model.species],
-                                                        'out_type': 'svg'})
+        circuit.result_collector.add_result(
+            steady_states,
+            name='steady_states',
+            category='time_series',
+            vis_func=VisODE().plot,
+            vis_kwargs={'t': np.arange(0, np.shape(steady_states)[circuit.time_axis]) *
+                        modeller_steady_state.time_interval,
+                        'legend': [s.name for s in circuit.model.species],
+                        'out_type': 'svg'},
+            analytics_kwargs={'labels': [s.name for s in circuit.model.species]})
         return circuit
 
     def compute_steady_states(self, modeller: Modeller, circuit: Circuit,
@@ -168,7 +170,8 @@ class CircuitModeller():
         IMPORTANT! Modeller already includes the dt, or the length of the time step taken. """
 
         time = np.arange(0, max_time-1, time_interval)
-        copynumbers = np.concatenate((init_copynumbers, np.zeros((np.shape(init_copynumbers)[0], len(time)))), axis=1)
+        copynumbers = np.concatenate((init_copynumbers, np.zeros(
+            (np.shape(init_copynumbers)[0], len(time)))), axis=1)
         current_copynumbers = init_copynumbers.flatten()
         for i, t in enumerate(time):
             dxdt = modelling_func(
@@ -216,16 +219,18 @@ class CircuitModeller():
 
         t = np.arange(0, np.shape(new_copynumbers)[
             1]) * self.t1 / np.shape(new_copynumbers)[1]  # Accounting for Runge-Kutta solver dt modification
-        circuit.result_collector.add_result(new_copynumbers,
-                                            name='signal',
-                                            category='time_series',
-                                            vis_func=VisODE().plot,
-                                            save_numerical_vis_data=save_numerical_vis_data,
-                                            vis_kwargs={'t': t,
-                                                        'legend': [s.name for s in circuit.model.species],
-                                                        'out_type': 'svg'},
-                                            analytics_kwargs={'signal_idx': np.where(signal.onehot == 1)[0],
-                                                              'ref_circuit_signal': ref_circuit_signal})
+        circuit.result_collector.add_result(
+            new_copynumbers,
+            name='signal',
+            category='time_series',
+            vis_func=VisODE().plot,
+            save_numerical_vis_data=save_numerical_vis_data,
+            vis_kwargs={'t': t,
+                        'legend': [s.name for s in circuit.model.species],
+                        'out_type': 'svg'},
+            analytics_kwargs={'labels': [s.name for s in circuit.model.species],
+                              'signal_onehot': signal.onehot,
+                              'ref_circuit_signal': ref_circuit_signal})
         return circuit
 
     def simulate_signal_batch(self, circuits: List[Circuit], max_time,
@@ -280,16 +285,18 @@ class CircuitModeller():
                 'signal')
             ref_circuit_signal = None if ref_circuit_result is None else ref_circuit_result.data
         for i, circuit in enumerate(circuits):
-            circuits[i].result_collector.add_result(b_new_copynumbers[i],
-                                                    name='signal',
-                                                    category='time_series',
-                                                    vis_func=VisODE().plot,
-                                                    save_numerical_vis_data=save_numerical_vis_data,
-                                                    vis_kwargs={'t': t,
-                                                                'legend': [s.name for s in circuit.model.species],
-                                                                'out_type': 'svg'},
-                                                    analytics_kwargs={'signal_idx': signal.identities_idx,
-                                                                      'ref_circuit_signal': ref_circuit_signal})
+            circuits[i].result_collector.add_result(
+                b_new_copynumbers[i],
+                name='signal',
+                category='time_series',
+                vis_func=VisODE().plot,
+                save_numerical_vis_data=save_numerical_vis_data,
+                vis_kwargs={'t': t,
+                            'legend': [s.name for s in circuit.model.species],
+                            'out_type': 'svg'},
+                analytics_kwargs={'labels': [s.name for s in circuit.model.species],
+                                  'signal_onehot': signal.onehot,
+                                  'ref_circuit_signal': ref_circuit_signal})
         return list(zip(names, circuits))
 
     # @time_it
