@@ -17,7 +17,7 @@ class Timeseries():
         """ Last 5% of data considered steady state """
         stability_threshold = 0.01
         final_deriv = np.average(
-            self.get_derivative()[:, :-2])
+            self.get_derivative(self.data)[:, :-2])
         is_steady_state_reached = final_deriv < stability_threshold
         steady_states = np.expand_dims(
             self.data[:, -1], axis=1).astype(np.float32)
@@ -31,8 +31,8 @@ class Timeseries():
         else:
             return division_matrix
 
-    def get_derivative(self):
-        deriv = np.gradient(self.data)[1]
+    def get_derivative(self, data):
+        deriv = np.gradient(data)[1]
         return deriv  # get column derivative
 
     def get_overshoot(self, steady_states):
@@ -106,23 +106,25 @@ class Timeseries():
 
     def get_response_times(self, steady_states, first_derivative, signal_idx: np.ndarray):
         """ """
+        time = self.time * np.ones_like(steady_states)
         margin = 0.05
         sm = steady_states * margin
-        cond_out = steady_states > (steady_states + sm) & steady_states < (steady_states - sm)
+        fm = first_derivative * 0.001
+        cond_out = (steady_states > (steady_states + sm)) & (steady_states < (steady_states - sm))
 
-        zd = first_derivative == 0
+        zd = (first_derivative < (first_derivative + fm)) & (first_derivative > (first_derivative - fm))
         second_derivative = self.get_derivative(self.get_derivative(self.data))
-        t0 = self.time[np.where(zd)[0]]
+        t0 = time[np.where(zd)[0]]
 
         def find_final_time(fd, sd):
             cond_out_fd = fd == 0 & cond_out
-            if any(self.time[zd] > t0):
-                t_out = self.time[np.logical_and(cond_out_fd, self.time > t0)]
-                ty_f = self.time[np.logical_and(fd == 0, self.time > t0)][0]
+            if any(time[zd] > t0):
+                t_out = time[np.logical_and(cond_out_fd, time > t0)]
+                ty_f = time[np.logical_and(fd == 0, time > t0)][0]
                 ty = max(ty_f, t_out[0])
             else:
                 zd2 = sd == 0
-                ty = self.time[np.logical_and(zd2, self.time > t0)]
+                ty = time[np.logical_and(zd2, time > t0)]
             return ty
 
         t_signal = find_final_time(first_derivative[signal_idx, :], second_derivative[signal_idx, :])
@@ -244,7 +246,7 @@ class Timeseries():
         signal_idxs = np.where(signal_onehot == 1)[0]
         signal_idxs = signal_idxs if len(signal_idxs) >= 1 else None
         analytics = {
-            'first_derivative': self.get_derivative(),
+            'first_derivative': self.get_derivative(self.data),
             'fold_change': self.fold_change(),
             'RMSE': self.get_rmse(ref_circuit_signal),
             'sensitivity': self.get_sensitivity(signal_idxs),
@@ -259,8 +261,8 @@ class Timeseries():
         analytics['response_time'] = {}
         analytics['precision'] = {}
         analytics['precision_estimate'] = {}
-        if signal_onehot is not None:
-            signal_labels = labels[signal_idxs]
+        if signal_idxs is not None:
+            signal_labels = list(map(labels. __getitem__, signal_idxs))
             for s, s_idx in zip(signal_labels, signal_idxs):
                 # analytics['response_time'], \
                 #     analytics['response_time_high'], \
@@ -268,7 +270,7 @@ class Timeseries():
                 #     analytics['steady_states'], analytics['first_derivative'], signal_idxs=signal_onehot)
 
                 analytics['response_time'][s] = self.get_response_times(
-                    analytics['steady_states'], analytics['first_derivative'], signal_idxs=s_idx)
+                    analytics['steady_states'], analytics['first_derivative'], signal_idx=s_idx)
                 analytics['precision'][s] = self.get_precision(
                     analytics['steady_states'], s_idx)
                 analytics['precision_estimate'][s] = self.get_precision(

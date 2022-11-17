@@ -15,7 +15,6 @@ class Result():
         self.vis_func = vis_func
         self.vis_kwargs = vis_kwargs
         self.analytics_kwargs = analytics_kwargs
-
         self.analytics = analytics
         if category == 'time_series':
             from src.utils.results.analytics.timeseries import Timeseries

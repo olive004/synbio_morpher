@@ -63,6 +63,7 @@ class CircuitModeller():
                     si), circuit.model.species.index(sj)]
                 circuit.model.reactions[i].reverse_rate = interactions.binding_rates_dissociation[circuit.model.species.index(
                     si), circuit.model.species.index(sj)]
+        circuit.qreactions.reactions = circuit.qreactions.init_reactions(circuit.model)
         return circuit
 
     # @time_it
