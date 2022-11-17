@@ -6,6 +6,7 @@ import jax.numpy as jnp
 import diffrax as dfx
 from bioreaction.simulation.simfuncs.basic_de import bioreaction_sim
 from bioreaction.model.data_containers import QuantifiedReactions
+from bioreaction.misc.misc import invert_onehot
 from src.utils.modelling.base import Modeller
 
 
@@ -69,10 +70,12 @@ def bioreaction_sim_full(qreactions: QuantifiedReactions, t0, t1, dt0,
                          y0=None,
                          solver=dfx.Tsit5(),
                          saveat=dfx.SaveAt(t0=True, t1=True, steps=True)):
-    """ The signal is a function that takes in t """
+    """ The signal is a function that takes in t 
+    WARNING! Diffrax eqsolve will simulate to the end of the time series, 
+    then set time to infinity for the remainder until max_steps have been reached. """
 
     term = dfx.ODETerm(partial(bioreaction_sim, reactions=qreactions.reactions, signal=signal,
-                               signal_onehot=signal_onehot, dt=dt0))
+                               signal_onehot=signal_onehot, inverse_onehot=invert_onehot(signal_onehot)))
     y0 = qreactions.quantities if y0 is None else y0
 
     return dfx.diffeqsolve(term, solver, t0=t0, t1=t1, dt0=dt0,

@@ -63,7 +63,8 @@ class CircuitModeller():
                     si), circuit.model.species.index(sj)]
                 circuit.model.reactions[i].reverse_rate = interactions.binding_rates_dissociation[circuit.model.species.index(
                     si), circuit.model.species.index(sj)]
-        circuit.qreactions.reactions = circuit.qreactions.init_reactions(circuit.model)
+        circuit.qreactions.reactions = circuit.qreactions.init_reactions(
+            circuit.model)
         return circuit
 
     # @time_it
@@ -79,7 +80,7 @@ class CircuitModeller():
                 logging.warning(
                     'RUNNING IN TEST MODE - interaction rates are fake.')
                 random_matrices = np.random.rand(
-                    circuit.circuit_size, circuit.circuit_size, 4)
+                    circuit.circuit_size, circuit.circuit_size, 4) * 0.000001
                 circuit.interactions = MolecularInteractions(
                     coupled_binding_rates=random_matrices[:, :, 0],
                     binding_rates_association=random_matrices[:, :, 1],
@@ -136,7 +137,8 @@ class CircuitModeller():
         elif solver_type == 'ivp':
             steady_state_result = integrate.solve_ivp(
                 partial(bioreaction_sim, args=None, reactions=circuit.qreactions.reactions, signal=vanilla_return,
-                        signal_onehot=np.zeros_like(circuit.signal.onehot), dt=modeller.time_interval),
+                        signal_onehot=np.zeros_like(circuit.signal.onehot),
+                        inverse_onehot=np.ones_like(circuit.signal.onehot)),
                 (0, modeller.max_time),
                 y0=circuit.qreactions.quantities)
             if not steady_state_result.success:
@@ -202,12 +204,16 @@ class CircuitModeller():
         if solver == 'naive':
             new_copynumbers = self.model_circuit(steady_states,
                                                  circuit=circuit)
+            t = np.arange(0, np.shape(new_copynumbers)[
+                1]) * self.t1 / np.shape(new_copynumbers)[1]
 
         elif solver == 'jax':
-            new_copynumbers = bioreaction_sim_full(
-                y0=steady_states.flatten(),
+            solution = bioreaction_sim_full(
+                y0=steady_states.flatten() * invert_onehot(signal.onehot),
                 qreactions=circuit.qreactions, t0=0, t1=self.t1, dt0=self.dt,
-                signal=signal.func, signal_onehot=signal.onehot).ys
+                signal=signal.func, signal_onehot=signal.onehot)
+            new_copynumbers = solution.ys[solution.ts < np.inf]
+            t = solution.ts[solution.ts < np.inf]
             if np.shape(new_copynumbers)[0] != circuit.circuit_size:
                 new_copynumbers = np.rollaxis(new_copynumbers, axis=1)
 
@@ -218,8 +224,6 @@ class CircuitModeller():
                 'signal')
             ref_circuit_signal = None if ref_circuit_result is None else ref_circuit_result.data
 
-        t = np.arange(0, np.shape(new_copynumbers)[
-            1]) * self.t1 / np.shape(new_copynumbers)[1]  # Accounting for Runge-Kutta solver dt modification
         circuit.result_collector.add_result(
             new_copynumbers,
             name='signal',
