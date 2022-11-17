@@ -116,7 +116,7 @@ class CircuitModeller():
                                                    solver_type=self.steady_state_solver)
 
         circuit.result_collector.add_result(
-            steady_states,
+            data=steady_states,
             name='steady_states',
             category='time_series',
             vis_func=VisODE().plot,
@@ -225,9 +225,10 @@ class CircuitModeller():
             ref_circuit_signal = None if ref_circuit_result is None else ref_circuit_result.data
 
         circuit.result_collector.add_result(
-            new_copynumbers,
+            data=new_copynumbers,
             name='signal',
             category='time_series',
+            time=t,
             vis_func=VisODE().plot,
             save_numerical_vis_data=save_numerical_vis_data,
             vis_kwargs={'t': t,
@@ -291,7 +292,7 @@ class CircuitModeller():
             ref_circuit_signal = None if ref_circuit_result is None else ref_circuit_result.data
         for i, circuit in enumerate(circuits):
             circuits[i].result_collector.add_result(
-                b_new_copynumbers[i],
+                data=b_new_copynumbers[i],
                 name='signal',
                 category='time_series',
                 vis_func=VisODE().plot,
