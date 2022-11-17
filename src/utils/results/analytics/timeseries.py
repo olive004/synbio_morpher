@@ -104,17 +104,20 @@ class Timeseries():
             np.sum(np.divide(np.power(data, 2), len(self.data)), axis=1))
         return rmse
 
-    def get_response_times(self, steady_states, first_derivative, signal_idx: np.ndarray):
+    def get_response_times(self, steady_states, first_deriv, signal_idx: np.ndarray):
         """ """
         time = self.time * np.ones_like(steady_states)
         margin = 0.05
         sm = steady_states * margin
-        fm = first_derivative * 0.001
+        fm = np.max(first_deriv[signal_idx]) * 0.001
         cond_out = (steady_states > (steady_states + sm)) & (steady_states < (steady_states - sm))
 
-        zd = (first_derivative < (first_derivative + fm)) & (first_derivative > (first_derivative - fm))
-        second_derivative = self.get_derivative(self.get_derivative(self.data))
+        zd = (first_deriv[signal_idx] < (first_deriv[signal_idx] + fm)) & (first_deriv[signal_idx] > (first_deriv[signal_idx] - fm))
+        second_derivative = self.get_derivative(first_deriv)
         t0 = time[np.where(zd)[0]]
+
+        def find_start_time(fd, signal_idx):
+            fd[signal_idx, :] == 0
 
         def find_final_time(fd, sd):
             cond_out_fd = fd == 0 & cond_out
@@ -127,8 +130,8 @@ class Timeseries():
                 ty = time[np.logical_and(zd2, time > t0)]
             return ty
 
-        t_signal = find_final_time(first_derivative[signal_idx, :], second_derivative[signal_idx, :])
-        ty = find_final_time(first_derivative, second_derivative)
+        t_signal = find_final_time(first_deriv[signal_idx, :], second_derivative[signal_idx, :])
+        ty = find_final_time(first_deriv, second_derivative)
         return t_signal - ty
 
     # def get_response_times(self, steady_states, first_derivative, signal_idxs: np.ndarray):

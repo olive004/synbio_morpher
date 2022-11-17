@@ -10,8 +10,14 @@ import jax.numpy as jnp
 class SignalFuncs():
 
     @staticmethod
-    def step_function(t, impulse_center, impulse_halfwidth, dt, target):
+    def sine_step_function(t, impulse_center, impulse_halfwidth, dt, target):
         return (jnp.sin(t) + 1)* jnp.where(
+            (impulse_center-impulse_halfwidth < t) & (t < impulse_center+impulse_halfwidth), 
+            target/(2*impulse_halfwidth*dt), 0)
+
+    @staticmethod
+    def step_function(t, impulse_center, impulse_halfwidth, dt, target):
+        return 1* jnp.where(
             (impulse_center-impulse_halfwidth < t) & (t < impulse_center+impulse_halfwidth), 
             target/(2*impulse_halfwidth*dt), 0)
 
