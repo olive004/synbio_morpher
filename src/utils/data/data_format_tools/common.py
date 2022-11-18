@@ -4,6 +4,7 @@ import logging
 import os
 from typing import Union
 import numpy as np
+import jaxlib
 import pandas as pd
 
 from src.utils.misc.type_handling import inverse_dict
@@ -101,7 +102,7 @@ def process_dict_for_json(dict_like) -> Union[list, dict]:
             dict_like[k] = process_dict_for_json(v)
         elif type(v) == np.bool_:
             dict_like[k] = bool(v)
-        elif type(v) == np.ndarray:
+        elif type(v) == np.ndarray or type(v) == jaxlib.xla_extension.DeviceArray:
             dict_like[k] = v.tolist()
         elif type(v) == np.float32 or type(v) == np.int64:
             dict_like[k] = str(v)
@@ -124,7 +125,7 @@ def write_csv(data: pd.DataFrame, out_path: str, overwrite=False):
             data.to_csv(out_path, index=None)
         else:
             data.to_csv(out_path, mode='a', header=None, index=None)
-    elif type(data) == np.ndarray:
+    elif type(data) == np.ndarray or type(data) == jaxlib.xla_extension.DeviceArray:
         pd.DataFrame(data).to_csv(out_path, mode='a', header=None, index=None)
     else:
         raise TypeError(

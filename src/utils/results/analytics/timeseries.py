@@ -107,41 +107,45 @@ class Timeseries():
     def get_response_times(self, steady_states, deriv1, signal_idx: np.ndarray):
         """ """
         time = self.time * np.ones_like(steady_states)
+        deriv2 = self.get_derivative(deriv1)
         margin = 0.05
-        fm = np.expand_dims(np.max(deriv1, axis=1) * 0.001, axis=1)
         cond_out = (self.data > (steady_states + steady_states * margin)
                     ) | (self.data < (steady_states - steady_states * margin))
-        deriv2 = self.get_derivative(deriv1)
+        
+        # Get zero derivative within margin
+        fmargin = 0.001
+        fm = np.expand_dims(np.max(deriv1, axis=1) * fmargin, axis=1)
+        fm2 = np.expand_dims(np.max(deriv2, axis=1) * fmargin, axis=1)
+        zd = (deriv1 < fm) & (deriv1 > -fm)  # This is just dx/dt == 0
+        zd2 = (deriv2 < fm2) & (deriv2 > -fm2)  # This is just dx2/d2t == 0
 
-        zd = (deriv1 < np.repeat(fm, len(self.time), axis=1)) & \
-            (deriv1 > -np.repeat(fm, len(self.time), axis=1)
-             )  # This is just dx/dt == 0
-        zd2 = (deriv2 < np.repeat(fm, len(self.time), axis=1)) & \
-            (deriv2 > -np.repeat(fm, len(self.time), axis=1)
-             )  # This is just dx2/d2t == 0
+        # Start time of signal change
         idx_before_signal_change = np.max(
             np.where(zd[signal_idx] == False)[0][0] - 1, 0)
         t0 = self.time[idx_before_signal_change]
 
-        def find_final_time():
-            has_first_deriv_after_signal = np.expand_dims(
-                np.any(time * zd > t0, axis=1), axis=1)
-            # In case there's no dx/dt = 0 after the signal start time, use dx2/d2t
-            deriv_zero = np.where(np.repeat(has_first_deriv_after_signal, len(self.time), axis=1),
-                                  zd, zd2)
-            # The signal starts to change where the derivative is not zero
-            tstart_idxs = np.argmax(
-                (deriv_zero == False) & (time > t0), axis=1)
-            tstart = self.time[tstart_idxs]
-            tstart_expanded = np.repeat(np.expand_dims(
-                tstart, axis=1), len(self.time), axis=1)
-            idxs_first_zd_after_signal = np.argmax(
-                (time * deriv_zero > tstart_expanded) & (cond_out == False), axis=1)
-            return np.where(idxs_first_zd_after_signal != 0,
-                            time[np.arange(len(steady_states)), idxs_first_zd_after_signal], tstart)
+        has_first_deriv_after_signal = np.expand_dims(
+            np.any(time * zd > t0, axis=1), axis=1)
+        # In case there's no dx/dt = 0 after the signal start time, use dx2/d2t
+        deriv_zero = np.where(np.repeat(has_first_deriv_after_signal, len(self.time), axis=1),
+                                zd, zd2)
+        # The all species start to change where the derivative is not zero
+        tstart_idxs = np.argmax(
+            (deriv_zero == False) & (time > t0), axis=1)
+        tstart = self.time[tstart_idxs]
+        # Stop measuring response time where the sepcies is within the 
+        # steady state margin and has a zero derivative after its start time
+        idxs_first_zd_after_signal = np.argmax(
+            (time * deriv_zero > np.expand_dims(tstart, axis=1)) & (cond_out == False), axis=1)
+        tstop = np.where(idxs_first_zd_after_signal != 0,
+                        time[np.arange(len(steady_states)), idxs_first_zd_after_signal], tstart)
 
-        ty = find_final_time()
-        return t_signal - ty
+        response_times = tstop - tstart 
+        # np.divide(
+        #     tstop - tstart,
+        #     tstop[signal_idx] - tstart[signal_idx]
+        # )
+        return response_times
 
     # def get_response_times(self, steady_states, first_derivative, signal_idxs: np.ndarray):
     #     species_num = np.shape(steady_states)[0]
@@ -241,8 +245,8 @@ class Timeseries():
                 'precision',
                 'precision_estimate',
                 'response_time',
-                'response_time_high',
-                'response_time_low',
+                # 'response_time_high',
+                # 'response_time_low',
                 'RMSE',
                 'sensitivity',
                 'sensitivity_estimate',
@@ -288,8 +292,8 @@ class Timeseries():
                 analytics['precision_estimate'][s] = self.get_precision(
                     analytics['steady_states'], s_idx, ignore_denominator=True)
         else:
-            analytics['response_time'] = {s: None for s in labels}
-            analytics['precision'] = {s: None for s in labels}
-            analytics['precision_estimate'] = {s: None for s in labels}
+            analytics['response_time'] = None #{s: None for s in labels}
+            analytics['precision'] = None #{s: None for s in labels}
+            analytics['precision_estimate'] = None #{s: None for s in labels}
 
         return analytics
