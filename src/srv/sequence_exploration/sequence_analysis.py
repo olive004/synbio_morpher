@@ -45,7 +45,7 @@ MUTATION_INFO_COLUMN_NAMES = [
 def generate_interaction_stats(path_name, writer: DataWriter = None, experiment_dir: str = None, **stat_addons) -> pd.DataFrame:
 
     interactions = InteractionMatrix(
-        matrix_path=path_name, experiment_dir=experiment_dir)
+        matrix_paths=path_name, experiment_dir=experiment_dir)
 
     stats = interactions.get_stats()
     add_stats = pd.DataFrame.from_dict({'interactions_path': [path_name]})
@@ -142,7 +142,7 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFrame:
             file_key = [
                 interaction_type, circuit_name] if include_circuit_in_filekey else interaction_type
             interactions = InteractionMatrix(
-                matrix_path=get_pathnames(first_only=True,
+                matrix_paths=get_pathnames(first_only=True,
                                           file_key=file_key,
                                           search_dir=interaction_dir))
             interaction_stats[interaction_type] = interactions.get_stats()

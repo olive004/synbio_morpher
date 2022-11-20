@@ -25,18 +25,18 @@ config = {
     "simulation": {
         "dt": 0.1,
         "t0": 0,
-        "t1": 100,
-        "solver": "jax"
+        "t1": 1000,
+        "solver": "diffrax"
     },
     "signal": {
         "inputs": ["RNA_0"],
         "outputs": ["RNA_1"],
         "function_name": "step_function",
         "function_kwargs": {
-            "impulse_center": 40, 
+            "impulse_center": 500, 
             "impulse_halfwidth": 5, 
-            "target": 0.5
-        } 
+            "target": 1
+        }
     },
     "system_type": "RNA"
 }
@@ -51,6 +51,7 @@ circuit.__dict__
 modeller = CircuitModeller(result_writer=data_writer, config=config)
 circuit = modeller.init_circuit(circuit=circuit)
 circuit = modeller.simulate_signal(circuit=circuit, signal=circuit.signal, solver=config['simulation']['solver'])
+
 modeller.write_results(circuit)
 
 # %%

@@ -26,7 +26,7 @@
                 "name": "IntaRNA",
                 "postprocess": true
             },
-            "interaction_file_keyword": "eqconstants",
+            "interaction_file_keyword": ["eqconstants", "coupled_binding_rates", "binding_rates_dissociation"],
             "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
             "experiment": {
                 "purpose": "gather_interaction_stats"
@@ -50,10 +50,6 @@
                 "name": "IntaRNA",
                 "postprocess": true
             },
-            "identities": {
-                "input": "RNA_0",
-                "output": "RNA_2"
-            },
             "filters": {
                 "min_num_interacting": 2,
                 "max_self_interacting": 3,
@@ -68,17 +64,21 @@
                 "concurrent_species_to_mutate": "single_species_at_a_time"
             },
             "signal": {
-                "signal": [
-                    0,
-                    1
-                ],
-                "signal_spec": "raw",
-                "signal_type": "abstract",
-                "total_time": 100,
-                "magnitude": 100,
-                "solver": "jax",
-                "use_batching": true,
-                "time_interval": 0.1
+                "inputs": ["RNA_0"],
+                "outputs": ["RNA_1"],
+                "function_name": "step_function",
+                "function_kwargs": {
+                    "impulse_center": 500, 
+                    "impulse_halfwidth": 5, 
+                    "target": 1
+                }
+            },
+            "simulation": {
+                "dt": 0.1,
+                "t0": 0,
+                "t1": 1000,
+                "solver": "diffrax",
+                "use_batch_mutations": false
             },
             "source_of_interaction_stats": {
                 "is_source_dir_incomplete": true,

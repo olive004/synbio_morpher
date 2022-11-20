@@ -207,7 +207,7 @@ class CircuitModeller():
             t = np.arange(0, np.shape(new_copynumbers)[
                 1]) * self.t1 / np.shape(new_copynumbers)[1]
 
-        elif solver == 'jax':
+        elif solver == 'diffrax':
             solution = bioreaction_sim_full(
                 y0=steady_states.flatten() * invert_onehot(signal.onehot),
                 qreactions=circuit.qreactions, t0=0, t1=self.t1, dt0=self.dt,

@@ -75,7 +75,7 @@
                 "total_time": 100,
                 "magnitude": 100,
                 "solver": "jax",
-                "use_batching": true,
+                "use_batch_mutations": true,
                 "time_interval": 0.1
             },
             "source_of_interaction_stats": {

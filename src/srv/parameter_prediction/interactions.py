@@ -31,36 +31,37 @@ class MolecularInteractions():
 class InteractionMatrix():
 
     def __init__(self,  # config_args=None,
-                 matrix=None,
-                 matrix_path: str = None,
+                 matrix_paths: dict = None,
                  experiment_dir: str = None,
                  num_nodes: int = None,
-                 toy=False,
                  units=''):
         super().__init__()
 
         self.name = None
-        self.toy = toy
         self.units = units
         self.experiment_dir = experiment_dir
 
         self.interaction_file_addons = {
-            'interactions': SIMULATOR_UNITS['IntaRNA']['rate'],
-            'binding_rates': SIMULATOR_UNITS['IntaRNA']['rate'],
+            'coupled_binding_rates': SIMULATOR_UNITS['IntaRNA']['rate'],
+            'binding_rates_dissociation': SIMULATOR_UNITS['IntaRNA']['rate'],
             'eqconstants': 'eqconstants'
         }
 
+        random_matrices = np.random.rand(
+            num_nodes, num_nodes, 4) * 0.000001
+        self.interactions = MolecularInteractions(
+            coupled_binding_rates=random_matrices[:, :, 0],
+            binding_rates_association=random_matrices[:, :, 1],
+            binding_rates_dissociation=random_matrices[:, :, 2],
+            eqconstants=random_matrices[:, :, 3], units='test'
+        )
         self.sample_names = None
-
-        if matrix is not None:
-            self.interactions = MolecularInteractions(coupled_binding_rates=matrix)
-        elif matrix_path is not None:
-            loaded_matrix, self.units, self.sample_names = self.load(matrix_path)
-            self.interactions = MolecularInteractions(coupled_binding_rates=loaded_matrix, units=self.units)
-        elif toy:
-            self.interactions = MolecularInteractions(coupled_binding_rates=self.make_toy_matrix(num_nodes))
-        else:
-            self.interactions = MolecularInteractions(coupled_binding_rates=self.make_rand_matrix(num_nodes))
+        if matrix_paths is not None:
+            loaded_matrix, self.units, self.sample_names = self.load(matrix_paths)
+            self.interactions.coupled_binding_rates=loaded_matrix
+            self.interactions.units=self.units
+        elif num_nodes is None:
+            self.interactions.coupled_binding_rates=self.make_toy_matrix()
 
     def load(self, filepath):
         filetype = determine_file_format(filepath)
@@ -104,17 +105,12 @@ class InteractionMatrix():
             circuit_name = base_name if type(base_name) == str else circuit_name
         return circuit_name
 
-    def make_rand_matrix(self, num_nodes):
-        if num_nodes is None or num_nodes == 0:
-            num_nodes = 1
-        return square_matrix_rand(num_nodes)
-
     def make_toy_matrix(self, num_nodes=None):
         if not num_nodes:
             min_nodes = 2
             max_nodes = 15
             num_nodes = np.random.randint(min_nodes, max_nodes)
-        return self.make_rand_matrix(num_nodes)
+        return square_matrix_rand(num_nodes)
 
     def get_stats(self):
         idxs_interacting = self.get_unique_interacting_idxs()
@@ -147,17 +143,8 @@ class InteractionMatrix():
         return [idx[0] for idx in idxs_interacting if len(set(idx)) == 1]
 
     def get_unique_interacting_idxs(self):
-        if self.units == SIMULATOR_UNITS['IntaRNA']['energy']:
-            idxs_interacting = np.argwhere(self.interactions < 0)
-            idxs_interacting = sorted([tuple(sorted(i)) for i in idxs_interacting])
-        elif self.units == SIMULATOR_UNITS['IntaRNA']['rate']:
-            idxs_interacting = np.argwhere(self.interactions > 0.000000001)
-            idxs_interacting = sorted([tuple(sorted(i)) for i in idxs_interacting])
-        elif self.units == 'eqconstants':
-            idxs_interacting = np.argwhere(self.interactions < 1)
-            idxs_interacting = sorted([tuple(sorted(i)) for i in idxs_interacting])
-        else:
-            raise ValueError(f'Cannot determine interaction properties from units "{self.units}"')
+        idxs_interacting = np.argwhere(self.interactions.eqconstants < 1)
+        idxs_interacting = sorted([tuple(sorted(i)) for i in idxs_interacting])
         return list(set(idxs_interacting))
 
 

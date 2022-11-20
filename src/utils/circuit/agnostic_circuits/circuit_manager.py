@@ -13,7 +13,8 @@ from src.utils.misc.numerical import make_dynamic_indexer, np_delete_axes, zero_
 from src.utils.misc.type_handling import flatten_nested_dict
 from src.utils.results.visualisation import VisODE
 from src.utils.signal.signals import Signal
-from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS, InteractionSimulator
+from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
+from src.srv.parameter_prediction.interactions import InteractionSimulator
 from src.utils.circuit.agnostic_circuits.base_circuit import BaseCircuit
 from src.utils.modelling.deterministic import Deterministic, simulate_signal_scan
 from src.utils.modelling.base import Modeller

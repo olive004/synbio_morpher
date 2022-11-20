@@ -41,9 +41,9 @@ def compose_kwargs(internal_configs: dict = None, config: dict = None) -> dict:
     """ Extra configs like data paths can be supplied here, eg. for circuits that were dynamically generated. """
 
     if internal_configs is not None:
-        for kwarg, config in internal_configs.items():
+        for kwarg, c in internal_configs.items():
             if kwarg != 'experiment':
-                config[kwarg] = config
+                config[kwarg] = c
 
     data_manager = DataManager(filepath=make_filename_safely(config.get("data_path", None)),
                                identities=config.get("identities", {}),

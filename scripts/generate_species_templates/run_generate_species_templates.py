@@ -1,23 +1,20 @@
 from functools import partial
-import logging
 import os
-import sys
-
 from fire import Fire
-from src.utils.circuit.agnostic_circuits.circuit_manager_new import construct_circuit_from_cfg
 
+from src.utils.common.setup_new import construct_circuit_from_cfg
 from src.utils.results.experiments import Experiment, Protocol
 from src.utils.results.result_writer import ResultWriter
+from src.srv.io.manage.script_manager import script_preamble
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.data.fake_data_generation.seq_generator import RNAGenerator
-from src.utils.circuit.agnostic_circuits.circuit_manager import CircuitModeller
+from src.utils.circuit.agnostic_circuits.circuit_manager_new import CircuitModeller
 
 
 def main(config=None, data_writer=None):
     # set configs
-    if config is None:
-        config = os.path.join(
-            "scripts", "generate_species_templates", "configs", "base_config.json")
+    config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
+            "scripts", "generate_species_templates", "configs", "base_config.json"))
     config_file = load_json_as_dict(config)
     exp_configs = config_file.get("circuit_generation")
 
@@ -47,7 +44,7 @@ def main(config=None, data_writer=None):
             ),
             Protocol(
                 CircuitModeller(
-                    result_writer=data_writer).compute_interaction_strengths,
+                    result_writer=data_writer, config=config_file).compute_interaction_strengths,
                 req_input=True,
                 name="compute_interaction_strengths"
             )

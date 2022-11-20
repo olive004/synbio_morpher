@@ -5,6 +5,7 @@ import os
 from fire import Fire
 
 from src.utils.results.experiments import Experiment, Protocol
+from src.srv.io.manage.script_manager import script_preamble
 from src.utils.results.writer import DataWriter
 from src.srv.sequence_exploration.sequence_analysis import generate_interaction_stats
 from src.utils.data.data_format_tools.common import load_json_as_dict
@@ -19,9 +20,8 @@ def readout(var_obj):
 
 def main(config=None, data_writer=None):
     # set configs
-    if config is None:
-        config = os.path.join(
-            "scripts", "gather_interaction_stats", "configs", "gather_interaction_stats.json")
+    config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
+        "scripts", "gather_interaction_stats", "configs", "gather_interaction_stats.json"))
     config_file = load_json_as_dict(config)
 
     # start_experiment
