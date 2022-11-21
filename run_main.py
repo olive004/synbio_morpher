@@ -24,7 +24,6 @@ from scripts.ensemble_mutation_effect_analysis.run_ensemble_mutation_effect_anal
 # from scripts.ensemble_parameter_grid_analysis.run_ensemble_parameter_grid_analysis import main
 
 
-
 FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
 FORMAT = "%(filename)s:%(funcName)s():%(lineno)i: %(message)s %(levelname)s"
 logging.basicConfig(level=logging.INFO, format=FORMAT)
@@ -34,8 +33,6 @@ logger.setLevel(logging.INFO)
 
 if __name__ == "__main__":
     Fire(main)
-
-
 
     # \item run_agnostic_simulation
     # \item run_RNA_circuit
