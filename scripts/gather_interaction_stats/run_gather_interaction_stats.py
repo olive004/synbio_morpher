@@ -30,15 +30,23 @@ def main(config=None, data_writer=None):
             "experiment").get("purpose")}
         data_writer = DataWriter(**data_writer_kwargs)
 
-    config_file, search_dir = get_search_dir(
+    config_file, search_dirs = get_search_dir(
         config_searchdir_key="source_of_interactions", config_file=config_file)
+    f = partial(get_pathnames,
+                    file_key=config_file['interaction_file_keyword'],
+                    search_dir=search_dirs,
+                    subdirs=config_file['interaction_file_keyword'],
+                    as_dict=True
+                    )
+    f()
     protocols = [
         Protocol(
             # get list of all interaction paths
             partial(get_pathnames,
                     file_key=config_file['interaction_file_keyword'],
-                    search_dir=search_dir,
-                    subdir=config_file['interaction_file_keyword']
+                    search_dir=search_dirs,
+                    subdirs=config_file['interaction_file_keyword'],
+                    as_dict=True
                     ),
             req_output=True,
             name='get_pathnames'
@@ -54,7 +62,7 @@ def main(config=None, data_writer=None):
             # do some analytics
             Protocol(
                 partial(generate_interaction_stats,
-                        experiment_dir=search_dir, writer=data_writer),
+                        experiment_dir=search_dirs, writer=data_writer),
                 req_output=True,
                 req_input=True,
                 name='analyse_interactions'

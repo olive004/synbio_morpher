@@ -91,7 +91,7 @@ class CircuitModeller():
                     circuit, circuit.interactions)
 
             filename_addons = ['eqconstants',
-                               'binding_rates_dissociation', 'interactions']
+                               'binding_rates_dissociation', 'coupled_binding_rates']
             for interaction_matrix, filename_addon in zip(
                 [circuit.interactions.eqconstants, circuit.interactions.binding_rates_dissociation,
                  circuit.interactions.coupled_binding_rates], filename_addons

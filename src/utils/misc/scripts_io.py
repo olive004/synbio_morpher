@@ -74,30 +74,6 @@ def find_config_searchdir_key(config: dict, config_searchdir_key: str, source_di
             return config_searchdir_key
     return config_searchdir_key
 
-
-def get_search_dir_multi(config_file: dict, config_searchdir_keys: list = None,
-                   modify_config_for_posterity: bool = True) -> Tuple[dict, dict]:
-    source_dir_key = 'source_dir'
-    config_searchdir_key = find_config_searchdir_key(
-        config_file, config_searchdir_key, source_dir_key)
-    sourcing_config = config_file.get(config_searchdir_key, {})
-    if not sourcing_config:
-        raise KeyError(
-            f'Could not find {config_searchdir_key} in config keys: {config_file.keys()}.')
-    update = sourcing_config.get("is_source_dir_incomplete", None)
-    if update:
-        source_dir = os.path.join(sourcing_config.get(source_dir_key),
-                                  get_recent_experiment_folder(sourcing_config.get(
-                                      source_dir_key)), sourcing_config.get("purpose_to_get_source_dir_from"))
-        if not os.path.isdir(source_dir):
-            raise ConfigError(f'Could not find directory {source_dir}')
-        if modify_config_for_posterity:
-            config_file[config_searchdir_key]['source_dir_actually_used_POSTERITY'] = source_dir
-        return config_file, source_dir
-    else:
-        source_dir = sourcing_config[source_dir_key]
-        return config_file, source_dir
-
 def get_search_dir(config_file: dict, config_searchdir_key: str = None,
                    modify_config_for_posterity: bool = True) -> Tuple[dict, str]:
     """ When a specific data folder is to be loaded, this can be specified
