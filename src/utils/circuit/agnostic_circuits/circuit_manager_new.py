@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import List, Tuple
+from typing import List
 from functools import partial
 import logging
 import numpy as np
@@ -8,12 +8,11 @@ from scipy import integrate
 from bioreaction.model.data_containers import Species
 from bioreaction.simulation.simfuncs.basic_de import bioreaction_sim
 
-from src.utils.results.analytics.timeseries import Timeseries
 from src.utils.results.result_writer import ResultWriter
 from src.utils.circuit.agnostic_circuits.circuit_new import interactions_to_df
 from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
 from src.srv.parameter_prediction.interactions import MolecularInteractions, InteractionData, InteractionSimulator
-from src.utils.misc.numerical import make_dynamic_indexer, invert_onehot, zero_out_negs
+from src.utils.misc.numerical import invert_onehot, zero_out_negs
 from src.utils.misc.type_handling import flatten_nested_dict, flatten_listlike, get_unique
 from src.srv.io.loaders.experiment_loading import INTERACTION_FILE_ADDONS
 from src.utils.misc.helper import vanilla_return
