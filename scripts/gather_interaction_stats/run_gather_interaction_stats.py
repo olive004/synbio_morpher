@@ -14,7 +14,8 @@ from src.utils.misc.scripts_io import get_search_dir
 
 
 def readout(var_obj):
-    logging.info(f'Using directory or files {var_obj} for gathering the gene circuit interactions from.')
+    logging.info(
+        f'Using directory or files {var_obj} for gathering the gene circuit interactions from.')
     return var_obj
 
 
@@ -32,13 +33,6 @@ def main(config=None, data_writer=None):
 
     config_file, search_dirs = get_search_dir(
         config_searchdir_key="source_of_interactions", config_file=config_file)
-    f = partial(get_pathnames,
-                    file_key=config_file['interaction_file_keyword'],
-                    search_dir=search_dirs,
-                    subdirs=config_file['interaction_file_keyword'],
-                    as_dict=True
-                    )
-    f()
     protocols = [
         Protocol(
             # get list of all interaction paths

@@ -74,6 +74,7 @@ def find_config_searchdir_key(config: dict, config_searchdir_key: str, source_di
             return config_searchdir_key
     return config_searchdir_key
 
+
 def get_search_dir(config_file: dict, config_searchdir_key: str = None,
                    modify_config_for_posterity: bool = True) -> Tuple[dict, str]:
     """ When a specific data folder is to be loaded, this can be specified
@@ -201,7 +202,8 @@ def load_experiment_config_original(starting_experiment_folder: str, target_purp
                               f'for purpose {target_purpose} when starting from '
                               f'experiment folder {starting_experiment_folder}.')
         if type(original_source_dir) == list and len(original_source_dir) == 1:
-            logging.warning(f'Expected string for {original_source_dir} but got list')
+            logging.warning(
+                f'Expected string for {original_source_dir} but got list')
             original_source_dir = original_source_dir[0]
         original_config = load_experiment_config(
             original_source_dir)

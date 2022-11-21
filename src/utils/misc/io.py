@@ -1,8 +1,8 @@
 from typing import List, Union
 import glob
-import logging
 import os
 from src.utils.misc.string_handling import remove_file_extension
+from src.utils.misc.type_handling import nest_list_dict
 from src.utils.misc.helper import vanilla_return
 from src.utils.data.data_format_tools.common import load_multiple_as_list
 
@@ -25,7 +25,7 @@ def get_pathnames_from_mult_dirs(search_dirs: List[str], **get_pathnames_kwargs)
 
 def get_pathnames(search_dir: str, file_key: Union[List, str] = '', first_only: bool = False,
                   allow_empty: bool = False, subdir: str = '',
-                  subdirs:list=None,
+                  subdirs: list = None,
                   conditional: Union[str, None] = 'filenames',
                   as_dict=False):
     """ Get the pathnames in a folder given a keyword. 
@@ -48,13 +48,15 @@ def get_pathnames(search_dir: str, file_key: Union[List, str] = '', first_only: 
                     set(sorted([f for f in glob.glob(os.path.join(
                         search_dir, '*' + fk + '*')) if path_condition_f(f)]))
                 )
-            path_names = list(all_path_names[0].intersection(*all_path_names[1:]))
+            path_names = list(
+                all_path_names[0].intersection(*all_path_names[1:]))
         else:
             all_path_names = {}
             for fk, sd in zip(file_key, subdirs):
-                curr_search_dir = os.path.join(search_dir, sd) if sd is not None else search_dir
+                curr_search_dir = os.path.join(
+                    search_dir, sd) if sd is not None else search_dir
                 all_path_names[fk] = list(set(sorted([f for f in glob.glob(os.path.join(
-                        curr_search_dir, '*' + fk + '*')) if path_condition_f(f)])))
+                    curr_search_dir, '*' + fk + '*')) if path_condition_f(f)])))
             path_names = nest_list_dict(all_path_names)
     elif not file_key:
         path_names = sorted([os.path.join(search_dir, f) for f in os.listdir(

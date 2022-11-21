@@ -6,6 +6,7 @@ import numpy as np
 import logging
 
 from src.srv.parameter_prediction.interactions import MolecularInteractions
+from src.srv.io.manage.data_manager import DataManager
 from src.utils.circuit.common.system_setup import construct_bioreaction_model
 from src.utils.results.results import ResultCollector
 from src.utils.signal.signals_new import Signal
@@ -36,7 +37,8 @@ def interactions_to_df(interactions: np.ndarray, labels: list):
 class Graph():
 
     def __init__(self, labels: List[str], source_matrix: np.ndarray = None) -> None:
-        source_matrix = np.zeros((len(labels), len(labels))) if source_matrix is None else source_matrix
+        source_matrix = np.zeros(
+            (len(labels), len(labels))) if source_matrix is None else source_matrix
         self._node_labels = labels
         self.build_graph(source_matrix)
 
@@ -92,13 +94,16 @@ class Circuit():
         self.result_collector = ResultCollector()
         self.model = construct_bioreaction_model(
             config.get('data'), config.get('molecular_params'))
+        self.data: DataManager = config.get('data')
         self.qreactions = self.init_reactions(self.model, config)
         self.interactions = self.init_interactions()
         self.species_state: str = config.get('species_state', 'uninitialised')
         self.signal: Signal = None
-        self.mutations: dict = config.get('mutations', {})
+        self.mutations = {}
+        self.mutations_args: dict = config.get('mutations', {})
 
-        self.graph = Graph(source_matrix=self.interactions.eqconstants, labels=[s.name for s in self.model.species])
+        self.graph = Graph(source_matrix=self.interactions.eqconstants, labels=[
+                           s.name for s in self.model.species])
         self.circuit_size = len(self.model.species)
 
     def init_reactions(self, model: BasicModel, config: dict) -> QuantifiedReactions:

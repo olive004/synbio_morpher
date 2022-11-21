@@ -15,7 +15,7 @@ from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
 from src.srv.parameter_prediction.interactions import MolecularInteractions, InteractionData, InteractionSimulator
 from src.utils.misc.numerical import make_dynamic_indexer, invert_onehot, zero_out_negs
 from src.utils.misc.type_handling import flatten_nested_dict, flatten_listlike, get_unique
-from src.srv.io.loaders.experiment import INTERACTION_FILE_ADDONS
+from src.srv.io.loaders.experiment_loading import INTERACTION_FILE_ADDONS
 from src.utils.misc.helper import vanilla_return
 from src.utils.results.visualisation import VisODE
 from src.utils.signal.signals_new import Signal
@@ -337,7 +337,7 @@ class CircuitModeller():
             self.result_writer.subdivide_writing(circuit.name)
 
         mutation_dict = flatten_nested_dict(
-            circuit.mutations.items())
+            circuit.mutations_args.items())
         subcircuits = [(name, circuit.make_subcircuit(name, mutation))
                        for name, mutation in mutation_dict.items()]
         if include_normal_run:

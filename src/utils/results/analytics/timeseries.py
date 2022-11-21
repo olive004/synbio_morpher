@@ -109,7 +109,7 @@ class Timeseries():
         margin = 0.05
         cond_out = (self.data > (steady_states + steady_states * margin)
                     ) | (self.data < (steady_states - steady_states * margin))
-        
+
         # Get zero derivative within margin
         fmargin = 0.001
         fm = np.expand_dims(np.max(deriv1, axis=1) * fmargin, axis=1)
@@ -124,111 +124,15 @@ class Timeseries():
         tstart_idxs = np.argmax(
             (zd == False) & (time > t0), axis=1)
         tstart = self.time[tstart_idxs]
-        # Stop measuring response time where the species is within the 
+        # Stop measuring response time where the species is within the
         # steady state margin and has a zero derivative after its start time
         idxs_first_zd_after_signal = np.argmax(
             (time * zd > np.expand_dims(tstart, axis=1)) & (cond_out == False), axis=1)
         tstop = np.where(idxs_first_zd_after_signal != 0,
-                        time[np.arange(len(steady_states)), idxs_first_zd_after_signal], tstart)
+                         time[np.arange(len(steady_states)), idxs_first_zd_after_signal], tstart)
 
-        response_times = tstop - tstart 
-        # np.divide(
-        #     tstop - tstart,
-        #     tstop[signal_idx] - tstart[signal_idx]
-        # )
+        response_times = tstop - tstart
         return response_times
-
-    # def get_response_times(self, steady_states, first_derivative, signal_idxs: np.ndarray):
-    #     species_num = np.shape(steady_states)[0]
-    #     if signal_idxs is None:
-    #         return [None] * 3
-
-    #     def get_response_time_thresholded(threshold, signal_idx):
-    #         """ The response time is calculated as the time from the last point
-    #         where the signal changed to the point where the output steadied. This
-    #         is the same as the last stationary point of the output minus the
-    #         last stationary point of the signal derivative. """
-    #         zero_deriv = np.logical_and(first_derivative <= 0 +
-    #                                     threshold, first_derivative >= 0-threshold).astype(int)
-    #         signal_mask = np.ones(species_num)
-    #         signal_mask[signal_idx] = 0
-    #         if np.all(np.sum(np.gradient(zero_deriv, axis=1) != 0, axis=1) * signal_mask == 0):
-    #             # If no species responded to the signal
-    #             return [None] * species_num
-    #         all_deriv_change_points = [np.where(np.gradient(zero_deriv, axis=1)[
-    #             i] != 0)[0] for i in range(species_num)]
-    #         response_times = [None] * species_num
-    #         if len(all_deriv_change_points[signal_idx]) != 0:
-    #             for i in range(species_num):
-    #                 if len(all_deriv_change_points[i]) != 0 and i != signal_idx:
-    #                     response_times[i] = self.time[all_deriv_change_points[signal_idx][-1]] - \
-    #                         self.time[all_deriv_change_points[i][-1]]
-    #         return response_times
-    #     margin = 0.05
-    #     clean_derivative = first_derivative[np.where(first_derivative < 1e20)]
-    #     threshold = max(
-    #         0.001 * np.max(clean_derivative),
-    #     0.001) # avoid inf
-    #     response_time = get_response_time_thresholded(
-    #         threshold=threshold, signal_idx=signal_idxs[0])
-    #     response_time_high = get_response_time_thresholded(
-    #         threshold=first_derivative[np.where(
-    #             clean_derivative <= margin*clean_derivative+clean_derivative)][-1],
-    #         signal_idx=signal_idxs[0])
-    #     response_time_low = get_response_time_thresholded(
-    #         threshold=clean_derivative[np.where(
-    #             clean_derivative >= -margin*clean_derivative+clean_derivative)][-1],
-    #         signal_idx=signal_idxs[0])
-
-    #     return response_time, response_time_high, response_time_low
-
-    # def get_response_times_og(self, final_steady_states):
-    #     margin_high = 1.05
-    #     margin_low = 0.95
-    #     peak = np.max(self.data)
-    #     has_peak = np.all(peak > final_steady_states)
-    #     if has_peak:
-    #         post_peak_data = self.data[:, np.argmax(
-    #             self.data < peak):]
-    #         response_time = np.expand_dims(np.argmax(
-    #             post_peak_data < final_steady_states, axis=1).astype(self.num_dtype), axis=1)
-    #         response_time_high = np.expand_dims(np.argmax(post_peak_data < (
-    #             final_steady_states * margin_high), axis=1).astype(self.num_dtype), axis=1)
-    #         response_time_low = np.expand_dims(np.argmax(post_peak_data < (
-    #             final_steady_states * margin_low), axis=1).astype(self.num_dtype), axis=1)
-    #     else:
-    #         post_peak_data = self.data
-    #         response_time = np.expand_dims(np.argmax(
-    #             post_peak_data >= final_steady_states, axis=1).astype(self.num_dtype), axis=1)
-    #         response_time_high = np.expand_dims(np.argmax(post_peak_data >= (
-    #             final_steady_states * margin_high), axis=1).astype(self.num_dtype), axis=1)
-    #         response_time_low = np.expand_dims(np.argmax(post_peak_data >= (
-    #             final_steady_states * margin_low), axis=1).astype(self.num_dtype), axis=1)
-    #     return response_time, response_time_high, response_time_low
-
-    # def get_response_times_reverse(self, final_steady_states):
-    #     margin_high = 1.05
-    #     margin_low = 0.95
-    #     dip = np.min(self.data)
-    #     has_dip = np.all(dip < final_steady_states)
-    #     if has_dip:
-    #         post_dip_data = self.data[:, np.argmax(
-    #             self.data > dip):]
-    #         response_time = np.expand_dims(np.argmax(
-    #             post_dip_data > final_steady_states, axis=1).astype(self.num_dtype), axis=1)
-    #         response_time_high = np.expand_dims(np.argmax(post_dip_data > (
-    #             final_steady_states * margin_high), axis=1).astype(self.num_dtype), axis=1)
-    #         response_time_low = np.expand_dims(np.argmax(post_dip_data > (
-    #             final_steady_states * margin_low), axis=1).astype(self.num_dtype), axis=1)
-    #     else:
-    #         post_dip_data = self.data
-    #         response_time = np.expand_dims(np.argmax(
-    #             post_dip_data >= final_steady_states, axis=1).astype(self.num_dtype), axis=1)
-    #         response_time_high = np.expand_dims(np.argmax(post_dip_data >= (
-    #             final_steady_states * margin_high), axis=1).astype(self.num_dtype), axis=1)
-    #         response_time_low = np.expand_dims(np.argmax(post_dip_data >= (
-    #             final_steady_states * margin_low), axis=1).astype(self.num_dtype), axis=1)
-    #     return response_time, response_time_high, response_time_low
 
     def get_analytics_types(self):
         return ['fold_change',
@@ -283,8 +187,8 @@ class Timeseries():
                 analytics['precision_estimate'][s] = self.get_precision(
                     analytics['steady_states'], s_idx, ignore_denominator=True)
         else:
-            analytics['response_time'] = None #{s: None for s in labels}
-            analytics['precision'] = None #{s: None for s in labels}
-            analytics['precision_estimate'] = None #{s: None for s in labels}
+            analytics['response_time'] = None  # {s: None for s in labels}
+            analytics['precision'] = None  # {s: None for s in labels}
+            analytics['precision_estimate'] = None  # {s: None for s in labels}
 
         return analytics

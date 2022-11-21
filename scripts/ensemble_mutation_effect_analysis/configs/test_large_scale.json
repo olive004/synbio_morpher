@@ -52,8 +52,8 @@
             },
             "filters": {
                 "min_num_interacting": 2,
-                "max_self_interacting": 3,
-                "max_total": 2
+                "max_self_interacting": null,
+                "max_total": 5
             },
             "mutations": {
                 "algorithm": "random",

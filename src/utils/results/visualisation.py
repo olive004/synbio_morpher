@@ -25,7 +25,7 @@ class NetworkCustom(Network):
         """
         Overriding default pyvis Network() function to allow show_edge_weights
         """
-        assert(isinstance(nx_graph, nx.Graph))
+        assert (isinstance(nx_graph, nx.Graph))
         edges = nx_graph.edges(data=True)
         nodes = nx_graph.nodes(data=True)
 
@@ -353,7 +353,8 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                                                       'hue': hue},
                                                      plot_kwargs))
                 else:
-                    logging.warning(f'Could not visualise columns {col_x} and {col_y} for {data}')
+                    logging.warning(
+                        f'Could not visualise columns {col_x} and {col_y} for {data}')
 
 
 def visualise_graph_pyvis(graph: nx.DiGraph,
@@ -375,7 +376,8 @@ def visualise_graph_pyvis(graph: nx.DiGraph,
     try:
         interactive_graph.save_graph(out_path)
     except PermissionError:
-        logging.warning(f'The graph at {out_path} may not have saved properly.')
+        logging.warning(
+            f'The graph at {out_path} may not have saved properly.')
 
     # web_filename = 'file:///' + os.getcwd() + '/' + out_path
     # # webbrowser.open(web_filename, new=1, autoraise=True)

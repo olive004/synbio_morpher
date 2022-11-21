@@ -11,6 +11,7 @@ import pandas as pd
 
 
 from src.srv.io.loaders.data_loader import GeneCircuitLoader
+from src.srv.io.loaders.experiment_loading import INTERACTION_FILE_ADDONS
 from src.utils.misc.numerical import NUMERICAL
 from src.utils.misc.string_handling import remove_element_from_list_by_substring
 from src.utils.misc.type_handling import flatten_nested_listlike
@@ -23,7 +24,7 @@ from src.utils.misc.scripts_io import get_path_from_output_summary, get_root_exp
     load_experiment_config, load_experiment_output_summary, load_result_report
 
 
-INTERACTION_TYPES = ['binding_rates', 'eqconstants', 'interactions']
+INTERACTION_TYPES = list(INTERACTION_FILE_ADDONS.keys())
 INTERACTION_STATS = ['num_self_interacting',
                      'num_interacting',
                      'max_interaction',
@@ -44,12 +45,13 @@ MUTATION_INFO_COLUMN_NAMES = [
 
 def generate_interaction_stats(path_name: dict, writer: DataWriter = None, experiment_dir: str = None, **stat_addons) -> pd.DataFrame:
 
-    interactions =
+    interactions = 1
     interactions = InteractionMatrix(
         matrix_paths=path_name, experiment_dir=experiment_dir)
 
     stats = interactions.get_stats()
-    add_stats = pd.DataFrame.from_dict({'interactions_path': [path_name]})
+    add_stats = pd.DataFrame.from_dict(
+        {f'path_{k}': [v] for k, v in path_name.items()})
     stats = pd.concat([stats, add_stats], axis=1)
 
     if writer:
@@ -62,10 +64,14 @@ def generate_interaction_stats(path_name: dict, writer: DataWriter = None, exper
 def filter_data(data: pd.DataFrame, filters: dict = {}):
     if not filters:
         return data
+    fks = list(filters.keys())
+    for k in fks:
+        if filters[k] is None:
+            filters.pop(k)
     filt_stats = data[data['num_interacting']
-                      >= filters.get("min_num_interacting")]
+                      >= filters.get("min_num_interacting", len(data))]
     filt_stats = filt_stats[filt_stats['num_self_interacting'] <= filters.get(
-        "max_self_interacting")]
+        "max_self_interacting", len(data))]
     filt_stats = filt_stats.iloc[:min(filters.get(
         'max_total', len(filt_stats)), len(filt_stats))]
     return filt_stats
@@ -82,8 +88,9 @@ def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path
         logging.warning(stats)
         return []
 
+    path_key = f'path_{list(INTERACTION_FILE_ADDONS.keys())[0]}'
     experiment_folder = get_root_experiment_folder(
-        filt_stats['interactions_path'].to_list()[0])
+        filt_stats[path_key].to_list()[0])
     experiment_summary = load_experiment_output_summary(experiment_folder)
 
     extra_configs = []
@@ -92,7 +99,7 @@ def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path
         extra_config.update({write_key: get_path_from_output_summary(
             name=row["name"], output_summary=experiment_summary)})
         extra_config.update(
-            {'interactions_path': row["interactions_path"]}
+            {path_key: row[path_key]}
         )
         extra_configs.append(extra_config)
     if filters.get('max_circuits') is not None:

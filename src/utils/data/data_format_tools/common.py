@@ -62,7 +62,8 @@ def load_json_as_df(json_pathname: str) -> pd.DataFrame:
 
 def load_multiple_as_list(inputs_list: list, load_func, **kwargs) -> list:
     collection_list = []
-    assert type(inputs_list) == list, f'Input type of {inputs_list} should be list and not {type(inputs_list)}'
+    assert type(
+        inputs_list) == list, f'Input type of {inputs_list} should be list and not {type(inputs_list)}'
     for inp in inputs_list:
         collection_list.append(load_func(inp, **kwargs))
     return collection_list

@@ -8,7 +8,7 @@ from typing import Tuple
 
 from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS, RawSimulationHandling
 from src.utils.misc.scripts_io import get_root_experiment_folder, load_experiment_config
-from src.srv.io.loaders.experiment import INTERACTION_FILE_ADDONS, load_param, load_units
+from src.srv.io.loaders.experiment_loading import INTERACTION_FILE_ADDONS, load_param, load_units
 from src.utils.misc.type_handling import flatten_listlike
 from src.srv.io.loaders.misc import load_csv
 from src.utils.data.data_format_tools.common import determine_file_format
@@ -42,24 +42,24 @@ class InteractionMatrix():
         self.units = units
         self.experiment_dir = experiment_dir
 
+        self.sample_names = None
+        init_nodes = num_nodes if num_nodes is not None else 3
         random_matrices = np.random.rand(
-            num_nodes, num_nodes, 4) * 0.000001
+            init_nodes, init_nodes, 4) * 0.000001
         self.interactions = MolecularInteractions(
             coupled_binding_rates=random_matrices[:, :, 0],
             binding_rates_association=random_matrices[:, :, 1],
             binding_rates_dissociation=random_matrices[:, :, 2],
             eqconstants=random_matrices[:, :, 3], units='test'
         )
-        self.sample_names = None
         if matrix_paths is not None:
-            self.interactions.binding_rates_association = load_param(matrix_path, 'creation_rate')
+            self.interactions.binding_rates_association = load_param(
+                list(matrix_paths.values())[0], 'creation_rate')
             for matrix_type, matrix_path in matrix_paths.items():
                 loaded_matrix, self.units, self.sample_names = self.load(
                     matrix_path)
                 self.interactions.__setattr__(matrix_type, loaded_matrix)
                 self.interactions.units = self.units
-        elif num_nodes is None:
-            self.interactions.coupled_binding_rates = self.make_toy_matrix()
 
     def load(self, filepath):
         filetype = determine_file_format(filepath)
@@ -77,29 +77,20 @@ class InteractionMatrix():
     def isolate_circuit_name(self, circuit_filepath, filetype):
         circuit_name = None
         for faddon in INTERACTION_FILE_ADDONS.keys():
-            base_name = os.path.basename(circuit_filepath).replace('.'+filetype, '').replace(
-                faddon+'_', '').replace('_'+faddon, '')
-            circuit_name = base_name if type(
-                base_name) == str else circuit_name
+            if faddon in circuit_filepath:
+                base_name = os.path.basename(circuit_filepath).replace('.'+filetype, '').replace(
+                    faddon+'_', '').replace('_'+faddon, '')
+                circuit_name = base_name if type(
+                    base_name) == str and faddon not in base_name else circuit_name
+        if circuit_name is None:
+            logging.warning(
+                f'Could not find circuit name in {circuit_filepath}')
         return circuit_name
-
-    def make_toy_matrix(self, num_nodes=None):
-        if not num_nodes:
-            min_nodes = 2
-            max_nodes = 15
-            num_nodes = np.random.randint(min_nodes, max_nodes)
-        return square_matrix_rand(num_nodes)
 
     def get_stats(self):
         idxs_interacting = self.get_unique_interacting_idxs()
         interacting = self.get_interacting_species(idxs_interacting)
         self_interacting = self.get_selfinteracting_species(idxs_interacting)
-
-        nonzero_matrix = self.interactions[np.where(self.interactions > 0)]
-        if len(nonzero_matrix):
-            min_interaction = np.min(nonzero_matrix)
-        else:
-            min_interaction = np.min(self.interactions)
 
         stats = {
             "name": self.name,
@@ -107,8 +98,8 @@ class InteractionMatrix():
             "self_interacting": self_interacting,
             "num_interacting": len(set(flatten_listlike(interacting))),
             "num_self_interacting": len(set(self_interacting)),
-            "max_interaction": np.max(self.interactions),
-            "min_interaction": min_interaction
+            "max_interaction": np.max(self.interactions.eqconstants),
+            "min_interaction": np.min(self.interactions.eqconstants)
         }
         stats = {k: [v] for k, v in stats.items()}
         stats = pd.DataFrame.from_dict(stats)
@@ -121,7 +112,7 @@ class InteractionMatrix():
         return [idx[0] for idx in idxs_interacting if len(set(idx)) == 1]
 
     def get_unique_interacting_idxs(self):
-        idxs_interacting = np.argwhere(self.interactions.eqconstants < 1)
+        idxs_interacting = np.argwhere(self.interactions.eqconstants != 1)
         idxs_interacting = sorted([tuple(sorted(i)) for i in idxs_interacting])
         return list(set(idxs_interacting))
 

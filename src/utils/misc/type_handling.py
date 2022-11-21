@@ -11,7 +11,7 @@ def cast_all_values_as_list(dict_like):
     new_dict = {}
     for k, v in dict_like.items():
         if not type(v) == list:
-            new_dict[k] = [v] 
+            new_dict[k] = [v]
         else:
             new_dict[k] = v
     return new_dict
@@ -101,12 +101,14 @@ def merge_dicts(*dict_objs):
                 if type(v) == dict and type(all_dicts[k]) == dict:
                     all_dicts[k] = merge_dicts(all_dicts[k], v)
                 elif type(v) == dict and not type(all_dicts[k]) == dict:
-                    logging.warning(f'Could not merge {all_dicts[k]} with {v} for dict {dict_obj}')
+                    logging.warning(
+                        f'Could not merge {all_dicts[k]} with {v} for dict {dict_obj}')
         else:
-            logging.warning(f'Could not merge object {dict_obj} of type {type(dict_obj)} with {all_dicts}')
+            logging.warning(
+                f'Could not merge object {dict_obj} of type {type(dict_obj)} with {all_dicts}')
     return all_dicts
 
 
 def nest_list_dict(dict_of_lists: dict) -> list:
     vs = list(dict_of_lists.values())
-    return [{k: vs[i][j] for i, k in enumerate(dict_of_lists.keys())} for j in range(len(vs[0])) ]
+    return [{k: vs[i][j] for i, k in enumerate(dict_of_lists.keys())} for j in range(len(vs[0]))]

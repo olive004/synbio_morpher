@@ -80,7 +80,8 @@ def main(config=None, data_writer=None):
             req_output=True,
             name='pull_circuit_from_stats'
         ),
-        Protocol(logging_circuit, req_input=True, req_output=True, name='logging'),
+        Protocol(logging_circuit, req_input=True,
+                 req_output=True, name='logging'),
         [  # for each circuit
             # Construct circuit
             Protocol(
