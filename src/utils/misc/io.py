@@ -1,13 +1,10 @@
-
-
+from typing import List, Union
 import glob
 import logging
 import os
-from typing import List, Union
-from src.utils.data.data_format_tools.common import load_multiple_as_list
-
+from src.utils.misc.string_handling import remove_file_extension
 from src.utils.misc.helper import vanilla_return
-from src.utils.misc.string_handling import get_intersecting_string, remove_file_extension
+from src.utils.data.data_format_tools.common import load_multiple_as_list
 
 
 def isolate_filename(filepath: str):
@@ -58,7 +55,7 @@ def get_pathnames(search_dir: str, file_key: Union[List, str] = '', first_only: 
                 curr_search_dir = os.path.join(search_dir, sd) if sd is not None else search_dir
                 all_path_names[fk] = list(set(sorted([f for f in glob.glob(os.path.join(
                         curr_search_dir, '*' + fk + '*')) if path_condition_f(f)])))
-            path_names = all_path_names
+            path_names = nest_list_dict(all_path_names)
     elif not file_key:
         path_names = sorted([os.path.join(search_dir, f) for f in os.listdir(
             search_dir) if path_condition_f(os.path.join(search_dir, f))])

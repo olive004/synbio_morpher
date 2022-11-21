@@ -15,6 +15,7 @@ from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
 from src.srv.parameter_prediction.interactions import MolecularInteractions, InteractionData, InteractionSimulator
 from src.utils.misc.numerical import make_dynamic_indexer, invert_onehot, zero_out_negs
 from src.utils.misc.type_handling import flatten_nested_dict, flatten_listlike, get_unique
+from src.srv.io.loaders.experiment import INTERACTION_FILE_ADDONS
 from src.utils.misc.helper import vanilla_return
 from src.utils.results.visualisation import VisODE
 from src.utils.signal.signals_new import Signal
@@ -90,8 +91,7 @@ class CircuitModeller():
                 circuit = self.update_species_simulated_rates(
                     circuit, circuit.interactions)
 
-            filename_addons = ['eqconstants',
-                               'binding_rates_dissociation', 'coupled_binding_rates']
+            filename_addons = INTERACTION_FILE_ADDONS.keys()
             for interaction_matrix, filename_addon in zip(
                 [circuit.interactions.eqconstants, circuit.interactions.binding_rates_dissociation,
                  circuit.interactions.coupled_binding_rates], filename_addons

@@ -12,7 +12,7 @@ import pandas as pd
 
 from src.srv.io.loaders.data_loader import GeneCircuitLoader
 from src.utils.misc.numerical import NUMERICAL
-from src.utils.misc.string_handling import prettify_logging_info, remove_element_from_list_by_substring
+from src.utils.misc.string_handling import remove_element_from_list_by_substring
 from src.utils.misc.type_handling import flatten_nested_listlike
 from src.utils.results.analytics.timeseries import Timeseries
 from src.utils.results.visualisation import expand_data_by_col
@@ -42,8 +42,9 @@ MUTATION_INFO_COLUMN_NAMES = [
 ]
 
 
-def generate_interaction_stats(path_name, writer: DataWriter = None, experiment_dir: str = None, **stat_addons) -> pd.DataFrame:
+def generate_interaction_stats(path_name: dict, writer: DataWriter = None, experiment_dir: str = None, **stat_addons) -> pd.DataFrame:
 
+    interactions =
     interactions = InteractionMatrix(
         matrix_paths=path_name, experiment_dir=experiment_dir)
 
@@ -65,7 +66,8 @@ def filter_data(data: pd.DataFrame, filters: dict = {}):
                       >= filters.get("min_num_interacting")]
     filt_stats = filt_stats[filt_stats['num_self_interacting'] <= filters.get(
         "max_self_interacting")]
-    filt_stats = filt_stats.iloc[:min(filters.get('max_total', len(filt_stats)), len(filt_stats))]
+    filt_stats = filt_stats.iloc[:min(filters.get(
+        'max_total', len(filt_stats)), len(filt_stats))]
     return filt_stats
 
 
@@ -143,8 +145,8 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFrame:
                 interaction_type, circuit_name] if include_circuit_in_filekey else interaction_type
             interactions = InteractionMatrix(
                 matrix_paths=get_pathnames(first_only=True,
-                                          file_key=file_key,
-                                          search_dir=interaction_dir))
+                                           file_key=file_key,
+                                           search_dir=interaction_dir))
             interaction_stats[interaction_type] = interactions.get_stats()
         return interaction_stats, interactions.sample_names
 

@@ -105,3 +105,8 @@ def merge_dicts(*dict_objs):
         else:
             logging.warning(f'Could not merge object {dict_obj} of type {type(dict_obj)} with {all_dicts}')
     return all_dicts
+
+
+def nest_list_dict(dict_of_lists: dict) -> list:
+    vs = list(dict_of_lists.values())
+    return [{k: vs[i][j] for i, k in enumerate(dict_of_lists.keys())} for j in range(len(vs[0])) ]

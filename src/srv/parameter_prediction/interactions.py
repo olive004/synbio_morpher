@@ -8,6 +8,7 @@ from typing import Tuple
 
 from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS, RawSimulationHandling
 from src.utils.misc.scripts_io import get_root_experiment_folder, load_experiment_config
+from src.srv.io.loaders.experiment import INTERACTION_FILE_ADDONS, load_param, load_units
 from src.utils.misc.type_handling import flatten_listlike
 from src.srv.io.loaders.misc import load_csv
 from src.utils.data.data_format_tools.common import determine_file_format
@@ -17,10 +18,10 @@ from src.utils.misc.type_handling import flatten_listlike
 
 class MolecularInteractions():
 
-    def __init__(self, coupled_binding_rates, 
-    binding_rates_association=None, 
-    binding_rates_dissociation=None, 
-    eqconstants=None, units=None) -> None:
+    def __init__(self, coupled_binding_rates,
+                 binding_rates_association=None,
+                 binding_rates_dissociation=None,
+                 eqconstants=None, units=None) -> None:
         self.coupled_binding_rates = coupled_binding_rates
         self.binding_rates_association = binding_rates_association
         self.binding_rates_dissociation = binding_rates_dissociation
@@ -41,12 +42,6 @@ class InteractionMatrix():
         self.units = units
         self.experiment_dir = experiment_dir
 
-        self.interaction_file_addons = {
-            'coupled_binding_rates': SIMULATOR_UNITS['IntaRNA']['rate'],
-            'binding_rates_dissociation': SIMULATOR_UNITS['IntaRNA']['rate'],
-            'eqconstants': 'eqconstants'
-        }
-
         random_matrices = np.random.rand(
             num_nodes, num_nodes, 4) * 0.000001
         self.interactions = MolecularInteractions(
@@ -57,52 +52,35 @@ class InteractionMatrix():
         )
         self.sample_names = None
         if matrix_paths is not None:
-            loaded_matrix, self.units, self.sample_names = self.load(matrix_paths)
-            self.interactions.coupled_binding_rates=loaded_matrix
-            self.interactions.units=self.units
+            self.interactions.binding_rates_association = load_param(matrix_path, 'creation_rate')
+            for matrix_type, matrix_path in matrix_paths.items():
+                loaded_matrix, self.units, self.sample_names = self.load(
+                    matrix_path)
+                self.interactions.__setattr__(matrix_type, loaded_matrix)
+                self.interactions.units = self.units
         elif num_nodes is None:
-            self.interactions.coupled_binding_rates=self.make_toy_matrix()
+            self.interactions.coupled_binding_rates = self.make_toy_matrix()
 
     def load(self, filepath):
         filetype = determine_file_format(filepath)
 
         self.name = self.isolate_circuit_name(filepath, filetype)
         if filetype == 'csv':
-            matrix, sample_names = load_csv(filepath, load_as='numpy', return_header=True)
+            matrix, sample_names = load_csv(
+                filepath, load_as='numpy', return_header=True)
         else:
             raise TypeError(
                 f'Unsupported filetype {filetype} for loading {filepath}')
-        units = self.load_units(filepath)
+        units = load_units(filepath)
         return matrix, units, sample_names
-
-    def load_units(self, filepath):
-        
-        try:
-            experiment_config = load_experiment_config(
-                experiment_folder=get_root_experiment_folder(filepath))
-        except ValueError:
-            raise ValueError(f'For loading units into {self}, supply a valid '
-                             f'experiment directory instead of {self.experiment_dir}')
-        simulator_cfgs = experiment_config.get('interaction_simulator')
-        
-        if any([i for i in self.interaction_file_addons.keys() if i in filepath]):
-            for i, u in self.interaction_file_addons.items():
-                if i in filepath:
-                    return u
-        elif simulator_cfgs.get('name') == 'IntaRNA':
-            if simulator_cfgs.get('postprocess'):
-                return SIMULATOR_UNITS['IntaRNA']['rate']
-            else:
-                return SIMULATOR_UNITS['IntaRNA']['energy']
-        else:
-            return 'unknown'
 
     def isolate_circuit_name(self, circuit_filepath, filetype):
         circuit_name = None
-        for faddon in self.interaction_file_addons.keys():
+        for faddon in INTERACTION_FILE_ADDONS.keys():
             base_name = os.path.basename(circuit_filepath).replace('.'+filetype, '').replace(
                 faddon+'_', '').replace('_'+faddon, '')
-            circuit_name = base_name if type(base_name) == str else circuit_name
+            circuit_name = base_name if type(
+                base_name) == str else circuit_name
         return circuit_name
 
     def make_toy_matrix(self, num_nodes=None):

@@ -38,7 +38,7 @@ def main(config=None, data_writer=None):
     config_file, source_experiment_dir = get_search_dir(
         config_searchdir_key='source_of_interaction_stats', config_file=config_file)
 
-    if not config_file['signal']['use_batch_mutations']:
+    if not config_file['simulation']['use_batch_mutations']:
         simulation_func = partial(CircuitModeller(result_writer=data_writer, config=config_file).wrap_mutations,
                                   write_to_subsystem=True,
                                   methods={
