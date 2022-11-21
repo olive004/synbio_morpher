@@ -60,7 +60,7 @@ class Experiment():
                 for o in out:
                     self.iterate_protocols(protocols=protocol, out=o)
 
-    def call_protocol(self, protocol, out=None):
+    def call_protocol(self, protocol: Protocol, out=None):
         if protocol.req_input and protocol.req_output:
             out = protocol(out)
         elif protocol.req_input:

@@ -13,7 +13,7 @@
             },
             "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
             "circuit_generation": {
-                "repetitions": 50,
+                "repetitions": 5,
                 "species_count": 3,
                 "sequence_length": 20,
                 "generator_protocol": "template_mutate",

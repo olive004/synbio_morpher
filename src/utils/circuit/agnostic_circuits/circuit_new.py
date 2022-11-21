@@ -138,17 +138,6 @@ class Circuit():
     def reset_to_initial_state(self):
         self.result_collector.reset()
 
-    def make_subcircuit(self, mutation_name: str, mutation=None):
-        subcircuit = deepcopy(self)
-        subcircuit.reset_to_initial_state()
-        subcircuit.species_state = 'uninitialised'
-
-        if mutation is None:
-            mutation = self.model.species.mutations.get(mutation_name)
-
-        subcircuit.model.species.mutate(mutation)
-        return subcircuit
-
     @property
     def signal(self):
         return self._signal

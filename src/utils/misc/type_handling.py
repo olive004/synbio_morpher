@@ -29,9 +29,9 @@ def extend_int_to_list(int_like, target_num):
     return int_like
 
 
-def flatten_nested_dict(dict_obj):
+def flatten_nested_dict(dict_obj: dict):
     flat_dict = {}
-    for _, subdict in dict_obj:
+    for _, subdict in dict_obj.items():
         if type(subdict) == dict:
             flat_dict.update(subdict)
     return flat_dict

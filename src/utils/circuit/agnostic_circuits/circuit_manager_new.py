@@ -21,6 +21,7 @@ from src.utils.results.visualisation import VisODE
 from src.utils.signal.signals_new import Signal
 from src.utils.circuit.agnostic_circuits.circuit_new import Circuit
 from src.utils.modelling.deterministic import Deterministic, simulate_signal_scan, bioreaction_sim_full
+from src.utils.evolution.mutation import implement_mutation
 from src.utils.modelling.base import Modeller
 
 
@@ -155,7 +156,8 @@ class CircuitModeller():
         modelling_func = partial(bioreaction_sim, args=None,
                                  reactions=circuit.qreactions.reactions,
                                  signal=circuit.signal.func,
-                                 signal_onehot=circuit.signal.onehot, dt=self.dt)
+                                 signal_onehot=circuit.signal.onehot,
+                                 inverse_onehot=invert_onehot(circuit.signal.onehot))
 
         copynumbers = self.iterate_modelling_func(y0, modelling_func,
                                                   max_time=self.t1,
@@ -280,7 +282,7 @@ class CircuitModeller():
                                                  'input'),
                                              one_step_func=modeller_signal.dxdt_RNA_jnp))(b_starting_copynumbers, full_interactions=b_interactions)
         b_new_copynumbers = np.array(b_new_copynumbers[1])
-        if np.shape(b_new_copynumbers)[1] != circuits[circuit_idx].species.size and np.shape(b_new_copynumbers)[-1] == circuits[circuit_idx].species.size:
+        if np.shape(b_new_copynumbers)[1] != circuits[circuit_idx].circuit_size and np.shape(b_new_copynumbers)[-1] == circuits[circuit_idx].species.size:
             b_new_copynumbers = np.swapaxes(b_new_copynumbers, 1, 2)
 
         # Apply to all circuits
@@ -305,13 +307,25 @@ class CircuitModeller():
                                   'ref_circuit_signal': ref_circuit_signal})
         return list(zip(names, circuits))
 
+
+    def make_subcircuit(self, circuit: Circuit, mutation_name: str, mutation=None):
+    
+        subcircuit = deepcopy(circuit)
+        subcircuit.reset_to_initial_state()
+        subcircuit.species_state = 'uninitialised'
+        if mutation is None:
+            mutation = circuit.mutations.get(mutation_name)
+
+        subcircuit = implement_mutation(circuit=subcircuit, mutation=mutation)
+        return subcircuit
+
     # @time_it
     def wrap_mutations(self, circuit: Circuit, methods: dict, include_normal_run=True,
                        write_to_subsystem=False):
         if write_to_subsystem:
             self.result_writer.subdivide_writing(circuit.name)
         mutation_dict = flatten_nested_dict(
-            circuit.model.species.mutations.items())
+            circuit.mutations)
         # logging.info(
         #     f'Running functions {methods} on circuit with {len(mutation_dict)} items.')
 
@@ -325,7 +339,7 @@ class CircuitModeller():
                     circuit, methods, ref_circuit=circuit)
                 self.result_writer.subdivide_writing(
                     'mutations', safe_dir_change=False)
-            subcircuit = circuit.make_subcircuit(name, mutation)
+            subcircuit = self.make_mutated_subcircuit(circuit, name, mutation)
             self.result_writer.subdivide_writing(name, safe_dir_change=False)
             self.apply_to_circuit(subcircuit, methods, ref_circuit=circuit)
             self.result_writer.unsubdivide_last_dir()

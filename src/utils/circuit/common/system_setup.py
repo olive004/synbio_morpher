@@ -1,4 +1,5 @@
 from bioreaction.model.data_tools import construct_model_fromnames
+from bioreaction.model.data_containers import BasicModel
 from src.utils.data.common import Data
 
 
@@ -14,10 +15,10 @@ def get_system_type(sys_type, use_updated = True):
             f"Desired system type {sys_type} not supported.")
 
 
-def add_data_to_species(model, data: Data):
-    for s in model.species:
+def add_data_to_species(model: BasicModel, data: Data):
+    for i, s in enumerate(model.species):
         if s.name in data.data.keys():
-            s.physical_data = data.data[s.name]
+            model.species[i].physical_data = data.data[s.name]
     return model
 
 

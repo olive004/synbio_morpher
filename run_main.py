@@ -33,25 +33,3 @@ logger.setLevel(logging.INFO)
 
 if __name__ == "__main__":
     Fire(main)
-
-    # \item run_agnostic_simulation
-    # \item run_RNA_circuit
-    # \item run_pair_species_mutation
-    # \item run_generate_species_templates
-    # \item run_gather_interaction_stats
-    # \item run_mutation_effect_on_interactions_signal
-    # \item run_analyse_mutated_templates
-    # \item run_intarna_sandbox
-    # \item run_ensemble_mutation_effect_analysis
-    # \item run_parameter_based_simulation
-
-    # \item agnostic_simulation
-    # \item RNA_circuit_simulation
-    # \item pair_species_mutation
-    # \item generate_species_templates
-    # \item gather_interaction_stats
-    # \item mutation_effect_on_interactions_signal
-    # \item analyse_mutated_templates
-    # \item intarna_sandbox
-    # \item ensemble_mutation_effect_analysis
-    # \item parameter_based_simulation
