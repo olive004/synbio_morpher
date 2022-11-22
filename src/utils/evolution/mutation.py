@@ -66,13 +66,13 @@ def get_mutation_type_mapping(sequence_type):
 
 class Mutations(Tabulated):
 
-    def __init__(self, mutation_name: str, template_species: Species, template_name: str,
-                 template_file: str, template_seq: str, positions: list, mutation_types: list,
+    def __init__(self, mutation_name: str, template_species: Species,
+                 template_file: str, positions: list, mutation_types: list,
                  count: int, sequence_type: str, algorithm: str) -> None:
         self.mutation_name = mutation_name
         self.template_species = template_species
-        self.template_name = template_name
-        self.template_seq = template_seq
+        self.template_name = self.template_species.name
+        self.template_seq = self.template_species.physical_data
         self.mutation_types = mutation_types
         self.positions = positions
         self.count = count

@@ -67,7 +67,7 @@ class Evolver():
 
                             mutation = self.make_mutations(
                                 specie=specie, positions=positions, 
-                                mutation_idx=mutation_idx, sequence=sequence,
+                                mutation_idx=mutation_idx,
                                 mutation_types=mutation_types, algorithm=algorithm,
                                 template_file=circuit.data.source)
 
@@ -87,7 +87,7 @@ class Evolver():
                         mutation_idx = mutation_nums_per_position[0]*p + i
                         mutations = self.make_mutations(
                             species=specie, positions=[
-                                p], mutation_idx=mutation_idx, sequence=sequence, mutation_types=[
+                                p], mutation_idx=mutation_idx, mutation_types=[
                                 mt], algorithm=algorithm, template_file=circuit.data.source)
                         circuit.mutations[specie.name][mutations.mutation_name] = mutations
             return circuit
@@ -117,7 +117,7 @@ class Evolver():
         return flatten_listlike(mutation_types.values()), flatten_listlike(new_positions)
 
     def make_mutations(self, specie: Species, positions: list,
-                       mutation_idx: int, sequence: str, mutation_types: list,
+                       mutation_idx: int, mutation_types: list,
                        algorithm: str, template_file: str):
         mutation_count = len(positions)
         mutations = Mutations(
@@ -125,8 +125,6 @@ class Evolver():
             f'm{mutation_count}-' + str(
                 mutation_idx),
             template_species=specie,
-            template_name=specie.name,
-            template_seq=sequence,
             mutation_types=mutation_types,
             count=mutation_count,
             positions=positions,

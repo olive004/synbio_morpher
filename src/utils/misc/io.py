@@ -41,7 +41,15 @@ def get_pathnames(search_dir: str, file_key: Union[List, str] = '', first_only: 
         path_condition_f = os.path.isfile
 
     if type(file_key) == list:
-        if not as_dict and subdirs is not None:
+        if as_dict and subdirs is not None:
+            all_path_names = {}
+            for fk, sd in zip(file_key, subdirs):
+                curr_search_dir = os.path.join(
+                    search_dir, sd) if sd is not None else search_dir
+                all_path_names[fk] = list(set(sorted([f for f in glob.glob(os.path.join(
+                    curr_search_dir, '*' + fk + '*')) if path_condition_f(f)])))
+            path_names = nest_list_dict(all_path_names)
+        else:
             all_path_names = []
             for fk in file_key:
                 all_path_names.append(
@@ -50,14 +58,6 @@ def get_pathnames(search_dir: str, file_key: Union[List, str] = '', first_only: 
                 )
             path_names = list(
                 all_path_names[0].intersection(*all_path_names[1:]))
-        else:
-            all_path_names = {}
-            for fk, sd in zip(file_key, subdirs):
-                curr_search_dir = os.path.join(
-                    search_dir, sd) if sd is not None else search_dir
-                all_path_names[fk] = list(set(sorted([f for f in glob.glob(os.path.join(
-                    curr_search_dir, '*' + fk + '*')) if path_condition_f(f)])))
-            path_names = nest_list_dict(all_path_names)
     elif not file_key:
         path_names = sorted([os.path.join(search_dir, f) for f in os.listdir(
             search_dir) if path_condition_f(os.path.join(search_dir, f))])

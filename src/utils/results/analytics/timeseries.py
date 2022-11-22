@@ -134,24 +134,24 @@ class Timeseries():
         response_times = tstop - tstart
         return response_times
 
-    def get_analytics_types(self):
-        return ['fold_change',
-                'overshoot',
-                'precision',
-                'precision_estimate',
-                'response_time',
-                # 'response_time_high',
-                # 'response_time_low',
-                'RMSE',
-                'sensitivity',
-                'sensitivity_estimate',
-                'steady_states']
-
     def frequency(self):
         spectrum = np.fft.fft(self.data)/len(self.data)
         spectrum = spectrum[range(int(len(self.data)/2))]
         freq = np.fft.fftfreq(len(spectrum))
         return freq
+
+    def get_analytics_types(self):
+        return ['fold_change',
+                'overshoot',
+                'RMSE',
+                'steady_states'] + self.get_signal_dependent_analytics()
+
+    def get_signal_dependent_analytics(self):
+        return ['response_time',
+                'precision',
+                'precision_estimate',
+                'sensitivity',
+                'sensitivity_estimate']
 
     def generate_analytics(self, labels: List[str], signal_onehot=None, ref_circuit_signal=None):
         signal_idxs = np.where(signal_onehot == 1)[0]
@@ -160,8 +160,6 @@ class Timeseries():
             'first_derivative': self.get_derivative(self.data),
             'fold_change': self.fold_change(),
             'RMSE': self.get_rmse(ref_circuit_signal),
-            'sensitivity': self.get_sensitivity(signal_idxs),
-            'sensitivity_estimate': self.get_sensitivity(signal_idxs, ignore_denominator=True)
         }
         analytics['steady_states'], \
             analytics['is_steady_state_reached'], \
@@ -172,6 +170,8 @@ class Timeseries():
         analytics['response_time'] = {}
         analytics['precision'] = {}
         analytics['precision_estimate'] = {}
+        analytics['sensitivity'] = {}
+        analytics['sensitivity_estimate'] = {}
         if signal_idxs is not None:
             signal_labels = list(map(labels. __getitem__, signal_idxs))
             for s, s_idx in zip(signal_labels, signal_idxs):
@@ -179,16 +179,20 @@ class Timeseries():
                 #     analytics['response_time_high'], \
                 #     analytics['response_time_low'] = self.get_response_times(
                 #     analytics['steady_states'], analytics['first_derivative'], signal_idxs=signal_onehot)
-
-                analytics['response_time'][s] = self.get_step_response_times(
-                    analytics['steady_states'], analytics['first_derivative'], signal_idx=s_idx)
                 analytics['precision'][s] = self.get_precision(
                     analytics['steady_states'], s_idx)
                 analytics['precision_estimate'][s] = self.get_precision(
                     analytics['steady_states'], s_idx, ignore_denominator=True)
+                analytics['response_time'][s] = self.get_step_response_times(
+                    analytics['steady_states'], analytics['first_derivative'], signal_idx=s_idx)
+                analytics['sensitivity'] = self.get_sensitivity(s_idx)
+                analytics['sensitivity_estimate'] = self.get_sensitivity(
+                    s_idx, ignore_denominator=True)
         else:
             analytics['response_time'] = None  # {s: None for s in labels}
             analytics['precision'] = None  # {s: None for s in labels}
             analytics['precision_estimate'] = None  # {s: None for s in labels}
+            analytics['sensitivity'] = None
+            analytics['sensitivity_estimate'] = None
 
         return analytics

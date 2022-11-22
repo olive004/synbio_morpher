@@ -145,16 +145,25 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFrame:
 
     def make_interaction_stats_and_sample_names(source_interaction_dir: str, include_circuit_in_filekey=False):
         interaction_stats = {}
+        interactions = InteractionMatrix(
+            matrix_paths=get_pathnames(file_key=INTERACTION_TYPES,
+                      search_dir=source_interaction_dir,
+                      subdirs=INTERACTION_TYPES,
+                      as_dict=True, first_only=True)
+        )
         for interaction_type in INTERACTION_TYPES:
-            interaction_dir = os.path.join(
-                source_interaction_dir, interaction_type)
-            file_key = [
-                interaction_type, circuit_name] if include_circuit_in_filekey else interaction_type
-            interactions = InteractionMatrix(
-                matrix_paths=get_pathnames(first_only=True,
-                                           file_key=file_key,
-                                           search_dir=interaction_dir))
-            interaction_stats[interaction_type] = interactions.get_stats()
+            interaction_stats[interaction_type] = interactions.get_stats(interaction_type)
+
+        # for interaction_type in INTERACTION_TYPES:
+        #     interaction_dir = os.path.join(
+        #         source_interaction_dir, interaction_type)
+        #     file_key = [
+        #         interaction_type, circuit_name] if include_circuit_in_filekey else interaction_type
+        #     interactions = InteractionMatrix(
+        #         matrix_paths=get_pathnames(first_only=True,
+        #                                    file_key=file_key,
+        #                                    search_dir=interaction_dir))
+        #     interaction_stats[interaction_type] = interactions.get_stats()
         return interaction_stats, interactions.sample_names
 
     def upate_table_with_results(table: dict, reference_table: dict, results: dict) -> dict:
@@ -253,7 +262,6 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFrame:
             out_type='json', out_name='tabulated_mutation_info', **{'data': info_table})
 
     info_table = init_info_table()
-    source_config = load_experiment_config(source_dir)
 
     circuit_dirs = get_subdirectories(source_dir)
     for circ_idx, circuit_dir in enumerate(circuit_dirs):

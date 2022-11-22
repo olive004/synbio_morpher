@@ -109,7 +109,7 @@ class CircuitModeller():
 
     def find_steady_states(self, circuit: Circuit):
         modeller_steady_state = Deterministic(
-            max_time=50, time_interval=0.1)
+            max_time=500, time_interval=0.1)
 
         steady_states = self.compute_steady_states(modeller_steady_state,
                                                    circuit=circuit,
@@ -260,13 +260,12 @@ class CircuitModeller():
 
         # Batch
         t = np.arange(modeller_signal.max_time)
+        steady_states = np.array(
+            [c.result_collector.get_result('steady_states').analytics['steady_states'].flatten() for c in circuits]
+        )
         b_starting_copynumbers = np.array(
             [c.model.species.steady_state_copynums.flatten() for c in circuits])
         b_interactions = np.array([c.species.interactions for c in circuits])
-        # b_creation_rates = np.array(
-        #     [c.species.creation_rates.flatten() for c in circuits])
-        # b_degradation_rates = np.array(
-        #     [c.species.degradation_rates.flatten() for c in circuits])
 
         b_new_copynumbers = jax.vmap(partial(simulate_signal_scan,
                                              # b_new_copynumbers = partial(simulate_signal_scan,

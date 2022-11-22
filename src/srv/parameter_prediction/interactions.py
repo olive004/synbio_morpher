@@ -87,7 +87,7 @@ class InteractionMatrix():
                 f'Could not find circuit name in {circuit_filepath}')
         return circuit_name
 
-    def get_stats(self):
+    def get_stats(self, interaction_attr='eqconstants'):
         idxs_interacting = self.get_unique_interacting_idxs()
         interacting = self.get_interacting_species(idxs_interacting)
         self_interacting = self.get_selfinteracting_species(idxs_interacting)
@@ -98,8 +98,8 @@ class InteractionMatrix():
             "self_interacting": self_interacting,
             "num_interacting": len(set(flatten_listlike(interacting))),
             "num_self_interacting": len(set(self_interacting)),
-            "max_interaction": np.max(self.interactions.eqconstants),
-            "min_interaction": np.min(self.interactions.eqconstants)
+            "max_interaction": np.max(self.interactions.__getattribute__(interaction_attr)),
+            "min_interaction": np.min(self.interactions.__getattribute__(interaction_attr))
         }
         stats = {k: [v] for k, v in stats.items()}
         stats = pd.DataFrame.from_dict(stats)

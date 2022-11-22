@@ -76,7 +76,7 @@ def bioreaction_sim_full(qreactions: QuantifiedReactions, t0, t1, dt0,
 
     term = dfx.ODETerm(partial(bioreaction_sim, reactions=qreactions.reactions, signal=signal,
                                signal_onehot=signal_onehot, inverse_onehot=invert_onehot(signal_onehot)))
-    y0 = qreactions.quantities if y0 is None else y0
+    # y0 = qreactions.quantities if y0 is None else y0
 
     return dfx.diffeqsolve(term, solver, t0=t0, t1=t1, dt0=dt0,
                            y0=y0, saveat=saveat, max_steps=16**4)
