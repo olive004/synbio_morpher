@@ -69,7 +69,6 @@ def main(config=None, data_writer=None):
             partial(visualise_data, data_writer=data_writer, cols_x=['binding_rates_max_interaction'],
                     plot_type='histplot',
                     out_name='binding_rates_max_freqs',
-                    preprocessor_func_x=preprocessing_func,
                     exclude_rows_nonempty_in_cols=['mutation_name'],
                     threshold_value_max=binding_rates_threshold_upper,
                     log_axis=(False, False),
@@ -86,7 +85,6 @@ def main(config=None, data_writer=None):
             partial(visualise_data, data_writer=data_writer, cols_x=['binding_rates_max_interaction'],
                     plot_type='histplot',
                     out_name='binding_rates_max_freqs_mutations',
-                    preprocessor_func_x=preprocessing_func,
                     exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
                     threshold_value_max=binding_rates_threshold_upper,
                     log_axis=(False, False),
@@ -104,7 +102,6 @@ def main(config=None, data_writer=None):
             partial(visualise_data, data_writer=data_writer, cols_x=['binding_rates_max_interaction_diff_to_base_circuit'],
                     plot_type='histplot',
                     out_name='binding_rates_max_freqs_diffs',
-                    preprocessor_func_x=preprocessing_func,
                     exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
                     log_axis=(False, False),
                     use_sns=True,
@@ -118,20 +115,11 @@ def main(config=None, data_writer=None):
             skip=config_file.get('only_visualise_circuits', False)
         ),
 
-
-
-
-
-
-
-
-
         # Binding rates min int's og
         Protocol(
             partial(visualise_data, data_writer=data_writer, cols_x=['binding_rates_min_interaction'],
                     plot_type='histplot',
                     out_name='binding_rates_min_freqs',
-                    preprocessor_func_x=preprocessing_func,
                     exclude_rows_nonempty_in_cols=['mutation_name'],
                     threshold_value_max=binding_rates_threshold_upper,
                     log_axis=(False, False),
@@ -150,7 +138,6 @@ def main(config=None, data_writer=None):
             partial(visualise_data, data_writer=data_writer, cols_x=['binding_rates_min_interaction'],
                     plot_type='histplot',
                     out_name='binding_rates_min_interaction_og',
-                    preprocessor_func_x=preprocessing_func,
                     exclude_rows_nonempty_in_cols=['mutation_name'],
                     threshold_value_max=binding_rates_threshold_upper,
                     log_axis=(False, False),
@@ -168,7 +155,6 @@ def main(config=None, data_writer=None):
             partial(visualise_data, data_writer=data_writer, cols_x=['eqconstants_max_interaction'],
                     plot_type='histplot',
                     out_name='eqconstants_max_interaction_og',
-                    preprocessor_func_x=preprocessing_func,
                     exclude_rows_nonempty_in_cols=['mutation_name'],
                     threshold_value_max=binding_rates_threshold_upper,
                     log_axis=(False, False),
@@ -209,7 +195,6 @@ def main(config=None, data_writer=None):
                         partial(visualise_data, data_writer=data_writer, cols_x=[cols_x],
                                 plot_type='histplot',
                                 out_name=out_name,
-                                preprocessor_func_x=preprocessing_func,
                                 exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
                                 threshold_value_max=binding_rates_threshold_upper,
                                 log_axis=log_opt,
@@ -229,7 +214,6 @@ def main(config=None, data_writer=None):
                 partial(visualise_data, data_writer=data_writer, cols_x=[cols_x],
                         plot_type='histplot',
                         out_name=out_name,
-                        preprocessor_func_x=preprocessing_func,
                         exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
                         threshold_value_max=binding_rates_threshold_upper,
                         log_axis=log_opt,
@@ -261,7 +245,6 @@ def main(config=None, data_writer=None):
                     data_writer=data_writer, cols_x=[cols_x],
                     plot_type='histplot',
                     out_name=f'{analytics_type}{log_text}',
-                    preprocessor_func_x=preprocessing_func,
                     exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
                     log_axis=log_opt,
                     use_sns=True,

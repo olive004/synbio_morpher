@@ -140,11 +140,14 @@ class Timeseries():
         freq = np.fft.fftfreq(len(spectrum))
         return freq
 
+    def get_all_analytics_types(self):
+        return self.get_analytics_types() + self.get_signal_dependent_analytics()
+
     def get_analytics_types(self):
         return ['fold_change',
                 'overshoot',
                 'RMSE',
-                'steady_states'] + self.get_signal_dependent_analytics()
+                'steady_states']
 
     def get_signal_dependent_analytics(self):
         return ['response_time',
@@ -167,11 +170,11 @@ class Timeseries():
         analytics['overshoot'] = self.get_overshoot(
             analytics['steady_states'])
 
-        analytics['response_time'] = {}
-        analytics['precision'] = {}
-        analytics['precision_estimate'] = {}
-        analytics['sensitivity'] = {}
-        analytics['sensitivity_estimate'] = {}
+        # analytics['response_time'] = {}
+        # analytics['precision'] = {}
+        # analytics['precision_estimate'] = {}
+        # analytics['sensitivity'] = {}
+        # analytics['sensitivity_estimate'] = {}
         if signal_idxs is not None:
             signal_labels = list(map(labels. __getitem__, signal_idxs))
             for s, s_idx in zip(signal_labels, signal_idxs):
@@ -179,20 +182,29 @@ class Timeseries():
                 #     analytics['response_time_high'], \
                 #     analytics['response_time_low'] = self.get_response_times(
                 #     analytics['steady_states'], analytics['first_derivative'], signal_idxs=signal_onehot)
-                analytics['precision'][s] = self.get_precision(
+                # analytics['precision'][s] = self.get_precision(
+                #     analytics['steady_states'], s_idx)
+                # analytics['precision_estimate'][s] = self.get_precision(
+                #     analytics['steady_states'], s_idx, ignore_denominator=True)
+                # analytics['response_time'][s] = self.get_step_response_times(
+                #     analytics['steady_states'], analytics['first_derivative'], signal_idx=s_idx)
+                # analytics['sensitivity'] = self.get_sensitivity(s_idx)
+                # analytics['sensitivity_estimate'] = self.get_sensitivity(
+                #     s_idx, ignore_denominator=True)
+                analytics[f'precision_wrt_{s}'] = self.get_precision(
                     analytics['steady_states'], s_idx)
-                analytics['precision_estimate'][s] = self.get_precision(
+                analytics[f'precision_estimate_wrt_{s}'] = self.get_precision(
                     analytics['steady_states'], s_idx, ignore_denominator=True)
-                analytics['response_time'][s] = self.get_step_response_times(
+                analytics[f'response_time_wrt_{s}'] = self.get_step_response_times(
                     analytics['steady_states'], analytics['first_derivative'], signal_idx=s_idx)
-                analytics['sensitivity'] = self.get_sensitivity(s_idx)
-                analytics['sensitivity_estimate'] = self.get_sensitivity(
+                analytics[f'sensitivity_wrt_{s}'] = self.get_sensitivity(s_idx)
+                analytics[f'sensitivity_estimate_wrt_{s}'] = self.get_sensitivity(
                     s_idx, ignore_denominator=True)
-        else:
-            analytics['response_time'] = None  # {s: None for s in labels}
-            analytics['precision'] = None  # {s: None for s in labels}
-            analytics['precision_estimate'] = None  # {s: None for s in labels}
-            analytics['sensitivity'] = None
-            analytics['sensitivity_estimate'] = None
+        # else:
+        #     analytics['response_time'] = None  # {s: None for s in labels}
+        #     analytics['precision'] = None  # {s: None for s in labels}
+        #     analytics['precision_estimate'] = None  # {s: None for s in labels}
+        #     analytics['sensitivity'] = None
+        #     analytics['sensitivity_estimate'] = None
 
         return analytics
