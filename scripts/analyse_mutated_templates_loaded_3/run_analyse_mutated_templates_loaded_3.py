@@ -10,6 +10,7 @@ from src.utils.misc.io import get_pathnames_from_mult_dirs
 from src.utils.misc.scripts_io import get_search_dir, load_experiment_config_original
 from src.utils.misc.string_handling import prettify_keys_for_label
 
+from src.utils.results.analytics.timeseries import Timeseries
 from src.utils.results.experiments import Experiment, Protocol
 from src.utils.results.result_writer import ResultWriter
 from src.utils.results.visualisation import visualise_data
@@ -73,14 +74,7 @@ def main(config=None, data_writer=None):
     # Visualisations
 
     # Analytics visualisation
-    analytics_types = ['fold_change',
-                       'overshoot',
-                       'precision',
-                       'response_time',
-                       'response_time_high',
-                       'response_time_low',
-                       'sensitivity',
-                       'steady_states']  # Timeseries(data=None).get_analytics_types()
+    analytics_types = Timeseries(data=None).get_analytics_types()
 
     ## Line plots
 
@@ -90,14 +84,19 @@ def main(config=None, data_writer=None):
 
     for mutation_attr in ['mutation_positions']:  #, 'mutation_type']: -> should be barplot
         # Difference
-        for cols_x, cols_y, title, xlabel, ylabel in [
+        for analytics_type, cols_x, cols_y, title, xlabel, ylabel in [
                 [
+                    analytics_type,
                     mutation_attr,
                     f'{analytics_type}_diff_to_base_circuit',
                     f'{prettify_keys_for_label(mutation_attr)} vs. {prettify_keys_for_label(analytics_type)} difference between circuit\nand mutated counterparts',
                     f'{prettify_keys_for_label(mutation_attr)}',
                     f'{prettify_keys_for_label(analytics_type)} difference{outlier_text}'
                 ] for analytics_type in analytics_types]:
+            
+            complete_colx_by_str = analytics_type + \
+                '_wrt' if analytics_type in Timeseries(
+                    data=None).get_signal_dependent_analytics() else None
             protocols.append(Protocol(
                 partial(
                     visualise_data,
@@ -105,6 +104,7 @@ def main(config=None, data_writer=None):
                     cols_x=[cols_x], cols_y=[cols_y],
                     plot_type='line_plot',
                     out_name=f'{cols_x}_{cols_y}',
+                    complete_colx_by_str=complete_colx_by_str,
                     exclude_rows_zero_in_cols=['mutation_num'],
                     expand_xcoldata_using_col=True,
                     log_axis=(False, True),
@@ -123,14 +123,18 @@ def main(config=None, data_writer=None):
             )
 
         # Ratio
-        for cols_x, cols_y, title, xlabel, ylabel in [
+        for analytics_type, cols_x, cols_y, title, xlabel, ylabel in [
                 [
+                    analytics_type,
                     mutation_attr,
                     f'{analytics_type}_ratio_from_mutation_to_base',
                     f'{prettify_keys_for_label(mutation_attr)} vs. {prettify_keys_for_label(analytics_type)} ratio from mutated\nto original circuit',
                     f'{prettify_keys_for_label(mutation_attr)}',
                     f'{prettify_keys_for_label(analytics_type)} ratio'
                 ] for analytics_type in analytics_types]:
+            complete_colx_by_str = analytics_type + \
+                '_wrt' if analytics_type in Timeseries(
+                    data=None).get_signal_dependent_analytics() else None
             protocols.append(Protocol(
                 partial(
                     visualise_data,
@@ -138,6 +142,7 @@ def main(config=None, data_writer=None):
                     cols_x=[cols_x], cols_y=[cols_y],
                     plot_type='line_plot',
                     out_name=f'{cols_x}_{cols_y}',
+                    complete_colx_by_str=complete_colx_by_str,
                     exclude_rows_zero_in_cols=['mutation_num'],
                     expand_xcoldata_using_col=True,
                     log_axis=(False, False),

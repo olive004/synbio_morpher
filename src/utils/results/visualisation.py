@@ -187,8 +187,10 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
             return [None]
         if complete_col_by_str is not None:
             for i, col in enumerate(cols):
-                rex = np.asarray([re.search(f"^{complete_col_by_str}.*{col.split(complete_col_by_str)[-1]}", c) for c in data.columns])
+                rex = np.asarray([re.search(f"^{complete_col_by_str}.*{col.split(complete_col_by_str.split('wrt')[0])[-1]}", c) for c in data.columns])
                 if list(data.columns[np.where(rex != None)[0]])[0] == 'precision_wrt_species-6_diff_to_base_circuit':
+                    col
+                if col == 'response_time_ratio_from_mutation_to_base':
                     col
                 cols[i] = list(data.columns[np.where(rex != None)[0]])
         if flatten_listlike(cols, safe=True) == []:
@@ -220,6 +222,8 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                 data = data.rename(columns={col: new_col})
             return data, new_col
 
+        if column_x == 'response_time_ratio_from_mutation_to_base':
+            column_x
         if column_x is not None:
             data, column_x = process_log(data, column_x, log_axis[0], 'xlabel')
         if column_y is not None:
@@ -333,6 +337,8 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
     for col_x in cols_x:
         for col_y in cols_y:
             if use_sns:
+                if col_x == 'response_time_ratio_from_mutation_to_base':
+                    col_x
                 data, col_x, col_y = preprocess_data(
                     data, preprocessor_func_x, threshold_value_max,
                     expand_xcoldata_using_col, expand_ycoldata_using_col,
@@ -346,6 +352,8 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                     selection_conditions=selection_conditions,
                     postprocessor_func_x=postprocessor_func_x,
                     postprocessor_func_y=postprocessor_func_y)
+                if col_x == 'response_time_ratio_from_mutation_to_base':
+                    col_x
                 data, col_x, col_y = process_log_sns(
                     data, col_x, col_y, plot_kwargs, log_axis, plot_type)
                 if plot_type == 'scatter_plot':

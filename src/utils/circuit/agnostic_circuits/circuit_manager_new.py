@@ -240,34 +240,30 @@ class CircuitModeller():
                               'ref_circuit_signal': ref_circuit_signal})
         return circuit
 
-    def simulate_signal_batch(self, circuits: List[Circuit], max_time,
+    def simulate_signal_batch(self, circuits: List[Circuit],
                               circuit_idx: int = 0,
                               save_numerical_vis_data: bool = False,
                               ref_circuit: Circuit = None,
-                              dt=1, as_batch=True):
+                              as_batch=True):
         names = list([n for n, c in circuits])
         circuits = list([c for n, c in circuits])
         if circuit_idx < len(circuits):
             signal = circuits[circuit_idx].signal
-            signal.update_time_interval(dt)
+            signal.update_time_interval(self.dt)
         else:
             raise ValueError(
                 f'The chosen circuit index {circuit_idx} exceeds the circuit list (len {len(circuits)}')
 
         modeller_signal = Deterministic(
-            max_time=max_time, time_interval=dt
+            max_time=self.t1, time_interval=self.dt
         )
 
         # Batch
-        t = np.arange(0, modeller_signal.max_time, dt)
+        t = np.arange(self.t0, self.t1, self.dt)
         b_steady_states = np.array(
             [c.result_collector.get_result('steady_states').analytics['steady_states'].flatten() for c in circuits]
         )
         b_reactions = [c.qreactions.reactions for c in circuits]
-
-        # jax.vmap(partial(bioreaction_sim,
-        # t=, y=, args=, reactions=, signal=, signal_onehot=, inverse_onehot=))
-        # jax.vmap(partial(bioreaction_sim_full, qreactions=circuits, t0=, t1=, dt0=, signal=, signal_onehot=, y0=)))
 
         b_new_copynumbers = bioreactions_simulate_signal_scan(
             copynumbers=b_steady_states, time=t, reactions=b_reactions, signal=circuits[0].signal, signal_onehot=circuits[0].signal.onehot)
