@@ -3,6 +3,7 @@ import logging
 from math import factorial
 from typing import Union, List
 import numpy as np
+import re
 import pandas as pd
 
 
@@ -29,12 +30,23 @@ def cast_astype(list_like, dtypes):
         list_like = cast_astype(list_like, dtypes)
     else:
         dtype = dtypes
-    if type(list_like) == list: 
+    if type(list_like) == list:
         recast = map(dtype, list_like)
     elif type(list_like) == pd.Series:
-        recast = list_like.astype(dtype)
+        def replace_string_list(e):
+            if type(e) == str and re.search("\[.*\]", e):
+                # return [dtype(ll) for ll in e[1:-1].split(',')]
+                return dtype(e[1:-1])
+            elif type(e) == list:
+                # return [dtype(ee) for ee in e]
+                return dtype(e[0])
+            else:
+                return dtype(e)
+        recast = list_like.apply(replace_string_list)
+        # recast = list_like.astype(dtype)
     else:
-        raise TypeError(f'Type {type(list_like)} cannot be converted to {dtype}')
+        raise TypeError(
+            f'Type {type(list_like)} cannot be converted to {dtype}')
     return recast
 
 
@@ -61,9 +73,9 @@ def expand_matrix_triangle_idx(flat_triangle_idx):
 
     # Reverse of the triangle_sequence formula
     n = (-1 + np.sqrt(1 - 4 * 1 * (-2*flat_triangle_idx))) / 2
-    row = np.floor(n) 
+    row = np.floor(n)
     col = flat_triangle_idx - triangular_sequence(np.floor(n))
-    
+
     return (int(row), int(col))
 
 

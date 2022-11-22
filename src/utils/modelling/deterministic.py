@@ -5,7 +5,7 @@ import jax
 import jax.numpy as jnp
 import diffrax as dfx
 from bioreaction.simulation.simfuncs.basic_de import bioreaction_sim
-from bioreaction.model.data_containers import QuantifiedReactions
+from bioreaction.model.data_containers import QuantifiedReactions, Reactions
 from bioreaction.misc.misc import invert_onehot
 from src.utils.modelling.base import Modeller
 
@@ -63,6 +63,16 @@ def simulate_signal_scan(copynumbers, time, full_interactions, creation_rates, d
         return one_step_func(carry, t, full_interactions, creation_rates, degradation_rates,
                              identity_matrix, s, signal_idx), carry
     return jax.lax.scan(to_scan, copynumbers, (time, signal))
+
+
+def bioreactions_simulate_signal_scan(copynumbers, time: np.ndarray, reactions: Reactions, signal, signal_onehot: np.ndarray):
+    inverse_onehot = invert_onehot(signal_onehot)
+
+    def to_scan(carry, thingy):
+        t, r = thingy
+        return bioreaction_sim(t, carry, args=None, reactions=r, signal=signal,
+                               signal_onehot=signal_onehot, inverse_onehot=inverse_onehot)
+    return jax.lax.scan(to_scan, copynumbers, (time, reactions))
 
 
 def bioreaction_sim_full(qreactions: QuantifiedReactions, t0, t1, dt0,

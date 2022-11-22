@@ -22,11 +22,11 @@ from src.utils.data.data_format_tools.common import load_json_as_dict, load_json
 def main(config=None, data_writer=None):
     # Set configs
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
-            # "scripts", "analyse_mutated_templates_loaded", "configs", "base_config_test_2.json"))
-            # "scripts", "analyse_mutated_templates_loaded", "configs", "base_config.json"))
-            # "scripts", "analyse_mutated_templates_loaded", "configs", "analyse_large.json"))
-            # "scripts", "analyse_mutated_templates_loaded", "configs", "analyse_large_highmag.json"))
-            "scripts", "analyse_mutated_templates_loaded_1", "configs", "base_config.json"))
+        # "scripts", "analyse_mutated_templates_loaded", "configs", "base_config_test_2.json"))
+        # "scripts", "analyse_mutated_templates_loaded", "configs", "base_config.json"))
+        # "scripts", "analyse_mutated_templates_loaded", "configs", "analyse_large.json"))
+        # "scripts", "analyse_mutated_templates_loaded", "configs", "analyse_large_highmag.json"))
+        "scripts", "analyse_mutated_templates_loaded_1", "configs", "base_config.json"))
     config_file = load_json_as_dict(config)
 
     # Start_experiment
@@ -83,10 +83,10 @@ def main(config=None, data_writer=None):
         Protocol(
             partial(
                 visualise_data, data_writer=data_writer, cols_x=[
-                    'binding_rates_min_interaction'],
+                    'binding_rates_dissociation_min_interaction'],
                 plot_type='histplot',
                 hue='mutation_num',
-                out_name='binding_rates_min_freqs_mutations_logs',
+                out_name='binding_rates_dissociation_min_freqs_mutations_logs',
                 threshold_value_max=binding_rates_threshold_upper,
                 exclude_rows_zero_in_cols=['mutation_num'],
                 misc_histplot_kwargs={
@@ -112,10 +112,10 @@ def main(config=None, data_writer=None):
     protocols.append(Protocol(
         partial(
             visualise_data, data_writer=data_writer, cols_x=[
-                'binding_rates_min_interaction'],
+                'binding_rates_dissociation_min_interaction'],
             plot_type='histplot',
             hue='mutation_num',
-            out_name='binding_rates_min_freqs_mutations_logs',
+            out_name='binding_rates_dissociation_min_freqs_mutations_logs',
             threshold_value_max=binding_rates_threshold_upper,
             exclude_rows_zero_in_cols=['mutation_num'],
             misc_histplot_kwargs={
@@ -152,17 +152,20 @@ def main(config=None, data_writer=None):
 
     # Analytics visualisation
     analytics_types = Timeseries(data=None).get_analytics_types()
-
     # Log histplots with mutation number hue
     # Difference
     for filltype in ['dodge', 'fill']:
-        for cols_x, title, xlabel in [
+        for analytics_type, cols_x, title, xlabel in [
                 [
+                    analytics_type,
                     f'{analytics_type}_diff_to_base_circuit',
                     f'{prettify_keys_for_label(analytics_type)} difference between circuit\nand mutated counterparts',
                     f'{prettify_keys_for_label(analytics_type)} difference'
                 ] for analytics_type in analytics_types]:
 
+            complete_colx_by_str = analytics_type + \
+                '_wrt' if analytics_type in Timeseries(
+                    data=None).get_signal_dependent_analytics() else None
             protocols.append(Protocol(
                 partial(
                     visualise_data,
@@ -170,6 +173,7 @@ def main(config=None, data_writer=None):
                     plot_type='histplot',
                     hue='mutation_num',
                     out_name=f'{cols_x}_log_{filltype}',
+                    complete_colx_by_str=complete_colx_by_str,
                     exclude_rows_zero_in_cols=['mutation_num'],
                     misc_histplot_kwargs={
                         "multiple": filltype,

@@ -4,10 +4,12 @@ from typing import List, Union
 import networkx as nx
 import numpy as np
 import pandas as pd
+import re
 import logging
 from src.utils.misc.type_handling import get_unique
 from src.utils.results.writer import DataWriter
 from src.utils.misc.string_handling import add_outtype, get_all_similar, make_time_str, prettify_keys_for_label
+from src.utils.misc.type_handling import flatten_listlike
 from pyvis.network import Network
 from src.utils.misc.type_handling import merge_dicts
 
@@ -162,6 +164,8 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                    selection_conditions: List[tuple] = None,
                    remove_outliers_y: bool = False,
                    outlier_std_threshold_y=3,
+                   complete_colx_by_str=None,
+                   complete_coly_by_str=None,
                    exclude_rows_nonempty_in_cols: list = None,
                    exclude_rows_zero_in_cols: list = None,
                    expand_xcoldata_using_col: bool = False,
@@ -178,14 +182,23 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
 
     hue = hue if hue is not None else column_name_for_expanding_xcoldata
 
-    def process_cols(cols):
-        cols = cols if cols is not None else [None]
-        for i, col in enumerate(cols):
-            if col is not None and col not in data.columns:
-                cols[i] = [c for c in data.columns if col in c]
-        return cols
-    cols_x = process_cols(cols_x)
-    cols_y = process_cols(cols_y)
+    def process_cols(cols, complete_col_by_str):
+        if cols is None:
+            return [None]
+        if complete_col_by_str is not None:
+            for i, col in enumerate(cols):
+                rex = np.asarray([re.search(f"^{complete_col_by_str}.*{col.split(complete_col_by_str)[-1]}", c) for c in data.columns])
+                if list(data.columns[np.where(rex != None)[0]])[0] == 'precision_wrt_species-6_diff_to_base_circuit':
+                    col
+                cols[i] = list(data.columns[np.where(rex != None)[0]])
+        if flatten_listlike(cols, safe=True) == []:
+            cols
+        return flatten_listlike(cols, safe=True)
+    cols_x = process_cols(cols_x, complete_colx_by_str)
+    cols_y = process_cols(cols_y, complete_coly_by_str)
+
+    if plot_kwargs.get('xlabel') == 'Precision difference':
+        cols_x
 
     def process_log_sns(data: pd.DataFrame, column_x: str, column_y: str,
                         plot_kwrgs: dict, log_axis: list, plot_type: str = None):

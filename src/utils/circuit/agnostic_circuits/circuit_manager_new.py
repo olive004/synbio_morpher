@@ -19,7 +19,7 @@ from src.utils.misc.helper import vanilla_return
 from src.utils.results.visualisation import VisODE
 from src.utils.signal.signals_new import Signal
 from src.utils.circuit.agnostic_circuits.circuit_new import Circuit
-from src.utils.modelling.deterministic import Deterministic, simulate_signal_scan, bioreaction_sim_full
+from src.utils.modelling.deterministic import Deterministic, simulate_signal_scan, bioreaction_sim_full, bioreactions_simulate_signal_scan
 from src.utils.evolution.mutation import implement_mutation
 from src.utils.modelling.base import Modeller
 
@@ -259,26 +259,30 @@ class CircuitModeller():
         )
 
         # Batch
-        t = np.arange(modeller_signal.max_time)
-        steady_states = np.array(
+        t = np.arange(0, modeller_signal.max_time, dt)
+        b_steady_states = np.array(
             [c.result_collector.get_result('steady_states').analytics['steady_states'].flatten() for c in circuits]
         )
-        b_starting_copynumbers = np.array(
-            [c.model.species.steady_state_copynums.flatten() for c in circuits])
-        b_interactions = np.array([c.species.interactions for c in circuits])
+        b_reactions = [c.qreactions.reactions for c in circuits]
 
-        b_new_copynumbers = jax.vmap(partial(simulate_signal_scan,
-                                             # b_new_copynumbers = partial(simulate_signal_scan,
-                                             time=t,
-                                             creation_rates=circuits[circuit_idx].species.creation_rates.flatten(
-                                             ),
-                                             degradation_rates=circuits[circuit_idx].species.degradation_rates.flatten(
-                                             ),
-                                             identity_matrix=np.identity(
-                                                 circuits[circuit_idx].species.size),
-                                             signal=signal.real_signal, signal_idx=circuits[circuit_idx].species.identities.get(
-                                                 'input'),
-                                             one_step_func=modeller_signal.dxdt_RNA_jnp))(b_starting_copynumbers, full_interactions=b_interactions)
+        # jax.vmap(partial(bioreaction_sim,
+        # t=, y=, args=, reactions=, signal=, signal_onehot=, inverse_onehot=))
+        # jax.vmap(partial(bioreaction_sim_full, qreactions=circuits, t0=, t1=, dt0=, signal=, signal_onehot=, y0=)))
+
+        b_new_copynumbers = bioreactions_simulate_signal_scan(
+            copynumbers=b_steady_states, time=t, reactions=b_reactions, signal=circuits[0].signal, signal_onehot=circuits[0].signal.onehot)
+        # b_new_copynumbers = jax.vmap(partial(simulate_signal_scan,
+        #                                      # b_new_copynumbers = partial(simulate_signal_scan,
+        #                                      time=t,
+        #                                      creation_rates=circuits[circuit_idx].species.creation_rates.flatten(
+        #                                      ),
+        #                                      degradation_rates=circuits[circuit_idx].species.degradation_rates.flatten(
+        #                                      ),
+        #                                      identity_matrix=np.identity(
+        #                                          circuits[circuit_idx].species.size),
+        #                                      signal=signal.real_signal, signal_idx=circuits[circuit_idx].species.identities.get(
+        #                                          'input'),
+        #                                      one_step_func=modeller_signal.dxdt_RNA_jnp))(b_starting_copynumbers, full_interactions=b_interactions)
         b_new_copynumbers = np.array(b_new_copynumbers[1])
         if np.shape(b_new_copynumbers)[1] != circuits[circuit_idx].circuit_size and np.shape(b_new_copynumbers)[-1] == circuits[circuit_idx].species.size:
             b_new_copynumbers = np.swapaxes(b_new_copynumbers, 1, 2)
