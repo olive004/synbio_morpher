@@ -140,14 +140,11 @@ class Timeseries():
         freq = np.fft.fftfreq(len(spectrum))
         return freq
 
-    def get_all_analytics_types(self):
-        return self.get_analytics_types() + self.get_signal_dependent_analytics()
-
     def get_analytics_types(self):
         return ['fold_change',
                 'overshoot',
                 'RMSE',
-                'steady_states']
+                'steady_states'] + self.get_signal_dependent_analytics()
 
     def get_signal_dependent_analytics(self):
         return ['response_time',
@@ -191,14 +188,14 @@ class Timeseries():
                 # analytics['sensitivity'] = self.get_sensitivity(s_idx)
                 # analytics['sensitivity_estimate'] = self.get_sensitivity(
                 #     s_idx, ignore_denominator=True)
-                analytics[f'precision_wrt_{s}'] = self.get_precision(
+                analytics[f'precision_wrt_species-{s_idx}'] = self.get_precision(
                     analytics['steady_states'], s_idx)
-                analytics[f'precision_estimate_wrt_{s}'] = self.get_precision(
+                analytics[f'precision_estimate_wrt_species-{s_idx}'] = self.get_precision(
                     analytics['steady_states'], s_idx, ignore_denominator=True)
-                analytics[f'response_time_wrt_{s}'] = self.get_step_response_times(
+                analytics[f'response_time_wrt_species-{s_idx}'] = self.get_step_response_times(
                     analytics['steady_states'], analytics['first_derivative'], signal_idx=s_idx)
-                analytics[f'sensitivity_wrt_{s}'] = self.get_sensitivity(s_idx)
-                analytics[f'sensitivity_estimate_wrt_{s}'] = self.get_sensitivity(
+                analytics[f'sensitivity_wrt_species-{s_idx}'] = self.get_sensitivity(s_idx)
+                analytics[f'sensitivity_estimate_wrt_species-{s_idx}'] = self.get_sensitivity(
                     s_idx, ignore_denominator=True)
         # else:
         #     analytics['response_time'] = None  # {s: None for s in labels}

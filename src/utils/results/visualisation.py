@@ -178,8 +178,14 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
 
     hue = hue if hue is not None else column_name_for_expanding_xcoldata
 
-    cols_x = cols_x if cols_x is not None else [None]
-    cols_y = cols_y if cols_y is not None else [None]
+    def process_cols(cols):
+        cols = cols if cols is not None else [None]
+        for i, col in enumerate(cols):
+            if col is not None and col not in data.columns:
+                cols[i] = [c for c in data.columns if col in c]
+        return cols
+    cols_x = process_cols(cols_x)
+    cols_y = process_cols(cols_y)
 
     def process_log_sns(data: pd.DataFrame, column_x: str, column_y: str,
                         plot_kwrgs: dict, log_axis: list, plot_type: str = None):

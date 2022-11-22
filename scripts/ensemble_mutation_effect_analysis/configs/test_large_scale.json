@@ -70,7 +70,7 @@
                 "function_kwargs": {
                     "impulse_center": 500, 
                     "impulse_halfwidth": 5, 
-                    "target": 1
+                    "target": 10
                 }
             },
             "simulation": {

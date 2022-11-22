@@ -43,7 +43,12 @@ class ResultWriter(DataWriter):
 
         report = {}
         for writeable in keys:
-            report[writeable] = prettify_writeable(source.get(writeable, ''))
+            if writeable not in source:
+                writeable = [s for s in source.keys() if writeable in s]
+            if type(writeable) != list:
+                writeable = [writeable]
+            for w in writeable:
+                report[w] = prettify_writeable(source.get(w, ''))
         self.report = report
 
         return report
