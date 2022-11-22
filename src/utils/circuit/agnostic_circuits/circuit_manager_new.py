@@ -339,7 +339,7 @@ class CircuitModeller():
                     circuit, methods, ref_circuit=circuit)
                 self.result_writer.subdivide_writing(
                     'mutations', safe_dir_change=False)
-            subcircuit = self.make_mutated_subcircuit(circuit, name, mutation)
+            subcircuit = self.make_subcircuit(circuit, name, mutation)
             self.result_writer.subdivide_writing(name, safe_dir_change=False)
             self.apply_to_circuit(subcircuit, methods, ref_circuit=circuit)
             self.result_writer.unsubdivide_last_dir()
