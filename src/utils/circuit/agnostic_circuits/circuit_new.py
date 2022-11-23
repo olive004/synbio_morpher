@@ -30,7 +30,7 @@ def interactions_to_dict(interactions: np.ndarray, labels: list):
 
 def interactions_to_df(interactions: np.ndarray, labels: list):
     interactions_df = pd.DataFrame.from_dict(
-        interactions_to_dict(interactions, labels))
+        interactions_to_dict(interactions, labels), dtype=object)
     return interactions_df
 
 

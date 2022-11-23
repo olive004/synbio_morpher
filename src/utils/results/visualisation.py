@@ -85,11 +85,12 @@ def expand_data_by_col(data: pd.DataFrame, columns: Union[str, list], column_for
 
     def make_expansion_df(df_lists, col_names: list) -> pd.DataFrame:
         temp_data = deepcopy(data)
-        expanded_data = pd.DataFrame(columns=data.columns)
+        expanded_data = pd.DataFrame(columns=data.columns, dtype=object)
         for c in col_names:
             expanded_df_col = pd.DataFrame.from_dict(
                 dict(zip(columns + [column_for_expanding_coldata],
-                     [df_lists.loc[column][c] for column in columns] + [c]))
+                     [df_lists.loc[column][c] for column in columns] + [c])),
+                dtype=object
             )
             # {column: df_lists[c], column_for_expanding_coldata: c})
             temp_data.drop(columns, axis=1, inplace=True)

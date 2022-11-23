@@ -120,7 +120,7 @@ def process_json(json_dict):
 def write_csv(data: pd.DataFrame, out_path: str, overwrite=False):
     if type(data) == dict:
         data = {k: [v] for k, v in data.items()}
-        data = pd.DataFrame.from_dict(data)
+        data = pd.DataFrame.from_dict(data, dtype=object)
     if type(data) == pd.DataFrame:
         if overwrite or not os.path.exists(out_path):
             data.to_csv(out_path, index=None)

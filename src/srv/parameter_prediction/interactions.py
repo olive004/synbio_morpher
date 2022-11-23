@@ -102,7 +102,7 @@ class InteractionMatrix():
             "min_interaction": np.min(self.interactions.__getattribute__(interaction_attr))
         }
         stats = {k: [v] for k, v in stats.items()}
-        stats = pd.DataFrame.from_dict(stats)
+        stats = pd.DataFrame.from_dict(stats, dtype=object)
         return stats
 
     def get_interacting_species(self, idxs_interacting):

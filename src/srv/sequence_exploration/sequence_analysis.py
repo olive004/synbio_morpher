@@ -130,7 +130,7 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFrame:
 
     def init_info_table() -> pd.DataFrame:
         info_column_names = get_mutation_info_columns()
-        info_table = pd.DataFrame(columns=info_column_names)
+        info_table = pd.DataFrame(columns=info_column_names, dtype=object)
         return info_table
 
     def check_coherency(table: pd.DataFrame) -> None:

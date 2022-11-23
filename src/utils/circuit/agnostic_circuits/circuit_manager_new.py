@@ -244,7 +244,7 @@ class CircuitModeller():
                               circuit_idx: int = 0,
                               save_numerical_vis_data: bool = False,
                               ref_circuit: Circuit = None,
-                              as_batch=True):
+                              batch=True):
         names = list([n for n, c in circuits])
         circuits = list([c for n, c in circuits])
         if circuit_idx < len(circuits):
@@ -263,10 +263,13 @@ class CircuitModeller():
         b_steady_states = np.array(
             [c.result_collector.get_result('steady_states').analytics['steady_states'].flatten() for c in circuits]
         )
-        b_reactions = [c.qreactions.reactions for c in circuits]
+        b_inputs = np.array([c.qreactions.reactions.inputs for c in circuits])
+        b_outputs = np.array([c.qreactions.reactions.outputs for c in circuits])
+        b_forward_rates = np.array([c.qreactions.reactions.forward_rates for c in circuits])
+        b_reverse_rates = np.array([c.qreactions.reactions.reverse_rates for c in circuits])
 
-        b_new_copynumbers = bioreactions_simulate_signal_scan(
-            copynumbers=b_steady_states, time=t, reactions=b_reactions, signal=circuits[0].signal, signal_onehot=circuits[0].signal.onehot)
+        b_new_copynumbers = jax.vmap(partial(bioreactions_simulate_signal_scan,
+            time=t, signal=signal.func, signal_onehot=signal.onehot))(copynumbers=b_steady_states, inputs=b_inputs, outputs=b_outputs, forward_rates=b_forward_rates, reverse_rates=b_reverse_rates)
         # b_new_copynumbers = jax.vmap(partial(simulate_signal_scan,
         #                                      # b_new_copynumbers = partial(simulate_signal_scan,
         #                                      time=t,
@@ -280,8 +283,11 @@ class CircuitModeller():
         #                                          'input'),
         #                                      one_step_func=modeller_signal.dxdt_RNA_jnp))(b_starting_copynumbers, full_interactions=b_interactions)
         b_new_copynumbers = np.array(b_new_copynumbers[1])
-        if np.shape(b_new_copynumbers)[1] != circuits[circuit_idx].circuit_size and np.shape(b_new_copynumbers)[-1] == circuits[circuit_idx].species.size:
+        if np.shape(b_new_copynumbers)[1] != circuits[circuit_idx].circuit_size and np.shape(b_new_copynumbers)[-1] == circuits[circuit_idx].circuit_size:
             b_new_copynumbers = np.swapaxes(b_new_copynumbers, 1, 2)
+
+        # Get analytics batched too
+        
 
         # Apply to all circuits
         if ref_circuit is None or ref_circuit == circuit:
@@ -349,8 +355,8 @@ class CircuitModeller():
             self.result_writer.subdivide_writing(circuit.name)
 
         mutation_dict = flatten_nested_dict(
-            circuit.mutations_args.items())
-        subcircuits = [(name, circuit.make_subcircuit(name, mutation))
+            circuit.mutations)
+        subcircuits = [(name, self.make_subcircuit(circuit, name, mutation))
                        for name, mutation in mutation_dict.items()]
         if include_normal_run:
             subcircuits.insert(0, ('ref_circuit', circuit))

@@ -193,13 +193,17 @@ def main(config=None, data_writer=None):
     # Log histplots with mutation number hue
     # Ratios
     for filltype in ['dodge', 'fill']:
-        for cols_x, title, xlabel in [
+        for analytics_type, cols_x, title, xlabel in [
                 [
+                    analytics_type,
                     f'{analytics_type}_ratio_from_mutation_to_base',
                     f'{prettify_keys_for_label(analytics_type)} ratio from mutated\nto original circuit',
                     f'{prettify_keys_for_label(analytics_type)} ratio'
                 ] for analytics_type in analytics_types]:
 
+            complete_colx_by_str = analytics_type + \
+                '_wrt' if analytics_type in Timeseries(
+                    data=None).get_signal_dependent_analytics() else None
             protocols.append(Protocol(
                 partial(
                     visualise_data,
@@ -208,6 +212,7 @@ def main(config=None, data_writer=None):
                     hue='mutation_num',
                     out_name=f'{cols_x}_log_{filltype}',
                     exclude_rows_zero_in_cols=['mutation_num'],
+                    complete_colx_by_str=complete_colx_by_str,
                     misc_histplot_kwargs={
                         "multiple": filltype,
                         "hue": 'mutation_num',

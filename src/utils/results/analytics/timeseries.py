@@ -3,6 +3,203 @@ import numpy as np
 from typing import List
 
 
+NUM_DTYPE = np.float32
+
+
+def get_derivative(data):
+    deriv = np.gradient(data)[1]
+    return deriv  # get column derivative
+
+def get_steady_state(data):
+    """ Last 5% of data considered steady state """
+    stability_threshold = 0.01
+    final_deriv = np.average(
+        get_derivative(data)[:, :-2])
+    is_steady_state_reached = final_deriv < stability_threshold
+    steady_states = np.expand_dims(
+        data[:, -1], axis=1).astype(np.float32)
+    return steady_states, is_steady_state_reached, final_deriv
+
+def fold_change(data):
+    division_matrix = np.divide(
+        data[:, -1].clip(1), data[:, 0].clip(1))
+    if np.ndim(division_matrix) == 1:
+        return np.expand_dims(division_matrix, axis=1)
+    else:
+        return division_matrix
+
+def get_overshoot(data, steady_states):
+    return np.expand_dims(np.max(data, axis=1), axis=1) - steady_states
+
+def calculate_precision(self, output_diff, starting_states, signal_diff, signal_start) -> np.ndarray:
+    precision = np.absolute(np.divide(
+        output_diff / starting_states,
+        signal_diff / signal_start
+    )).astype(NUM_DTYPE)
+    return np.divide(1, precision)
+
+def get_precision(data, steady_states, signal_idx: int, ignore_denominator: bool = False):
+    if signal_idx is None:
+        return None
+    starting_states = np.expand_dims(data[:, 0], axis=1)
+    signal_start = data[signal_idx, 0]
+    signal_end = data[signal_idx, -1]
+
+    """ IF YOU IGNORE THE DENOMINATOR THE DIVIDE BY ZERO GOES AWAY AND YOU GET UNSCALED PRECISION """
+    signal_diff = signal_end - signal_start
+    output_diff = steady_states - starting_states
+
+    if ignore_denominator:
+        if signal_diff == 0:
+            return np.zeros_like(output_diff)
+        if signal_start == 0:
+            signal_start = 1
+        if any(starting_states == 0):
+            starting_states = 1
+        return calculate_precision(output_diff, starting_states, signal_diff, signal_start)
+    return calculate_precision(output_diff, starting_states, signal_diff, signal_start)
+
+def calculate_sensitivity(output_diff, starting_states, signal_diff, signal_low) -> np.ndarray:
+    return np.expand_dims(np.absolute(np.divide(
+        output_diff / starting_states,
+        signal_diff / signal_low
+    )).astype(NUM_DTYPE), axis=1)
+
+def get_sensitivity(data, signal_idx: int, ignore_denominator: bool = False):
+    if signal_idx is None:
+        return None
+    starting_states = data[:, 0]
+    peaks = np.max(data, axis=1)
+    signal_low = np.min(data[signal_idx, :])
+    signal_high = np.max(data[signal_idx, :])
+
+    """ IF YOU IGNORE THE DENOMINATOR THE DIVIDE BY ZERO GOES AWAY AND YOU GET UNSCALED SENSITIVITY """
+    output_diff = peaks - starting_states
+    signal_diff = signal_high - signal_low
+
+    if signal_diff == 0:
+        logging.warning(
+            f'Signal difference was 0 from {signal_high} and {signal_low}.')
+        return NUM_DTYPE(0)
+    elif ignore_denominator and signal_low == 0 or any(starting_states == 0):
+        # return np.expand_dims(np.absolute(np.divide(
+        #     output_diff,
+        #     signal_diff
+        # )).astype(NUM_DTYPE), axis=1)
+        return calculate_sensitivity(output_diff, np.ones_like(output_diff), signal_diff, np.ones_like(signal_diff))
+    return calculate_sensitivity(output_diff, starting_states, signal_diff, signal_low)
+
+def get_rmse(data, ref_circuit_signal):
+    if ref_circuit_signal is None:
+        return np.zeros(shape=(np.shape(data)[0], 1))
+    data = data - ref_circuit_signal
+    rmse = np.sqrt(
+        np.sum(np.divide(np.power(data, 2), len(data)), axis=1))
+    return rmse
+
+def get_step_response_times(data, t, steady_states, deriv1, signal_idx: np.ndarray):
+    time = t * np.ones_like(steady_states)
+    margin = 0.05
+    cond_out = (data > (steady_states + steady_states * margin)
+                ) | (data < (steady_states - steady_states * margin))
+
+    # Get zero derivative within margin
+    fmargin = 0.001
+    fm = np.expand_dims(np.max(deriv1, axis=1) * fmargin, axis=1)
+    zd = (deriv1 < fm) & (deriv1 > -fm)  # This is just dx/dt == 0
+
+    # Start time of signal change
+    idx_before_signal_change = np.max(
+        np.where(zd[signal_idx] == False)[0][0] - 1, 0)
+    t0 = t[idx_before_signal_change]
+
+    # The time all species start to change where the derivative is not zero
+    tstart_idxs = np.argmax(
+        (zd == False) & (time > t0), axis=1)
+    tstart = t[tstart_idxs]
+    # Stop measuring response time where the species is within the
+    # steady state margin and has a zero derivative after its start time
+    idxs_first_zd_after_signal = np.argmax(
+        (time * zd > np.expand_dims(tstart, axis=1)) & (cond_out == False), axis=1)
+    tstop = np.where(idxs_first_zd_after_signal != 0,
+                        time[np.arange(len(steady_states)), idxs_first_zd_after_signal], tstart)
+
+    response_times = tstop - tstart
+    return response_times
+
+def frequency(data):
+    spectrum = np.fft.fft(data)/len(data)
+    spectrum = spectrum[range(int(len(data)/2))]
+    freq = np.fft.fftfreq(len(spectrum))
+    return freq
+
+def get_analytics_types():
+    return ['fold_change',
+            'overshoot',
+            'RMSE',
+            'steady_states'] + get_signal_dependent_analytics()
+
+def get_signal_dependent_analytics(self):
+    return ['response_time',
+            'precision',
+            'precision_estimate',
+            'sensitivity',
+            'sensitivity_estimate']
+
+def generate_analytics(data, labels: List[str], signal_onehot=None, ref_circuit_signal=None):
+    signal_idxs = np.where(signal_onehot == 1)[0]
+    signal_idxs = signal_idxs if len(signal_idxs) >= 1 else None
+    analytics = {
+        'first_derivative': get_derivative(data),
+        'fold_change': fold_change(),
+        'RMSE': get_rmse(ref_circuit_signal),
+    }
+    analytics['steady_states'], \
+        analytics['is_steady_state_reached'], \
+        analytics['final_deriv'] = get_steady_state()
+    analytics['overshoot'] = get_overshoot(
+        analytics['steady_states'])
+
+    # analytics['response_time'] = {}
+    # analytics['precision'] = {}
+    # analytics['precision_estimate'] = {}
+    # analytics['sensitivity'] = {}
+    # analytics['sensitivity_estimate'] = {}
+    if signal_idxs is not None:
+        signal_labels = list(map(labels. __getitem__, signal_idxs))
+        for s, s_idx in zip(signal_labels, signal_idxs):
+            # analytics['response_time'], \
+            #     analytics['response_time_high'], \
+            #     analytics['response_time_low'] = get_response_times(
+            #     analytics['steady_states'], analytics['first_derivative'], signal_idxs=signal_onehot)
+            # analytics['precision'][s] = get_precision(
+            #     analytics['steady_states'], s_idx)
+            # analytics['precision_estimate'][s] = get_precision(
+            #     analytics['steady_states'], s_idx, ignore_denominator=True)
+            # analytics['response_time'][s] = get_step_response_times(
+            #     analytics['steady_states'], analytics['first_derivative'], signal_idx=s_idx)
+            # analytics['sensitivity'] = get_sensitivity(s_idx)
+            # analytics['sensitivity_estimate'] = get_sensitivity(
+            #     s_idx, ignore_denominator=True)
+            analytics[f'precision_wrt_species-{s_idx}'] = get_precision(
+                analytics['steady_states'], s_idx)
+            analytics[f'precision_estimate_wrt_species-{s_idx}'] = get_precision(
+                analytics['steady_states'], s_idx, ignore_denominator=True)
+            analytics[f'response_time_wrt_species-{s_idx}'] = get_step_response_times(
+                analytics['steady_states'], analytics['first_derivative'], signal_idx=s_idx)
+            analytics[f'sensitivity_wrt_species-{s_idx}'] = get_sensitivity(s_idx)
+            analytics[f'sensitivity_estimate_wrt_species-{s_idx}'] = get_sensitivity(
+                s_idx, ignore_denominator=True)
+    # else:
+    #     analytics['response_time'] = None  # {s: None for s in labels}
+    #     analytics['precision'] = None  # {s: None for s in labels}
+    #     analytics['precision_estimate'] = None  # {s: None for s in labels}
+    #     analytics['sensitivity'] = None
+    #     analytics['sensitivity_estimate'] = None
+
+    return analytics
+
+
 class Timeseries():
     def __init__(self, data, time=None) -> None:
         self.data = data

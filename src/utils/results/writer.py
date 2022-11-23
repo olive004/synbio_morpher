@@ -164,7 +164,9 @@ class Tabulated(ABC):
         self.max_table_length = find_sublist_max(self.data)
 
     def as_table(self):
-        return pd.DataFrame.from_dict(dict(zip(self.column_names, [[v] for v in self.data])))
+        return pd.DataFrame.from_dict(dict(
+            zip(self.column_names, [[v] for v in self.data])),
+            dtype=object)
 
     @abstractmethod
     def get_table_properties(self):
