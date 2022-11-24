@@ -94,7 +94,7 @@ def main(config=None, data_writer=None):
                     f'{prettify_keys_for_label(analytics_type)} difference{outlier_text}'
                 ] for analytics_type in analytics_types]:
             
-            complete_colx_by_str = analytics_type + \
+            complete_coly_by_str = analytics_type + \
                 '_wrt' if analytics_type in get_signal_dependent_analytics() else None
             protocols.append(Protocol(
                 partial(
@@ -103,7 +103,7 @@ def main(config=None, data_writer=None):
                     cols_x=[cols_x], cols_y=[cols_y],
                     plot_type='line_plot',
                     out_name=f'{cols_x}_{cols_y}',
-                    complete_colx_by_str=complete_colx_by_str,
+                    complete_coly_by_str=complete_coly_by_str,
                     exclude_rows_zero_in_cols=['mutation_num'],
                     expand_xcoldata_using_col=True,
                     log_axis=(False, True),
@@ -131,7 +131,7 @@ def main(config=None, data_writer=None):
                     f'{prettify_keys_for_label(mutation_attr)}',
                     f'{prettify_keys_for_label(analytics_type)} ratio'
                 ] for analytics_type in analytics_types]:
-            complete_colx_by_str = analytics_type + \
+            complete_coly_by_str = analytics_type + \
                 '_wrt' if analytics_type in get_signal_dependent_analytics() else None
             protocols.append(Protocol(
                 partial(
@@ -140,7 +140,7 @@ def main(config=None, data_writer=None):
                     cols_x=[cols_x], cols_y=[cols_y],
                     plot_type='line_plot',
                     out_name=f'{cols_x}_{cols_y}',
-                    complete_colx_by_str=complete_colx_by_str,
+                    complete_coly_by_str=complete_coly_by_str,
                     exclude_rows_zero_in_cols=['mutation_num'],
                     expand_xcoldata_using_col=True,
                     log_axis=(False, False),

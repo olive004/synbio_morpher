@@ -12,6 +12,7 @@ from src.utils.misc.string_handling import add_outtype, get_all_similar, make_ti
 from src.utils.misc.type_handling import flatten_listlike
 from pyvis.network import Network
 from src.utils.misc.type_handling import merge_dicts
+import seaborn as sns
 from matplotlib import pyplot as plt
 plt.ioff()
 
@@ -198,9 +199,7 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                 if not list(data.columns[np.where(rex != None)[0]]):
                     logging.warning(f'Could not find complete column name for {col} with str {complete_col_by_str}')
                 cols[i] = list(data.columns[np.where(rex != None)[0]])
-        if flatten_listlike(cols, safe=True) == []:
-            cols
-        return flatten_listlike(cols, safe=True)    
+        return flatten_listlike(cols, safe=True)
     cols_x = process_cols(cols_x, complete_colx_by_str)
     cols_y = process_cols(cols_y, complete_coly_by_str)
 
@@ -407,10 +406,8 @@ def visualise_graph_pyvis(graph: nx.DiGraph,
 
 
 def visualise_graph_pyplot(graph: nx.DiGraph):
-    import matplotlib.pyplot as plt
     ax1 = plt.subplot(111)
     nx.draw(graph)
-    plt.show()
     raise NotImplementedError
 
 
@@ -460,8 +457,6 @@ class VisODE():
                          title: str = None,
                          figsize=(7, 5), style="ticks",
                          **plot_kwargs):
-        import seaborn as sns
-        import matplotlib.pyplot as plt
         sns.set_context('paper')
         sns.set_theme(style=style)
         sns.set_palette("viridis")
@@ -488,7 +483,6 @@ class VisODE():
     def sns_barplot(self, out_path: str, x: str, y: str, data: pd.DataFrame,
                     title: str = None, xlabel=None, ylabel=None,
                     **plot_kwargs):
-        import seaborn as sns
         plot_kwargs.update({'errwidth': 1})
 
         if plot_kwargs.get('hue'):
@@ -534,7 +528,6 @@ class VisODE():
     def heatmap(self, data: pd.DataFrame, out_path: str = None, out_type='png',
                 new_vis=False, vmin=None, vmax=None, **plot_kwrgs):
         import seaborn as sns
-        import matplotlib.pyplot as plt
         sns.set_theme()
 
         plt.figure(figsize=self.figsize)
