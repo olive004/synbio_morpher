@@ -392,6 +392,52 @@ class CircuitModeller():
 
         self.result_writer.unsubdivide()
 
+    def batch_circuits(self, circuits: Circuit, methods: dict):
+
+        subcircuits = flatten_listlike(
+            [[(circuit.name, subname, self.make_subcircuit(circuit, subname, mutation))
+            for subname, mutation in flatten_nested_dict(
+            circuit.mutations).items()] for circuit in circuits])
+
+        refcircuits = [(circuit.name, 'ref_circuit', circuit) for circuit in circuits]
+        subcircuits.extend(refcircuits)
+
+        self.run_batch(subcircuits, methods)
+
+    def run_batch(self, subcircuits_circuits: Circuit, methods: dict, include_normal_run:bool=True,
+        write_to_subsystem: bool=False)
+        for method, kwargs in methods.items():
+            if kwargs.get('batch') == True:  # method is batchable
+                if hasattr(self, method):
+                    subcircuits = getattr(self, method)(subcircuits, **kwargs)
+                else:
+                    logging.warning(
+                        f'Could not find method @{method} in class {self}')
+            else:
+                self.result_writer.subdivide_writing(
+                    'mutations', safe_dir_change=False)
+                for i, (top_name, sub_name, subcircuit) in enumerate(subcircuits):
+                    if sub_name == 'ref_circuit' and write_to_subsystem:
+                        ref_circuit = subcircuit
+                        self.result_writer.unsubdivide()
+                        self.result_writer.subdivide_writing(top_name)
+                        if include_normal_run:
+                            subcircuit = self.apply_to_circuit(
+                                subcircuit, {method: kwargs}, ref_circuit=subcircuit)
+                        self.result_writer.subdivide_writing(
+                            'mutations', safe_dir_change=False)
+                        continue
+
+                    self.result_writer.subdivide_writing(
+                        sub_name, safe_dir_change=False)
+                    subcircuit = self.apply_to_circuit(
+                        subcircuit, {method: kwargs}, ref_circuit=ref_circuit)
+                    self.result_writer.unsubdivide_last_dir()
+                    subcircuits[i] = (sub_name, subcircuit)
+                self.result_writer.unsubdivide_last_dir()
+            
+
+
     def apply_to_circuit(self, circuit: Circuit, _methods: dict, ref_circuit: Circuit):
         methods = deepcopy(_methods)
         for method, kwargs in methods.items():
