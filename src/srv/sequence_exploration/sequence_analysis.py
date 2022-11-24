@@ -15,7 +15,7 @@ from src.srv.io.loaders.experiment_loading import INTERACTION_FILE_ADDONS
 from src.utils.misc.numerical import NUMERICAL
 from src.utils.misc.string_handling import remove_element_from_list_by_substring
 from src.utils.misc.type_handling import flatten_nested_listlike
-from src.utils.results.analytics.timeseries import Timeseries
+from src.utils.results.analytics.timeseries import get_analytics_types
 from src.utils.results.visualisation import expand_data_by_col
 from src.utils.results.writer import DataWriter
 from src.srv.parameter_prediction.interactions import InteractionMatrix
@@ -174,11 +174,12 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFrame:
                 max_len = len(table[k])
 
             reference_v = reference_table[k]
-            diff = np.asarray(table[k]) - np.asarray(reference_v)
+            diff = np.where(np.asarray(reference_v) != 0, np.asarray(table[k]) - np.asarray(reference_v), 0)
             if np.shape(np.asarray(table[k])) < np.shape(np.asarray(reference_v)):
                 table[k] = np.repeat(table[k], repeats=len(reference_v))
             ratio = np.divide(np.asarray(table[k]), np.asarray(reference_v),
-                              out=np.zeros_like(np.asarray(table[k])), where=np.asarray(reference_v) != 0)
+                              out=np.zeros_like(np.asarray(table[k])), 
+                              where=(np.asarray(reference_v) != 0 ) & (np.asarray(reference_v) != np.nan))
             ratio = np.expand_dims(
                 ratio, axis=0) if not np.shape(ratio) else ratio
             if np.size(diff) == 1 and type(diff) == np.ndarray:
@@ -252,7 +253,7 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFrame:
         return table
 
     def write_results(info_table: pd.DataFrame) -> None:
-        result_report_keys = Timeseries(None).get_analytics_types()
+        result_report_keys = get_analytics_types()
         info_table = expand_data_by_col(info_table, columns=result_report_keys, find_all_similar_columns=True,
                                         column_for_expanding_coldata='sample_names', idx_for_expanding_coldata=0)
         info_table = remove_invalid_json_values(info_table)

@@ -9,7 +9,7 @@ from src.utils.misc.type_handling import assert_uniform_type
 class Result():
     def __init__(self, name: str, result_data: np.ndarray, category: str, vis_func,
                  time: np.ndarray = None, save_numerical_vis_data: bool = False,
-                 vis_kwargs: dict = None, analytics_kwargs: dict = None, analytics: list = None) -> None:
+                 vis_kwargs: dict = None, analytics_kwargs: dict = None, analytics: dict = None) -> None:
         self.name = name
         self.data = result_data
         self.category = category
@@ -18,11 +18,12 @@ class Result():
         self.vis_kwargs = vis_kwargs
         self.analytics_kwargs = analytics_kwargs
         self.analytics = analytics
-        if category == 'time_series':
-            from src.utils.results.analytics.timeseries import Timeseries
+        if category == 'time_series' and analytics is None:
+            from src.utils.results.analytics.timeseries import generate_analytics
             analytics_kwargs = analytics_kwargs if analytics_kwargs is not None else {}
-            self.analytics = Timeseries(
-                result_data, time).generate_analytics(**analytics_kwargs)
+            self.analytics = generate_analytics(result_data, time, **analytics_kwargs)
+            # Timeseries(
+            #     result_data, time).generate_analytics(**analytics_kwargs)
 
     def __repr__(self):
         str_rep = [f'\n\nResult {self.name}\n']

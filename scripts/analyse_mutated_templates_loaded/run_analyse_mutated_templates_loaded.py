@@ -9,7 +9,7 @@ from fire import Fire
 from src.srv.io.manage.script_manager import script_preamble
 from src.utils.misc.scripts_io import get_search_dir, load_experiment_config_original
 from src.utils.misc.string_handling import prettify_keys_for_label
-from src.utils.results.analytics.timeseries import Timeseries
+from src.utils.results.analytics.timeseries import get_analytics_types, get_signal_dependent_analytics
 
 from src.utils.results.experiments import Experiment, Protocol
 from src.utils.results.result_writer import ResultWriter
@@ -281,7 +281,7 @@ def main(config=None, data_writer=None):
             )
 
     # Analytics histplots
-    analytics_types = Timeseries(data=None).get_analytics_types()
+    analytics_types = get_analytics_types()
     for log_opt in [(False, False)]:
         for m in num_mutations:
             for analytics_type, cols_x, title, xlabel in [
@@ -294,8 +294,7 @@ def main(config=None, data_writer=None):
 
                 log_text = '_log' if log_opt[0] or log_opt[1] else ''
                 complete_colx_by_str = analytics_type + \
-                    '_wrt' if analytics_type in Timeseries(
-                        data=None).get_signal_dependent_analytics() else None
+                    '_wrt' if analytics_type in get_signal_dependent_analytics() else None
                 protocols.append(
                     Protocol(
                         partial(

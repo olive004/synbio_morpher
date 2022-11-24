@@ -12,6 +12,8 @@ from src.utils.misc.string_handling import add_outtype, get_all_similar, make_ti
 from src.utils.misc.type_handling import flatten_listlike
 from pyvis.network import Network
 from src.utils.misc.type_handling import merge_dicts
+from matplotlib import pyplot as plt
+plt.ioff()
 
 
 logger = logging.getLogger(__name__)
@@ -131,7 +133,11 @@ def expand_data_by_col(data: pd.DataFrame, columns: Union[str, list], column_for
         if new_expanding_column_name not in list(data.columns):
             data = data.rename(
                 columns={column_for_expanding_coldata: new_expanding_column_name})
-        df_lists = data[columns].unstack().apply(pd.Series)
+        # for c in columns:
+        #     for r in data[c]:
+        #         print(pd.Series(r))
+        df_lists = data[columns].unstack().apply(partial(flatten_listlike, safe=True)).apply(pd.Series)
+        # df_lists = data[columns].unstack().apply(pd.Series)
         col_names = data[new_expanding_column_name].iloc[idx_for_expanding_coldata]
         if type(col_names) != list:
             logging.warning(
@@ -189,19 +195,14 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
         if complete_col_by_str is not None:
             for i, col in enumerate(cols):
                 rex = np.asarray([re.search(f"^{complete_col_by_str}.*{col.split(complete_col_by_str.split('wrt')[0])[-1]}", c) for c in data.columns])
-                if list(data.columns[np.where(rex != None)[0]])[0] == 'precision_wrt_species-6_diff_to_base_circuit':
-                    col
-                if col == 'response_time_ratio_from_mutation_to_base':
-                    col
+                if not list(data.columns[np.where(rex != None)[0]]):
+                    logging.warning(f'Could not find complete column name for {col} with str {complete_col_by_str}')
                 cols[i] = list(data.columns[np.where(rex != None)[0]])
         if flatten_listlike(cols, safe=True) == []:
             cols
-        return flatten_listlike(cols, safe=True)
+        return flatten_listlike(cols, safe=True)    
     cols_x = process_cols(cols_x, complete_colx_by_str)
     cols_y = process_cols(cols_y, complete_coly_by_str)
-
-    if plot_kwargs.get('xlabel') == 'Precision difference':
-        cols_x
 
     def process_log_sns(data: pd.DataFrame, column_x: str, column_y: str,
                         plot_kwrgs: dict, log_axis: list, plot_type: str = None):
@@ -223,8 +224,6 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                 data = data.rename(columns={col: new_col})
             return data, new_col
 
-        if column_x == 'response_time_ratio_from_mutation_to_base':
-            column_x
         if column_x is not None:
             data, column_x = process_log(data, column_x, log_axis[0], 'xlabel')
         if column_y is not None:
@@ -338,8 +337,6 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
     for col_x in cols_x:
         for col_y in cols_y:
             if use_sns:
-                if col_x == 'response_time_ratio_from_mutation_to_base':
-                    col_x
                 data, col_x, col_y = preprocess_data(
                     data, preprocessor_func_x, threshold_value_max,
                     expand_xcoldata_using_col, expand_ycoldata_using_col,
@@ -353,8 +350,6 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                     selection_conditions=selection_conditions,
                     postprocessor_func_x=postprocessor_func_x,
                     postprocessor_func_y=postprocessor_func_y)
-                if col_x == 'response_time_ratio_from_mutation_to_base':
-                    col_x
                 data, col_x, col_y = process_log_sns(
                     data, col_x, col_y, plot_kwargs, log_axis, plot_type)
                 if plot_type == 'scatter_plot':
@@ -446,7 +441,6 @@ class VisODE():
 
     def plot(self, data, y=None, new_vis=False, t=None, out_path='test_plot', out_type='svg',
              **plot_kwrgs) -> None:
-        from matplotlib import pyplot as plt
         data = data.T if len(plot_kwrgs.get('legend', [])
                              ) == np.shape(data)[0] else data
         plt.figure()
@@ -557,7 +551,6 @@ class VisODE():
                      histplot_kwargs: dict = None,
                      **plot_kwargs):
         """ log_axis: use logarithmic axes in (x-axis, y-axis) """
-        from matplotlib import pyplot as plt
         import seaborn as sns
         sns.set_context('paper')
 
@@ -583,7 +576,6 @@ class VisODE():
                  bin_count=100,
                  **plot_kwrgs):
         logging.warning(f'Function "histplot" is not finished.')
-        from matplotlib import pyplot as plt
         plt.figure()
         plt.hist(data, range=(min(data), max(data)), bins=bin_count)
         self.add_kwrgs(plt, **plot_kwrgs)

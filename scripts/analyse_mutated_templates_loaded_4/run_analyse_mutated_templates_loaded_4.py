@@ -12,7 +12,7 @@ from src.utils.misc.io import get_pathnames_from_mult_dirs
 from src.utils.misc.numerical import cast_astype
 from src.utils.misc.scripts_io import get_search_dir, load_experiment_config_original
 from src.utils.misc.string_handling import prettify_keys_for_label
-from src.utils.results.analytics.timeseries import Timeseries
+from src.utils.results.analytics.timeseries import get_analytics_types
 
 from src.utils.results.experiments import Experiment, Protocol
 from src.utils.results.result_writer import ResultWriter
@@ -79,7 +79,7 @@ def main(config=None, data_writer=None):
     # Visualisations
 
     # Analytics visualisation
-    analytics_types = Timeseries(data=None).get_analytics_types()
+    analytics_types = get_analytics_types()
 
     # Bar plots
 
@@ -90,9 +90,8 @@ def main(config=None, data_writer=None):
         log_text = '_log' if any(log_axis) else ''
         outlier_save_text = '_nooutliers' if remove_outliers else ''
         # Difference
-        for analytics_type, cols_x, cols_y, title, xlabel, ylabel in [
+        for cols_x, cols_y, title, xlabel, ylabel in [
                 [
-                    analytics_type,
                     mutation_attr,
                     f'{analytics_type}_diff_to_base_circuit',
                     f'{prettify_keys_for_label(mutation_attr)} vs. {prettify_keys_for_label(analytics_type)} difference between circuit\nand mutated counterparts',
@@ -100,9 +99,6 @@ def main(config=None, data_writer=None):
                     f'{prettify_keys_for_label(analytics_type)} difference{outlier_text}'
                 ] for analytics_type in analytics_types]:
             
-            complete_colx_by_str = analytics_type + \
-                '_wrt' if analytics_type in Timeseries(
-                    data=None).get_signal_dependent_analytics() else None
             protocols.append(Protocol(
                 partial(
                     visualise_data,
@@ -110,7 +106,6 @@ def main(config=None, data_writer=None):
                     cols_x=[cols_x], cols_y=[cols_y],
                     plot_type=plot_type,
                     out_name=f'{cols_x}_{cols_y}{log_text}{outlier_save_text}',
-                    complete_colx_by_str=complete_colx_by_str,
                     exclude_rows_zero_in_cols=['mutation_num'],
                     postprocessor_func_x=partial(cast_astype, 
                         dtypes=[int, float]),
@@ -139,9 +134,8 @@ def main(config=None, data_writer=None):
             )
 
         # Ratios
-        for analytics_type, cols_x, cols_y, title, xlabel, ylabel in [
+        for cols_x, cols_y, title, xlabel, ylabel in [
                 [
-                    analytics_type,
                     mutation_attr,
                     f'{analytics_type}_ratio_from_mutation_to_base',
                     f'{prettify_keys_for_label(mutation_attr)} vs. {prettify_keys_for_label(analytics_type)} ratio from mutated\nto original circuit',
@@ -149,11 +143,6 @@ def main(config=None, data_writer=None):
                     f'{prettify_keys_for_label(analytics_type)} ratio{outlier_text}'
                 ] for analytics_type in analytics_types]:
             
-            complete_colx_by_str = analytics_type + \
-                '_wrt' if analytics_type in Timeseries(
-                    data=None).get_signal_dependent_analytics() else None
-            if analytics_type == 'response_time_ratio_from_mutation_to_base':
-                analytics_type
             protocols.append(Protocol(
                 partial(
                     visualise_data,
@@ -161,7 +150,6 @@ def main(config=None, data_writer=None):
                     cols_x=[cols_x], cols_y=[cols_y],
                     plot_type=plot_type,
                     out_name=f'{cols_x}_{cols_y}{log_text}{outlier_save_text}',
-                    complete_colx_by_str=complete_colx_by_str,
                     exclude_rows_zero_in_cols=['mutation_num'],
                     postprocessor_func_x=partial(cast_astype, 
                         dtypes=[int, float]),

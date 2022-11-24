@@ -8,7 +8,7 @@ from src.srv.io.manage.sys_interface import make_filename_safely
 from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
 from src.utils.circuit.agnostic_circuits.circuit_manager_new import construct_circuit_from_cfg
 from src.utils.misc.decorators import time_it
-from src.utils.results.analytics.timeseries import Timeseries
+from src.utils.results.analytics.timeseries import get_analytics_types
 from src.utils.results.experiments import Experiment, Protocol
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.misc.numerical import make_symmetrical_matrix_from_sequence, triangular_sequence
@@ -57,7 +57,7 @@ def main_subprocess(config, config_file, data_writer, sub_process, total_process
             num_unique_interactions = triangular_sequence(num_species)
             return num_species, num_unique_interactions
 
-        analytic_types = Timeseries(None).get_analytics_types()
+        analytic_types = get_analytics_types()
         num_species, num_unique_interactions = load_local_data(
             config_file)
 

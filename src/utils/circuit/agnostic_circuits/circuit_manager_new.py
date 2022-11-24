@@ -261,7 +261,7 @@ class CircuitModeller():
         # Batch
         t = np.arange(self.t0, self.t1, self.dt)
         b_steady_states = np.array(
-            [c.result_collector.get_result('steady_states').analytics['steady_states'].flatten() for c in circuits]
+            [c.result_collector.get_result('steady_states').analytics['steady_states'].flatten() * invert_onehot(signal.onehot) for c in circuits]
         )
         b_inputs = np.array([c.qreactions.reactions.inputs for c in circuits])
         b_outputs = np.array([c.qreactions.reactions.outputs for c in circuits])
@@ -287,28 +287,29 @@ class CircuitModeller():
             b_new_copynumbers = np.swapaxes(b_new_copynumbers, 1, 2)
 
         # Get analytics batched too
-        
-
-        # Apply to all circuits
+        from src.utils.results.analytics.timeseries import generate_analytics
         if ref_circuit is None or ref_circuit == circuit:
             ref_circuit_signal = None
         else:
             ref_circuit_result = ref_circuit.result_collector.get_result(
                 'signal')
-            ref_circuit_signal = None if ref_circuit_result is None else ref_circuit_result.data
-        for i, circuit in enumerate(circuits):
+            ref_circuit_signal = None if ref_circuit_result is None else ref_circuit_result.data.flatten()
+        b_analytics = jax.vmap(partial(generate_analytics, time=t, labels=[s.name for s in circuits[circuit_idx].model.species], 
+            signal_onehot=signal.onehot, ref_circuit_data=ref_circuit_signal))(data=b_new_copynumbers)
+        b_analytics = [{k: v[i] for k, v in b_analytics.items()} for i in range(len(circuits))]
+
+        # Apply to all circuits
+        for i, (circuit, analytics) in enumerate(zip(circuits, b_analytics)):
             circuits[i].result_collector.add_result(
                 data=b_new_copynumbers[i],
                 name='signal',
                 category='time_series',
                 vis_func=VisODE().plot,
                 save_numerical_vis_data=save_numerical_vis_data,
+                analytics=analytics,
                 vis_kwargs={'t': t,
                             'legend': [s.name for s in circuit.model.species],
-                            'out_type': 'svg'},
-                analytics_kwargs={'labels': [s.name for s in circuit.model.species],
-                                  'signal_onehot': signal.onehot,
-                                  'ref_circuit_signal': ref_circuit_signal})
+                            'out_type': 'svg'})
         return list(zip(names, circuits))
 
 
