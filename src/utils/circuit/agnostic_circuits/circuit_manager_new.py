@@ -241,7 +241,7 @@ class CircuitModeller():
                               'ref_circuit_signal': ref_circuit_signal})
         return circuit
 
-    def simulate_signal_batch(self, all_circuits: List[Dict[str, Dict[str, Circuit]]],
+    def simulate_signal_batch(self, all_circuits: Dict[str, Dict[str, Circuit]],
                               circuit_idx: int = 0,
                               save_numerical_vis_data: bool = False,
                               ref_circuit: Circuit = None,
@@ -257,15 +257,19 @@ class CircuitModeller():
         # Batch
         t = np.arange(self.t0, self.t1, self.dt)
         b_steady_states = np.array(
-            [c.result_collector.get_result('steady_states').analytics['steady_states'].flatten() * invert_onehot(signal.onehot) for c in circuits]
+            [c.result_collector.get_result('steady_states').analytics['steady_states'].flatten(
+            ) * invert_onehot(signal.onehot) for c in circuits]
         )
         b_inputs = np.array([c.qreactions.reactions.inputs for c in circuits])
-        b_outputs = np.array([c.qreactions.reactions.outputs for c in circuits])
-        b_forward_rates = np.array([c.qreactions.reactions.forward_rates for c in circuits])
-        b_reverse_rates = np.array([c.qreactions.reactions.reverse_rates for c in circuits])
+        b_outputs = np.array(
+            [c.qreactions.reactions.outputs for c in circuits])
+        b_forward_rates = np.array(
+            [c.qreactions.reactions.forward_rates for c in circuits])
+        b_reverse_rates = np.array(
+            [c.qreactions.reactions.reverse_rates for c in circuits])
 
         b_new_copynumbers = jax.vmap(partial(bioreactions_simulate_signal_scan,
-            time=t, signal=signal.func, signal_onehot=signal.onehot))(copynumbers=b_steady_states, inputs=b_inputs, outputs=b_outputs, forward_rates=b_forward_rates, reverse_rates=b_reverse_rates)
+                                             time=t, signal=signal.func, signal_onehot=signal.onehot))(copynumbers=b_steady_states, inputs=b_inputs, outputs=b_outputs, forward_rates=b_forward_rates, reverse_rates=b_reverse_rates)
         # b_new_copynumbers = jax.vmap(partial(simulate_signal_scan,
         #                                      # b_new_copynumbers = partial(simulate_signal_scan,
         #                                      time=t,
@@ -290,9 +294,10 @@ class CircuitModeller():
             ref_circuit_result = ref_circuit.result_collector.get_result(
                 'signal')
             ref_circuit_signal = None if ref_circuit_result is None else ref_circuit_result.data.flatten()
-        b_analytics = jax.vmap(partial(generate_analytics, time=t, labels=[s.name for s in circuits[circuit_idx].model.species], 
-            signal_onehot=signal.onehot, ref_circuit_data=ref_circuit_signal))(data=b_new_copynumbers)
-        b_analytics = [{k: v[i] for k, v in b_analytics.items()} for i in range(len(circuits))]
+        b_analytics = jax.vmap(partial(generate_analytics, time=t, labels=[s.name for s in circuits[circuit_idx].model.species],
+                                       signal_onehot=signal.onehot, ref_circuit_data=ref_circuit_signal))(data=b_new_copynumbers)
+        b_analytics = [{k: v[i] for k, v in b_analytics.items()}
+                       for i in range(len(circuits))]
 
         # Apply to all circuits
         for i, (circuit, analytics) in enumerate(zip(circuits, b_analytics)):
@@ -306,11 +311,11 @@ class CircuitModeller():
                 vis_kwargs={'t': t,
                             'legend': [s.name for s in circuit.model.species],
                             'out_type': 'svg'})
-        return [{top_name: {sub_name: c} for sub_name in v.keys()} for top_name, v in all_circuits]
-
+        return {top_name: {subname: circuits[len(v)*i + j] for j, subname in enumerate(v.keys())}
+                for i, (top_name, v) in enumerate(all_circuits.items())}
 
     def make_subcircuit(self, circuit: Circuit, mutation_name: str, mutation=None):
-    
+
         subcircuit = deepcopy(circuit)
         subcircuit.reset_to_initial_state()
         subcircuit.species_state = 'uninitialised'
@@ -352,13 +357,14 @@ class CircuitModeller():
             circuit.mutations)
 
         subcircuits = {
-            circuit.name: {subname: self.make_subcircuit(circuit, subname, mutation) 
-                for subname, mutation in flatten_nested_dict(
+            circuit.name: {subname: self.make_subcircuit(circuit, subname, mutation)
+                           for subname, mutation in flatten_nested_dict(
                 circuit.mutations).items()}
         }
         subcircuits[circuit.name]['ref_circuit'] = circuit
 
-        self.run_batch(subcircuits, methods, include_normal_run, write_to_subsystem)
+        self.run_batch(subcircuits, methods,
+                       include_normal_run, write_to_subsystem)
         # for method, kwargs in methods.items():
         #     if kwargs.get('batch') == True:
         #         if hasattr(self, method):
@@ -392,8 +398,8 @@ class CircuitModeller():
     def batch_circuits(self, circuits: List[Circuit], methods: dict):
 
         subcircuits = {
-            circuit.name: {subname: self.make_subcircuit(circuit, subname, mutation) 
-                for subname, mutation in flatten_nested_dict(
+            circuit.name: {subname: self.make_subcircuit(circuit, subname, mutation)
+                           for subname, mutation in flatten_nested_dict(
                 circuit.mutations).items()}
             for circuit in circuits
         }
@@ -402,8 +408,8 @@ class CircuitModeller():
 
         self.run_batch(subcircuits, methods)
 
-    def run_batch(self, subcircuits: List[Dict[str, Dict[str, Circuit]]], methods: dict, 
-        include_normal_run: bool=True, write_to_subsystem: bool=False):
+    def run_batch(self, subcircuits: Dict[str, Dict[str, Circuit]], methods: dict,
+                  include_normal_run: bool = True, write_to_subsystem: bool = False):
         # ref_circuit = None
         for method, kwargs in methods.items():
             if kwargs.get('batch') == True:  # method is batchable
@@ -413,10 +419,12 @@ class CircuitModeller():
                     logging.warning(
                         f'Could not find method @{method} in class {self}')
             else:
-                for top_name, v in enumerate(subcircuits.items()):
+                for top_name, v in subcircuits.items():
                     for sub_name, subcircuit in v.items():
-                        dir_name = top_name if sub_name == 'ref_circuit' or not write_to_subsystem else os.path.join(top_name, 'mutations', sub_name)
-                        self.result_writer.subdivide_writing(dir_name, safe_dir_change=True)
+                        dir_name = top_name if sub_name == 'ref_circuit' or not write_to_subsystem else os.path.join(
+                            top_name, 'mutations', sub_name)
+                        self.result_writer.subdivide_writing(
+                            dir_name, safe_dir_change=True)
                         if not include_normal_run and sub_name == 'ref_circuit':
                             continue
                         subcircuit = self.apply_to_circuit(
