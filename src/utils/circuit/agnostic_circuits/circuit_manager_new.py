@@ -350,8 +350,6 @@ class CircuitModeller():
                         write_to_subsystem=False):
         mutation_dict = flatten_nested_dict(
             circuit.mutations)
-        subcircuits = [{circuit.name: {name: self.make_subcircuit(circuit, name, mutation)}}
-                       for name, mutation in mutation_dict.items()]
 
         subcircuits = {
             circuit.name: {subname: self.make_subcircuit(circuit, subname, mutation) 
