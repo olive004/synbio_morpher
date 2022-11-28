@@ -299,6 +299,13 @@ class CircuitModeller():
                 vis_kwargs={'t': t,
                             'legend': [s.name for s in circuit.model.species],
                             'out_type': 'svg'})
+
+            bioreactions_simulate_signal_scan(
+                time=t, signal=signal.func, signal_onehot=signal.onehot,
+                inputs=circuits[i].qreactions.reactions.inputs,
+                outputs=circuits[i].qreactions.reactions.outputs,
+                copynumbers=b_steady_states[i], forward_rates=b_forward_rates[i],
+                reverse_rates=b_reverse_rates[i])
         return {top_name: {subname: circuits[len(v)*i + j] for j, subname in enumerate(v.keys())}
                 for i, (top_name, v) in enumerate(all_circuits.items())}
 
