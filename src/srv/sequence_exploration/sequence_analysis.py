@@ -1,6 +1,6 @@
 
 
-import itertools
+from typing import List, Dict
 import logging
 import os
 from re import I
@@ -77,7 +77,7 @@ def filter_data(data: pd.DataFrame, filters: dict = {}):
     return filt_stats
 
 
-def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path') -> list:
+def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path') -> List[Dict]:
 
     stats = GeneCircuitLoader().load_data(stats_pathname).data
     filt_stats = filter_data(stats, filters)
@@ -88,9 +88,9 @@ def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path
         logging.warning(stats)
         return []
 
-    path_key = f'path_{list(INTERACTION_FILE_ADDONS.keys())[0]}'
-    experiment_folder = get_root_experiment_folder(
-        filt_stats[path_key].to_list()[0])
+    interaction_path_keys = {k: f'path_{k}' for k in INTERACTION_FILE_ADDONS.keys()}
+    a_pathname = filt_stats[list(interaction_path_keys.values())[0]].to_list()[0]
+    experiment_folder = get_root_experiment_folder(a_pathname)
     experiment_summary = load_experiment_output_summary(experiment_folder)
 
     extra_configs = []
@@ -98,9 +98,9 @@ def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path
         extra_config = load_experiment_config(experiment_folder)
         extra_config.update({write_key: get_path_from_output_summary(
             name=row["name"], output_summary=experiment_summary)})
-        extra_config.update(
-            {path_key: row[path_key]}
-        )
+        extra_config["interactions"] = {
+            k: row[path_key] for k, path_key in interaction_path_keys.items()
+        }
         extra_configs.append(extra_config)
     if filters.get('max_circuits') is not None:
         extra_configs = extra_configs[:filters.get('max_circuits')]
@@ -154,16 +154,6 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFrame:
         for interaction_type in INTERACTION_TYPES:
             interaction_stats[interaction_type] = interactions.get_stats(interaction_type)
 
-        # for interaction_type in INTERACTION_TYPES:
-        #     interaction_dir = os.path.join(
-        #         source_interaction_dir, interaction_type)
-        #     file_key = [
-        #         interaction_type, circuit_name] if include_circuit_in_filekey else interaction_type
-        #     interactions = InteractionMatrix(
-        #         matrix_paths=get_pathnames(first_only=True,
-        #                                    file_key=file_key,
-        #                                    search_dir=interaction_dir))
-        #     interaction_stats[interaction_type] = interactions.get_stats()
         return interaction_stats, interactions.sample_names
 
     def upate_table_with_results(table: dict, reference_table: dict, results: dict) -> dict:

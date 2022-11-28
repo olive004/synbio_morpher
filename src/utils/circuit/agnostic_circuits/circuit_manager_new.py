@@ -72,7 +72,7 @@ class CircuitModeller():
 
     # @time_it
     def compute_interaction_strengths(self, circuit: Circuit):
-        if circuit.species_state == 'uninitialised':
+        if circuit.interactions_state == 'uninitialised':
             if not TEST_MODE:
                 interactions = self.run_interaction_simulator(
                     get_unique(flatten_listlike([r.input for r in circuit.model.reactions])))
@@ -318,7 +318,7 @@ class CircuitModeller():
 
         subcircuit = deepcopy(circuit)
         subcircuit.reset_to_initial_state()
-        subcircuit.species_state = 'uninitialised'
+        subcircuit.interactions_state = 'uninitialised'
         if mutation is None:
             mutation = circuit.mutations.get(mutation_name)
 

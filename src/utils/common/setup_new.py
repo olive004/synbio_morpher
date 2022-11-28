@@ -5,6 +5,7 @@ from src.utils.data.common import Data
 from src.srv.io.manage.sys_interface import make_filename_safely
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.srv.io.manage.data_manager import DataManager
+from src.utils.misc.units import per_mol_to_per_molecules
 from src.utils.misc.io import isolate_filename
 from src.utils.misc.type_handling import cast_all_values_as_list
 from src.utils.signal.configs import get_signal_type, parse_sig_args
@@ -28,13 +29,20 @@ def expand_model_config(in_config: dict, out_config: dict, sample_names: List[st
         for s in sample_names:
             out_config['starting_concentration'][s] = in_config['molecular_params'].get(
                 'starting_copynumbers', 1)
-    if in_config.get('interactions', {}).get('interactions_path') or in_config.get('interactions_path'):
-        out_config['species_state'] = 'loaded'
+    if in_config.get('interactions', {}):
+        out_config['interactions_state'] = 'loaded'
         logging.warning(
             '\n\n\n\nNot implemented yet - to load interactions, modify model construciton\n\n\n\n')
     else:
-        out_config['species_state'] = 'uninitialised'
+        out_config['interactions_state'] = 'uninitialised'
     return out_config
+
+
+def process_molecular_params(params: dict) -> dict:
+    for k, v in params.items():
+        if 'rate' in k:
+            params[k] = per_mol_to_per_molecules(v)
+    return params
 
 
 def compose_kwargs(internal_configs: dict = None, config: dict = None) -> dict:
@@ -48,8 +56,8 @@ def compose_kwargs(internal_configs: dict = None, config: dict = None) -> dict:
     data_manager = DataManager(filepath=make_filename_safely(config.get("data_path", None)),
                                identities=config.get("identities", {}),
                                data=config.get("data", None))
-    config["molecular_params"] = load_json_as_dict(
-        config.get("molecular_params"))
+    config["molecular_params"] = process_molecular_params(load_json_as_dict(
+        config.get("molecular_params")))
     kwargs = {}
     kwargs = expand_model_config(config, kwargs, data_manager.data.sample_names)
 
@@ -59,7 +67,7 @@ def compose_kwargs(internal_configs: dict = None, config: dict = None) -> dict:
         # For pre-loading interactions
         "interactions": config.get("interactions", {}),
         "interaction_simulator": config.get("interaction_simulator", {"name": "IntaRNA"}),
-        "molecular_params": config["molecular_params"],
+        "molecular_params": config["molecular_params"] ,
         "mutations": cast_all_values_as_list(config.get("mutations", {})),
         "name": isolate_filename(data_manager.data.source),
         "signal": load_json_as_dict(config.get("signal")),

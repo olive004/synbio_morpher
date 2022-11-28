@@ -5,7 +5,7 @@ import networkx as nx
 import numpy as np
 import logging
 
-from src.srv.parameter_prediction.interactions import MolecularInteractions
+from src.srv.parameter_prediction.interactions import MolecularInteractions, InteractionMatrix
 from src.srv.io.manage.data_manager import DataManager
 from src.utils.circuit.common.system_setup import construct_bioreaction_model
 from src.utils.results.results import ResultCollector
@@ -96,8 +96,9 @@ class Circuit():
             config.get('data'), config.get('molecular_params'))
         self.data: DataManager = config.get('data')
         self.qreactions = self.init_reactions(self.model, config)
-        self.interactions = self.init_interactions()
-        self.species_state: str = config.get('species_state', 'uninitialised')
+        self.interactions_state: str = config.get(
+            'interactions_state', 'uninitialised')
+        self.interactions = self.init_interactions(config.get('interactions'))
         self.signal: Signal = None
         self.mutations = {}
         self.mutations_args: dict = config.get('mutations', {})
@@ -111,29 +112,33 @@ class Circuit():
         qreactions.init_properties(model, config)
         return qreactions
 
-    def init_interactions(self):
-        matrix = np.zeros((len(self.model.species), len(self.model.species)))
-        for r in self.model.reactions:
-            if len(r.input) == 2:
-                si = r.input[0]
-                sj = r.input[1]
-                matrix[self.model.species.index(si), self.model.species.index(
-                    sj)] = r.forward_rate
-        # for si in self.model.species:
-        #     for sj in self.model.species:
-        #         candidate_reactions = [
-        #             r for r in self.model.reactions if si in r.input and sj in r.input]
-        #         if len(candidate_reactions) == 0:
-        #             continue
-        #             # raise ValueError(
-        #             #     f'The species {si} and {sj} were not in any reaction inputs')
-        #         if len(candidate_reactions) > 1:
-        #             raise ValueError(
-        #                 f'Multiple reactions found in unique list {candidate_reactions}')
-        #         matrix[self.model.species.index(si), self.model.species.index(
-        #             sj)] = candidate_reactions[0].forward_rate
-        return MolecularInteractions(
-            coupled_binding_rates=matrix)
+    def init_interactions(self, interaction_cfg):
+        if not interaction_cfg:
+            matrix = np.zeros(
+                (len(self.model.species), len(self.model.species)))
+            for r in self.model.reactions:
+                if len(r.input) == 2:
+                    si = r.input[0]
+                    sj = r.input[1]
+                    matrix[self.model.species.index(si), self.model.species.index(
+                        sj)] = r.forward_rate
+            # for si in self.model.species:
+            #     for sj in self.model.species:
+            #         candidate_reactions = [
+            #             r for r in self.model.reactions if si in r.input and sj in r.input]
+            #         if len(candidate_reactions) == 0:
+            #             continue
+            #             # raise ValueError(
+            #             #     f'The species {si} and {sj} were not in any reaction inputs')
+            #         if len(candidate_reactions) > 1:
+            #             raise ValueError(
+            #                 f'Multiple reactions found in unique list {candidate_reactions}')
+            #         matrix[self.model.species.index(si), self.model.species.index(
+            #             sj)] = candidate_reactions[0].forward_rate
+            return MolecularInteractions(
+                coupled_binding_rates=matrix)
+        assert self.interactions_state != 'uninitialised', f'The interactions should have been initialised from {interaction_cfg}'
+        return InteractionMatrix(matrix_paths=interaction_cfg).interactions
 
     def reset_to_initial_state(self):
         self.result_collector.reset()

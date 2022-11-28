@@ -54,7 +54,7 @@ class InteractionMatrix():
         )
         if matrix_paths is not None:
             self.interactions.binding_rates_association = load_param(
-                list(matrix_paths.values())[0], 'creation_rate')
+                list(matrix_paths.values())[0], 'association_binding_rate')
             for matrix_type, matrix_path in matrix_paths.items():
                 loaded_matrix, self.units, self.sample_names = self.load(
                     matrix_path)
