@@ -93,15 +93,15 @@ class CircuitModeller():
                 circuit = self.update_species_simulated_rates(
                     circuit, circuit.interactions)
 
-            filename_addons = INTERACTION_FILE_ADDONS.keys()
-            for interaction_matrix, filename_addon in zip(
-                [circuit.interactions.eqconstants, circuit.interactions.binding_rates_dissociation,
-                 circuit.interactions.coupled_binding_rates], filename_addons
-            ):
-                self.result_writer.output(
-                    out_type='csv', out_name=circuit.name, data=interactions_to_df(
-                        interaction_matrix, labels=[s.name for s in circuit.model.species]), overwrite=False,
-                    new_file=True, filename_addon=filename_addon, subfolder=filename_addon)
+        filename_addons = INTERACTION_FILE_ADDONS.keys()
+        for interaction_matrix, filename_addon in zip(
+            [circuit.interactions.eqconstants, circuit.interactions.binding_rates_dissociation,
+                circuit.interactions.coupled_binding_rates], filename_addons
+        ):
+            self.result_writer.output(
+                out_type='csv', out_name=circuit.name, data=interactions_to_df(
+                    interaction_matrix, labels=[s.name for s in circuit.model.species]), overwrite=False,
+                new_file=True, filename_addon=filename_addon, subfolder=filename_addon)
         return circuit
 
     def run_interaction_simulator(self, species: List[Species]) -> InteractionData:

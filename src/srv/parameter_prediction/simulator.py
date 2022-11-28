@@ -24,11 +24,11 @@ MIN_INTERACTION_EQCONSTANT = 0.000000001
 
 class RawSimulationHandling():
 
-    def __init__(self, config_args: dict = None) -> None:
-        self.simulator_name = config_args.get('name', 'IntaRNA')
-        self.postprocess = config_args.get('postprocess')
-        self.sim_kwargs = config_args.get('simulator_kwargs', {})
-        self.fixed_rate_k_a = config_args.get(
+    def __init__(self, config: dict = None) -> None:
+        self.simulator_name = config.get('name', 'IntaRNA')
+        self.postprocess = config.get('postprocess')
+        self.sim_kwargs = config.get('simulator_kwargs', {})
+        self.fixed_rate_k_a = config.get(
             'molecular_params').get('association_binding_rate')
         self.units = ''
 

@@ -51,7 +51,7 @@ class Evolver():
             return positions
 
         def rand_mutator(circuit: Circuit, algorithm: str, positions_chosen=None):
-            for i, specie in enumerate(circuit.model.species):
+            for specie in circuit.model.species:
                 circuit.mutations[specie.name] = {}
                 sequence = specie.physical_data
                 if not sequence:

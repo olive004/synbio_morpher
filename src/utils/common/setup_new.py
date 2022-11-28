@@ -1,4 +1,5 @@
 import logging
+from copy import deepcopy
 from typing import List
 from bioreaction.model.data_containers import BasicModel
 from src.utils.data.common import Data
@@ -56,8 +57,8 @@ def compose_kwargs(internal_configs: dict = None, config: dict = None) -> dict:
     data_manager = DataManager(filepath=make_filename_safely(config.get("data_path", None)),
                                identities=config.get("identities", {}),
                                data=config.get("data", None))
-    config["molecular_params"] = process_molecular_params(load_json_as_dict(
-        config.get("molecular_params")))
+    config["molecular_params"] = load_json_as_dict(
+        config.get("molecular_params"))
     kwargs = {}
     kwargs = expand_model_config(config, kwargs, data_manager.data.sample_names)
 
@@ -67,7 +68,7 @@ def compose_kwargs(internal_configs: dict = None, config: dict = None) -> dict:
         # For pre-loading interactions
         "interactions": config.get("interactions", {}),
         "interaction_simulator": config.get("interaction_simulator", {"name": "IntaRNA"}),
-        "molecular_params": config["molecular_params"] ,
+        "molecular_params": process_molecular_params(deepcopy(config.get("molecular_params"))),
         "mutations": cast_all_values_as_list(config.get("mutations", {})),
         "name": isolate_filename(data_manager.data.source),
         "signal": load_json_as_dict(config.get("signal")),
