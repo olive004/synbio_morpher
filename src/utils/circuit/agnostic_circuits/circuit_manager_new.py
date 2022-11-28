@@ -194,11 +194,11 @@ class CircuitModeller():
                 new_copynumbers = np.rollaxis(new_copynumbers, axis=1)
 
         if ref_circuit is None or ref_circuit == circuit:
-            ref_circuit_signal = None
+            ref_circuit_data = None
         else:
             ref_circuit_result = ref_circuit.result_collector.get_result(
                 'signal')
-            ref_circuit_signal = None if ref_circuit_result is None else ref_circuit_result.data
+            ref_circuit_data = None if ref_circuit_result is None else ref_circuit_result.data
 
         circuit.result_collector.add_result(
             data=new_copynumbers,
@@ -212,7 +212,7 @@ class CircuitModeller():
                         'out_type': 'svg'},
             analytics_kwargs={'labels': [s.name for s in circuit.model.species],
                               'signal_onehot': signal.onehot,
-                              'ref_circuit_signal': ref_circuit_signal})
+                              'ref_circuit_data': ref_circuit_data})
         return circuit
 
     def simulate_signal_batch(self, all_circuits: Dict[str, Dict[str, Circuit]],
@@ -264,13 +264,13 @@ class CircuitModeller():
 
         # Get analytics batched too
         if ref_circuit is None or ref_circuit == circuit:
-            ref_circuit_signal = None
+            ref_circuit_data = None
         else:
             ref_circuit_result = ref_circuit.result_collector.get_result(
                 'signal')
-            ref_circuit_signal = None if ref_circuit_result is None else ref_circuit_result.data.flatten()
+            ref_circuit_data = None if ref_circuit_result is None else ref_circuit_result.data.flatten()
         b_analytics = jax.vmap(partial(generate_analytics, time=t, labels=[s.name for s in circuits[circuit_idx].model.species],
-                                       signal_onehot=signal.onehot, ref_circuit_data=ref_circuit_signal))(data=b_new_copynumbers)
+                                       signal_onehot=signal.onehot, ref_circuit_data=ref_circuit_data))(data=b_new_copynumbers)
         b_analytics = [{k: v[i] for k, v in b_analytics.items()}
                        for i in range(len(circuits))]
 

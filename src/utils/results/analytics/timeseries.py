@@ -30,7 +30,7 @@ def fold_change(data):
     #     return jnp.expand_dims(fold_change, axis=1)
     # else:
     #     return fold_change
-    return fold_change
+    return jnp.expand_dims(fold_change, axis=1)
 
 def get_overshoot(data, steady_states):
     return (jnp.expand_dims(jnp.max(data, axis=1), axis=1) - steady_states)
@@ -85,7 +85,7 @@ def get_rmse(data, ref_circuit_data):
     data = data - ref_circuit_data
     rmse = jnp.sqrt(
         jnp.sum(jnp.divide(jnp.power(data, 2), len(data)), axis=1))
-    return rmse
+    return jnp.expand_dims(rmse, axis=1)
 
 def get_step_response_times(data, t, steady_states, deriv1, signal_idx: jnp.ndarray):
     time = t * jnp.ones_like(steady_states)
@@ -120,6 +120,9 @@ def get_step_response_times(data, t, steady_states, deriv1, signal_idx: jnp.ndar
         jnp.max(time * argmax_workaround, axis=1), tstart)
 
     response_times = tstop - tstart
+
+    if response_times.ndim == 1:
+        return jnp.expand_dims(response_times, axis=1)
     return response_times
 
 def frequency(data):

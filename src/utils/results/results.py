@@ -22,7 +22,6 @@ class Result():
             from src.utils.results.analytics.timeseries import generate_analytics
             analytics_kwargs = analytics_kwargs if analytics_kwargs is not None else {}
             self.analytics = generate_analytics(result_data, time, **analytics_kwargs)
-            # Timeseries(
             #     result_data, time).generate_analytics(**analytics_kwargs)
 
     def __repr__(self):

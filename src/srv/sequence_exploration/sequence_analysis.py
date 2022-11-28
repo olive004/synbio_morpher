@@ -166,7 +166,7 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFrame:
             reference_v = reference_table[k]
             diff = np.where(np.asarray(reference_v) != 0, np.asarray(table[k]) - np.asarray(reference_v), 0)
             if np.shape(np.asarray(table[k])) < np.shape(np.asarray(reference_v)):
-                table[k] = np.repeat(table[k], repeats=len(reference_v))
+                table[k] = np.expand_dims(table[k], axis=1)
             ratio = np.divide(np.asarray(table[k]), np.asarray(reference_v),
                               out=np.zeros_like(np.asarray(table[k])), 
                               where=(np.asarray(reference_v) != 0 ) & (np.asarray(reference_v) != np.nan))

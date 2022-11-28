@@ -334,11 +334,11 @@ class CircuitModeller():
                                                  circuit.species.species_axis])
             })]), axis=circuit.species.time_axis)
         if ref_circuit is None or ref_circuit == circuit:
-            ref_circuit_signal = None
+            ref_circuit_data = None
         else:
             ref_circuit_result = ref_circuit.result_collector.get_result(
                 'signal')
-            ref_circuit_signal = None if ref_circuit_result is None else ref_circuit_result.data
+            ref_circuit_data = None if ref_circuit_result is None else ref_circuit_result.data
 
         t = np.arange(0, np.shape(new_copynumbers)[
             1]) * modeller_signal.time_interval
@@ -351,7 +351,7 @@ class CircuitModeller():
                                                         'legend': list(circuit.species.data.sample_names),
                                                         'out_type': 'svg'},
                                             analytics_kwargs={'signal_idx': signal.identities_idx,
-                                                              'ref_circuit_signal': ref_circuit_signal})
+                                                              'ref_circuit_data': ref_circuit_data})
         return circuit
 
     def simulate_signal_batch(self, circuits: List[Tuple[str, BaseCircuit]], circuit_idx: int = 0,
@@ -399,11 +399,11 @@ class CircuitModeller():
 
         # Apply to all circuits
         if ref_circuit is None or ref_circuit == circuit:
-            ref_circuit_signal = None
+            ref_circuit_data = None
         else:
             ref_circuit_result = ref_circuit.result_collector.get_result(
                 'signal')
-            ref_circuit_signal = None if ref_circuit_result is None else ref_circuit_result.data
+            ref_circuit_data = None if ref_circuit_result is None else ref_circuit_result.data
         for i, circuit in enumerate(circuits):
             circuits[i].result_collector.add_result(b_new_copynumbers[i],
                                                     name='signal',
@@ -414,7 +414,7 @@ class CircuitModeller():
                                                                 'legend': list(circuit.species.data.sample_names),
                                                                 'out_type': 'svg'},
                                                     analytics_kwargs={'signal_idx': signal.identities_idx,
-                                                                      'ref_circuit_signal': ref_circuit_signal})
+                                                                      'ref_circuit_data': ref_circuit_data})
         return list(zip(names, circuits))
 
     # @time_it
