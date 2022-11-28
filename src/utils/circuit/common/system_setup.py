@@ -22,7 +22,7 @@ def add_data_to_species(model: BasicModel, data: Data):
     return model
 
 
-def construct_bioreaction_model(data: Data, molecular_params):
+def construct_bioreaction_model(data: Data, molecular_params: dict):
     model = construct_model_fromnames(data.sample_names)
     model = add_data_to_species(model, data)
     for i in range(len(model.reactions)):

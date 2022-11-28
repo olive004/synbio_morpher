@@ -32,8 +32,6 @@ def expand_model_config(in_config: dict, out_config: dict, sample_names: List[st
                 'starting_copynumbers', 1)
     if in_config.get('interactions', {}):
         out_config['interactions_state'] = 'loaded'
-        logging.warning(
-            '\n\n\n\nNot implemented yet - to load interactions, modify model construciton\n\n\n\n')
     else:
         out_config['interactions_state'] = 'uninitialised'
     return out_config

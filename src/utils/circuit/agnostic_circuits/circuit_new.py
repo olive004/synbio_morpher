@@ -1,4 +1,3 @@
-from copy import deepcopy
 from typing import List, Union
 import pandas as pd
 import networkx as nx
@@ -94,6 +93,7 @@ class Circuit():
         self.result_collector = ResultCollector()
         self.model = construct_bioreaction_model(
             config.get('data'), config.get('molecular_params'))
+        self.circuit_size = len(self.model.species)
         self.data: DataManager = config.get('data')
         self.qreactions = self.init_reactions(self.model, config)
         self.interactions_state: str = config.get(
@@ -105,38 +105,33 @@ class Circuit():
 
         self.graph = Graph(source_matrix=self.interactions.eqconstants, labels=[
                            s.name for s in self.model.species])
-        self.circuit_size = len(self.model.species)
+        
+        self = update_species_simulated_rates(self, self.interactions)
 
     def init_reactions(self, model: BasicModel, config: dict) -> QuantifiedReactions:
         qreactions = QuantifiedReactions()
         qreactions.init_properties(model, config)
         return qreactions
 
-    def init_interactions(self, interaction_cfg):
+    def init_interactions(self, interaction_cfg: dict) -> MolecularInteractions:
         if not interaction_cfg:
-            matrix = np.zeros(
-                (len(self.model.species), len(self.model.species)))
-            for r in self.model.reactions:
-                if len(r.input) == 2:
-                    si = r.input[0]
-                    sj = r.input[1]
-                    matrix[self.model.species.index(si), self.model.species.index(
-                        sj)] = r.forward_rate
-            # for si in self.model.species:
-            #     for sj in self.model.species:
-            #         candidate_reactions = [
-            #             r for r in self.model.reactions if si in r.input and sj in r.input]
-            #         if len(candidate_reactions) == 0:
-            #             continue
-            #             # raise ValueError(
-            #             #     f'The species {si} and {sj} were not in any reaction inputs')
-            #         if len(candidate_reactions) > 1:
-            #             raise ValueError(
-            #                 f'Multiple reactions found in unique list {candidate_reactions}')
+            # matrix = np.zeros(
+            #     (len(self.model.species), len(self.model.species)))
+            # for r in self.model.reactions:
+            #     if len(r.input) == 2:
+            #         si = r.input[0]
+            #         sj = r.input[1]
             #         matrix[self.model.species.index(si), self.model.species.index(
-            #             sj)] = candidate_reactions[0].forward_rate
+            #             sj)] = r.reverse_rate
+            # return MolecularInteractions(binding_rates_dissociation=matrix)
+            random_matrices = np.random.rand(
+                self.circuit_size, self.circuit_size, 4) * 0.000001
             return MolecularInteractions(
-                coupled_binding_rates=matrix)
+                coupled_binding_rates=random_matrices[:, :, 0],
+                binding_rates_association=random_matrices[:, :, 1],
+                binding_rates_dissociation=random_matrices[:, :, 2],
+                eqconstants=random_matrices[:, :, 3], units='test'
+            )
         assert self.interactions_state != 'uninitialised', f'The interactions should have been initialised from {interaction_cfg}'
         return InteractionMatrix(matrix_paths=interaction_cfg).interactions
 
@@ -157,3 +152,18 @@ class Circuit():
     @signal.setter
     def signal(self, value):
         self._signal = value
+
+
+def update_species_simulated_rates(circuit: Circuit,
+                                   interactions: MolecularInteractions) -> Circuit:
+    for i, r in enumerate(circuit.model.reactions):
+        if len(r.input) == 2:
+            si = r.input[0]
+            sj = r.input[1]
+            circuit.model.reactions[i].forward_rate = interactions.binding_rates_association[circuit.model.species.index(
+                si), circuit.model.species.index(sj)]
+            circuit.model.reactions[i].reverse_rate = interactions.binding_rates_dissociation[circuit.model.species.index(
+                si), circuit.model.species.index(sj)]
+    circuit.qreactions.reactions = circuit.qreactions.init_reactions(
+        circuit.model)
+    return circuit

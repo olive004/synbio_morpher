@@ -86,7 +86,6 @@
                 "purpose_to_get_source_dir_from": "gather_interaction_stats",
                 "source_dir_actually_used_POSTERITY": null
             },
-            "interactions_path": null,
             "molecular_params": "./src/utils/circuit/specific_circuits/RNA/configs/RNA_system.json"
         },
         "summarise_simulation": {

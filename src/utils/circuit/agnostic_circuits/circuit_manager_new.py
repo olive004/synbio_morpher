@@ -19,7 +19,7 @@ from src.srv.io.loaders.experiment_loading import INTERACTION_FILE_ADDONS
 from src.utils.misc.helper import vanilla_return
 from src.utils.results.visualisation import VisODE
 from src.utils.signal.signals_new import Signal
-from src.utils.circuit.agnostic_circuits.circuit_new import Circuit
+from src.utils.circuit.agnostic_circuits.circuit_new import Circuit, update_species_simulated_rates
 from src.utils.results.analytics.timeseries import generate_analytics
 from src.utils.modelling.deterministic import Deterministic, bioreaction_sim_full, bioreactions_simulate_signal_scan
 from src.utils.evolution.mutation import implement_mutation
@@ -56,27 +56,13 @@ class CircuitModeller():
                        identity_matrix=np.identity(circuit.circuit_size)
                        )
 
-    def update_species_simulated_rates(self, circuit: Circuit,
-                                       interactions: MolecularInteractions) -> Circuit:
-        for i, r in enumerate(circuit.model.reactions):
-            if len(r.input) == 2:
-                si = r.input[0]
-                sj = r.input[1]
-                circuit.model.reactions[i].forward_rate = interactions.binding_rates_association[circuit.model.species.index(
-                    si), circuit.model.species.index(sj)]
-                circuit.model.reactions[i].reverse_rate = interactions.binding_rates_dissociation[circuit.model.species.index(
-                    si), circuit.model.species.index(sj)]
-        circuit.qreactions.reactions = circuit.qreactions.init_reactions(
-            circuit.model)
-        return circuit
-
     # @time_it
     def compute_interaction_strengths(self, circuit: Circuit):
         if circuit.interactions_state == 'uninitialised':
             if not TEST_MODE:
                 interactions = self.run_interaction_simulator(
                     get_unique(flatten_listlike([r.input for r in circuit.model.reactions])))
-                circuit = self.update_species_simulated_rates(
+                circuit = update_species_simulated_rates(
                     circuit, interactions.interactions)
                 circuit.interactions = interactions.interactions
             else:
@@ -90,7 +76,7 @@ class CircuitModeller():
                     binding_rates_dissociation=random_matrices[:, :, 2],
                     eqconstants=random_matrices[:, :, 3], units='test'
                 )
-                circuit = self.update_species_simulated_rates(
+                circuit = update_species_simulated_rates(
                     circuit, circuit.interactions)
 
         filename_addons = INTERACTION_FILE_ADDONS.keys()
@@ -261,16 +247,18 @@ class CircuitModeller():
             [c.result_collector.get_result('steady_states').analytics['steady_states'].flatten(
             ) * invert_onehot(signal.onehot) for c in circuits]
         )
-        b_inputs = np.array([c.qreactions.reactions.inputs for c in circuits])
-        b_outputs = np.array(
-            [c.qreactions.reactions.outputs for c in circuits])
         b_forward_rates = np.array(
             [c.qreactions.reactions.forward_rates for c in circuits])
         b_reverse_rates = np.array(
             [c.qreactions.reactions.reverse_rates for c in circuits])
 
-        b_new_copynumbers = jax.vmap(partial(bioreactions_simulate_signal_scan,
-                                             time=t, signal=signal.func, signal_onehot=signal.onehot))(copynumbers=b_steady_states, inputs=b_inputs, outputs=b_outputs, forward_rates=b_forward_rates, reverse_rates=b_reverse_rates)
+        b_new_copynumbers = jax.vmap(
+            partial(bioreactions_simulate_signal_scan,
+                    time=t, signal=signal.func, signal_onehot=signal.onehot,
+                    inputs=circuits[circuit_idx].qreactions.reactions.inputs,
+                    outputs=circuits[circuit_idx].qreactions.reactions.outputs))(
+                        copynumbers=b_steady_states, forward_rates=b_forward_rates,
+                        reverse_rates=b_reverse_rates)
         # b_new_copynumbers = jax.vmap(partial(simulate_signal_scan,
         #                                      # b_new_copynumbers = partial(simulate_signal_scan,
         #                                      time=t,
@@ -361,11 +349,11 @@ class CircuitModeller():
         subcircuits[circuit.name]['ref_circuit'] = circuit
 
         subcircuits = self.run_batch(subcircuits, methods,
-                       include_normal_run, write_to_subsystem)
+                                     include_normal_run, write_to_subsystem)
         return subcircuits
 
     def batch_circuits(self, circuits: List[Circuit], methods: dict, include_normal_run=True,
-                        write_to_subsystem=False) -> List[Circuit]:
+                       write_to_subsystem=False) -> List[Circuit]:
         subcircuits = {
             circuit.name: {subname: self.make_subcircuit(circuit, subname, mutation)
                            for subname, mutation in flatten_nested_dict(
@@ -375,7 +363,8 @@ class CircuitModeller():
         for circuit in circuits:
             subcircuits[circuit.name]['ref_circuit'] = circuit
 
-        subcircuits = self.run_batch(subcircuits, methods, include_normal_run, write_to_subsystem)
+        subcircuits = self.run_batch(
+            subcircuits, methods, include_normal_run, write_to_subsystem)
         return subcircuits
 
     def run_batch(self, subcircuits: Dict[str, Dict[str, Circuit]], methods: dict,

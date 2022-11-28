@@ -53,13 +53,14 @@ class InteractionMatrix():
             eqconstants=random_matrices[:, :, 3], units='test'
         )
         if matrix_paths is not None:
-            self.interactions.binding_rates_association = load_param(
-                list(matrix_paths.values())[0], 'association_binding_rate')
             for matrix_type, matrix_path in matrix_paths.items():
                 loaded_matrix, self.units, self.sample_names = self.load(
                     matrix_path)
                 self.interactions.__setattr__(matrix_type, loaded_matrix)
                 self.interactions.units = self.units
+            self.interactions.binding_rates_association = load_param(
+                list(matrix_paths.values())[0], 'association_binding_rate'
+            ) * np.ones_like(self.interactions.binding_rates_dissociation)
 
     def load(self, filepath):
         filetype = determine_file_format(filepath)
