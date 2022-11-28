@@ -100,29 +100,24 @@ def main(config=None, data_writer=None):
                 req_output=True,
                 name="generate_mutations"
             )
-        ],
-        Protocol(simulation_func,
-                        req_input=True,
-                        name="simulate_visualisations"
-                        )
+        ]
     ]
-    
-    # if not config_file['simulation']['use_batch_mutations']:
-    #     protocols.append([
-    #             # Simulate signal and write results
-    #             Protocol(simulation_func,
-    #                     req_input=True,
-    #                     name="simulate_visualisations"
-    #                     )
-    #         ]
-    #     )
-    # else:
-    #     protocols.append(
-    #             # Simulate signal and write results
-    #             Protocol(simulation_func,
-    #                     req_input=True,
-    #                     name="simulate_visualisations"
-    #                     ))
+
+    if not config_file['simulation']['use_batch_mutations']:
+        protocols[-1].append(
+            # Simulate signal and write results
+            Protocol(simulation_func,
+                     req_input=True,
+                     name="simulate_visualisations"
+                     )
+        )
+    else:
+        protocols.append(
+            # Simulate signal and write results
+            Protocol(simulation_func,
+                     req_input=True,
+                     name="simulate_visualisations"
+                     ))
 
     experiment = Experiment(config=config, config_file=config_file, protocols=protocols,
                             data_writer=data_writer, debug_inputs=False)

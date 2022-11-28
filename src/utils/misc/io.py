@@ -46,7 +46,7 @@ def get_pathnames(search_dir: str, file_key: Union[List, str] = '', first_only: 
             for fk, sd in zip(file_key, subdirs):
                 curr_search_dir = os.path.join(
                     search_dir, sd) if sd is not None else search_dir
-                all_path_names[fk] = list(set(sorted([f for f in glob.glob(os.path.join(
+                all_path_names[fk] = sorted(list(set([f for f in glob.glob(os.path.join(
                     curr_search_dir, '*' + fk + '*')) if path_condition_f(f)])))
             path_names = nest_list_dict(all_path_names)
         else:

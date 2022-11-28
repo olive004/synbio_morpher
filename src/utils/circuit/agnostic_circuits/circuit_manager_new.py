@@ -58,26 +58,13 @@ class CircuitModeller():
 
     # @time_it
     def compute_interaction_strengths(self, circuit: Circuit):
-        if circuit.interactions_state == 'uninitialised':
-            if not TEST_MODE:
-                interactions = self.run_interaction_simulator(
-                    get_unique(flatten_listlike([r.input for r in circuit.model.reactions])))
-                circuit = update_species_simulated_rates(
-                    circuit, interactions.interactions)
-                circuit.interactions = interactions.interactions
-            else:
-                logging.warning(
-                    'RUNNING IN TEST MODE - interaction rates are fake.')
-                random_matrices = np.random.rand(
-                    circuit.circuit_size, circuit.circuit_size, 4) * 0.000001
-                circuit.interactions = MolecularInteractions(
-                    coupled_binding_rates=random_matrices[:, :, 0],
-                    binding_rates_association=random_matrices[:, :, 1],
-                    binding_rates_dissociation=random_matrices[:, :, 2],
-                    eqconstants=random_matrices[:, :, 3], units='test'
-                )
-                circuit = update_species_simulated_rates(
-                    circuit, circuit.interactions)
+        if circuit.interactions_state == 'uninitialised' and not TEST_MODE:
+            interactions = self.run_interaction_simulator(
+                get_unique(flatten_listlike([r.input for r in circuit.model.reactions])))
+            circuit = update_species_simulated_rates(
+                circuit, interactions.interactions)
+            circuit.interactions = interactions.interactions
+            circuit.interactions.units = 'rate'
 
         filename_addons = INTERACTION_FILE_ADDONS.keys()
         for interaction_matrix, filename_addon in zip(

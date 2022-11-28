@@ -78,7 +78,7 @@
                 "t0": 0,
                 "t1": 1000,
                 "solver": "diffrax",
-                "use_batch_mutations": true
+                "use_batch_mutations": false
             },
             "source_of_interaction_stats": {
                 "is_source_dir_incomplete": true,
