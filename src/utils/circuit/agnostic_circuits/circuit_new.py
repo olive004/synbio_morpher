@@ -125,7 +125,7 @@ class Circuit():
             #             sj)] = r.reverse_rate
             # return MolecularInteractions(binding_rates_dissociation=matrix)
             random_matrices = np.random.rand(
-                self.circuit_size, self.circuit_size, 4) * 0.000001
+                self.circuit_size, self.circuit_size, 4) * 0.0001
             return MolecularInteractions(
                 coupled_binding_rates=random_matrices[:, :, 0],
                 binding_rates_association=random_matrices[:, :, 1],

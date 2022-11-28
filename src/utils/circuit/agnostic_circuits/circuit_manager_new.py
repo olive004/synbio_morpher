@@ -333,19 +333,6 @@ class CircuitModeller():
             self.result_writer.unsubdivide_last_dir()
         self.result_writer.unsubdivide()
 
-    def batch_mutations(self, circuit: Circuit, methods: dict, include_normal_run=True,
-                        write_to_subsystem=False):
-        subcircuits = {
-            circuit.name: {subname: self.make_subcircuit(circuit, subname, mutation)
-                           for subname, mutation in flatten_nested_dict(
-                circuit.mutations).items()}
-        }
-        subcircuits[circuit.name]['ref_circuit'] = circuit
-
-        subcircuits = self.run_batch(subcircuits, methods,
-                                     include_normal_run, write_to_subsystem)
-        return subcircuits
-
     def batch_circuits(self, circuits: List[Circuit], methods: dict, include_normal_run=True,
                        write_to_subsystem=False) -> List[Circuit]:
         subcircuits = {
