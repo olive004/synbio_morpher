@@ -48,7 +48,7 @@ def main(config=None, data_writer=None):
             "write_results": {'no_visualisations': config_file['experiment'].get('no_visualisations', False)}
         })
     else:
-        simulation_func = partial(CircuitModeller(result_writer=data_writer, config=config_file).batch_mutations,
+        simulation_func = partial(CircuitModeller(result_writer=data_writer, config=config_file).batch_circuits,
                                   write_to_subsystem=True,
                                   methods={
             "init_circuit": {},
@@ -99,14 +99,31 @@ def main(config=None, data_writer=None):
                 req_input=True,
                 req_output=True,
                 name="generate_mutations"
-            ),
-            # Simulate signal and write results
-            Protocol(simulation_func,
-                     req_input=True,
-                     name="simulate_visualisations"
-                     )
-        ]
+            )
+        ],
+        Protocol(simulation_func,
+                        req_input=True,
+                        name="simulate_visualisations"
+                        )
     ]
+    
+    # if not config_file['simulation']['use_batch_mutations']:
+    #     protocols.append([
+    #             # Simulate signal and write results
+    #             Protocol(simulation_func,
+    #                     req_input=True,
+    #                     name="simulate_visualisations"
+    #                     )
+    #         ]
+    #     )
+    # else:
+    #     protocols.append(
+    #             # Simulate signal and write results
+    #             Protocol(simulation_func,
+    #                     req_input=True,
+    #                     name="simulate_visualisations"
+    #                     ))
+
     experiment = Experiment(config=config, config_file=config_file, protocols=protocols,
                             data_writer=data_writer, debug_inputs=False)
     experiment.run_experiment()
