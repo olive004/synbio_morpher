@@ -55,32 +55,41 @@ def compose_kwargs(internal_configs: dict = None, config: dict = None) -> dict:
     data_manager = DataManager(filepath=make_filename_safely(config.get("data_path", None)),
                                identities=config.get("identities", {}),
                                data=config.get("data", None))
-    config["molecular_params"] = load_json_as_dict(
-        config.get("molecular_params"))
     kwargs = {}
     kwargs = expand_model_config(config, kwargs, data_manager.data.sample_names)
-
     kwargs.update({
         "data": data_manager.data,
         "data_path": data_manager.source,
         # For pre-loading interactions
-        "interactions": config.get("interactions", {}),
-        "interaction_simulator": config.get("interaction_simulator", {"name": "IntaRNA"}),
-        "molecular_params": process_molecular_params(deepcopy(config.get("molecular_params"))),
-        "mutations": cast_all_values_as_list(config.get("mutations", {})),
+        "interactions": config["interactions"],
+        "interaction_simulator": config["interaction_simulator"],
+        "molecular_params": config["molecular_params"],
+        "mutations": config["mutations"],
         "name": isolate_filename(data_manager.data.source),
-        "signal": load_json_as_dict(config.get("signal")),
-        "simulation": config.get("simulation", {}),
-        "system_type": config.get("system_type")
+        "signal": config["signal"],
+        "simulation": config["simulation"],
+        "system_type": config["system_type"]
     })
     assert all([e in kwargs for e in ESSENTIAL_KWARGS]), 'Some of the kwargs for composing ' \
         f'a circuit are not listed in essential kwargs {ESSENTIAL_KWARGS}: {dict({e: e in kwargs for e in ESSENTIAL_KWARGS})}'
     return kwargs
 
 
+def expand_config(config: dict) -> dict:
+    config["interactions"] = config.get("interactions", {})
+    config["interaction_simulator"] = config.get("interaction_simulator", {"name": "IntaRNA"})
+    config["molecular_params"] = process_molecular_params(deepcopy(load_json_as_dict(config.get("molecular_params"))))
+    config["mutations"] = cast_all_values_as_list(config.get("mutations", {}))
+    config["signal"] = load_json_as_dict(config.get("signal"))
+    config["simulation"] = config.get("simulation", {})
+    config["system_type"] = config.get("system_type")
+    return config
+
+
 def construct_circuit_from_cfg(extra_configs: dict, config_filepath: str = None, config_file: dict = None):
 
     config_file = get_configs(config_file, config_filepath)
+    config_file = expand_config(config_file)
     kwargs = compose_kwargs(internal_configs=extra_configs, config=config_file)
     circuit = instantiate_system(kwargs)
 

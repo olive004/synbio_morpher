@@ -12,6 +12,8 @@ from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.evolution.evolver import Evolver
 from src.utils.misc.io import get_pathnames
 from src.utils.misc.scripts_io import get_search_dir
+from src.utils.circuit.common.config_setup import parse_cfg_args
+from src.utils.common.setup_new import expand_config
 from src.utils.circuit.agnostic_circuits.circuit_manager_new import CircuitModeller
 
 
@@ -37,25 +39,8 @@ def main(config=None, data_writer=None):
 
     config_file, source_experiment_dir = get_search_dir(
         config_searchdir_key='source_of_interaction_stats', config_file=config_file)
-
-    if not config_file['simulation']['use_batch_mutations']:
-        simulation_func = partial(CircuitModeller(result_writer=data_writer, config=config_file).wrap_mutations,
-                                  write_to_subsystem=True,
-                                  methods={
-            "init_circuit": {},
-            "simulate_signal": {'save_numerical_vis_data': True, 'ref_circuit': None,
-                                'solver': config_file['signal'].get('solver', 'naive')},
-            "write_results": {'no_visualisations': config_file['experiment'].get('no_visualisations', False)}
-        })
-    else:
-        simulation_func = partial(CircuitModeller(result_writer=data_writer, config=config_file).batch_circuits,
-                                  write_to_subsystem=True,
-                                  methods={
-            "init_circuit": {},
-            "simulate_signal_batch": {'save_numerical_vis_data': True, 'ref_circuit': None,
-                                      'batch': True},
-            "write_results": {'no_visualisations': config_file['experiment'].get('no_visualisations', True)}
-        })
+    config_file = expand_config(config=config_file)
+    config_file = parse_cfg_args(config_file)
 
     def logging_circuit(clist: list):
         logging.info(f'Simulating {len(clist)} circuits')
@@ -106,18 +91,32 @@ def main(config=None, data_writer=None):
     if not config_file['simulation']['use_batch_mutations']:
         protocols[-1].append(
             # Simulate signal and write results
-            Protocol(simulation_func,
-                     req_input=True,
-                     name="simulate_visualisations"
-                     )
+            Protocol(partial(CircuitModeller(result_writer=data_writer, config=config_file).wrap_mutations,
+                             write_to_subsystem=True,
+                             methods={
+                "init_circuit": {},
+                "simulate_signal": {'save_numerical_vis_data': True, 'ref_circuit': None,
+                                    'solver': config_file['signal'].get('solver', 'naive')},
+                "write_results": {'no_visualisations': config_file['experiment'].get('no_visualisations', False)}
+            }),
+                req_input=True,
+                name="simulate_visualisations"
+            )
         )
     else:
         protocols.append(
             # Simulate signal and write results
-            Protocol(simulation_func,
-                     req_input=True,
-                     name="simulate_visualisations"
-                     ))
+            Protocol(partial(CircuitModeller(result_writer=data_writer, config=config_file).batch_circuits,
+                             write_to_subsystem=True,
+                             methods={
+                "init_circuit": {},
+                "simulate_signal_batch": {'save_numerical_vis_data': True, 'ref_circuit': None,
+                                          'batch': True},
+                "write_results": {'no_visualisations': config_file['experiment'].get('no_visualisations', True)}
+            }),
+                req_input=True,
+                name="simulate_visualisations"
+            ))
 
     experiment = Experiment(config=config, config_file=config_file, protocols=protocols,
                             data_writer=data_writer, debug_inputs=False)

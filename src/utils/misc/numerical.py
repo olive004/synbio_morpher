@@ -36,7 +36,7 @@ def cast_astype(list_like, dtypes):
         def replace_string_list(e):
             if type(e) == str and re.search("\[.*\]", e):
                 # return [dtype(ll) for ll in e[1:-1].split(',')]
-                return dtype(e[1:-1])
+                return [dtype(i) for i in e[1:-1].split(',')]
             elif type(e) == list:
                 # return [dtype(ee) for ee in e]
                 return dtype(e[0])

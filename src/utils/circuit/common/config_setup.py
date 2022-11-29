@@ -44,15 +44,15 @@ def handle_simulator_cfgs(simulator, simulator_cfg_path):
     return cfg_protocol(simulator_cfg)
 
 
-def parse_cfg_args(config_args: dict = None, default_args: Dict = None) -> Dict:
+def parse_cfg_args(config: dict = None, default_args: Dict = None) -> Dict:
 
     if default_args is None:
         default_args = retrieve_default_arg_filenames()
-    simulator_kwargs = load_simulator_kwargs(default_args, config_args)
-    config_args['interaction_simulator']['simulator_kwargs'] = simulator_kwargs
-    config_args['interaction_simulator']['molecular_params'] = config_args['molecular_params']
+    simulator_kwargs = load_simulator_kwargs(default_args, config)
+    config['interaction_simulator']['simulator_kwargs'] = simulator_kwargs
+    config['interaction_simulator']['molecular_params'] = config['molecular_params']
 
-    return config_args
+    return config
 
 
 def load_simulator_kwargs(default_args: dict, config_args: str = None) -> Dict:

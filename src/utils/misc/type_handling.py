@@ -41,7 +41,7 @@ def flatten_listlike(listlike, safe=False):
     if safe:
         flat_list = []
         for l in listlike:
-            if hasattr(l, '__iter__') and type(l) != str:
+            if hasattr(l, '__iter__') and type(l) != str and l:
                 flat_list.extend(l)
             # if type(l) == tuple or type(l) == list:
             #     flat_list.extend(l)

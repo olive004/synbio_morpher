@@ -53,11 +53,11 @@
             "filters": {
                 "min_num_interacting": 2,
                 "max_self_interacting": null,
-                "max_total": 5
+                "max_total": null
             },
             "mutations": {
                 "algorithm": "random",
-                "mutation_counts": 2,
+                "mutation_counts": 10,
                 "mutation_nums_within_sequence": 1,
                 "mutation_nums_within_sequencex": [1, 2, 3, 5, 7, 10, 15, 20],
                 "mutation_nums_per_position": 1,
@@ -86,7 +86,7 @@
                 "purpose_to_get_source_dir_from": "gather_interaction_stats",
                 "source_dir_actually_used_POSTERITY": null
             },
-            "molecular_params": "./src/utils/circuit/specific_circuits/RNA/configs/RNA_system.json"
+            "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json"
         },
         "summarise_simulation": {
             "experiment": {

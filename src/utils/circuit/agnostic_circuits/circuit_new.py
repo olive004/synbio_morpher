@@ -7,6 +7,7 @@ import logging
 from src.srv.parameter_prediction.interactions import MolecularInteractions, InteractionMatrix
 from src.srv.io.manage.data_manager import DataManager
 from src.utils.circuit.common.system_setup import construct_bioreaction_model
+from src.utils.misc.type_handling import flatten_listlike, get_unique
 from src.utils.results.results import ResultCollector
 from src.utils.signal.signals_new import Signal
 from bioreaction.model.data_containers import BasicModel, QuantifiedReactions
@@ -105,7 +106,7 @@ class Circuit():
 
         self.graph = Graph(source_matrix=self.interactions.eqconstants, labels=[
                            s.name for s in self.model.species])
-        
+
         self = update_species_simulated_rates(self, self.interactions)
 
     def init_reactions(self, model: BasicModel, config: dict) -> QuantifiedReactions:
@@ -124,8 +125,9 @@ class Circuit():
             #         matrix[self.model.species.index(si), self.model.species.index(
             #             sj)] = r.reverse_rate
             # return MolecularInteractions(binding_rates_dissociation=matrix)
+            num_in_species = len(get_unique(flatten_listlike([r.input for r in self.model.reactions])))
             random_matrices = np.random.rand(
-                self.circuit_size, self.circuit_size, 4) * 0.0001
+                num_in_species, num_in_species, 4) * 0.0001
             return MolecularInteractions(
                 coupled_binding_rates=random_matrices[:, :, 0],
                 binding_rates_association=random_matrices[:, :, 1],
@@ -156,14 +158,17 @@ class Circuit():
 
 def update_species_simulated_rates(circuit: Circuit,
                                    interactions: MolecularInteractions) -> Circuit:
+    ordered_species = sorted(get_unique(flatten_listlike([r.input for r in circuit.model.reactions])))
     for i, r in enumerate(circuit.model.reactions):
         if len(r.input) == 2:
             si = r.input[0]
             sj = r.input[1]
-            circuit.model.reactions[i].forward_rate = interactions.binding_rates_association[circuit.model.species.index(
-                si), circuit.model.species.index(sj)]
-            circuit.model.reactions[i].reverse_rate = interactions.binding_rates_dissociation[circuit.model.species.index(
-                si), circuit.model.species.index(sj)]
+            interaction_idx_si = ordered_species.index(si)
+            interaction_idx_sj = ordered_species.index(sj)
+            circuit.model.reactions[i].forward_rate = interactions.binding_rates_association[
+                interaction_idx_si, interaction_idx_sj]
+            circuit.model.reactions[i].reverse_rate = interactions.binding_rates_dissociation[
+                interaction_idx_si, interaction_idx_sj]
     circuit.qreactions.reactions = circuit.qreactions.init_reactions(
         circuit.model)
     return circuit

@@ -135,25 +135,26 @@ class InteractionData():
             )
         self.interactions.units = simulation_handler.units
 
-    def calculate_full_coupling_of_rates(self, eqconstants):
-        self.coupled_binding_rates = self.simulation_handler.calculate_full_coupling_of_rates(
-            k_d=self.interactions.binding_rates_dissociation, eqconstants=eqconstants
+    def calculate_full_coupling_of_rates(self, eqconstants, k_d):
+        coupled_binding_rates = self.simulation_handler.calculate_full_coupling_of_rates(
+            k_d=k_d, eqconstants=eqconstants
         )
-        return self.coupled_binding_rates
+        return coupled_binding_rates
 
     def parse(self, data: dict) -> MolecularInteractions:
-        matrix, rates = self.make_matrix(data)
+        matrix, a_rates, d_rates = self.make_matrix(data)
+        coupled_binding_rates = self.calculate_full_coupling_of_rates(matrix, d_rates)
         return MolecularInteractions(
-            coupled_binding_rates=data, binding_rates_association=rates[0],
-            binding_rates_dissociation=rates[1], eqconstants=matrix)
+            coupled_binding_rates=coupled_binding_rates, binding_rates_association=a_rates,
+            binding_rates_dissociation=d_rates, eqconstants=matrix)
 
     def make_matrix(self, data: dict) -> Tuple[np.ndarray, np.ndarray]:
         matrix = np.zeros((len(data), len(data)))
         for i, (name_i, sample) in enumerate(data.items()):
             for j, (name_j, raw_sample) in enumerate(sample.items()):
                 matrix[i, j] = self.process_interaction(raw_sample)
-        matrix, rates = self.simulation_postproc(matrix)
-        return matrix, rates
+        matrix, (a_rates, d_rates) = self.simulation_postproc(matrix)
+        return matrix, a_rates, d_rates
 
     def process_interaction(self, sample):
         if sample == False:

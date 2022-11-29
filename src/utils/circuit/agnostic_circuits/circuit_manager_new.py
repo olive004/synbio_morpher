@@ -12,7 +12,7 @@ from bioreaction.simulation.simfuncs.basic_de import bioreaction_sim
 from src.utils.results.result_writer import ResultWriter
 from src.utils.circuit.agnostic_circuits.circuit_new import interactions_to_df
 from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
-from src.srv.parameter_prediction.interactions import MolecularInteractions, InteractionData, InteractionSimulator
+from src.srv.parameter_prediction.interactions import InteractionData, InteractionSimulator
 from src.utils.misc.numerical import invert_onehot, zero_out_negs
 from src.utils.misc.type_handling import flatten_nested_dict, flatten_listlike, get_unique
 from src.srv.io.loaders.experiment_loading import INTERACTION_FILE_ADDONS
@@ -26,7 +26,7 @@ from src.utils.evolution.mutation import implement_mutation
 from src.utils.modelling.base import Modeller
 
 
-TEST_MODE = True
+TEST_MODE = False
 
 
 class CircuitModeller():
@@ -60,11 +60,11 @@ class CircuitModeller():
     def compute_interaction_strengths(self, circuit: Circuit):
         if circuit.interactions_state == 'uninitialised' and not TEST_MODE:
             interactions = self.run_interaction_simulator(
-                get_unique(flatten_listlike([r.input for r in circuit.model.reactions])))
+                sorted(get_unique(flatten_listlike([r.input for r in circuit.model.reactions]))))
             circuit = update_species_simulated_rates(
                 circuit, interactions.interactions)
             circuit.interactions = interactions.interactions
-            circuit.interactions.units = 'rate'
+            # circuit.interactions.units = 'rate'
 
         filename_addons = INTERACTION_FILE_ADDONS.keys()
         for interaction_matrix, filename_addon in zip(
@@ -72,13 +72,16 @@ class CircuitModeller():
                 circuit.interactions.coupled_binding_rates], filename_addons
         ):
             self.result_writer.output(
-                out_type='csv', out_name=circuit.name, data=interactions_to_df(
-                    interaction_matrix, labels=[s.name for s in circuit.model.species]), overwrite=False,
-                new_file=True, filename_addon=filename_addon, subfolder=filename_addon)
+                data=interactions_to_df(
+                    interaction_matrix,
+                    labels=sorted(get_unique(flatten_listlike([r.input for r in circuit.model.reactions])))),
+                out_type='csv', out_name=circuit.name,
+                overwrite=False, new_file=True,
+                filename_addon=filename_addon, subfolder=filename_addon)
         return circuit
 
     def run_interaction_simulator(self, species: List[Species]) -> InteractionData:
-        data = {s.name: s.physical_data for s in species}
+        data = {s: s.physical_data for s in species}
         simulator = InteractionSimulator(self.simulator_args)
         return simulator.run(data)
 
@@ -240,7 +243,7 @@ class CircuitModeller():
 
         solution = jax.vmap(
             partial(bioreaction_sim_dfx_expanded,
-                    t0=self.t0, t1=self.t1, dt0=self.dt, 
+                    t0=self.t0, t1=self.t1, dt0=self.dt,
                     signal=signal.func, signal_onehot=signal.onehot,
                     inputs=circuits[circuit_idx].qreactions.reactions.inputs,
                     outputs=circuits[circuit_idx].qreactions.reactions.outputs))(
@@ -272,7 +275,7 @@ class CircuitModeller():
         #                                      signal=signal.real_signal, signal_idx=circuits[circuit_idx].species.identities.get(
         #                                          'input'),
         #                                      one_step_func=modeller_signal.dxdt_RNA_jnp))(b_starting_copynumbers, full_interactions=b_interactions)
-        
+
         if np.shape(b_new_copynumbers)[1] != circuits[circuit_idx].circuit_size and np.shape(b_new_copynumbers)[-1] == circuits[circuit_idx].circuit_size:
             b_new_copynumbers = np.swapaxes(b_new_copynumbers, 1, 2)
 
