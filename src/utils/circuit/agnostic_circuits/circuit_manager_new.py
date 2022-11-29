@@ -21,7 +21,7 @@ from src.utils.results.visualisation import VisODE
 from src.utils.signal.signals_new import Signal
 from src.utils.circuit.agnostic_circuits.circuit_new import Circuit, update_species_simulated_rates
 from src.utils.results.analytics.timeseries import generate_analytics
-from src.utils.modelling.deterministic import Deterministic, bioreaction_sim_full, bioreactions_simulate_signal_scan
+from src.utils.modelling.deterministic import Deterministic, bioreaction_sim_wrapper, bioreaction_sim_dfx_expanded
 from src.utils.evolution.mutation import implement_mutation
 from src.utils.modelling.base import Modeller
 
@@ -184,7 +184,7 @@ class CircuitModeller():
                 1]) * self.t1 / np.shape(new_copynumbers)[1]
 
         elif solver == 'diffrax':
-            solution = bioreaction_sim_full(
+            solution = bioreaction_sim_wrapper(
                 y0=steady_states.flatten() * invert_onehot(signal.onehot),
                 qreactions=circuit.qreactions, t0=0, t1=self.t1, dt0=self.dt,
                 signal=signal.func, signal_onehot=signal.onehot)
@@ -229,7 +229,6 @@ class CircuitModeller():
                 f'The chosen circuit index {circuit_idx} exceeds the circuit list (len {len(circuits)}')
 
         # Batch
-        t = np.arange(self.t0, self.t1, self.dt)
         b_steady_states = np.array(
             [c.result_collector.get_result('steady_states').analytics['steady_states'].flatten(
             ) * invert_onehot(signal.onehot) for c in circuits]
@@ -239,13 +238,28 @@ class CircuitModeller():
         b_reverse_rates = np.array(
             [c.qreactions.reactions.reverse_rates for c in circuits])
 
-        b_new_copynumbers = jax.vmap(
-            partial(bioreactions_simulate_signal_scan,
-                    time=t, signal=signal.func, signal_onehot=signal.onehot,
+        solution = jax.vmap(
+            partial(bioreaction_sim_dfx_expanded,
+                    t0=self.t0, t1=self.t1, dt0=self.dt, 
+                    signal=signal.func, signal_onehot=signal.onehot,
                     inputs=circuits[circuit_idx].qreactions.reactions.inputs,
                     outputs=circuits[circuit_idx].qreactions.reactions.outputs))(
-                        copynumbers=b_steady_states, forward_rates=b_forward_rates,
-                        reverse_rates=b_reverse_rates)
+            y0=b_steady_states, forward_rates=b_forward_rates, reverse_rates=b_reverse_rates)
+
+        tf = np.argmax(solution.ts == np.inf)
+        b_new_copynumbers = solution.ys[:, :tf, :]
+        t = solution.ts[0, :tf]
+
+        # t = np.arange(self.t0, self.t1, self.dt)
+        # b_new_copynumbers = jax.vmap(
+        #     partial(bioreactions_simulate_signal_scan,
+        #             time=t, signal=signal.func, signal_onehot=signal.onehot,
+        #             inputs=circuits[circuit_idx].qreactions.reactions.inputs,
+        #             outputs=circuits[circuit_idx].qreactions.reactions.outputs))(
+        #                 copynumbers=b_steady_states, forward_rates=b_forward_rates,
+        #                 reverse_rates=b_reverse_rates)
+        # b_new_copynumbers = np.array(b_new_copynumbers[1])
+
         # b_new_copynumbers = jax.vmap(partial(simulate_signal_scan,
         #                                      # b_new_copynumbers = partial(simulate_signal_scan,
         #                                      time=t,
@@ -258,7 +272,7 @@ class CircuitModeller():
         #                                      signal=signal.real_signal, signal_idx=circuits[circuit_idx].species.identities.get(
         #                                          'input'),
         #                                      one_step_func=modeller_signal.dxdt_RNA_jnp))(b_starting_copynumbers, full_interactions=b_interactions)
-        b_new_copynumbers = np.array(b_new_copynumbers[1])
+        
         if np.shape(b_new_copynumbers)[1] != circuits[circuit_idx].circuit_size and np.shape(b_new_copynumbers)[-1] == circuits[circuit_idx].circuit_size:
             b_new_copynumbers = np.swapaxes(b_new_copynumbers, 1, 2)
 
@@ -286,13 +300,6 @@ class CircuitModeller():
                 vis_kwargs={'t': t,
                             'legend': [s.name for s in circuit.model.species],
                             'out_type': 'svg'})
-
-            bioreactions_simulate_signal_scan(
-                time=t, signal=signal.func, signal_onehot=signal.onehot,
-                inputs=circuits[i].qreactions.reactions.inputs,
-                outputs=circuits[i].qreactions.reactions.outputs,
-                copynumbers=b_steady_states[i], forward_rates=b_forward_rates[i],
-                reverse_rates=b_reverse_rates[i])
         return {top_name: {subname: circuits[len(v)*i + j] for j, subname in enumerate(v.keys())}
                 for i, (top_name, v) in enumerate(all_circuits.items())}
 

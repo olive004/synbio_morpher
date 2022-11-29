@@ -16,13 +16,13 @@ class Deterministic(Modeller):
 
     def dxdt_RNA(self, t, copynumbers, full_interactions, creation_rates, degradation_rates,
                  signal=None, signal_idx=None, identity_matrix=None):
-        """ dx_dt = a + x * I * k_d * x' - x * ∂   for x=[A, B] 
+        """ dx_dt = a + x * I * k_d * x' - x * ∂   for x=[A, B]
         x: the vector of copy numbers of the samples A, B, C...
         y: the vector of copy numbers of bound (nonfunctional) samples (AA, AB, AC...)
         a: the 'creation' rate, or for RNA samples, the transcription rate
         I: the identity matrix
         k_a: fixed binding rate of association between two RNA molecules (fixed at 1 or 1e6)
-        k_d: a (symmetrical) matrix of interaction rates for the dissociation binding rate between each pair 
+        k_d: a (symmetrical) matrix of interaction rates for the dissociation binding rate between each pair
             of samples - self-interactions are included
         ∂: the 'destruction' rate, or for RNA samples, the (uncoupled) degradation rate
         Data in format [sample, timestep] or [sample,]"""
@@ -70,19 +70,21 @@ def bioreactions_simulate_signal_scan(copynumbers, time: np.ndarray, inputs, out
 
     def to_scan(carry, thingy):
         t = thingy
-        return bioreaction_sim_expanded(t, carry, args=None, inputs=inputs, outputs=outputs, forward_rates=forward_rates, 
-                                        reverse_rates=reverse_rates, signal=signal,
+        return bioreaction_sim_expanded(t, carry, args=(forward_rates, reverse_rates), inputs=inputs, outputs=outputs,
+                                        # forward_rates=forward_rates,
+                                        # reverse_rates=reverse_rates,
+                                        signal=signal,
                                         signal_onehot=signal_onehot, inverse_onehot=inverse_onehot), carry
     return jax.lax.scan(to_scan, copynumbers, (time))
 
 
-def bioreaction_sim_full(qreactions: QuantifiedReactions, t0, t1, dt0,
-                         signal, signal_onehot: np.ndarray,
-                         y0=None,
-                         solver=dfx.Tsit5(),
-                         saveat=dfx.SaveAt(t0=True, t1=True, steps=True)):
-    """ The signal is a function that takes in t 
-    WARNING! Diffrax eqsolve will simulate to the end of the time series, 
+def bioreaction_sim_wrapper(qreactions: QuantifiedReactions, t0, t1, dt0,
+                            signal, signal_onehot: np.ndarray,
+                            y0=None,
+                            solver=dfx.Tsit5(),
+                            saveat=dfx.SaveAt(t0=True, t1=True, steps=True)):
+    """ The signal is a function that takes in t
+    WARNING! Diffrax eqsolve will simulate to the end of the time series,
     then set time to infinity for the remainder until max_steps have been reached. """
 
     term = dfx.ODETerm(partial(bioreaction_sim, reactions=qreactions.reactions, signal=signal,
@@ -91,3 +93,21 @@ def bioreaction_sim_full(qreactions: QuantifiedReactions, t0, t1, dt0,
 
     return dfx.diffeqsolve(term, solver, t0=t0, t1=t1, dt0=dt0,
                            y0=y0, saveat=saveat, max_steps=16**4)
+
+
+def bioreaction_sim_dfx_expanded(y0, t0, t1, dt0,
+                                 inputs, outputs, forward_rates, reverse_rates,
+                                 signal, signal_onehot: np.ndarray,
+                                 solver=dfx.Tsit5(),
+                                 saveat=dfx.SaveAt(t0=True, t1=True, steps=True)):
+
+    term = dfx.ODETerm(
+        partial(bioreaction_sim_expanded,
+                inputs=inputs, outputs=outputs, signal=signal,
+                forward_rates=forward_rates, reverse_rates=reverse_rates,
+                signal_onehot=signal_onehot, inverse_onehot=invert_onehot(signal_onehot))
+    )
+    return dfx.diffeqsolve(term, solver,
+                           t0=t0, t1=t1, dt0=dt0,
+                           y0=y0,
+                           saveat=saveat, max_steps=16**4)
