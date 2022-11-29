@@ -41,7 +41,7 @@ def calculate_precision(output_diff, starting_states, signal_diff, signal_start)
     #     signal_diff / signal_start
     # )).astype(NUM_DTYPE)
     denom = jnp.where(signal_start != 0, signal_diff / signal_start, 1)
-    numer = jnp.where((starting_states == 0).astype(int) * (output_diff != 0).astype(int), output_diff / starting_states, 1)
+    numer = jnp.where((starting_states != 0).astype(int), output_diff / starting_states, 1)
     precision = jnp.absolute(jnp.divide(
         numer, denom))
     return jnp.divide(1, precision)
@@ -61,7 +61,7 @@ def get_precision(data, steady_states, signal_idx: int):
 
 def calculate_sensitivity(output_diff, starting_states, signal_diff, signal_low) -> jnp.ndarray:
     denom = jnp.where(signal_low != 0, signal_diff / signal_low, 1)
-    numer = jnp.where((starting_states == 0).astype(int) * (output_diff != 0).astype(int), output_diff / starting_states, 1)
+    numer = jnp.where((starting_states != 0).astype(int), output_diff / starting_states, 1)
     return jnp.expand_dims(jnp.absolute(jnp.divide(
         numer, denom)), axis=1)
 
