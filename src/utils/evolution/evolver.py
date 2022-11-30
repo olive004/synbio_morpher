@@ -97,7 +97,7 @@ class Evolver():
         elif algorithm == "all":
             return partial(all_mutator, algorithm=algorithm)
         else:
-            return ValueError(f'Unrecognised mutation algorithm choice "{algorithm}"')
+            raise ValueError(f'Unrecognised mutation algorithm choice "{algorithm}"')
 
     def sample_mutations(self, sequence: str, positions: list, mutation_nums_per_position: list) -> Tuple[list, list]:
         mutation_types = {}

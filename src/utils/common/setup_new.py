@@ -44,12 +44,12 @@ def process_molecular_params(params: dict) -> dict:
     return params
 
 
-def compose_kwargs(internal_configs: dict = None, config: dict = None) -> dict:
+def compose_kwargs(prev_configs: dict = None, config: dict = None) -> dict:
     """ Extra configs like data paths can be supplied here, eg. for circuits that were dynamically generated. """
 
-    if internal_configs is not None:
-        for kwarg, c in internal_configs.items():
-            if kwarg != 'experiment':
+    if prev_configs is not None:
+        for kwarg, c in prev_configs.items():
+            if kwarg not in ['experiment', 'mutations', 'signal', 'simulation']:
                 config[kwarg] = c
 
     data_manager = DataManager(filepath=make_filename_safely(config.get("data_path", None)),
@@ -64,7 +64,7 @@ def compose_kwargs(internal_configs: dict = None, config: dict = None) -> dict:
         "interactions": config["interactions"],
         "interaction_simulator": config["interaction_simulator"],
         "molecular_params": config["molecular_params"],
-        "mutations": config["mutations"],
+        "mutations": cast_all_values_as_list(config["mutations"]),
         "name": isolate_filename(data_manager.data.source),
         "signal": config["signal"],
         "simulation": config["simulation"],
@@ -79,18 +79,18 @@ def expand_config(config: dict) -> dict:
     config["interactions"] = config.get("interactions", {})
     config["interaction_simulator"] = config.get("interaction_simulator", {"name": "IntaRNA"})
     config["molecular_params"] = process_molecular_params(deepcopy(load_json_as_dict(config.get("molecular_params"))))
-    config["mutations"] = cast_all_values_as_list(config.get("mutations", {}))
+    config["mutations"] = config.get("mutations", {})
     config["signal"] = load_json_as_dict(config.get("signal"))
     config["simulation"] = config.get("simulation", {})
     config["system_type"] = config.get("system_type")
     return config
 
 
-def construct_circuit_from_cfg(extra_configs: dict, config_filepath: str = None, config_file: dict = None):
+def construct_circuit_from_cfg(prev_configs: dict, config_filepath: str = None, config_file: dict = None):
 
     config_file = get_configs(config_file, config_filepath)
     config_file = expand_config(config_file)
-    kwargs = compose_kwargs(internal_configs=extra_configs, config=config_file)
+    kwargs = compose_kwargs(prev_configs=prev_configs, config=config_file)
     circuit = instantiate_system(kwargs)
 
     if kwargs.get("signal"):

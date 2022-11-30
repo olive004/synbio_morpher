@@ -45,7 +45,7 @@ config, data_writer = script_preamble(config=config, data_writer=None, alt_cfg_f
 
 # %%
 
-circuit = construct_circuit_from_cfg(config_file=config, extra_configs=None)
+circuit = construct_circuit_from_cfg(config_file=config, prev_configs=None)
 circuit.__dict__
 
 modeller = CircuitModeller(result_writer=data_writer, config=config)

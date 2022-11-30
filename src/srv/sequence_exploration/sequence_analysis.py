@@ -143,7 +143,7 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFrame:
                 assert table[target] in table[pathname], \
                     f'Name {table[target]} should be in path {table[pathname]}.'
 
-    def make_interaction_stats_and_sample_names(source_interaction_dir: str, include_circuit_in_filekey=False):
+    def make_interaction_stats_and_sample_names(source_interaction_dir: str):
         interaction_stats = {}
         interactions = InteractionMatrix(
             matrix_paths=get_pathnames(file_key=INTERACTION_TYPES,
@@ -174,6 +174,8 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFrame:
                 ratio, axis=0) if not np.shape(ratio) else ratio
             if np.size(diff) == 1 and type(diff) == np.ndarray:
                 diff = diff[0]
+            else:
+                diff
             # elif np.size(diff) == 1:
             #     diff = np.repeat(diff, repeats=max_len)
             if np.size(ratio) == 1 and type(ratio) == np.ndarray and np.shape(ratio):
@@ -265,17 +267,17 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFrame:
                 os.path.join(circuit_dir, 'mutations')))
         else:
             mutation_dirs = sorted(get_subdirectories(circuit_dir))
-        # TODO: need a better way of getting the mutation directories - maybe just create mutations in a subfolder
-        for exclude_dir in ['binding_rates', 'eqconstants', '/interactions']:
-            mutation_dirs = remove_element_from_list_by_substring(
-                mutation_dirs, exclude=exclude_dir)
+        # # TODO: need a better way of getting the mutation directories - maybe just create mutations in a subfolder
+        # for exclude_dir in ['binding_rates', 'eqconstants', '/interactions']:
+        #     mutation_dirs = remove_element_from_list_by_substring(
+        #         mutation_dirs, exclude=exclude_dir)
 
         # Unmutated circuit
         # interaction_dir = os.path.dirname(
         #     os.path.dirname(mutations['template_file'].values[0]))
         interaction_dir = circuit_dir
         interaction_stats, sample_names = make_interaction_stats_and_sample_names(
-            interaction_dir, include_circuit_in_filekey=True)
+            interaction_dir)
 
         current_og_table = {
             'circuit_name': circuit_name,
