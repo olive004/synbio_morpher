@@ -74,7 +74,7 @@ class CircuitModeller():
             self.result_writer.output(
                 data=interactions_to_df(
                     interaction_matrix,
-                    labels=sorted(get_unique(flatten_listlike([r.input for r in circuit.model.reactions])))),
+                    labels=sorted([s.name for s in get_unique(flatten_listlike([r.input for r in circuit.model.reactions]))])),
                 out_type='csv', out_name=circuit.name,
                 overwrite=False, new_file=True,
                 filename_addon=filename_addon, subfolder=filename_addon)
