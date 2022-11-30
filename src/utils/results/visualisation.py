@@ -462,6 +462,15 @@ class VisODE():
         sns.set_palette("viridis")
         if title is None:
             title = plot_kwargs.get('title')
+        if plot_kwargs.get('hue'):
+            data = data.rename(
+                columns={plot_kwargs.get('hue'): prettify_keys_for_label(plot_kwargs.get('hue'))})
+            plot_kwargs['hue'] = prettify_keys_for_label(plot_kwargs.get('hue'))
+            plot_kwargs.update({
+                # 'palette': sns.color_palette("husl", len(data[plot_kwargs.get('hue')].unique()))
+                # 'palette': sns.color_palette("plasma", len(data[plot_kwargs.get('hue')].unique()))
+                'palette': sns.color_palette("viridis", len(data[plot_kwargs.get('hue')].unique()))
+            })
 
         if x is None:
             logging.warn(
@@ -474,9 +483,12 @@ class VisODE():
             y=y,
             **plot_kwargs
         ).set(title=title)
+        # if plot_kwargs.get('hue'):
+        #     plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.,
+        #                title=plot_kwargs['hue'])
+        #             #    title=prettify_keys_for_label(plot_kwargs.get('hue')))
         if plot_kwargs.get('hue'):
-            plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.,
-                       title=prettify_keys_for_label(plot_kwargs.get('hue')))
+            sns.move_legend(ax, "upper left", bbox_to_anchor=(1, 1))
         f.savefig(out_path, bbox_inches='tight')
         plt.close()
 
@@ -485,12 +497,12 @@ class VisODE():
                     **plot_kwargs):
         plot_kwargs.update({'errwidth': 1})
 
-        if plot_kwargs.get('hue'):
-            plot_kwargs.update({
-                # 'palette': sns.color_palette("husl", len(data[plot_kwargs.get('hue')].unique()))
-                # 'palette': sns.color_palette("plasma", len(data[plot_kwargs.get('hue')].unique()))
-                'palette': sns.color_palette("viridis", len(data[plot_kwargs.get('hue')].unique()))
-            })
+        # if plot_kwargs.get('hue'):
+        #     plot_kwargs.update({
+        #         # 'palette': sns.color_palette("husl", len(data[plot_kwargs.get('hue')].unique()))
+        #         # 'palette': sns.color_palette("plasma", len(data[plot_kwargs.get('hue')].unique()))
+        #         'palette': sns.color_palette("viridis", len(data[plot_kwargs.get('hue')].unique()))
+        #     })
 
         self.sns_generic_plot(sns.barplot, out_path, x,
                               y, data, title, **plot_kwargs)

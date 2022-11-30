@@ -111,10 +111,10 @@ def main(config=None, data_writer=None):
         SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"])
     protocols.append(Protocol(
         partial(
-            visualise_data, data_writer=data_writer, cols_x=[
-                'binding_rates_dissociation_min_interaction'],
+            visualise_data,
+            data_writer=data_writer,
+            cols_x=['binding_rates_dissociation_min_interaction'],
             plot_type='histplot',
-            hue='mutation_num',
             out_name='binding_rates_dissociation_min_freqs_mutations_logs',
             threshold_value_max=binding_rates_threshold_upper,
             exclude_rows_zero_in_cols=['mutation_num'],
@@ -124,6 +124,7 @@ def main(config=None, data_writer=None):
                 "element": "poly"},
             log_axis=(True, False),
             use_sns=True,
+            hue='mutation_num',
             title=f'Minimum ' + r'$k_d$' + ' strength',
             xlabel='Dissociation rate ' + r'$k_d$' + ' (' +
             f'{rate_unit})' +
