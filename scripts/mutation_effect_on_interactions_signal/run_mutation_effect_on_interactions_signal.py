@@ -43,7 +43,7 @@ def main(config=None, data_writer=None):
     config_file = parse_cfg_args(config_file)
 
     def logging_circuit(clist: list):
-        logging.info(f'Simulating {len(clist)} circuits')
+        logging.warning(f'\t\tSimulating {len(clist)} circuits')
         return clist
 
     protocols = [
@@ -65,8 +65,8 @@ def main(config=None, data_writer=None):
             req_output=True,
             name='pull_circuit_from_stats'
         ),
-        # Protocol(logging_circuit, req_input=True,
-        #          req_output=True, name='logging'),
+        Protocol(logging_circuit, req_input=True,
+                 req_output=True, name='logging'),
         [  # for each circuit
             # Construct circuit
             Protocol(
@@ -107,7 +107,7 @@ def main(config=None, data_writer=None):
         protocols.append(
             # Simulate signal and write results
             Protocol(partial(CircuitModeller(result_writer=data_writer, config=config_file).batch_circuits,
-                             write_to_subsystem=True,
+                             write_to_subsystem=True, batch_size=config['simulation'].get('batch_size', 100),
                              methods={
                 "init_circuit": {},
                 "simulate_signal_batch": {'save_numerical_vis_data': True, 'ref_circuit': None,

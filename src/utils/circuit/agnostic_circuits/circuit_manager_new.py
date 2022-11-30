@@ -65,10 +65,11 @@ class CircuitModeller():
                 circuit, interactions.interactions)
             circuit.interactions = interactions.interactions
 
-        filename_addons = INTERACTION_FILE_ADDONS.keys()
+        filename_addons = sorted(INTERACTION_FILE_ADDONS.keys())
         for interaction_matrix, filename_addon in zip(
-            [circuit.interactions.eqconstants, circuit.interactions.binding_rates_dissociation,
-                circuit.interactions.coupled_binding_rates], filename_addons
+            [circuit.interactions.binding_rates_dissociation,
+             circuit.interactions.coupled_binding_rates,
+             circuit.interactions.eqconstants], filename_addons
         ):
             self.result_writer.output(
                 data=interactions_to_df(
@@ -314,6 +315,7 @@ class CircuitModeller():
         subcircuit.interactions_state = 'uninitialised'
         if mutation is None:
             mutation = circuit.mutations.get(mutation_name)
+        subcircuit.subname = mutation_name
 
         subcircuit = implement_mutation(circuit=subcircuit, mutation=mutation)
         return subcircuit
@@ -344,23 +346,50 @@ class CircuitModeller():
             self.result_writer.unsubdivide_last_dir()
         self.result_writer.unsubdivide()
 
-    def batch_circuits(self, circuits: List[Circuit], methods: dict, include_normal_run=True,
+    def batch_circuits(self,
+                       all_circuits: List[Circuit],
+                       methods: dict,
+                       include_normal_run: bool = True,
+                       batch_size: int = None,
                        write_to_subsystem=False) -> List[Circuit]:
-        subcircuits = {
-            circuit.name: {subname: self.make_subcircuit(circuit, subname, mutation)
-                           for subname, mutation in flatten_nested_dict(
-                circuit.mutations).items()}
-            for circuit in circuits
-        }
-        for circuit in circuits:
-            subcircuits[circuit.name]['ref_circuit'] = circuit
+        batch_size = len(all_circuits) if batch_size is None else batch_size
+        all_subcircuits = {}
+        for b in range(0, len(all_circuits), batch_size):
+            logging.warning(
+                f'Batching {b} - {b+batch_size} circuits (out of {len(all_circuits)})')
+            circuits = all_circuits[b:np.where(
+                b+batch_size < len(all_circuits), b+batch_size, -1)]
+            subcircuits = {
+                circuit.name: {subname: self.make_subcircuit(circuit, subname, mutation)
+                               for subname, mutation in flatten_nested_dict(
+                    circuit.mutations).items()}
+                for circuit in circuits
+            }
+            for circuit in circuits:
+                subcircuits[circuit.name]['ref_circuit'] = circuit
 
-        subcircuits = self.run_batch(
-            subcircuits, methods, include_normal_run, write_to_subsystem)
-        return subcircuits
+            subcircuits = self.run_batch(
+                subcircuits, methods, include_normal_run, write_to_subsystem)
+            all_subcircuits.update(subcircuits)
+        return all_subcircuits
 
-    def run_batch(self, subcircuits: Dict[str, Dict[str, Circuit]], methods: dict,
-                  include_normal_run: bool = True, write_to_subsystem: bool = False) -> Dict[str, Dict[str, Circuit]]:
+    def batch_circuits2(self):
+        circuits: list
+        batch_size: int
+
+        for b in range(0, len(circuits), batch_size):
+            logging.warning(
+                f'Batching {b} - {b+batch_size} circuits (out of {len(circuits)})')
+            b_circuits = circuits[b:np.where(
+                b+batch_size < len(circuits), b+batch_size, -1)]
+
+            subcircuits = 1
+
+    def run_batch(self,
+                  subcircuits: Dict[str, Dict[str, Circuit]],
+                  methods: dict,
+                  include_normal_run: bool = True,
+                  write_to_subsystem: bool = False) -> Dict[str, Dict[str, Circuit]]:
         # ref_circuit = None
         for method, kwargs in methods.items():
             if kwargs.get('batch') == True:  # method is batchable

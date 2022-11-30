@@ -90,6 +90,7 @@ class Circuit():
     def __init__(self, config: dict):
 
         self.name = config.get("name")
+        self.subname = 'ref_circuit'
 
         self.result_collector = ResultCollector()
         self.model = construct_bioreaction_model(
