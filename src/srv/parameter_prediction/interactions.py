@@ -95,6 +95,8 @@ class InteractionMatrix():
             "name": self.name,
             "interacting": interacting,
             "self_interacting": self_interacting,
+            "interacting_names": sorted([self.sample_names[i] for i in interacting]),
+            "self_interacting_names": sorted([self.sample_names[i] for i in self_interacting]),
             "num_interacting": len(set(flatten_listlike(interacting))),
             "num_self_interacting": len(set(self_interacting)),
             "max_interaction": np.max(self.interactions.__getattribute__(interaction_attr)),
