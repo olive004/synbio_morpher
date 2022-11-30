@@ -151,6 +151,8 @@ def generate_analytics(data, time, labels: List[str], signal_onehot=None, ref_ci
         'first_derivative': get_derivative(data),
         'fold_change': fold_change(data),
         'RMSE': get_rmse(data, ref_circuit_data),
+        'max': jnp.max(data, axis=1),
+        'min': jnp.min(data, axis=1)
     }
     analytics['steady_states'], \
         analytics['is_steady_state_reached'], \

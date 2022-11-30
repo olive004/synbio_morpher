@@ -64,7 +64,6 @@ class CircuitModeller():
             circuit = update_species_simulated_rates(
                 circuit, interactions.interactions)
             circuit.interactions = interactions.interactions
-            # circuit.interactions.units = 'rate'
 
         filename_addons = INTERACTION_FILE_ADDONS.keys()
         for interaction_matrix, filename_addon in zip(
@@ -253,6 +252,7 @@ class CircuitModeller():
         b_new_copynumbers = solution.ys[:, :tf, :]
         t = solution.ts[0, :tf]
 
+        # Attempt 1
         # t = np.arange(self.t0, self.t1, self.dt)
         # b_new_copynumbers = jax.vmap(
         #     partial(bioreactions_simulate_signal_scan,
@@ -263,6 +263,7 @@ class CircuitModeller():
         #                 reverse_rates=b_reverse_rates)
         # b_new_copynumbers = np.array(b_new_copynumbers[1])
 
+        # Attempt 2
         # b_new_copynumbers = jax.vmap(partial(simulate_signal_scan,
         #                                      # b_new_copynumbers = partial(simulate_signal_scan,
         #                                      time=t,
@@ -291,7 +292,7 @@ class CircuitModeller():
         b_analytics = [{k: v[i] for k, v in b_analytics.items()}
                        for i in range(len(circuits))]
 
-        # Apply to all circuits
+        # Save for all circuits
         for i, (circuit, analytics) in enumerate(zip(circuits, b_analytics)):
             circuits[i].result_collector.add_result(
                 data=b_new_copynumbers[i],

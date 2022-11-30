@@ -13,7 +13,6 @@ import pandas as pd
 from src.srv.io.loaders.data_loader import GeneCircuitLoader
 from src.srv.io.loaders.experiment_loading import INTERACTION_FILE_ADDONS
 from src.utils.misc.numerical import NUMERICAL, cast_astype
-from src.utils.misc.string_handling import remove_element_from_list_by_substring
 from src.utils.misc.type_handling import flatten_nested_listlike
 from src.utils.results.analytics.timeseries import get_analytics_types
 from src.utils.results.visualisation import expand_data_by_col
@@ -168,14 +167,13 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFrame:
 
             reference_v = reference_table[k]
             diff = (np.asarray(
-                table[k]) - np.asarray(reference_v)).flatten() 
-                # np.where(np.asarray(reference_v) != 0, np.asarray(
-                # table[k]) - np.asarray(reference_v), 0).flatten()
+                table[k]) - np.asarray(reference_v)).flatten()
+            # np.where(np.asarray(reference_v) != 0, np.asarray(
+            # table[k]) - np.asarray(reference_v), 0).flatten()
             if np.shape(np.asarray(table[k])) < np.shape(np.asarray(reference_v)):
                 table[k] = np.expand_dims(table[k], axis=1)
-            ratio = np.divide(np.asarray(table[k]), np.asarray(reference_v),
-                              out=np.nan,
-                              where=(np.asarray(reference_v) != 0) & (np.asarray(reference_v) != np.nan))
+            ratio = np.where((np.asarray(reference_v) != 0) & (np.asarray(reference_v) != np.nan),
+                             np.divide(np.asarray(table[k]), np.asarray(reference_v)), np.nan)
             ratio = np.expand_dims(
                 ratio, axis=0) if not np.shape(ratio) else ratio
             if np.size(diff) == 1 and type(diff) == np.ndarray:
@@ -209,7 +207,7 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFrame:
                     curr_table[f'{i_type}_{col}_ratio_from_mutation_to_base'] = ratio
                 else:
                     diff = current_stat - ref_stat
-                    ratio = np.where(current_stat != 0 & current_stat != np.nan, np.divide(np.asarray(
+                    ratio = np.where((current_stat != 0) & (current_stat != np.nan), np.divide(np.asarray(
                         current_stat), np.asarray(ref_stat)), np.nan)
                 if np.size(diff) == 1:
                     diff = diff[0]
