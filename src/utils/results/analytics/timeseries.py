@@ -132,8 +132,12 @@ def frequency(data):
     return freq
 
 def get_analytics_types():
+    """ The naming here has to be unique and not include small 
+    raw values like diff, ratio, max, min. """
     return ['fold_change',
             'overshoot',
+            'max_amount',
+            'min_amount',
             'RMSE',
             'steady_states'] + get_signal_dependent_analytics()
 
@@ -151,8 +155,8 @@ def generate_analytics(data, time, labels: List[str], signal_onehot=None, ref_ci
         'first_derivative': get_derivative(data),
         'fold_change': fold_change(data),
         'RMSE': get_rmse(data, ref_circuit_data),
-        'max': jnp.max(data, axis=1),
-        'min': jnp.min(data, axis=1)
+        'max_amount': jnp.expand_dims(jnp.max(data, axis=1), axis=1),
+        'min_amount': jnp.expand_dims(jnp.min(data, axis=1), axis=1)
     }
     analytics['steady_states'], \
         analytics['is_steady_state_reached'], \
