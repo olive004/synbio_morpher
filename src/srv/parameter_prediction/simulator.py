@@ -62,7 +62,7 @@ class RawSimulationHandling():
             k_a: binding rate per Ms 
             eqconstants: unitless but in terms of mol
             k_d: unbinding rate per s"""
-            k_a = per_mol_to_per_molecules(self.fixed_rate_k_a)
+            # k_a = per_mol_to_per_molecules(self.fixed_rate_k_a)
             k_a = self.fixed_rate_k_a
             k_d = np.divide(k_a, eqconstants)
             return k_a*np.ones_like(k_d), k_d
@@ -99,7 +99,8 @@ class RawSimulationHandling():
             return simulate_vanilla
 
     def calculate_full_coupling_of_rates(self, k_d, eqconstants):
-        k_a = per_mol_to_per_molecules(self.fixed_rate_k_a)
+        # k_a = per_mol_to_per_molecules(self.fixed_rate_k_a)
+        k_a = self.fixed_rate_k_a
         full_interactions = np.divide(k_a, (k_d + eqconstants))  # .flatten()))
         return full_interactions
 

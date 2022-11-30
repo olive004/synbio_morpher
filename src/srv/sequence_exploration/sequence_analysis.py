@@ -12,7 +12,7 @@ import pandas as pd
 
 from src.srv.io.loaders.data_loader import GeneCircuitLoader
 from src.srv.io.loaders.experiment_loading import INTERACTION_FILE_ADDONS
-from src.utils.misc.numerical import NUMERICAL
+from src.utils.misc.numerical import NUMERICAL, cast_astype
 from src.utils.misc.string_handling import remove_element_from_list_by_substring
 from src.utils.misc.type_handling import flatten_nested_listlike
 from src.utils.results.analytics.timeseries import get_analytics_types
@@ -88,8 +88,10 @@ def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path
         logging.warning(stats)
         return []
 
-    interaction_path_keys = {k: f'path_{k}' for k in INTERACTION_FILE_ADDONS.keys()}
-    a_pathname = filt_stats[list(interaction_path_keys.values())[0]].to_list()[0]
+    interaction_path_keys = {
+        k: f'path_{k}' for k in INTERACTION_FILE_ADDONS.keys()}
+    a_pathname = filt_stats[list(interaction_path_keys.values())[
+        0]].to_list()[0]
     experiment_folder = get_root_experiment_folder(a_pathname)
     experiment_summary = load_experiment_output_summary(experiment_folder)
 
@@ -147,12 +149,13 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFrame:
         interaction_stats = {}
         interactions = InteractionMatrix(
             matrix_paths=get_pathnames(file_key=INTERACTION_TYPES,
-                      search_dir=source_interaction_dir,
-                      subdirs=INTERACTION_TYPES,
-                      as_dict=True, first_only=True)
+                                       search_dir=source_interaction_dir,
+                                       subdirs=INTERACTION_TYPES,
+                                       as_dict=True, first_only=True)
         )
         for interaction_type in INTERACTION_TYPES:
-            interaction_stats[interaction_type] = interactions.get_stats(interaction_type)
+            interaction_stats[interaction_type] = interactions.get_stats(
+                interaction_type)
 
         return interaction_stats, interactions.sample_names
 
@@ -164,24 +167,25 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFrame:
                 max_len = len(table[k])
 
             reference_v = reference_table[k]
-            diff = np.where(np.asarray(reference_v) != 0, np.asarray(table[k]) - np.asarray(reference_v), 0)
+            diff = (np.asarray(
+                table[k]) - np.asarray(reference_v)).flatten() 
+                # np.where(np.asarray(reference_v) != 0, np.asarray(
+                # table[k]) - np.asarray(reference_v), 0).flatten()
             if np.shape(np.asarray(table[k])) < np.shape(np.asarray(reference_v)):
                 table[k] = np.expand_dims(table[k], axis=1)
             ratio = np.divide(np.asarray(table[k]), np.asarray(reference_v),
-                              out=np.zeros_like(np.asarray(table[k])), 
-                              where=(np.asarray(reference_v) != 0 ) & (np.asarray(reference_v) != np.nan))
+                              out=np.nan,
+                              where=(np.asarray(reference_v) != 0) & (np.asarray(reference_v) != np.nan))
             ratio = np.expand_dims(
                 ratio, axis=0) if not np.shape(ratio) else ratio
             if np.size(diff) == 1 and type(diff) == np.ndarray:
                 diff = diff[0]
-            else:
-                diff
-            # elif np.size(diff) == 1:
-            #     diff = np.repeat(diff, repeats=max_len)
+            elif diff.ndim > 1:
+                diff = diff.flatten()
             if np.size(ratio) == 1 and type(ratio) == np.ndarray and np.shape(ratio):
                 ratio = ratio[0]
-            # elif np.size(ratio) == 1 and not np.shape(ratio):
-            #     ratio = np.repeat(ratio, repeats=max_len)
+            elif ratio.ndim > 1:
+                ratio = ratio.flatten()
 
             table[f'{k}_diff_to_base_circuit'] = diff
             table[f'{k}_ratio_from_mutation_to_base'] = ratio
@@ -205,8 +209,8 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFrame:
                     curr_table[f'{i_type}_{col}_ratio_from_mutation_to_base'] = ratio
                 else:
                     diff = current_stat - ref_stat
-                    ratio = np.divide(np.asarray(
-                        current_stat), np.asarray(ref_stat))
+                    ratio = np.where(current_stat != 0 & current_stat != np.nan, np.divide(np.asarray(
+                        current_stat), np.asarray(ref_stat)), np.nan)
                 if np.size(diff) == 1:
                     diff = diff[0]
                     ratio = ratio[0]
@@ -306,7 +310,7 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFrame:
             mutation_name = curr_mutation['mutation_name'].values[0]
 
             interaction_stats_current, curr_sample_names = make_interaction_stats_and_sample_names(
-                mutation_dir, include_circuit_in_filekey=False)
+                mutation_dir)
 
             current_table = {
                 'circuit_name': circuit_name,
@@ -314,8 +318,8 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFrame:
                 'source_species': curr_mutation['template_name'].values[0],
                 'sample_names': curr_sample_names,
                 'mutation_num': curr_mutation['count'].unique()[0],
-                'mutation_type': curr_mutation['mutation_types'].values,
-                'mutation_positions': curr_mutation['positions'].values,
+                'mutation_type': cast_astype(curr_mutation['mutation_types'], int).values[0],
+                'mutation_positions': cast_astype(curr_mutation['positions'], int).values[0],
                 'path_to_steady_state_data': get_pathnames(first_only=True,
                                                            file_key='steady_states_data',
                                                            search_dir=mutation_dir),

@@ -157,8 +157,7 @@ class InteractionData():
         return matrix, a_rates, d_rates
 
     def process_interaction(self, sample):
-        if sample == False:
-            logging.warning('Interaction simulation went wrong.')
+        if sample == False:  # No interactions
             return 0
         return self.simulation_protocol(sample)
 
