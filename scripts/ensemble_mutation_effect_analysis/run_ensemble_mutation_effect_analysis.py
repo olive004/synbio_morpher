@@ -12,8 +12,8 @@ from src.utils.data.data_format_tools.common import load_json_as_dict
 def main(config=None, data_writer=None):
 
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
-        # "scripts", "ensemble_mutation_effect_analysis", "configs", "test_ensemble.json"))
-        "scripts", "ensemble_mutation_effect_analysis", "configs", "test_large_scale.json"))
+        "scripts", "ensemble_mutation_effect_analysis", "configs", "test_ensemble.json"))
+        # "scripts", "ensemble_mutation_effect_analysis", "configs", "test_large_scale.json"))
 
     config_file = load_json_as_dict(config)
 
