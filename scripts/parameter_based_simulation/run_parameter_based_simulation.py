@@ -6,7 +6,7 @@ import numpy as np
 from src.srv.io.manage.script_manager import script_preamble
 from src.srv.io.manage.sys_interface import make_filename_safely
 from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
-from src.utils.circuit.agnostic_circuits.circuit_manager_new import construct_circuit_from_cfg
+from src.utils.circuit.agnostic_circuits.circuit_manager_new import construct_circuit_from_cfg, prepare_config
 from src.utils.misc.decorators import time_it
 from src.utils.results.analytics.timeseries import get_analytics_types
 from src.utils.results.experiments import Experiment, Protocol
@@ -21,6 +21,7 @@ def main(config=None, data_writer=None):
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
         'scripts', 'parameter_based_simulation', 'configs', 'testing.json'))
     config_file = load_json_as_dict(config)
+    config_file = prepare_config(config_file)
 
     if config_file.get('experiment').get('parallelise'):
         num_subprocesses = config_file.get(

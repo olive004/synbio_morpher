@@ -2,7 +2,7 @@ from functools import partial
 import os
 
 from fire import Fire
-from src.utils.circuit.agnostic_circuits.circuit_manager_new import construct_circuit_from_cfg
+from src.utils.circuit.agnostic_circuits.circuit_manager_new import construct_circuit_from_cfg, prepare_config
 from src.utils.results.experiments import Experiment, Protocol
 from src.utils.results.result_writer import ResultWriter
 from src.utils.data.data_format_tools.common import load_json_as_dict
@@ -17,6 +17,7 @@ def main(config=None, data_writer=None):
         config = os.path.join(
             "scripts", "pair_species_mutation", "configs", "RNA_pair_species_mutation.json")
     config_file = load_json_as_dict(config)
+    config_file = prepare_config(config_file)
     exp_configs = config_file.get("circuit_generation", {})
 
     # Start_experiment

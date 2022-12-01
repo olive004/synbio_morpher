@@ -34,54 +34,6 @@ def interactions_to_df(interactions: np.ndarray, labels: list):
     return interactions_df
 
 
-class Graph():
-
-    def __init__(self, labels: List[str], source_matrix: np.ndarray = None) -> None:
-        source_matrix = np.zeros(
-            (len(labels), len(labels))) if source_matrix is None else source_matrix
-        self._node_labels = labels
-        self.build_graph(source_matrix)
-
-    def build_graph(self, source_matrix: np.ndarray) -> nx.DiGraph:
-        graph = nx.from_numpy_matrix(source_matrix, create_using=nx.DiGraph)
-        if self.node_labels is not None:
-            graph = nx.relabel_nodes(graph, self.node_labels)
-        return graph
-
-    def refresh_graph(self, source_matrix: np.ndarray):
-        self.graph = self.build_graph(source_matrix)
-
-    def get_graph_labels(self) -> dict:
-        return sorted(self.graph)
-
-    @property
-    def graph(self):
-        return self._graph
-
-    @graph.setter
-    def graph(self, new_graph):
-        assert type(new_graph) == nx.DiGraph, 'Cannot set graph to' + \
-            f' type {type(new_graph)}.'
-        self._graph = new_graph
-
-    @property
-    def node_labels(self):
-        if type(self._node_labels) == list:
-            return {i: n for i, n in enumerate(self._node_labels)}
-        return self._node_labels
-
-    @node_labels.setter
-    def node_labels(self, labels: Union[dict, list]):
-
-        current_nodes = self.get_graph_labels()
-        if type(labels) == list:
-            self._node_labels = dict(zip(current_nodes, labels))
-        else:
-            labels = len(labels)
-            self._node_labels = dict(zip(current_nodes, labels))
-        self.graph = nx.relabel_nodes(self.graph, self.node_labels)
-
-
 class Circuit():
 
     species_axis = 0
@@ -104,9 +56,6 @@ class Circuit():
         self.signal: Signal = None
         self.mutations = {}
         self.mutations_args: dict = config.get('mutations', {})
-
-        self.graph = Graph(source_matrix=self.interactions.eqconstants, labels=[
-                           s.name for s in self.model.species])
 
         self = update_species_simulated_rates(self, self.interactions)
 

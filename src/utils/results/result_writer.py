@@ -7,6 +7,7 @@ import numpy as np
 from src.utils.results.analytics.timeseries import get_analytics_types
 from src.utils.results.results import Result
 from src.utils.results.writer import DataWriter
+from src.utils.results.visualisation import Graph
 from src.utils.misc.numerical import transpose_arraylike
 from src.utils.misc.string_handling import make_time_str
 from src.utils.circuit.agnostic_circuits.circuit_new import Circuit
@@ -104,13 +105,14 @@ class ResultWriter(DataWriter):
         self.output(out_name=out_name, write_func=writer, **vis_kwargs)
 
     def visualise_graph(self, circuit: Circuit, mode="pyvis", new_vis=False):
-        circuit.graph.refresh_graph(source_matrix=circuit.interactions.eqconstants)
+        graph = Graph(source_matrix=circuit.interactions.eqconstants, labels=[
+                           s.name for s in circuit.model.species])
 
         out_path = os.path.join(self.write_dir, 'graph')
         if mode == 'pyvis':
             from src.utils.results.visualisation import visualise_graph_pyvis
-            visualise_graph_pyvis(graph=circuit.graph.graph,
+            visualise_graph_pyvis(graph=graph,
                                   out_path=out_path, new_vis=new_vis)
         else:
             from src.utils.results.visualisation import visualise_graph_pyplot
-            visualise_graph_pyplot(graph=circuit.graph, new_vis=new_vis)
+            visualise_graph_pyplot(graph=graph, new_vis=new_vis)

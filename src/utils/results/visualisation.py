@@ -81,6 +81,54 @@ class NetworkCustom(Network):
             self.add_node(node, **nodes[node])
 
 
+class Graph():
+
+    def __init__(self, labels: List[str], source_matrix: np.ndarray = None) -> None:
+        source_matrix = np.zeros(
+            (len(labels), len(labels))) if source_matrix is None else source_matrix
+        self._node_labels = labels
+        self.build_graph(source_matrix)
+
+    def build_graph(self, source_matrix: np.ndarray) -> nx.DiGraph:
+        graph = nx.from_numpy_matrix(source_matrix, create_using=nx.DiGraph)
+        if self.node_labels is not None:
+            graph = nx.relabel_nodes(graph, self.node_labels)
+        return graph
+
+    def refresh_graph(self, source_matrix: np.ndarray):
+        self.graph = self.build_graph(source_matrix)
+
+    def get_graph_labels(self) -> dict:
+        return sorted(self.graph)
+
+    @property
+    def graph(self):
+        return self._graph
+
+    @graph.setter
+    def graph(self, new_graph):
+        assert type(new_graph) == nx.DiGraph, 'Cannot set graph to' + \
+            f' type {type(new_graph)}.'
+        self._graph = new_graph
+
+    @property
+    def node_labels(self):
+        if type(self._node_labels) == list:
+            return {i: n for i, n in enumerate(self._node_labels)}
+        return self._node_labels
+
+    @node_labels.setter
+    def node_labels(self, labels: Union[dict, list]):
+
+        current_nodes = self.get_graph_labels()
+        if type(labels) == list:
+            self._node_labels = dict(zip(current_nodes, labels))
+        else:
+            labels = len(labels)
+            self._node_labels = dict(zip(current_nodes, labels))
+        self.graph = nx.relabel_nodes(self.graph, self.node_labels)
+
+
 def expand_data_by_col(data: pd.DataFrame, columns: Union[str, list], column_for_expanding_coldata: str, idx_for_expanding_coldata: int,
                        find_all_similar_columns=False):
     """ Expand horizontally or vertically based on if a second column name 
@@ -376,7 +424,7 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                                                      plot_kwargs))
                 else:
                     logging.warning(
-                        f'Could not visualise columns {col_x} and {col_y} for {data}')
+                        f'Could not visualise columns {col_x} and {col_y}')
 
 
 def visualise_graph_pyvis(graph: nx.DiGraph,

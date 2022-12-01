@@ -21,7 +21,8 @@ def load_param(filepath, param):
             experiment_folder=get_root_experiment_folder(filepath))
     except ValueError:
         raise ValueError(f'Supply a valid experiment directory instead of {filepath}')
-    return per_mol_to_per_molecules(load_json_as_dict(experiment_config.get('molecular_params'))[param])
+    p = per_mol_to_per_molecules(load_json_as_dict(experiment_config.get('molecular_params'))[param])
+    return p
 
 
 def load_units(filepath):

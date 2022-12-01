@@ -86,13 +86,16 @@ def expand_config(config: dict) -> dict:
     return config
 
 
-def construct_circuit_from_cfg(prev_configs: dict, config_filepath: str = None, config_file: dict = None):
-
+def prepare_config(config_filepath: str = None, config_file: dict = None):
     config_file = get_configs(config_file, config_filepath)
     config_file = expand_config(config_file)
+    config_file = parse_cfg_args(config_file)
+    return config_file
+
+def construct_circuit_from_cfg(prev_configs: dict, config_file: dict):
+    logging.warning(f'Constructing circuit: {prev_configs}')
     kwargs = compose_kwargs(prev_configs=prev_configs, config=config_file)
     circuit = instantiate_system(kwargs)
-
     if kwargs.get("signal"):
         signal = construct_signal(kwargs, circuit)
         circuit.signal = signal
@@ -105,6 +108,6 @@ def construct_signal(kwargs: dict, circuit) -> Signal:
 
 
 def instantiate_system(kwargs):
-    system_cfg_args = parse_cfg_args(kwargs)
+    # system_cfg_args = parse_cfg_args(kwargs)
     SystemType = get_system_type(kwargs["system_type"])
-    return SystemType(system_cfg_args)
+    return SystemType(kwargs)

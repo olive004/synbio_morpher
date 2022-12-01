@@ -13,7 +13,7 @@
             },
             "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
             "circuit_generation": {
-                "repetitions": 300,
+                "repetitions": 30,
                 "species_count": 3,
                 "sequence_length": 20,
                 "generator_protocol": "template_mutate",
@@ -51,7 +51,7 @@
                 "postprocess": true
             },
             "filters": {
-                "min_num_interacting": 3,
+                "min_num_interacting": 2,
                 "max_self_interacting": null,
                 "max_total": null
             },

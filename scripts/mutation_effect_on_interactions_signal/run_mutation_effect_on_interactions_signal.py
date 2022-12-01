@@ -3,7 +3,7 @@ import logging
 import os
 from fire import Fire
 
-from src.utils.common.setup_new import construct_circuit_from_cfg
+from src.utils.common.setup_new import construct_circuit_from_cfg, prepare_config
 from src.srv.io.manage.script_manager import script_preamble
 from src.utils.results.experiments import Experiment, Protocol
 from src.utils.results.result_writer import ResultWriter
@@ -40,7 +40,7 @@ def main(config=None, data_writer=None):
     config_file, source_experiment_dir = get_search_dir(
         config_searchdir_key='source_of_interaction_stats', config_file=config_file)
     config_file = expand_config(config=config_file)
-    config_file = parse_cfg_args(config_file)
+    config_file = prepare_config(config_file)
 
     def logging_circuit(clist: list):
         logging.warning(f'\t\tSimulating {len(clist)} circuits')

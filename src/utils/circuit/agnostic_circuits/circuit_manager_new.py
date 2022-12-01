@@ -218,12 +218,11 @@ class CircuitModeller():
                               'ref_circuit_data': ref_circuit_data})
         return circuit
 
-    def simulate_signal_batch(self, all_circuits: Dict[str, Dict[str, Circuit]],
+    def simulate_signal_batch(self, circuits: List[Circuit],
                               ref_circuit: Circuit = None,
                               circuit_idx: int = 0,
                               save_numerical_vis_data: bool = False,
                               batch=True):
-        circuits = [c for s in all_circuits.values() for c in s.values()]
         ref_circuit = circuits[circuit_idx] if ref_circuit is None else ref_circuit
         signal = ref_circuit.signal
         signal.update_time_interval(self.dt)
@@ -279,7 +278,7 @@ class CircuitModeller():
             b_new_copynumbers = np.swapaxes(b_new_copynumbers, 1, 2)
 
         # Get analytics batched too
-        if ref_circuit is None or ref_circuit == circuit:
+        if ref_circuit is None:
             ref_circuit_data = None
         else:
             ref_circuit_result = ref_circuit.result_collector.get_result(
@@ -302,8 +301,9 @@ class CircuitModeller():
                 vis_kwargs={'t': t,
                             'legend': [s.name for s in circuit.model.species],
                             'out_type': 'svg'})
-        return {top_name: {subname: circuits[len(v)*i + j] for j, subname in enumerate(v.keys())}
-                for i, (top_name, v) in enumerate(all_circuits.items())}
+        # return {top_name: {subname: circuits[len(v)*i + j] for j, subname in enumerate(v.keys())}
+        #         for i, (top_name, v) in enumerate(.items())}
+        return circuits
 
     def make_subcircuit(self, circuit: Circuit, mutation_name: str, mutation=None):
 
@@ -389,7 +389,7 @@ class CircuitModeller():
                 f'Batching {b} - {b+batch_size} circuits (out of {len(circuits)})')
             bf = np.where(b+batch_size < len(subcircuits), b+batch_size, -1)
             b_circuits = subcircuits[b:bf]
-            b_circuits, ref_circuit = self.run_batch2(
+            b_circuits, ref_circuit = self.run_batch(
                 subcircuits, methods, ref_circuit=ref_circuit,
                 include_normal_run=include_normal_run,
                 write_to_subsystem=write_to_subsystem)
@@ -413,8 +413,9 @@ class CircuitModeller():
                         f'Could not find method @{method} in class {self}')
             else:
                 for i, subcircuit in enumerate(subcircuits):
-                    dir_name = subcircuit.name if subcircuit.sub_name == 'ref_circuit' or not write_to_subsystem else os.path.join(
-                        subcircuit.name, 'mutations', subcircuit.sub_name)
+                    logging.warning(f'\t\t\tSubcircuit {i} ({subcircuit.subname}): {method}')
+                    dir_name = subcircuit.name if subcircuit.subname == 'ref_circuit' or not write_to_subsystem else os.path.join(
+                        subcircuit.name, 'mutations', subcircuit.subname)
                     self.result_writer.subdivide_writing(
                         dir_name, safe_dir_change=True)
                     if subcircuit.subname == 'ref_circuit':

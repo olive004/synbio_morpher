@@ -95,8 +95,8 @@ class InteractionMatrix():
             "name": self.name,
             "interacting": interacting,
             "self_interacting": self_interacting,
-            "interacting_names": sorted([self.sample_names[i] for i in interacting]),
-            "self_interacting_names": sorted([self.sample_names[i] for i in self_interacting]),
+            "interacting_names": sorted([(self.sample_names[i[0]], self.sample_names[i[1]]) for i in interacting]),
+            "self_interacting_names": sorted([(self.sample_names[i[0]], self.sample_names[i[1]]) for i in self_interacting]),
             "num_interacting": len(set(flatten_listlike(interacting))),
             "num_self_interacting": len(set(self_interacting)),
             "max_interaction": np.max(self.interactions.__getattribute__(interaction_attr)),
@@ -110,10 +110,11 @@ class InteractionMatrix():
         return [idx for idx in idxs_interacting if len(set(idx)) > 1]
 
     def get_selfinteracting_species(self, idxs_interacting):
-        return [idx[0] for idx in idxs_interacting if len(set(idx)) == 1]
+        return [idx for idx in idxs_interacting if len(set(idx)) == 1]
 
     def get_unique_interacting_idxs(self):
         idxs_interacting = np.argwhere(self.interactions.eqconstants != 1)
+        # Assuming symmetry in interactions
         idxs_interacting = sorted([tuple(sorted(i)) for i in idxs_interacting])
         return list(set(idxs_interacting))
 
