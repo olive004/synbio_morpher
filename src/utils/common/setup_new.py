@@ -93,7 +93,6 @@ def prepare_config(config_filepath: str = None, config_file: dict = None):
     return config_file
 
 def construct_circuit_from_cfg(prev_configs: dict, config_file: dict):
-    logging.warning(f'Constructing circuit: {prev_configs}')
     kwargs = compose_kwargs(prev_configs=prev_configs, config=config_file)
     circuit = instantiate_system(kwargs)
     if kwargs.get("signal"):

@@ -174,6 +174,8 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFrame:
                 table[k] = np.expand_dims(table[k], axis=1)
             ratio = np.where((np.asarray(reference_v) != 0) & (np.asarray(reference_v) != np.nan),
                              np.divide(np.asarray(table[k]), np.asarray(reference_v)), np.nan)
+            test = np.where((np.asarray(reference_v) != 0) & (np.asarray(reference_v) != np.nan),
+                            np.divide(1, 0), 0)
             ratio = np.expand_dims(
                 ratio, axis=0) if not np.shape(ratio) else ratio
             if np.size(diff) == 1 and type(diff) == np.ndarray:
@@ -201,9 +203,8 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFrame:
                     diff = np.asarray(current_stat) - np.asarray(ref_stat)
                     curr_table[f'{i_type}_{col}_diff_to_base_circuit'] = diff
 
-                    ratio = np.divide(np.asarray(
-                        current_stat), np.asarray(ref_stat),
-                        out=np.zeros_like(np.asarray(current_stat)), where=np.asarray(ref_stat) != 0)
+                    ratio = np.where(np.asarray(ref_stat) != 0,
+                                     np.divide(np.asarray(current_stat), np.asarray(ref_stat)), 0)
                     curr_table[f'{i_type}_{col}_ratio_from_mutation_to_base'] = ratio
                 else:
                     diff = current_stat - ref_stat
@@ -241,7 +242,7 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFrame:
             for k, v in table.items():
                 if type(v) == np.ndarray:
                     v[v == np.inf] = NUMERICAL['infinity']
-                    v[v == -np.inf] = NUMERICAL['infinity']
+                    v[v == -np.inf] = -NUMERICAL['infinity']
                     v[v == np.nan] = NUMERICAL['nan']
                     table[k] = v
         return table
@@ -250,11 +251,11 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFrame:
         result_report_keys = get_analytics_types()
         info_table = expand_data_by_col(info_table, columns=result_report_keys, find_all_similar_columns=True,
                                         column_for_expanding_coldata='sample_names', idx_for_expanding_coldata=0)
-        info_table = remove_invalid_json_values(info_table)
         data_writer.output(
             out_type='csv', out_name='tabulated_mutation_info', **{'data': info_table})
+        json_info_table = remove_invalid_json_values(info_table)
         data_writer.output(
-            out_type='json', out_name='tabulated_mutation_info', **{'data': info_table})
+            out_type='json', out_name='tabulated_mutation_info', **{'data': json_info_table})
 
     info_table = init_info_table()
 

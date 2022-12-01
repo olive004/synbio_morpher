@@ -13,7 +13,7 @@
             },
             "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
             "circuit_generation": {
-                "repetitions": 5,
+                "repetitions": 50,
                 "species_count": 3,
                 "sequence_length": 20,
                 "generator_protocol": "template_mutate",
@@ -51,13 +51,13 @@
                 "postprocess": true
             },
             "filters": {
-                "min_num_interacting": 1,
+                "min_num_interacting": 2,
                 "max_self_interacting": null,
-                "max_total": null
+                "max_total": 50
             },
             "mutations": {
                 "algorithm": "random",
-                "mutation_counts": 1,
+                "mutation_counts": 2,
                 "mutation_nums_within_sequencex": 1,
                 "mutation_nums_within_sequence": [1, 2],
                 "y": [ 3, 5, 7, 10, 15, 20],
@@ -79,7 +79,8 @@
                 "t0": 0,
                 "t1": 1000,
                 "solver": "diffrax",
-                "use_batch_mutations": true
+                "use_batch_mutations": true,
+                "batch_size": 6
             },
             "source_of_interaction_stats": {
                 "is_source_dir_incomplete": true,

@@ -9,7 +9,6 @@ from src.srv.io.loaders.misc import load_csv
 from src.utils.evolution.mutation import get_mutation_type_mapping, Mutations
 from src.utils.misc.type_handling import flatten_listlike
 from src.utils.results.writer import DataWriter
-from src.utils.misc.decorators import time_it
 from src.utils.misc.string_handling import add_outtype
 
 
@@ -54,7 +53,6 @@ class Evolver():
             positions = random.sample(range(len(sequence)), num_mutations)
             return positions
 
-        @time_it
         def rand_mutator(circuit: Circuit, algorithm: str, positions_chosen=None):
             for specie in circuit.model.species:
                 circuit.mutations[specie.name] = {}
