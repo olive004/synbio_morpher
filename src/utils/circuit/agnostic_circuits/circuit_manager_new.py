@@ -388,6 +388,8 @@ class CircuitModeller():
             viable_circuit_num = int(max_circuits / (num_subcircuits+1))
         else:
             viable_circuit_num = len(circuits)
+
+        logging.warning(f'\tFrom the {len(circuits)} being mutated, a total of {expected_num_subcircuits} circuits will be simulated.')
         
         for vi in range(0, len(circuits), viable_circuit_num):
             vf = min(vi+viable_circuit_num, len(circuits))
@@ -406,7 +408,7 @@ class CircuitModeller():
             ref_circuit = subcircuits[0]
             for b in range(0, len(subcircuits), batch_size):
                 logging.warning(
-                    f'Batching {b} - {b+batch_size} circuits (out of {len(subcircuits)})')
+                    f'Batching {b} - {b+batch_size} circuits (out of {len(subcircuits)} (out of {expected_num_subcircuits}))')
                 bf = np.where(b+batch_size < len(subcircuits),
                             b+batch_size, len(subcircuits))
                 b_circuits = subcircuits[b:bf]
@@ -417,7 +419,7 @@ class CircuitModeller():
                     include_normal_run=include_normal_run,
                     write_to_subsystem=write_to_subsystem)
                 subcircuits[b:bf] = b_circuits
-            circuits[vi:vf] = subcircuits
+            subcircuits[vi:vf] = subcircuits
         return subcircuits
 
     def run_batch(self,
