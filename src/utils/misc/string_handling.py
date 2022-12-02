@@ -27,6 +27,14 @@ def list_to_str(input_listlike):
     return ''.join(input_listlike)
 
 
+def get_all_similar(key: str, similarity_list: list):
+    similar_keys = []
+    for s in similarity_list:
+        if key in s:
+            similar_keys.append(s)
+    return similar_keys
+
+
 def make_time_str():
     """Output as 'YEAR_MONTH_DAY_TIME'."""
     now = datetime.now() 
@@ -44,6 +52,14 @@ def ordered_merge(list1, list2, mask) -> list:
     return merged
 
 
+def prettify_keys_for_label(key: str):
+    key = key.replace('_', ' ')
+    key = key.replace('wrt', 'with respect to')
+    key = key.replace('number', 'num').replace('num', 'number')
+    key = key.capitalize()
+    return key
+
+
 def prettify_logging_info(loggin):
     str_out = loggin
     if type(loggin) == list:
@@ -57,7 +73,7 @@ def remove_file_extension(filename: str) -> str:
 
 
 def remove_special_py_functions(string_list: list) -> list:
-    return [s for s in string_list if '__' not in s]
+    return [s for s in string_list if '__' not in s or '.py' not in s]
 
 
 def remove_element_from_list_by_substring(string_list, exclude):

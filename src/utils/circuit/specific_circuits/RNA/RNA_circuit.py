@@ -47,9 +47,9 @@ class RNASpecies(BaseSpecies):
                 f'Could not find molecular parameters in config for RNA species. \nArgs: \n{config_args}')
 
         self.degradation_rates = self.init_matrix(ndims=1, init_type="uniform",
-                                                  uniform_val=molecular_params.get("degradation_rate"))
+                                                  uniform_val=molecular_params.get("degradation_rate", 1))
         self.creation_rates = self.init_matrix(ndims=1, init_type="uniform",
-                                               uniform_val=molecular_params.get("creation_rate"))
+                                               uniform_val=molecular_params.get("creation_rate", 1))
         # self.copynumbers = self.init_matrix(ndims=1, init_type="uniform",
         #                                     uniform_val=5)
         self.copynumbers = None  # For modelling

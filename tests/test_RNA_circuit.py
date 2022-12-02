@@ -10,7 +10,7 @@ import inspect
 import numpy as np
 from src.clients.common.setup import compose_kwargs
 from src.utils.circuit.agnostic_circuits.base_circuit import BaseCircuit
-from src.utils.circuit.config import parse_cfg_args
+from src.utils.circuit.common.config_setup import parse_cfg_args
 from src.utils.data.common import Data
 
 

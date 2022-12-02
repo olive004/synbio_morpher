@@ -1,7 +1,10 @@
+import functools
 import logging
 from math import factorial
-from typing import Union
+from typing import Union, List
 import numpy as np
+import re
+import pandas as pd
 
 
 SCIENTIFIC = {
@@ -11,13 +14,40 @@ SCIENTIFIC = {
     'mole': np.multiply(6.02214076, np.power(10, 23))
 }
 
+NUMERICAL = {
+    'infinity': np.multiply(10, 10),
+    'nan': 0
+}
 
-def zero_out_negs(npmatrix):
-    return npmatrix.clip(min=0)
 
-
-def nPr(n, r):
-    return int(factorial(n)/factorial(n-r))
+def cast_astype(list_like, dtypes):
+    if type(dtypes) == list:
+        dtype = dtypes[0]
+        if len(dtypes) == 1:
+            dtypes = dtypes[0]
+        else:
+            dtypes = dtypes[1:]
+        list_like = cast_astype(list_like, dtypes)
+    else:
+        dtype = dtypes
+    if type(list_like) == list:
+        recast = map(dtype, list_like)
+    elif type(list_like) == pd.Series:
+        def replace_string_list(e):
+            if type(e) == str and re.search("\[.*\]", e):
+                # return [dtype(ll) for ll in e[1:-1].split(',')]
+                return [dtype(i) for i in e[1:-1].split(',')]
+            elif type(e) == list:
+                # return [dtype(ee) for ee in e]
+                return dtype(e[0])
+            else:
+                return dtype(e)
+        recast = list_like.apply(replace_string_list)
+        # recast = list_like.astype(dtype)
+    else:
+        raise TypeError(
+            f'Type {type(list_like)} cannot be converted to {dtype}')
+    return recast
 
 
 def binary_arpeggiator(sequence: str, count: int):
@@ -43,9 +73,9 @@ def expand_matrix_triangle_idx(flat_triangle_idx):
 
     # Reverse of the triangle_sequence formula
     n = (-1 + np.sqrt(1 - 4 * 1 * (-2*flat_triangle_idx))) / 2
-    row = np.floor(n) 
+    row = np.floor(n)
     col = flat_triangle_idx - triangular_sequence(np.floor(n))
-    
+
     return (int(row), int(col))
 
 
@@ -75,6 +105,35 @@ def make_dynamic_indexer(desired_axis_index_pairs: dict) -> tuple:
     return tuple(idxs)
 
 
+def init_matrices(self, uniform_vals, ndims=2, init_type="rand") -> List[np.array]:
+    matrices = (self.init_matrix(ndims, init_type, val)
+                for val in uniform_vals)
+    return tuple(matrices)
+
+
+def init_matrix(self, ndims=2, init_type="rand", uniform_val=1) -> np.array:
+    matrix_size = np.random.randint(5) if self.data is None \
+        else self.data.size
+    if ndims > 1:
+        matrix_shape = tuple([matrix_size]*ndims)
+    else:
+        matrix_shape = (matrix_size, 1)
+
+    if init_type == "rand":
+        return square_matrix_rand(matrix_size)
+    elif init_type == "randint":
+        return np.random.randint(10, 1000, matrix_shape).astype(np.float64)
+    elif init_type == "uniform":
+        return np.ones(matrix_shape) * uniform_val
+    elif init_type == "zeros":
+        return np.zeros(matrix_shape)
+    raise ValueError(f"Matrix init type {init_type} not recognised.")
+
+
+def invert_onehot(onehot):
+    return (onehot == 0).astype(onehot.dtype)
+
+
 def make_symmetrical_matrix_from_sequence(arr, side_length: int, total_dimensions: int = 2, sequence: str = 'triangular'):
     matrix = np.zeros(tuple([side_length]*total_dimensions))
     if sequence == 'triangular':
@@ -96,6 +155,10 @@ def np_delete_axes(array, rowcol: Union[list, int], axes: list):
     return array
 
 
+def nPr(n, r):
+    return int(factorial(n)/factorial(n-r))
+
+
 def round_to_nearest(x, base):
     return base * round(x/base)
 
@@ -113,6 +176,10 @@ def transpose_arraylike(arraylike):
 
 def triangular_sequence(n: int) -> int:
     return int((n*(n+1))/2)
+
+
+def zero_out_negs(npmatrix):
+    return npmatrix.clip(min=0)
 
 
 pass

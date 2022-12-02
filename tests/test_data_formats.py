@@ -8,7 +8,7 @@ class TestDataFormatting(unittest.TestCase):
 
     def test_fasta_seq_loading(self):
         seqs = load_seq_from_FASTA(
-            os.path.join("data", "example_data", "toy_mRNA_circuit.fasta"),
+            os.path.join("data", "example", "toy_mRNA_circuit.fasta"),
             as_type="dict")
         keys = list(seqs.keys())
         self.assertEqual(keys[0], 'RNA_0', "Re-labelling failed.")

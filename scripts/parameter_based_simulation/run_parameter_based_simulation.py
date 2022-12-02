@@ -3,12 +3,12 @@ from multiprocessing import Process
 import os
 from typing import List
 import numpy as np
-from scripts.common.circuit import construct_circuit_from_cfg
 from src.srv.io.manage.script_manager import script_preamble
 from src.srv.io.manage.sys_interface import make_filename_safely
 from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
+from src.utils.circuit.agnostic_circuits.circuit_manager_new import construct_circuit_from_cfg, prepare_config
 from src.utils.misc.decorators import time_it
-from src.utils.results.analytics.timeseries import Timeseries
+from src.utils.results.analytics.timeseries import get_analytics_types
 from src.utils.results.experiments import Experiment, Protocol
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.misc.numerical import make_symmetrical_matrix_from_sequence, triangular_sequence
@@ -19,8 +19,9 @@ from src.utils.circuit.agnostic_circuits.circuit_manager import CircuitModeller
 def main(config=None, data_writer=None):
 
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
-        'scripts', 'parameter_based_simulation', 'configs', 'logscale.json'))
+        'scripts', 'parameter_based_simulation', 'configs', 'testing.json'))
     config_file = load_json_as_dict(config)
+    config_file = prepare_config(config_file)
 
     if config_file.get('experiment').get('parallelise'):
         num_subprocesses = config_file.get(
@@ -29,21 +30,21 @@ def main(config=None, data_writer=None):
         num_subprocesses = 1
 
     for subprocess in range(num_subprocesses):
-        data_writer.update_ensemble('subprocess_' + str(subprocess+1))
+        if num_subprocesses != 1:
+            data_writer.update_ensemble('subprocess_' + str(subprocess+1))
         p = Process(target=main_subprocess, args=(
-            config, data_writer, subprocess, num_subprocesses))
+            config, config_file, data_writer, subprocess, num_subprocesses))
         p.start()
 
 
-def main_subprocess(config, data_writer, sub_process, total_processes):
-    config_file = load_json_as_dict(config)
+def main_subprocess(config, config_file, data_writer, sub_process, total_processes):
     debug_mode = False
 
     def make_interaction_interpolation_matrices():
         # Parameter space to scan
         # interaction_min = config_file['parameter_based_simulation']['interaction_min']
         # interaction_max = config_file['parameter_based_simulation']['interaction_max']
-        # interaction_step_size = config_file['parameter_based_simulation']['interaction_step_size']
+        # step_size = config_file['parameter_based_simulation']['step_size']
         interaction_strengths = create_parameter_range(
             config_file['parameter_based_simulation'])
         size_interaction_array = np.size(interaction_strengths)
@@ -57,7 +58,7 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
             num_unique_interactions = triangular_sequence(num_species)
             return num_species, num_unique_interactions
 
-        analytic_types = Timeseries(None).get_analytics_types()
+        analytic_types = get_analytics_types()
         num_species, num_unique_interactions = load_local_data(
             config_file)
 
@@ -103,7 +104,7 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
         """ ????: 0.5561s medium cfg with 12 subprocess and with use_old_steadystates=True. """
         """ ????: 0.5613s logscale cfg with 12 subprocess and with use_old_steadystates=True. """
 
-        def loop_iter(i):
+        def loop_modelling(i):
             interaction_strength_choices = [int(np.mod(i / np.power(size_interaction_array, unique_interaction),
                                                        size_interaction_array)) for unique_interaction in range(num_unique_interactions)]
             flat_triangle = interaction_strengths[list(
@@ -151,7 +152,7 @@ def main_subprocess(config, data_writer, sub_process, total_processes):
                     f'Iteration {i}/{total_iterations}, stopping at {end_iteration}')
             # data_writer.subdivide_writing(str(i), safe_dir_change=False)
 
-            loop_iter(i)
+            loop_modelling(i)
             # data_writer.unsubdivide_last_dir()
 
         logging.info('Finished: outputting final matrices')

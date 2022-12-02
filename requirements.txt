@@ -1,0 +1,15 @@
+argparse
+biopython
+chex
+fire
+jax
+jaxlib
+jupyter
+diffrax
+matplotlib==3.6.0
+networkx
+numba
+numpy
+pandas
+pyvis
+seaborn

@@ -25,7 +25,7 @@ from src.srv.parameter_prediction.IntaRNA.bin.copomus.candidate_selectors import
 from src.srv.parameter_prediction.IntaRNA.bin.copomus.candidate_filters import get_filter
 from src.srv.parameter_prediction.IntaRNA.bin.copomus.mutation_generators import get_generator
 
-from src.utils.circuit.config import create_argparse_from_dict
+from src.utils.circuit.common.config_setup import create_argparse_from_dict
 
 
 class CopomuS:

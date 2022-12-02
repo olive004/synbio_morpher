@@ -1,6 +1,6 @@
 from datetime import datetime
 import logging
-from typing import Any, List
+from typing import Any, List, Union
 from src.utils.data.data_format_tools.common import load_json_as_dict
 
 from src.utils.results.writer import DataWriter
@@ -30,7 +30,7 @@ class Protocol():
 
 class Experiment():
 
-    def __init__(self, config: str, config_file: dict, protocols: List[Protocol], data_writer: DataWriter, debug_inputs=False) -> None:
+    def __init__(self, config: Union[str, dict], config_file: dict, protocols: List[Protocol], data_writer: DataWriter, debug_inputs=False) -> None:
 
         self.name = 'experiment'
         self.config = config
@@ -57,10 +57,11 @@ class Experiment():
                 if self.debug_inputs:
                     logging.info(f'Output to protocol {protocol.name}: {out}')
             elif type(protocol) == list and type(out) == list:
-                for o in out:
-                    self.iterate_protocols(protocols=protocol, out=o)
+                for i, o in enumerate(out):
+                    out[i] = self.iterate_protocols(protocols=protocol, out=o)
+        return out
 
-    def call_protocol(self, protocol, out=None):
+    def call_protocol(self, protocol: Protocol, out=None):
         if protocol.req_input and protocol.req_output:
             out = protocol(out)
         elif protocol.req_input:

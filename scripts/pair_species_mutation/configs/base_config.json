@@ -6,7 +6,7 @@
         "generator_protocol": "template_mutate",
         "proportion_to_mutate": 0.35
     },
-    "data": "./data/example_data/toy_mRNA_circuit.fasta",
+    "data": "./data/example/toy_mRNA_circuit.fasta",
     "experiment": {
         "purpose": "pair_species_mutation"
     },

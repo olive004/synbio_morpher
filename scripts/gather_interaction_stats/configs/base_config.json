@@ -3,11 +3,8 @@
         "name": "IntaRNA",
         "postprocess": true
     },
-    "molecular_params": {
-        "creation_rates": 50,
-        "copynumbers": 5,
-        "degradation_rates": 20
-    },
+    "interaction_file_keyword": "eqconstants",
+    "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
     "experiment": {
         "purpose": "gather_interaction_stats"
     },    

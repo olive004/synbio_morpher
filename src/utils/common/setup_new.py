@@ -1,0 +1,112 @@
+import logging
+from copy import deepcopy
+from typing import List
+from bioreaction.model.data_containers import BasicModel
+from src.utils.data.common import Data
+from src.srv.io.manage.sys_interface import make_filename_safely
+from src.utils.data.data_format_tools.common import load_json_as_dict
+from src.srv.io.manage.data_manager import DataManager
+from src.utils.misc.units import per_mol_to_per_molecules
+from src.utils.misc.io import isolate_filename
+from src.utils.misc.type_handling import cast_all_values_as_list
+from src.utils.signal.configs import get_signal_type, parse_sig_args
+from src.utils.signal.signals import Signal
+from src.utils.circuit.common.config_setup import parse_cfg_args, get_configs
+from src.utils.circuit.common.system_setup import get_system_type
+
+
+ESSENTIAL_KWARGS = [
+    # "interactions",
+    "interaction_simulator",
+    "molecular_params",
+    # "mutations",
+    "system_type",
+]
+
+
+def expand_model_config(in_config: dict, out_config: dict, sample_names: List[str]) -> dict:
+    if 'starting_concentration' not in out_config.keys():
+        out_config['starting_concentration'] = {}
+        for s in sample_names:
+            out_config['starting_concentration'][s] = in_config['molecular_params'].get(
+                'starting_copynumbers', 1)
+    if in_config.get('interactions', {}):
+        out_config['interactions_state'] = 'loaded'
+    else:
+        out_config['interactions_state'] = 'uninitialised'
+    return out_config
+
+
+def process_molecular_params(params: dict) -> dict:
+    for k, v in params.items():
+        if 'rate' in k:
+            params[k] = per_mol_to_per_molecules(v)
+    return params
+
+
+def compose_kwargs(prev_configs: dict = None, config: dict = None) -> dict:
+    """ Extra configs like data paths can be supplied here, eg. for circuits that were dynamically generated. """
+
+    if prev_configs is not None:
+        for kwarg, c in prev_configs.items():
+            if kwarg not in ['experiment', 'mutations', 'signal', 'simulation']:
+                config[kwarg] = c
+
+    data_manager = DataManager(filepath=make_filename_safely(config.get("data_path", None)),
+                               identities=config.get("identities", {}),
+                               data=config.get("data", None))
+    kwargs = {}
+    kwargs = expand_model_config(config, kwargs, data_manager.data.sample_names)
+    kwargs.update({
+        "data": data_manager.data,
+        "data_path": data_manager.source,
+        # For pre-loading interactions
+        "interactions": config["interactions"],
+        "interaction_simulator": config["interaction_simulator"],
+        "molecular_params": config["molecular_params"],
+        "mutations": cast_all_values_as_list(config["mutations"]),
+        "name": isolate_filename(data_manager.data.source),
+        "signal": config["signal"],
+        "simulation": config["simulation"],
+        "system_type": config["system_type"]
+    })
+    assert all([e in kwargs for e in ESSENTIAL_KWARGS]), 'Some of the kwargs for composing ' \
+        f'a circuit are not listed in essential kwargs {ESSENTIAL_KWARGS}: {dict({e: e in kwargs for e in ESSENTIAL_KWARGS})}'
+    return kwargs
+
+
+def expand_config(config: dict) -> dict:
+    config["interactions"] = config.get("interactions", {})
+    config["interaction_simulator"] = config.get("interaction_simulator", {"name": "IntaRNA"})
+    config["molecular_params"] = process_molecular_params(deepcopy(load_json_as_dict(config.get("molecular_params"))))
+    config["mutations"] = config.get("mutations", {})
+    config["signal"] = load_json_as_dict(config.get("signal"))
+    config["simulation"] = config.get("simulation", {})
+    config["system_type"] = config.get("system_type")
+    return config
+
+
+def prepare_config(config_filepath: str = None, config_file: dict = None):
+    config_file = get_configs(config_file, config_filepath)
+    config_file = expand_config(config_file)
+    config_file = parse_cfg_args(config_file)
+    return config_file
+
+def construct_circuit_from_cfg(prev_configs: dict, config_file: dict):
+    kwargs = compose_kwargs(prev_configs=prev_configs, config=config_file)
+    circuit = instantiate_system(kwargs)
+    if kwargs.get("signal"):
+        signal = construct_signal(kwargs, circuit)
+        circuit.signal = signal
+    return circuit
+
+
+def construct_signal(kwargs: dict, circuit) -> Signal:
+    SignalType = get_signal_type(kwargs["signal"].get("signal_type"))
+    return SignalType(**parse_sig_args(kwargs, circuit))
+
+
+def instantiate_system(kwargs):
+    # system_cfg_args = parse_cfg_args(kwargs)
+    SystemType = get_system_type(kwargs["system_type"])
+    return SystemType(kwargs)

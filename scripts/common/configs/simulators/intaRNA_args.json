@@ -1,8 +1,0 @@
-{
-    "qidxpos0": 1,
-    "tidxpos0": 1,
-    "outcsvcols": "E, ED1, ED2, E_hybrid, E_norm, E_hybridNorm, Eall, Eall1, Eall2, Etotal, Zall, EallTotal, bpList, P_E, Pu1, Pu2",
-    "threads": 0,
-    "n": 1,
-    "param_file": "./scripts/common/configs/simulators/intaRNA_parameterFile.sh"
-}

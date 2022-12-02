@@ -13,15 +13,11 @@
         "name": "IntaRNA",
         "postprocess": "True"
     },
-    "molecular_params": {
-        "creation_rates": 50,
-        "copynumbers": 5,
-        "degradation_rates": 20
-    },
+    "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
     "parameter_based_simulation": {
         "interaction_min": 0.05,
         "interaction_max": 1,
-        "interaction_step_size": 0.1,
+        "step_size": 0.1,
         "log_scale": false
     },
     "signal": {

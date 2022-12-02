@@ -96,7 +96,7 @@ def get_search_dir(config_file: dict, config_searchdir_key: str = None,
                                   get_recent_experiment_folder(sourcing_config.get(
                                       source_dir_key)), sourcing_config.get("purpose_to_get_source_dir_from"))
         if not os.path.isdir(source_dir):
-            raise ConfigError(f'Could not find directory {source_dir}')
+            raise ConfigError(f'Could not find directory {source_dir} (maybe it is not the most recent experiment directory anymore)')
         if modify_config_for_posterity:
             config_file[config_searchdir_key]['source_dir_actually_used_POSTERITY'] = source_dir
         return config_file, source_dir
@@ -105,7 +105,7 @@ def get_search_dir(config_file: dict, config_searchdir_key: str = None,
         return config_file, source_dir
 
 
-def get_root_experiment_folder(miscpath):
+def get_root_experiment_folder(miscpath: str):
     split_path = miscpath.split(os.sep)
     purposes = [p for p in split_path if p in get_purposes()]
     if len(purposes) == 1:
@@ -118,7 +118,7 @@ def get_root_experiment_folder(miscpath):
         experiment_folder = os.path.join(
             *split_path[:split_path.index(purposes[1])+1])
     else:
-        if len(os.path.split(miscpath)) == 1:
+        if len(os.path.split(miscpath)) == 1 or len(miscpath) == 0:
             raise ValueError(
                 f'Root experiment folder not found recursively in base {miscpath}')
         experiment_folder = get_root_experiment_folder(
@@ -156,6 +156,37 @@ def load_experiment_report(experiment_folder: str) -> dict:
     return load_json_as_dict(report_path)
 
 
+# def load_experiment_config_original(starting_experiment_folder: str, target_purpose: str) -> dict:
+#     """ Load the experiment config from a previous experiment that led
+#     to the current (starting) experiment folder"""
+#     original_config = load_experiment_config(starting_experiment_folder)
+#     current_purpose = get_purpose_from_cfg(
+#         original_config, starting_experiment_folder)
+#     logging.info(current_purpose)
+#     logging.info(target_purpose)
+#     while not current_purpose == target_purpose:
+#         logging.info(current_purpose)
+#         logging.info(target_purpose)
+#         try:
+#             original_config, original_source_dir = get_search_dir(
+#                 config_file=original_config)
+#         except ConfigError:
+#             raise ConfigError('Could not find the original configuration file used '
+#                               f'for purpose {target_purpose} when starting from '
+#                               f'experiment folder {starting_experiment_folder}.')
+#         logging.info(original_source_dir)
+#         original_config = load_experiment_config(
+#             original_source_dir)
+#         logging.info(original_config)
+#         current_purpose = get_purpose_from_cfg(
+#             original_config, starting_experiment_folder)
+#         logging.info(f'new purpose: {current_purpose}')
+#     if not current_purpose == target_purpose:
+#         logging.warning(f'Loaded wrong config from {original_source_dir} with purpose '
+#                         f'{current_purpose}')
+#     return original_config
+
+
 def load_experiment_config_original(starting_experiment_folder: str, target_purpose: str) -> dict:
     """ Load the experiment config from a previous experiment that led
     to the current (starting) experiment folder"""
@@ -170,6 +201,10 @@ def load_experiment_config_original(starting_experiment_folder: str, target_purp
             raise ConfigError('Could not find the original configuration file used '
                               f'for purpose {target_purpose} when starting from '
                               f'experiment folder {starting_experiment_folder}.')
+        if type(original_source_dir) == list and len(original_source_dir) == 1:
+            logging.warning(
+                f'Expected string for {original_source_dir} but got list')
+            original_source_dir = original_source_dir[0]
         original_config = load_experiment_config(
             original_source_dir)
         current_purpose = get_purpose_from_cfg(
