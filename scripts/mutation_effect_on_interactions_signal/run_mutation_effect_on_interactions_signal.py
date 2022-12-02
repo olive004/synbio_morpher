@@ -75,7 +75,9 @@ def main(config=None, data_writer=None):
                 req_input=True,
                 req_output=True,
                 name='construct_circuit'
-            ),
+            )
+        ],
+        [
             # Mutate circuit
             Protocol(
                 partial(Evolver(data_writer=data_writer, sequence_type=config_file.get('system_type')).mutate,

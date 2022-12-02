@@ -380,11 +380,13 @@ class CircuitModeller():
                         write_to_subsystem=True):
         batch_size = len(circuits) if batch_size is None else batch_size
 
-        subcircuits = flatten_listlike([[circuit] + [
-            self.make_subcircuit(circuit, subname, mutation)
-            for subname, mutation in flatten_nested_dict(
-                circuit.mutations).items()]
-            for circuit in circuits])
+        subcircuits = [None] * (len(circuits) + len(flatten_nested_dict(circuits[0].mutations)))
+        c_idx = 0
+        for circuit in circuits:
+            subcircuits[c_idx] = circuit
+            for subname, mutation in flatten_nested_dict(circuit.mutations).items():
+                subcircuits[c_idx] = self.make_subcircuit(circuit, subname, mutation)
+                
         ref_circuit = subcircuits[0]
         for b in range(0, len(subcircuits), batch_size):
             logging.warning(
