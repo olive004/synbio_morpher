@@ -30,8 +30,8 @@ class Evolver():
             return False
         return True
 
-    # def batch_mutate(self, circuits: List[Circuit], algorithm: str, write_to_subsystem=True):
-    #     if 
+    def batch_mutate(self, circuits: List[Circuit], algorithm: str, write_to_subsystem=True):
+        if 
 
     def mutate(self, circuit: Circuit, algorithm: str, write_to_subsystem=False):
         """ algorithm can be either random or all """

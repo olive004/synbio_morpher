@@ -174,8 +174,6 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFrame:
                 table[k] = np.expand_dims(table[k], axis=1)
             ratio = np.where((np.asarray(reference_v) != 0) & (np.asarray(reference_v) != np.nan),
                              np.divide(np.asarray(table[k]), np.asarray(reference_v)), np.nan)
-            test = np.where((np.asarray(reference_v) != 0) & (np.asarray(reference_v) != np.nan),
-                            np.divide(1, 0), 0)
             ratio = np.expand_dims(
                 ratio, axis=0) if not np.shape(ratio) else ratio
             if np.size(diff) == 1 and type(diff) == np.ndarray:

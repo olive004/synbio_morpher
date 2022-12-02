@@ -389,8 +389,10 @@ class CircuitModeller():
         for b in range(0, len(subcircuits), batch_size):
             logging.warning(
                 f'Batching {b} - {b+batch_size} circuits (out of {len(subcircuits)})')
-            bf = np.where(b+batch_size < len(subcircuits), b+batch_size, -1)
+            bf = np.where(b+batch_size < len(subcircuits), b+batch_size, len(subcircuits))
             b_circuits = subcircuits[b:bf]
+            if not b_circuits:
+                continue
             b_circuits, ref_circuit = self.run_batch(
                 b_circuits, methods, ref_circuit=ref_circuit,
                 include_normal_run=include_normal_run,
