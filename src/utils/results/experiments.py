@@ -57,10 +57,11 @@ class Experiment():
                 if self.debug_inputs:
                     logging.info(f'Output to protocol {protocol.name}: {out}')
             elif type(protocol) == list and type(out) == list:
-                for o in out:
-                    self.iterate_protocols(protocols=protocol, out=o)
+                for i, o in enumerate(out):
+                    out[i] = self.iterate_protocols(protocols=protocol, out=o)
+        return out
 
-    def call_protocol(self, protocol, out=None):
+    def call_protocol(self, protocol: Protocol, out=None):
         if protocol.req_input and protocol.req_output:
             out = protocol(out)
         elif protocol.req_input:

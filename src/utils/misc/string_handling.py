@@ -54,6 +54,7 @@ def ordered_merge(list1, list2, mask) -> list:
 
 def prettify_keys_for_label(key: str):
     key = key.replace('_', ' ')
+    key = key.replace('wrt', 'with respect to')
     key = key.replace('number', 'num').replace('num', 'number')
     key = key.capitalize()
     return key
@@ -72,7 +73,7 @@ def remove_file_extension(filename: str) -> str:
 
 
 def remove_special_py_functions(string_list: list) -> list:
-    return [s for s in string_list if '__' not in s]
+    return [s for s in string_list if '__' not in s or '.py' not in s]
 
 
 def remove_element_from_list_by_substring(string_list, exclude):

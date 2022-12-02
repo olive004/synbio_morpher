@@ -4,6 +4,7 @@ import logging
 import os
 from typing import Union
 import numpy as np
+import jaxlib
 import pandas as pd
 
 from src.utils.misc.type_handling import inverse_dict
@@ -61,7 +62,8 @@ def load_json_as_df(json_pathname: str) -> pd.DataFrame:
 
 def load_multiple_as_list(inputs_list: list, load_func, **kwargs) -> list:
     collection_list = []
-    assert type(inputs_list) == list, f'Input type of {inputs_list} should be list and not {type(inputs_list)}'
+    assert type(
+        inputs_list) == list, f'Input type of {inputs_list} should be list and not {type(inputs_list)}'
     for inp in inputs_list:
         collection_list.append(load_func(inp, **kwargs))
     return collection_list
@@ -101,7 +103,7 @@ def process_dict_for_json(dict_like) -> Union[list, dict]:
             dict_like[k] = process_dict_for_json(v)
         elif type(v) == np.bool_:
             dict_like[k] = bool(v)
-        elif type(v) == np.ndarray:
+        elif type(v) == np.ndarray or type(v) == jaxlib.xla_extension.DeviceArray:
             dict_like[k] = v.tolist()
         elif type(v) == np.float32 or type(v) == np.int64:
             dict_like[k] = str(v)
@@ -118,13 +120,13 @@ def process_json(json_dict):
 def write_csv(data: pd.DataFrame, out_path: str, overwrite=False):
     if type(data) == dict:
         data = {k: [v] for k, v in data.items()}
-        data = pd.DataFrame.from_dict(data)
+        data = pd.DataFrame.from_dict(data, dtype=object)
     if type(data) == pd.DataFrame:
         if overwrite or not os.path.exists(out_path):
             data.to_csv(out_path, index=None)
         else:
             data.to_csv(out_path, mode='a', header=None, index=None)
-    elif type(data) == np.ndarray:
+    elif type(data) == np.ndarray or type(data) == jaxlib.xla_extension.DeviceArray:
         pd.DataFrame(data).to_csv(out_path, mode='a', header=None, index=None)
     else:
         raise TypeError(

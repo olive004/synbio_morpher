@@ -4,8 +4,8 @@ from functools import partial
 import logging
 import os
 from fire import Fire
-from scripts.common.circuit import construct_circuit_from_cfg
 from src.srv.io.manage.script_manager import script_preamble
+from src.utils.common.setup_new import construct_circuit_from_cfg, prepare_config
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.misc.decorators import time_it
 from src.utils.results.experiments import Experiment, Protocol
@@ -15,13 +15,10 @@ from src.utils.circuit.agnostic_circuits.circuit_manager import CircuitModeller
 @time_it
 def main(config=None, data_writer=None):
 
-    # from src.utils.data.fake_data_generation.seq_generator import RNAGenerator
-    # RNAGenerator(purpose='example_data').generate_circuit(
-    #     count=3, slength=25, protocol="template_mix")
-
     config, data_writer = script_preamble(config=config, data_writer=data_writer, alt_cfg_filepath=os.path.join(
         "scripts", "RNA_circuit_simulation", "configs", "toy_RNA.json"))
     config_file = load_json_as_dict(config)
+    config_file = prepare_config(config_file)
     logging.info(config)
     logging.info(config_file)
 

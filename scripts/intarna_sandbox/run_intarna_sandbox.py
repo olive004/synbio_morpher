@@ -4,13 +4,11 @@ from functools import partial
 import logging
 import os
 import re
-from scripts.common.circuit import construct_circuit_from_cfg
-from src.clients.common.setup import compose_kwargs
+from src.utils.circuit.agnostic_circuits.circuit_manager_new import construct_circuit_from_cfg
 from src.utils.results.experiments import Experiment, Protocol
 from src.utils.results.result_writer import ResultWriter
 from src.utils.results.writer import DataWriter
 from src.srv.parameter_prediction.IntaRNA.bin.copomus.IntaRNA import IntaRNA
-from src.srv.parameter_prediction.simulator import simulate_intaRNA_data
 from src.utils.evolution.mutation import Evolver
 from src.utils.circuit.agnostic_circuits.base_circuit import BaseSpecies
 from src.utils.circuit.agnostic_circuits.circuit_manager import CircuitModeller

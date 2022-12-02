@@ -3,12 +3,12 @@ from multiprocessing import Process
 import os
 from typing import List
 import numpy as np
-from scripts.common.circuit import construct_circuit_from_cfg
 from src.srv.io.manage.script_manager import script_preamble
 from src.srv.io.manage.sys_interface import make_filename_safely
 from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
+from src.utils.circuit.agnostic_circuits.circuit_manager_new import construct_circuit_from_cfg, prepare_config
 from src.utils.misc.decorators import time_it
-from src.utils.results.analytics.timeseries import Timeseries
+from src.utils.results.analytics.timeseries import get_analytics_types
 from src.utils.results.experiments import Experiment, Protocol
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.misc.numerical import make_symmetrical_matrix_from_sequence, triangular_sequence
@@ -21,6 +21,7 @@ def main(config=None, data_writer=None):
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
         'scripts', 'parameter_based_simulation', 'configs', 'testing.json'))
     config_file = load_json_as_dict(config)
+    config_file = prepare_config(config_file)
 
     if config_file.get('experiment').get('parallelise'):
         num_subprocesses = config_file.get(
@@ -57,7 +58,7 @@ def main_subprocess(config, config_file, data_writer, sub_process, total_process
             num_unique_interactions = triangular_sequence(num_species)
             return num_species, num_unique_interactions
 
-        analytic_types = Timeseries(None).get_analytics_types()
+        analytic_types = get_analytics_types()
         num_species, num_unique_interactions = load_local_data(
             config_file)
 

@@ -2,6 +2,11 @@ from functools import partial
 import logging
 from typing import List
 import numpy as np
+import jax.numpy as jnp
+
+
+def step_function(t, total_time, step_num, dt, target):
+    return (jnp.sin(t) + 1)* jnp.where((10 < t) & (t < 130), target/24, 0)
 
 
 class Signal():

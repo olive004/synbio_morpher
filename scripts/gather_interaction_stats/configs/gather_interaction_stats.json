@@ -4,7 +4,7 @@
         "postprocess": true
     },
     "interaction_file_keyword": "eqconstants",
-    "molecular_params": "./scripts/common/configs/RNA_circuit/molecular_params.json",
+    "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
     "experiment": {
         "purpose": "gather_interaction_stats"
     },    

@@ -8,5 +8,6 @@ __pycache__
 *.txt
 !requirements.txt
 data/*
-!data/example_data
+!data/example
 lib/*
+bioreaction

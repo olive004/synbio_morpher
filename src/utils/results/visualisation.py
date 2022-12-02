@@ -4,12 +4,17 @@ from typing import List, Union
 import networkx as nx
 import numpy as np
 import pandas as pd
+import re
 import logging
-from src.utils.misc.type_funcs import get_unique
+from src.utils.misc.type_handling import get_unique
 from src.utils.results.writer import DataWriter
 from src.utils.misc.string_handling import add_outtype, get_all_similar, make_time_str, prettify_keys_for_label
+from src.utils.misc.type_handling import flatten_listlike
 from pyvis.network import Network
 from src.utils.misc.type_handling import merge_dicts
+import seaborn as sns
+from matplotlib import pyplot as plt
+plt.ioff()
 
 
 logger = logging.getLogger(__name__)
@@ -25,7 +30,7 @@ class NetworkCustom(Network):
         """
         Overriding default pyvis Network() function to allow show_edge_weights
         """
-        assert(isinstance(nx_graph, nx.Graph))
+        assert (isinstance(nx_graph, nx.Graph))
         edges = nx_graph.edges(data=True)
         nodes = nx_graph.nodes(data=True)
 
@@ -76,6 +81,54 @@ class NetworkCustom(Network):
             self.add_node(node, **nodes[node])
 
 
+class Graph():
+
+    def __init__(self, labels: List[str], source_matrix: np.ndarray = None) -> None:
+        source_matrix = np.zeros(
+            (len(labels), len(labels))) if source_matrix is None else source_matrix
+        self._node_labels = labels
+        self.build_graph(source_matrix)
+
+    def build_graph(self, source_matrix: np.ndarray) -> nx.DiGraph:
+        graph = nx.from_numpy_matrix(source_matrix, create_using=nx.DiGraph)
+        if self.node_labels is not None:
+            graph = nx.relabel_nodes(graph, self.node_labels)
+        return graph
+
+    def refresh_graph(self, source_matrix: np.ndarray):
+        self.graph = self.build_graph(source_matrix)
+
+    def get_graph_labels(self) -> dict:
+        return sorted(self.graph)
+
+    @property
+    def graph(self):
+        return self._graph
+
+    @graph.setter
+    def graph(self, new_graph):
+        assert type(new_graph) == nx.DiGraph, 'Cannot set graph to' + \
+            f' type {type(new_graph)}.'
+        self._graph = new_graph
+
+    @property
+    def node_labels(self):
+        if type(self._node_labels) == list:
+            return {i: n for i, n in enumerate(self._node_labels)}
+        return self._node_labels
+
+    @node_labels.setter
+    def node_labels(self, labels: Union[dict, list]):
+
+        current_nodes = self.get_graph_labels()
+        if type(labels) == list:
+            self._node_labels = dict(zip(current_nodes, labels))
+        else:
+            labels = len(labels)
+            self._node_labels = dict(zip(current_nodes, labels))
+        self.graph = nx.relabel_nodes(self.graph, self.node_labels)
+
+
 def expand_data_by_col(data: pd.DataFrame, columns: Union[str, list], column_for_expanding_coldata: str, idx_for_expanding_coldata: int,
                        find_all_similar_columns=False):
     """ Expand horizontally or vertically based on if a second column name 
@@ -83,11 +136,12 @@ def expand_data_by_col(data: pd.DataFrame, columns: Union[str, list], column_for
 
     def make_expansion_df(df_lists, col_names: list) -> pd.DataFrame:
         temp_data = deepcopy(data)
-        expanded_data = pd.DataFrame(columns=data.columns)
+        expanded_data = pd.DataFrame(columns=data.columns, dtype=object)
         for c in col_names:
             expanded_df_col = pd.DataFrame.from_dict(
                 dict(zip(columns + [column_for_expanding_coldata],
-                     [df_lists.loc[column][c] for column in columns] + [c]))
+                     [df_lists.loc[column][c] for column in columns] + [c])),
+                dtype=object
             )
             # {column: df_lists[c], column_for_expanding_coldata: c})
             temp_data.drop(columns, axis=1, inplace=True)
@@ -128,7 +182,11 @@ def expand_data_by_col(data: pd.DataFrame, columns: Union[str, list], column_for
         if new_expanding_column_name not in list(data.columns):
             data = data.rename(
                 columns={column_for_expanding_coldata: new_expanding_column_name})
-        df_lists = data[columns].unstack().apply(pd.Series)
+        # for c in columns:
+        #     for r in data[c]:
+        #         print(pd.Series(r))
+        df_lists = data[columns].unstack().apply(partial(flatten_listlike, safe=True)).apply(pd.Series)
+        # df_lists = data[columns].unstack().apply(pd.Series)
         col_names = data[new_expanding_column_name].iloc[idx_for_expanding_coldata]
         if type(col_names) != list:
             logging.warning(
@@ -162,6 +220,8 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                    selection_conditions: List[tuple] = None,
                    remove_outliers_y: bool = False,
                    outlier_std_threshold_y=3,
+                   complete_colx_by_str=None,
+                   complete_coly_by_str=None,
                    exclude_rows_nonempty_in_cols: list = None,
                    exclude_rows_zero_in_cols: list = None,
                    expand_xcoldata_using_col: bool = False,
@@ -178,8 +238,18 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
 
     hue = hue if hue is not None else column_name_for_expanding_xcoldata
 
-    cols_x = cols_x if cols_x is not None else [None]
-    cols_y = cols_y if cols_y is not None else [None]
+    def process_cols(cols, complete_col_by_str):
+        if cols is None:
+            return [None]
+        if complete_col_by_str is not None:
+            for i, col in enumerate(cols):
+                rex = np.asarray([re.search(f"^{complete_col_by_str}.*{col.split(complete_col_by_str.split('wrt')[0])[-1]}", c) for c in data.columns])
+                if not list(data.columns[np.where(rex != None)[0]]):
+                    logging.warning(f'Could not find complete column name for {col} with str {complete_col_by_str}')
+                cols[i] = list(data.columns[np.where(rex != None)[0]])
+        return flatten_listlike(cols, safe=True)
+    cols_x = process_cols(cols_x, complete_colx_by_str)
+    cols_y = process_cols(cols_y, complete_coly_by_str)
 
     def process_log_sns(data: pd.DataFrame, column_x: str, column_y: str,
                         plot_kwrgs: dict, log_axis: list, plot_type: str = None):
@@ -353,7 +423,8 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                                                       'hue': hue},
                                                      plot_kwargs))
                 else:
-                    logging.warning(f'Could not visualise columns {col_x} and {col_y} for {data}')
+                    logging.warning(
+                        f'Could not visualise columns {col_x} and {col_y}')
 
 
 def visualise_graph_pyvis(graph: nx.DiGraph,
@@ -372,17 +443,19 @@ def visualise_graph_pyvis(graph: nx.DiGraph,
     interactive_graph.from_nx(graph, edge_weight_transf=lambda x: round(x, 4))
     interactive_graph.inherit_edge_colors(True)
     interactive_graph.set_edge_smooth('dynamic')
-    interactive_graph.save_graph(out_path)
+    try:
+        interactive_graph.save_graph(out_path)
+    except PermissionError:
+        logging.warning(
+            f'The graph at {out_path} may not have saved properly.')
 
     # web_filename = 'file:///' + os.getcwd() + '/' + out_path
     # # webbrowser.open(web_filename, new=1, autoraise=True)
 
 
 def visualise_graph_pyplot(graph: nx.DiGraph):
-    import matplotlib.pyplot as plt
     ax1 = plt.subplot(111)
     nx.draw(graph)
-    plt.show()
     raise NotImplementedError
 
 
@@ -413,13 +486,14 @@ class VisODE():
 
     def plot(self, data, y=None, new_vis=False, t=None, out_path='test_plot', out_type='svg',
              **plot_kwrgs) -> None:
-        from matplotlib import pyplot as plt
         data = data.T if len(plot_kwrgs.get('legend', [])
                              ) == np.shape(data)[0] else data
         plt.figure()
         if y is not None:
             plt.plot(data, y)
         elif t is not None:
+            # if np.shape(t)[0] != np.shape(data)[0] and len(np.shape(data)) == 2:
+            #     logging.warning()
             plt.plot(t, data)
         else:
             plt.plot(data)
@@ -431,13 +505,20 @@ class VisODE():
                          title: str = None,
                          figsize=(7, 5), style="ticks",
                          **plot_kwargs):
-        import seaborn as sns
-        import matplotlib.pyplot as plt
         sns.set_context('paper')
         sns.set_theme(style=style)
         sns.set_palette("viridis")
         if title is None:
             title = plot_kwargs.get('title')
+        if plot_kwargs.get('hue'):
+            data = data.rename(
+                columns={plot_kwargs.get('hue'): prettify_keys_for_label(plot_kwargs.get('hue'))})
+            plot_kwargs['hue'] = prettify_keys_for_label(plot_kwargs.get('hue'))
+            plot_kwargs.update({
+                # 'palette': sns.color_palette("husl", len(data[plot_kwargs.get('hue')].unique()))
+                # 'palette': sns.color_palette("plasma", len(data[plot_kwargs.get('hue')].unique()))
+                'palette': sns.color_palette("viridis", len(data[plot_kwargs.get('hue')].unique()))
+            })
 
         if x is None:
             logging.warn(
@@ -450,24 +531,26 @@ class VisODE():
             y=y,
             **plot_kwargs
         ).set(title=title)
+        # if plot_kwargs.get('hue'):
+        #     plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.,
+        #                title=plot_kwargs['hue'])
+        #             #    title=prettify_keys_for_label(plot_kwargs.get('hue')))
         if plot_kwargs.get('hue'):
-            plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.,
-                       title=prettify_keys_for_label(plot_kwargs.get('hue')))
+            sns.move_legend(ax, "upper left", bbox_to_anchor=(1, 1))
         f.savefig(out_path, bbox_inches='tight')
         plt.close()
 
     def sns_barplot(self, out_path: str, x: str, y: str, data: pd.DataFrame,
                     title: str = None, xlabel=None, ylabel=None,
                     **plot_kwargs):
-        import seaborn as sns
         plot_kwargs.update({'errwidth': 1})
 
-        if plot_kwargs.get('hue'):
-            plot_kwargs.update({
-                # 'palette': sns.color_palette("husl", len(data[plot_kwargs.get('hue')].unique()))
-                # 'palette': sns.color_palette("plasma", len(data[plot_kwargs.get('hue')].unique()))
-                'palette': sns.color_palette("viridis", len(data[plot_kwargs.get('hue')].unique()))
-            })
+        # if plot_kwargs.get('hue'):
+        #     plot_kwargs.update({
+        #         # 'palette': sns.color_palette("husl", len(data[plot_kwargs.get('hue')].unique()))
+        #         # 'palette': sns.color_palette("plasma", len(data[plot_kwargs.get('hue')].unique()))
+        #         'palette': sns.color_palette("viridis", len(data[plot_kwargs.get('hue')].unique()))
+        #     })
 
         self.sns_generic_plot(sns.barplot, out_path, x,
                               y, data, title, **plot_kwargs)
@@ -505,7 +588,6 @@ class VisODE():
     def heatmap(self, data: pd.DataFrame, out_path: str = None, out_type='png',
                 new_vis=False, vmin=None, vmax=None, **plot_kwrgs):
         import seaborn as sns
-        import matplotlib.pyplot as plt
         sns.set_theme()
 
         plt.figure(figsize=self.figsize)
@@ -522,7 +604,6 @@ class VisODE():
                      histplot_kwargs: dict = None,
                      **plot_kwargs):
         """ log_axis: use logarithmic axes in (x-axis, y-axis) """
-        from matplotlib import pyplot as plt
         import seaborn as sns
         sns.set_context('paper')
 
@@ -548,7 +629,6 @@ class VisODE():
                  bin_count=100,
                  **plot_kwrgs):
         logging.warning(f'Function "histplot" is not finished.')
-        from matplotlib import pyplot as plt
         plt.figure()
         plt.hist(data, range=(min(data), max(data)), bins=bin_count)
         self.add_kwrgs(plt, **plot_kwrgs)

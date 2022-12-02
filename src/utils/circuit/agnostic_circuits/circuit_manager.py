@@ -7,12 +7,14 @@ import jax
 from scipy import integrate
 from src.utils.results.analytics.timeseries import Timeseries
 from src.utils.results.result_writer import ResultWriter
+from src.utils.circuit.agnostic_circuits.circuit_new import interactions_to_df
 
 from src.utils.misc.numerical import make_dynamic_indexer, np_delete_axes, zero_out_negs
 from src.utils.misc.type_handling import flatten_nested_dict
 from src.utils.results.visualisation import VisODE
-from src.utils.signal.inputs import Signal
-from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS, InteractionSimulator
+from src.utils.signal.signals import Signal
+from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
+from src.srv.parameter_prediction.interactions import InteractionSimulator
 from src.utils.circuit.agnostic_circuits.base_circuit import BaseCircuit
 from src.utils.modelling.deterministic import Deterministic, simulate_signal_scan
 from src.utils.modelling.base import Modeller
@@ -114,7 +116,7 @@ class CircuitModeller():
                  filename_addon_coupled_rates]
             ):
                 self.result_writer.output(
-                    out_type='csv', out_name=circuit.name, data=circuit.species.interactions_to_df(
+                    out_type='csv', out_name=circuit.name, data=interactions_to_df(
                         interaction_matrix), overwrite=False,
                     new_file=True, filename_addon=filename_addon, subfolder=filename_addon)
         return circuit
@@ -305,17 +307,25 @@ class CircuitModeller():
                 new_copynumbers[:,
                                 time_start:time_end] = expanded_steady_states
         elif use_solver == 'jax':
-            new_copynumbers = simulate_signal_scan(
-                copynumbers=steady_states.flatten(), time=np.arange(modeller_signal.max_time),
-                full_interactions=circuit.species.interactions,
-                creation_rates=circuit.species.creation_rates.flatten(),
-                degradation_rates=circuit.species.degradation_rates.flatten(),
-                identity_matrix=np.identity(
-                    circuit.species.size),
-                signal=signal.real_signal, signal_idx=circuit.species.identities.get(
-                    'input'),
-                one_step_func=modeller_signal.dxdt_RNA_jnp)
-            new_copynumbers = np.array(new_copynumbers[1]).T
+            # new_copynumbers = simulate_signal_scan(
+            #     copynumbers=steady_states.flatten(), time=np.arange(modeller_signal.max_time),
+            #     full_interactions=circuit.species.interactions,
+            #     creation_rates=circuit.species.creation_rates.flatten(),
+            #     degradation_rates=circuit.species.degradation_rates.flatten(),
+            #     identity_matrix=np.identity(
+            #         circuit.species.size),
+            #     signal=signal.real_signal, signal_idx=circuit.species.identities.get(
+            #         'input'),
+            #     one_step_func=modeller_signal.dxdt_RNA_jnp)
+            # new_copynumbers = np.array(new_copynumbers[1]).T
+            def translate_circuit_to_bioreaction(circuit):
+                import bioreaction
+
+            model = construct_model(config)
+
+            qreactions = QuantifiedReactions()
+            qreactions.init_properties(model, config)
+            new_copynumbers =1
 
         circuit.species.copynumbers = np.concatenate(
             (circuit.species.copynumbers, new_copynumbers[make_dynamic_indexer({
@@ -324,11 +334,11 @@ class CircuitModeller():
                                                  circuit.species.species_axis])
             })]), axis=circuit.species.time_axis)
         if ref_circuit is None or ref_circuit == circuit:
-            ref_circuit_signal = None
+            ref_circuit_data = None
         else:
             ref_circuit_result = ref_circuit.result_collector.get_result(
                 'signal')
-            ref_circuit_signal = None if ref_circuit_result is None else ref_circuit_result.data
+            ref_circuit_data = None if ref_circuit_result is None else ref_circuit_result.data
 
         t = np.arange(0, np.shape(new_copynumbers)[
             1]) * modeller_signal.time_interval
@@ -341,7 +351,7 @@ class CircuitModeller():
                                                         'legend': list(circuit.species.data.sample_names),
                                                         'out_type': 'svg'},
                                             analytics_kwargs={'signal_idx': signal.identities_idx,
-                                                              'ref_circuit_signal': ref_circuit_signal})
+                                                              'ref_circuit_data': ref_circuit_data})
         return circuit
 
     def simulate_signal_batch(self, circuits: List[Tuple[str, BaseCircuit]], circuit_idx: int = 0,
@@ -386,14 +396,14 @@ class CircuitModeller():
         b_new_copynumbers = np.array(b_new_copynumbers[1])
         if np.shape(b_new_copynumbers)[1] != circuits[circuit_idx].species.size and np.shape(b_new_copynumbers)[-1] == circuits[circuit_idx].species.size:
             b_new_copynumbers = np.swapaxes(b_new_copynumbers, 1, 2)
-        
+
         # Apply to all circuits
         if ref_circuit is None or ref_circuit == circuit:
-            ref_circuit_signal = None
+            ref_circuit_data = None
         else:
             ref_circuit_result = ref_circuit.result_collector.get_result(
                 'signal')
-            ref_circuit_signal = None if ref_circuit_result is None else ref_circuit_result.data
+            ref_circuit_data = None if ref_circuit_result is None else ref_circuit_result.data
         for i, circuit in enumerate(circuits):
             circuits[i].result_collector.add_result(b_new_copynumbers[i],
                                                     name='signal',
@@ -404,7 +414,7 @@ class CircuitModeller():
                                                                 'legend': list(circuit.species.data.sample_names),
                                                                 'out_type': 'svg'},
                                                     analytics_kwargs={'signal_idx': signal.identities_idx,
-                                                                      'ref_circuit_signal': ref_circuit_signal})
+                                                                      'ref_circuit_data': ref_circuit_data})
         return list(zip(names, circuits))
 
     # @time_it

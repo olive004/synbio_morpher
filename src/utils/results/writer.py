@@ -18,7 +18,7 @@ class DataWriter():
         self.purpose = purpose
         self.script_dir = os.path.join('scripts')
         self.root_output_dir = os.path.join('data')
-        self.exception_dirs = os.path.join('example_data')
+        self.exception_dirs = os.path.join('example')
 
         if out_location is None:
             self.top_write_dir = self.make_location_from_purpose(purpose)
@@ -119,19 +119,22 @@ class DataWriter():
     def update_ensemble(self, new_ensemble: str):
         old_ensemble_write_dir = deepcopy(self.ensemble_write_dir)
         self.ensemble_script = new_ensemble
-        self.ensemble_write_dir = os.path.join(self.top_write_dir, self.ensemble_script)
+        self.ensemble_write_dir = os.path.join(
+            self.top_write_dir, self.ensemble_script)
         if not os.path.isdir(self.ensemble_write_dir):
             create_location(os.path.join(self.ensemble_write_dir))
-        self.update_writedir(old_ensemble_write_dir)
+        self._update_writedir(old_ensemble_write_dir)
 
-    def update_writedir(self, old_ensemble_write_dir):
+    def _update_writedir(self, old_ensemble_write_dir):
         if old_ensemble_write_dir in self.write_dir:
-            self.write_dir = self.write_dir.replace(old_ensemble_write_dir, self.ensemble_write_dir)
+            self.write_dir = self.write_dir.replace(
+                old_ensemble_write_dir, self.ensemble_write_dir)
         elif self.top_write_dir in self.write_dir:
-            self.write_dir = self.write_dir.replace(self.top_write_dir, self.ensemble_write_dir)
+            self.write_dir = self.write_dir.replace(
+                self.top_write_dir, self.ensemble_write_dir)
         else:
-            raise ValueError(f'Cannot update write directory (currently {self.write_dir}) for DataWriter. '\
-            f'Should contain either {old_ensemble_write_dir} or {self.top_write_dir}')
+            raise ValueError(f'Cannot update write directory (currently {self.write_dir}) for DataWriter. '
+                             f'Should contain either {old_ensemble_write_dir} or {self.top_write_dir}')
 
     def unsubdivide_last_dir(self):
         self.write_dir = os.path.dirname(self.write_dir)
@@ -142,7 +145,7 @@ class DataWriter():
         old_ensemble_write_dir = deepcopy(self.ensemble_write_dir)
         self.ensemble_script = ''
         self.ensemble_write_dir = deepcopy(self.top_write_dir)
-        self.update_writedir(old_ensemble_write_dir)
+        self._update_writedir(old_ensemble_write_dir)
 
     def unsubdivide(self):
         self.write_dir = deepcopy(self.ensemble_write_dir)
@@ -161,7 +164,9 @@ class Tabulated(ABC):
         self.max_table_length = find_sublist_max(self.data)
 
     def as_table(self):
-        return pd.DataFrame.from_dict(dict(zip(self.column_names, self.data)))
+        return pd.DataFrame.from_dict(dict(
+            zip(self.column_names, [[v] for v in self.data])),
+            dtype=object)
 
     @abstractmethod
     def get_table_properties(self):

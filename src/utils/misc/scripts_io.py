@@ -96,7 +96,7 @@ def get_search_dir(config_file: dict, config_searchdir_key: str = None,
                                   get_recent_experiment_folder(sourcing_config.get(
                                       source_dir_key)), sourcing_config.get("purpose_to_get_source_dir_from"))
         if not os.path.isdir(source_dir):
-            raise ConfigError(f'Could not find directory {source_dir}')
+            raise ConfigError(f'Could not find directory {source_dir} (maybe it is not the most recent experiment directory anymore)')
         if modify_config_for_posterity:
             config_file[config_searchdir_key]['source_dir_actually_used_POSTERITY'] = source_dir
         return config_file, source_dir
@@ -202,7 +202,8 @@ def load_experiment_config_original(starting_experiment_folder: str, target_purp
                               f'for purpose {target_purpose} when starting from '
                               f'experiment folder {starting_experiment_folder}.')
         if type(original_source_dir) == list and len(original_source_dir) == 1:
-            logging.warning(f'Expected string for {original_source_dir} but got list')
+            logging.warning(
+                f'Expected string for {original_source_dir} but got list')
             original_source_dir = original_source_dir[0]
         original_config = load_experiment_config(
             original_source_dir)

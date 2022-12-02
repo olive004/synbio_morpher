@@ -5,6 +5,7 @@ import pandas as pd
 
 
 class Data():
+    """ Holds things like FASTA files or other genetic info files. """
 
     def __init__(self, loaded_data: dict, identities: dict = {}, source_files=None) -> None:
         self.data = loaded_data if loaded_data is not None else {}
@@ -18,10 +19,6 @@ class Data():
             return self.data[self.sample_names[idx]]
         else:
             return self.data[idx]
-
-    def add_data(self, name, data):
-        self.data[name] = data
-        self.sample_names.append(name)
 
     @staticmethod
     def convert_names_to_idxs(names_table: dict, source: list) -> dict:

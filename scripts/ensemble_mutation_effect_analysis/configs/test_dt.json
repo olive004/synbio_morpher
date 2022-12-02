@@ -11,7 +11,7 @@
             "experiment": {
                 "purpose": "generate_species_templates"
             },
-            "molecular_params": "./scripts/common/configs/RNA_circuit/molecular_params.json",
+            "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
             "circuit_generation": {
                 "repetitions": 20,
                 "species_count": 3,
@@ -27,7 +27,7 @@
                 "postprocess": true
             },
             "interaction_file_keyword": "eqconstants",
-            "molecular_params": "./scripts/common/configs/RNA_circuit/molecular_params.json",
+            "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
             "experiment": {
                 "purpose": "gather_interaction_stats"
             },    
@@ -74,7 +74,7 @@
                 "total_time": 1000,
                 "magnitude": 100,
                 "solver": "jax",
-                "use_batching": true,
+                "use_batch_mutations": true,
                 "time_interval": 0.1
             },
             "source_of_interaction_stats": {

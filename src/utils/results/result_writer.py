@@ -4,12 +4,13 @@ import logging
 import os
 
 import numpy as np
-from src.utils.results.analytics.timeseries import Timeseries
+from src.utils.results.analytics.timeseries import get_analytics_types
 from src.utils.results.results import Result
 from src.utils.results.writer import DataWriter
+from src.utils.results.visualisation import Graph
 from src.utils.misc.numerical import transpose_arraylike
 from src.utils.misc.string_handling import make_time_str
-from src.utils.circuit.agnostic_circuits.base_circuit import BaseCircuit
+from src.utils.circuit.agnostic_circuits.circuit_new import Circuit
 
 
 class ResultWriter(DataWriter):
@@ -43,7 +44,12 @@ class ResultWriter(DataWriter):
 
         report = {}
         for writeable in keys:
-            report[writeable] = prettify_writeable(source.get(writeable, ''))
+            if writeable not in source:
+                writeable = [s for s in source.keys() if writeable in s]
+            if type(writeable) != list:
+                writeable = [writeable]
+            for w in writeable:
+                report[w] = prettify_writeable(source.get(w, ''))
         self.report = report
 
         return report
@@ -62,7 +68,7 @@ class ResultWriter(DataWriter):
 
     def write_analytics(self, result: Result, new_report=False):
         analytics = result.analytics
-        writeables = Timeseries(data=None).get_analytics_types()
+        writeables = get_analytics_types()
         self.write_report(writeables, analytics, new_report,
                           out_name=f'report_{result.name}')
 
@@ -87,7 +93,7 @@ class ResultWriter(DataWriter):
                 if not no_analytics:
                     self.write_analytics(result, new_report=new_report)
 
-    def write_all(self, circuit: BaseCircuit, new_report: bool, no_visualisations: bool = False,
+    def write_all(self, circuit: Circuit, new_report: bool, no_visualisations: bool = False,
                   only_numerical: bool = False, no_numerical: bool = False):
         if not no_visualisations:
             self.visualise_graph(circuit)
@@ -98,14 +104,15 @@ class ResultWriter(DataWriter):
     def visualise(self, out_name, writer, vis_kwargs):
         self.output(out_name=out_name, write_func=writer, **vis_kwargs)
 
-    def visualise_graph(self, circuit: BaseCircuit, mode="pyvis", new_vis=False):
-        circuit.refresh_graph()
+    def visualise_graph(self, circuit: Circuit, mode="pyvis", new_vis=False):
+        graph = Graph(source_matrix=circuit.interactions.eqconstants, labels=[
+                           s.name for s in circuit.model.species])
 
         out_path = os.path.join(self.write_dir, 'graph')
         if mode == 'pyvis':
             from src.utils.results.visualisation import visualise_graph_pyvis
-            visualise_graph_pyvis(graph=circuit.graph,
+            visualise_graph_pyvis(graph=graph,
                                   out_path=out_path, new_vis=new_vis)
         else:
             from src.utils.results.visualisation import visualise_graph_pyplot
-            visualise_graph_pyplot(graph=circuit.graph, new_vis=new_vis)
+            visualise_graph_pyplot(graph=graph, new_vis=new_vis)

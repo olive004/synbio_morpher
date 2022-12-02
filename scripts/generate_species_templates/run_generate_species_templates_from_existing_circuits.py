@@ -4,7 +4,7 @@ import os
 import sys
 
 from fire import Fire
-from scripts.common.circuit import construct_circuit_from_cfg
+from src.utils.circuit.agnostic_circuits.circuit_manager_new import construct_circuit_from_cfg
 from src.utils.misc.io import get_pathnames
 
 from src.utils.results.experiments import Experiment, Protocol

@@ -1,6 +1,6 @@
 {
-    "query": "./src/utils/data/example_data/toy_mRNA.fasta",
-    "target": "./src/utils/data/example_data/toy_ncRNA.fasta",
+    "query": "./src/utils/data/example/toy_mRNA.fasta",
+    "target": "./src/utils/data/example/toy_ncRNA.fasta",
     "qidxpos0": 1,
     "tidxpos0": 1,
     "param_file": "",
