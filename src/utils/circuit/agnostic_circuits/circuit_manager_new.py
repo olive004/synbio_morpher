@@ -283,9 +283,10 @@ class CircuitModeller():
             ref_circuit_result = ref_circuit.result_collector.get_result(
                 'signal')
             if ref_circuit_result is None:
-                ref_circuit_data = b_new_copynumbers[circuits.index(ref_circuit)]
+                ref_circuit_data = b_new_copynumbers[circuits.index(
+                    ref_circuit)]
             else:
-                ref_circuit_data = ref_circuit_result.data #.flatten()
+                ref_circuit_data = ref_circuit_result.data  # .flatten()
         b_analytics = jax.vmap(partial(generate_analytics, time=t, labels=[s.name for s in ref_circuit.model.species],
                                        signal_onehot=signal.onehot, ref_circuit_data=ref_circuit_data))(data=b_new_copynumbers)
         b_analytics = [{k: v[i] for k, v in b_analytics.items()}
@@ -346,11 +347,11 @@ class CircuitModeller():
         self.result_writer.unsubdivide()
 
     def batch_circuits_old(self,
-                       all_circuits: List[Circuit],
-                       methods: dict,
-                       include_normal_run: bool = True,
-                       batch_size: int = None,
-                       write_to_subsystem=False) -> List[Circuit]:
+                           all_circuits: List[Circuit],
+                           methods: dict,
+                           include_normal_run: bool = True,
+                           batch_size: int = None,
+                           write_to_subsystem=False) -> List[Circuit]:
         batch_size = len(all_circuits) if batch_size is None else batch_size
         all_subcircuits = {}
         for b in range(0, len(all_circuits), batch_size):
@@ -373,41 +374,58 @@ class CircuitModeller():
         return all_subcircuits
 
     def batch_circuits(self,
-                        circuits: List[Circuit],
-                        methods: dict,
-                        batch_size: int = None,
-                        include_normal_run: bool = True,
-                        write_to_subsystem=True):
+                       circuits: List[Circuit],
+                       methods: dict,
+                       batch_size: int = None,
+                       include_normal_run: bool = True,
+                       write_to_subsystem=True):
         batch_size = len(circuits) if batch_size is None else batch_size
 
-        subcircuits = [None] * (len(circuits) + len(flatten_nested_dict(circuits[0].mutations)))
-        c_idx = 0
-        for circuit in circuits:
-            subcircuits[c_idx] = circuit
-            for subname, mutation in flatten_nested_dict(circuit.mutations).items():
-                subcircuits[c_idx] = self.make_subcircuit(circuit, subname, mutation)
-                
-        ref_circuit = subcircuits[0]
-        for b in range(0, len(subcircuits), batch_size):
-            logging.warning(
-                f'Batching {b} - {b+batch_size} circuits (out of {len(subcircuits)})')
-            bf = np.where(b+batch_size < len(subcircuits), b+batch_size, len(subcircuits))
-            b_circuits = subcircuits[b:bf]
-            if not b_circuits:
-                continue
-            b_circuits, ref_circuit = self.run_batch(
-                b_circuits, methods, ref_circuit=ref_circuit,
-                include_normal_run=include_normal_run,
-                write_to_subsystem=write_to_subsystem)
-            subcircuits[b:bf] = b_circuits
+        max_circuits = 1000
+        num_subcircuits = len(flatten_nested_dict(circuits[0].mutations))
+        expected_num_subcircuits = len(circuits) * (1+num_subcircuits)
+        if expected_num_subcircuits > max_circuits:
+            viable_circuit_num = int(max_circuits / (num_subcircuits+1))
+        else:
+            viable_circuit_num = len(circuits)
+        
+        for vi in range(0, len(circuits), viable_circuit_num):
+            vf = min(vi+viable_circuit_num, len(circuits))
+            # Preallocate then create subcircuits
+            subcircuits = [circuits[0]] * (viable_circuit_num * (1+num_subcircuits))
+            c_idx = 0
+            for circuit in circuits[vi: vf]:
+                subcircuits[c_idx] = circuit
+                c_idx += 1
+                for subname, mutation in flatten_nested_dict(circuit.mutations).items():
+                    subcircuits[c_idx] = self.make_subcircuit(
+                        circuit, subname, mutation)
+                    c_idx += 1
+
+            # Batch
+            ref_circuit = subcircuits[0]
+            for b in range(0, len(subcircuits), batch_size):
+                logging.warning(
+                    f'Batching {b} - {b+batch_size} circuits (out of {len(subcircuits)})')
+                bf = np.where(b+batch_size < len(subcircuits),
+                            b+batch_size, len(subcircuits))
+                b_circuits = subcircuits[b:bf]
+                if not b_circuits:
+                    continue
+                b_circuits, ref_circuit = self.run_batch(
+                    b_circuits, methods, ref_circuit=ref_circuit,
+                    include_normal_run=include_normal_run,
+                    write_to_subsystem=write_to_subsystem)
+                subcircuits[b:bf] = b_circuits
+            circuits[vi:vf] = subcircuits
         return subcircuits
 
     def run_batch(self,
-                   subcircuits: List[Circuit],
-                   methods: dict,
-                   ref_circuit: Circuit = None,
-                   include_normal_run: bool = True,
-                   write_to_subsystem: bool = True) -> List[Circuit]:
+                  subcircuits: List[Circuit],
+                  methods: dict,
+                  ref_circuit: Circuit = None,
+                  include_normal_run: bool = True,
+                  write_to_subsystem: bool = True) -> List[Circuit]:
         for method, kwargs in methods.items():
             if kwargs.get('batch'):  # method is batchable
                 if hasattr(self, method):
@@ -419,7 +437,8 @@ class CircuitModeller():
                         f'Could not find method @{method} in class {self}')
             else:
                 for i, subcircuit in enumerate(subcircuits):
-                    logging.warning(f'\t\tSubcircuit {i} ({subcircuit.name} - {subcircuit.subname}): {method}')
+                    logging.warning(
+                        f'\t\tSubcircuit {i} ({subcircuit.name} - {subcircuit.subname}): {method}')
                     dir_name = subcircuit.name if subcircuit.subname == 'ref_circuit' or not write_to_subsystem else os.path.join(
                         subcircuit.name, 'mutations', subcircuit.subname)
                     self.result_writer.subdivide_writing(
@@ -435,10 +454,10 @@ class CircuitModeller():
         return subcircuits, ref_circuit
 
     def run_batch_old(self,
-                  subcircuits: Dict[str, Dict[str, Circuit]],
-                  methods: dict,
-                  include_normal_run: bool = True,
-                  write_to_subsystem: bool = False) -> Dict[str, Dict[str, Circuit]]:
+                      subcircuits: Dict[str, Dict[str, Circuit]],
+                      methods: dict,
+                      include_normal_run: bool = True,
+                      write_to_subsystem: bool = False) -> Dict[str, Dict[str, Circuit]]:
         # ref_circuit = None
         for method, kwargs in methods.items():
             if kwargs.get('batch') == True:  # method is batchable
