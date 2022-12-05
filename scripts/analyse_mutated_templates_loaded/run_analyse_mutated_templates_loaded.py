@@ -92,13 +92,13 @@ def main(config=None, data_writer=None):
     # Binding rates interactions og min and max
     log_opts = [(False, False), (True, False)]
     for log_opt in log_opts:
+        log_text = '_log' if any(log_opt) else ''
         cols_xs = ['eqconstants_max_interaction',
                    'eqconstants_min_interaction']
         out_names = ['eqconstants_max_freqs',
                      'eqconstants_min_freqs']
         titles = ['Maximum equilibrium constant, unmutated circuits',
                   'Minimum equilibrium constant, unmutated circuits']
-        log_text = '_log' if any(log_opt) else ''
         for cols_x, out_name, title in zip(cols_xs, out_names, titles):
             protocols.append(
                 Protocol(
@@ -284,40 +284,46 @@ def main(config=None, data_writer=None):
 
     # Analytics histplots
     analytics_types = get_analytics_types()
+    visualisation_types = [
+        '', '_ratio_from_mutation_to_base', '_diff_to_base_circuit']
+    visualisation_type_titles = [
+        '', ' ratio', ' difference']
     for log_opt in [(False, False)]:
+        log_text = '_log' if any(log_opt) else ''
         for m in num_mutations:
-            for analytics_type, cols_x, title, xlabel in [
-                    [
-                        analytics_type,
-                        f'{analytics_type}_diff_to_base_circuit',
-                        f'{prettify_keys_for_label(analytics_type)} difference between circuit\nand mutated counterparts, {m} mutation{plot_grammar}',
-                        f'{prettify_keys_for_label(analytics_type)} difference'
-                    ] for analytics_type in analytics_types]:
+            plot_grammar_m = 's' if m > 1 else ''
+            for v, vt in zip(visualisation_types, visualisation_type_titles):
+                for analytics_type, cols_x, title, xlabel in [
+                        [
+                            analytics_type,
+                            f'{analytics_type}{v}',
+                            f'{prettify_keys_for_label(analytics_type)}{vt} between circuit\nand mutated counterparts, {m} mutation{plot_grammar_m}',
+                            f'{prettify_keys_for_label(analytics_type)}{vt}'
+                        ] for analytics_type in analytics_types]:
 
-                log_text = '_log' if log_opt[0] or log_opt[1] else ''
-                complete_colx_by_str = analytics_type + \
-                    '_wrt' if analytics_type in get_signal_dependent_analytics() else None
-                protocols.append(
-                    Protocol(
-                        partial(
-                            visualise_data,
-                            data_writer=data_writer, cols_x=[cols_x],
-                            plot_type='histplot',
-                            out_name=f'{analytics_type}{log_text}_m{m}',
-                            complete_colx_by_str=complete_colx_by_str,
-                            exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
-                            selection_conditions=[(
-                                'mutation_num', operator.eq, m
-                            )],
-                            log_axis=log_opt,
-                            use_sns=True,
-                            title=title,
-                            xlabel=xlabel),
-                        req_input=True,
-                        name='visualise_interactions_difference',
-                        skip=config_file.get('only_visualise_circuits', False)
+                    complete_colx_by_str = analytics_type + \
+                        '_wrt' if analytics_type in get_signal_dependent_analytics() else None
+                    protocols.append(
+                        Protocol(
+                            partial(
+                                visualise_data,
+                                data_writer=data_writer, cols_x=[cols_x],
+                                plot_type='histplot',
+                                out_name=f'{cols_x}{log_text}_m{m}',
+                                complete_colx_by_str=complete_colx_by_str,
+                                exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
+                                selection_conditions=[(
+                                    'mutation_num', operator.eq, m
+                                )],
+                                log_axis=log_opt,
+                                use_sns=True,
+                                title=title,
+                                xlabel=xlabel),
+                            req_input=True,
+                            name='visualise_interactions_difference',
+                            skip=config_file.get('only_visualise_circuits', False)
+                        )
                     )
-                )
 
     experiment = Experiment(config=config, config_file=config_file, protocols=protocols,
                             data_writer=data_writer)

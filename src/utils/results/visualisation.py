@@ -244,11 +244,18 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
             return [None]
         if complete_col_by_str is not None:
             for i, col in enumerate(cols):
-                rex = np.asarray([re.search(f"^{complete_col_by_str}.*{col.split(complete_col_by_str.split('wrt')[0])[-1]}", c) for c in data.columns])
+                end = col.split(complete_col_by_str.split('_wrt')[0])[-1]
+                rex = np.asarray([re.search(f"^{complete_col_by_str}.*{end}", c) for c in data.columns])
                 if not list(data.columns[np.where(rex != None)[0]]):
                     logging.warning(f'Could not find complete column name for {col} with str {complete_col_by_str}')
-                cols[i] = list(data.columns[np.where(rex != None)[0]])
+                potential_cols = list(data.columns[np.where(rex != None)[0]])
+                if not end:
+                    cols[i] = min(potential_cols)
+                else:
+                    cols[i] = potential_cols
         return flatten_listlike(cols, safe=True)
+    if plot_kwargs.get('xlabel') == 'response_time' or plot_kwargs.get('xlabel') == 'Response time':
+        plot_kwargs
     cols_x = process_cols(cols_x, complete_colx_by_str)
     cols_y = process_cols(cols_y, complete_coly_by_str)
 
