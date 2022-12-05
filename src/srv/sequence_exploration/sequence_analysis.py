@@ -67,10 +67,13 @@ def filter_data(data: pd.DataFrame, filters: dict = {}):
     for k in fks:
         if filters[k] is None:
             filters.pop(k)
-    filt_stats = data[data['num_interacting']
-                      >= filters.get("min_num_interacting", data["num_interacting"].iloc[0])]
-    filt_stats = filt_stats[filt_stats['num_self_interacting'] <= filters.get(
-        "max_self_interacting", data["num_self_interacting"].iloc[0])]
+    filt_stats = data
+    if filters.get("min_num_interacting") is not None:
+        filt_stats = data[data['num_interacting']
+                          >= filters["min_num_interacting"]]
+    if filters.get("max_self_interacting") is not None:
+        filt_stats = filt_stats[filt_stats['num_self_interacting'] <= filters.get(
+            "max_self_interacting", data["num_self_interacting"].iloc[0])]
     filt_stats = filt_stats.iloc[:min(filters.get(
         'max_total', len(filt_stats)), len(filt_stats))]
     return filt_stats

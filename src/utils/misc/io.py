@@ -2,7 +2,7 @@ from typing import List, Union
 import glob
 import os
 from src.utils.misc.string_handling import remove_file_extension
-from src.utils.misc.type_handling import nest_list_dict
+from src.utils.misc.type_handling import nest_list_dict, flatten_nested_listlike
 from src.utils.misc.helper import vanilla_return
 from src.utils.data.data_format_tools.common import load_multiple_as_list
 
@@ -27,7 +27,7 @@ def get_pathnames(search_dir: str, file_key: Union[List, str] = '', first_only: 
                   allow_empty: bool = False, subdir: str = '',
                   subdirs: list = None,
                   conditional: Union[str, None] = 'filenames',
-                  as_dict=False):
+                  as_dict=False) -> Union[dict, list]:
     """ Get the pathnames in a folder given a keyword. 
 
     Args:
@@ -53,9 +53,10 @@ def get_pathnames(search_dir: str, file_key: Union[List, str] = '', first_only: 
             all_path_names = []
             for fk in file_key:
                 all_path_names.append(
-                    set(sorted([f for f in glob.glob(os.path.join(
-                        search_dir, '*' + fk + '*')) if path_condition_f(f)]))
+                    set([f for f in glob.glob(os.path.join(
+                        search_dir, '*' + fk + '*')) if path_condition_f(f)])
                 )
+            # all_path_names = flatten_nested_listlike(all_path_names)
             path_names = list(
                 all_path_names[0].intersection(*all_path_names[1:]))
     elif not file_key:
