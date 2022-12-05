@@ -116,8 +116,7 @@ class CircuitModeller():
         elif solver_type == 'ivp':
             steady_state_result = integrate.solve_ivp(
                 partial(bioreaction_sim, args=None, reactions=circuit.qreactions.reactions, signal=vanilla_return,
-                        signal_onehot=np.zeros_like(circuit.signal.onehot),
-                        inverse_onehot=np.ones_like(circuit.signal.onehot)),
+                        signal_onehot=np.zeros_like(circuit.signal.onehot)),
                 (0, modeller.max_time),
                 y0=circuit.qreactions.quantities)
             if not steady_state_result.success:
@@ -134,8 +133,7 @@ class CircuitModeller():
         modelling_func = partial(bioreaction_sim, args=None,
                                  reactions=circuit.qreactions.reactions,
                                  signal=circuit.signal.func,
-                                 signal_onehot=circuit.signal.onehot,
-                                 inverse_onehot=invert_onehot(circuit.signal.onehot))
+                                 signal_onehot=circuit.signal.onehot)
 
         copynumbers = self.iterate_modelling_func(y0, modelling_func,
                                                   max_time=self.t1,

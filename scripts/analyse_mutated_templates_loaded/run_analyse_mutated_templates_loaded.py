@@ -23,7 +23,7 @@ from src.utils.data.data_format_tools.common import load_json_as_dict, load_json
 def main(config=None, data_writer=None):
     # Set configs
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
-        "scripts", "analyse_mutated_templates_loaded", "configs", "base_config_test_2.json"))
+        "scripts", "analyse_mutated_templates_loaded", "configs", "base_config.json"))
     config_file = load_json_as_dict(config)
 
     # Start_experiment
@@ -90,14 +90,14 @@ def main(config=None, data_writer=None):
     ]
 
     # Binding rates interactions og min and max
-    cols_xs = ['eqconstants_max_interaction',
-               'eqconstants_min_interaction']
-    out_names = ['eqconstants_max_freqs',
-                 'eqconstants_min_freqs']
-    titles = ['Maximum equilibrium constant, unmutated circuits',
-              'Minimum equilibrium constant, unmutated circuits']
     log_opts = [(False, False), (True, False)]
     for log_opt in log_opts:
+        cols_xs = ['eqconstants_max_interaction',
+                   'eqconstants_min_interaction']
+        out_names = ['eqconstants_max_freqs',
+                     'eqconstants_min_freqs']
+        titles = ['Maximum equilibrium constant, unmutated circuits',
+                  'Minimum equilibrium constant, unmutated circuits']
         log_text = '_log' if any(log_opt) else ''
         for cols_x, out_name, title in zip(cols_xs, out_names, titles):
             protocols.append(
@@ -137,6 +137,9 @@ def main(config=None, data_writer=None):
                             plot_type='histplot',
                             out_name=out_name + log_text,
                             exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
+                            selection_conditions=[(
+                                'mutation_num', operator.eq, m
+                            )],
                             # threshold_value_max=binding_rates_threshold_upper,
                             log_axis=log_opt,
                             use_sns=True,
@@ -223,6 +226,8 @@ def main(config=None, data_writer=None):
                         xlabel = 'Dissociation rate ' + r'$k_d$' + ' (' \
                             f'{rate_unit})' \
                             f'{binding_rates_threshold_upper_text}'
+                    if 'Difference' in title:
+                        xlabel = r'$\Delta$ ' + xlabel
 
                     cols_x = f'{interaction_type}{visualisation_type}'
                     out_name = f'{cols_x}{log_text}_m{m}'
@@ -264,7 +269,7 @@ def main(config=None, data_writer=None):
                 Protocol(
                     partial(visualise_data, data_writer=data_writer, cols_x=[cols_x],
                             plot_type='histplot',
-                            out_name=f'{cols_x}_unmutated',
+                            out_name=f'{cols_x}_unmutated' + log_text,
                             exclude_rows_nonempty_in_cols=['mutation_name'],
                             threshold_value_max=binding_rates_threshold_upper,
                             log_axis=log_opt,
@@ -300,6 +305,9 @@ def main(config=None, data_writer=None):
                             out_name=f'{analytics_type}{log_text}_m{m}',
                             complete_colx_by_str=complete_colx_by_str,
                             exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
+                            selection_conditions=[(
+                                'mutation_num', operator.eq, m
+                            )],
                             log_axis=log_opt,
                             use_sns=True,
                             title=title,

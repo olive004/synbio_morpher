@@ -111,8 +111,8 @@ class ResultWriter(DataWriter):
         out_path = os.path.join(self.write_dir, 'graph')
         if mode == 'pyvis':
             from src.utils.results.visualisation import visualise_graph_pyvis
-            visualise_graph_pyvis(graph=graph,
+            visualise_graph_pyvis(graph=graph.graph,
                                   out_path=out_path, new_vis=new_vis)
         else:
             from src.utils.results.visualisation import visualise_graph_pyplot
-            visualise_graph_pyplot(graph=graph, new_vis=new_vis)
+            visualise_graph_pyplot(graph=graph.graph, new_vis=new_vis)

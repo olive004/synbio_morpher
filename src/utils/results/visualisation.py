@@ -87,7 +87,7 @@ class Graph():
         source_matrix = np.zeros(
             (len(labels), len(labels))) if source_matrix is None else source_matrix
         self._node_labels = labels
-        self.build_graph(source_matrix)
+        self.graph = self.build_graph(source_matrix)
 
     def build_graph(self, source_matrix: np.ndarray) -> nx.DiGraph:
         graph = nx.from_numpy_matrix(source_matrix, create_using=nx.DiGraph)
@@ -135,25 +135,26 @@ def expand_data_by_col(data: pd.DataFrame, columns: Union[str, list], column_for
     is given for expanding the column data """
 
     def make_expansion_df(df_lists, col_names: list) -> pd.DataFrame:
-        temp_data = deepcopy(data)
         expanded_data = pd.DataFrame(columns=data.columns, dtype=object)
         for c in col_names:
+            temp_data = deepcopy(data)
+            temp_data.drop(columns, axis=1, inplace=True)
             expanded_df_col = pd.DataFrame.from_dict(
                 dict(zip(columns + [column_for_expanding_coldata],
                      [df_lists.loc[column][c] for column in columns] + [c])),
                 dtype=object
             )
             # {column: df_lists[c], column_for_expanding_coldata: c})
-            temp_data.drop(columns, axis=1, inplace=True)
-            temp_data = temp_data.assign(
-                **dict(zip(
-                    columns + [column_for_expanding_coldata],
-                    [pd.Series(expanded_df_col[column].values) for column in columns] + [pd.Series(
-                        expanded_df_col[column_for_expanding_coldata].values)]))
-                # column: pd.Series(expanded_df_col[column].values),
-                # column_for_expanding_coldata: pd.Series(
-                #     expanded_df_col[column_for_expanding_coldata].values)
-            )
+            # temp_data = temp_data.assign(
+            #     **dict(zip(
+            #         columns + [column_for_expanding_coldata],
+            #         [pd.Series(expanded_df_col[column].values) for column in columns] + [pd.Series(
+            #             expanded_df_col[column_for_expanding_coldata].values)]))
+            #     # column: pd.Series(expanded_df_col[column].values),
+            #     # column_for_expanding_coldata: pd.Series(
+            #     #     expanded_df_col[column_for_expanding_coldata].values)
+            # )
+            temp_data = pd.concat([temp_data, expanded_df_col], axis=1)
             expanded_data = pd.concat(
                 [expanded_data, temp_data], axis=0, ignore_index=True)
         return expanded_data
