@@ -6,7 +6,6 @@ import jax.numpy as jnp
 import diffrax as dfx
 from bioreaction.simulation.simfuncs.basic_de import bioreaction_sim, bioreaction_sim_expanded
 from bioreaction.model.data_containers import QuantifiedReactions, Reactions
-from bioreaction.misc.misc import invert_onehot
 from src.utils.modelling.base import Modeller
 
 
@@ -66,7 +65,6 @@ def simulate_signal_scan(copynumbers, time, full_interactions, creation_rates, d
 
 
 def bioreactions_simulate_signal_scan(copynumbers, time: np.ndarray, inputs, outputs, forward_rates, reverse_rates, signal, signal_onehot: np.ndarray):
-    inverse_onehot = invert_onehot(signal_onehot)
 
     def to_scan(carry, thingy):
         t = thingy
@@ -74,7 +72,7 @@ def bioreactions_simulate_signal_scan(copynumbers, time: np.ndarray, inputs, out
                                         # forward_rates=forward_rates,
                                         # reverse_rates=reverse_rates,
                                         signal=signal,
-                                        signal_onehot=signal_onehot, inverse_onehot=inverse_onehot), carry
+                                        signal_onehot=signal_onehot), carry
     return jax.lax.scan(to_scan, copynumbers, (time))
 
 
@@ -88,7 +86,7 @@ def bioreaction_sim_wrapper(qreactions: QuantifiedReactions, t0, t1, dt0,
     then set time to infinity for the remainder until max_steps have been reached. """
 
     term = dfx.ODETerm(partial(bioreaction_sim, reactions=qreactions.reactions, signal=signal,
-                               signal_onehot=signal_onehot, inverse_onehot=invert_onehot(signal_onehot)))
+                               signal_onehot=signal_onehot))
     # y0 = qreactions.quantities if y0 is None else y0
 
     return dfx.diffeqsolve(term, solver, t0=t0, t1=t1, dt0=dt0,
@@ -105,7 +103,7 @@ def bioreaction_sim_dfx_expanded(y0, t0, t1, dt0,
         partial(bioreaction_sim_expanded,
                 inputs=inputs, outputs=outputs, signal=signal,
                 forward_rates=forward_rates, reverse_rates=reverse_rates,
-                signal_onehot=signal_onehot, inverse_onehot=invert_onehot(signal_onehot))
+                signal_onehot=signal_onehot)
     )
     return dfx.diffeqsolve(term, solver,
                            t0=t0, t1=t1, dt0=dt0,
