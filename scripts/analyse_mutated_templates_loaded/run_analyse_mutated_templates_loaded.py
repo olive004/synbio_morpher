@@ -197,25 +197,26 @@ def main(config=None, data_writer=None):
         log_text = '_log' if any(log_opt) else ''
         for m in num_mutations:
 
+            plot_grammar_m = 's' if m > 1 else ''
             titles = [
                 # Binding rates dissociation
-                f'Maximum ' + r'$k_d$' + f', {m} mutation{plot_grammar}',
+                f'Maximum ' + r'$k_d$' + f', {m} mutation{plot_grammar_m}',
                 f'Difference between circuit\nand mutated (maximum ' +
-                r'$k_d$' + f'), {m} mutation{plot_grammar}',
+                r'$k_d$' + f'), {m} mutation{plot_grammar_m}',
                 f'Ratio between mutated and \noriginal circuit (maximum ' +
-                r'$k_d$' + f'), {m} mutation{plot_grammar}',
-                f'Minimum ' + r'$k_d$' + f', {m} mutation{plot_grammar}',
+                r'$k_d$' + f'), {m} mutation{plot_grammar_m}',
+                f'Minimum ' + r'$k_d$' + f', {m} mutation{plot_grammar_m}',
                 f'Difference between circuit\nand mutated (minimum ' +
-                r'$k_d$' + f'), {m} mutation{plot_grammar}',
+                r'$k_d$' + f'), {m} mutation{plot_grammar_m}',
                 f'Ratio between mutated and \noriginal circuit (minimum ' +
-                r'$k_d$' + f'), {m} mutation{plot_grammar}',
+                r'$k_d$' + f'), {m} mutation{plot_grammar_m}',
                 # eqconstant
-                f'Maximum equilibrium constant, {m} mutation{plot_grammar}',
-                f'Difference between reference and mutated\ncircuits, equilibrium constant (max), {m} mutation{plot_grammar}',
-                f'Ratio between mutated and original circuit\nequilibrium constant (max), {m} mutation{plot_grammar}',
-                f'Minimum equilibrium constant, {m} mutation{plot_grammar}',
-                f'Difference between reference and mutated\ncircuits, equilibrium constant (min), {m} mutation{plot_grammar}',
-                f'Ratio between mutated and original circuit\nequilibrium constant (min), {m} mutation{plot_grammar}'
+                f'Maximum equilibrium constant, {m} mutation{plot_grammar_m}',
+                f'Difference between reference and mutated\ncircuits, equilibrium constant (max), {m} mutation{plot_grammar_m}',
+                f'Ratio between mutated and original circuit\nequilibrium constant (max), {m} mutation{plot_grammar_m}',
+                f'Minimum equilibrium constant, {m} mutation{plot_grammar_m}',
+                f'Difference between reference and mutated\ncircuits, equilibrium constant (min), {m} mutation{plot_grammar_m}',
+                f'Ratio between mutated and original circuit\nequilibrium constant (min), {m} mutation{plot_grammar_m}'
             ]
             title_count = 0
             for interaction_type in interaction_types_chosen:
@@ -226,7 +227,7 @@ def main(config=None, data_writer=None):
                         xlabel = 'Dissociation rate ' + r'$k_d$' + ' (' \
                             f'{rate_unit})' \
                             f'{binding_rates_threshold_upper_text}'
-                    if 'Difference' in title:
+                    if 'Difference' in titles[title_count]:
                         xlabel = r'$\Delta$ ' + xlabel
 
                     cols_x = f'{interaction_type}{visualisation_type}'

@@ -381,13 +381,13 @@ class CircuitModeller():
 
         max_circuits = 1000
         num_subcircuits = len(flatten_nested_dict(circuits[0].mutations))
-        expected_num_subcircuits = len(circuits) * (1+num_subcircuits)
-        if expected_num_subcircuits > max_circuits:
+        expected_tot_subcircuits = len(circuits) * (1+num_subcircuits)
+        if expected_tot_subcircuits > max_circuits:
             viable_circuit_num = int(max_circuits / (num_subcircuits+1))
         else:
             viable_circuit_num = len(circuits)
 
-        logging.warning(f'\tFrom the {len(circuits)} being mutated, a total of {expected_num_subcircuits} circuits will be simulated.')
+        logging.warning(f'\t From {len(circuits)} circuits, a total of {expected_tot_subcircuits} mutated circuits will be simulated.')
         
         for vi in range(0, len(circuits), viable_circuit_num):
             vf = min(vi+viable_circuit_num, len(circuits))
@@ -406,7 +406,7 @@ class CircuitModeller():
             ref_circuit = subcircuits[0]
             for b in range(0, len(subcircuits), batch_size):
                 logging.warning(
-                    f'Batching {b} - {b+batch_size} circuits (out of {len(subcircuits)} (out of {expected_num_subcircuits}))')
+                    f'Batching {b} - {b+batch_size} circuits (out of {len(subcircuits)} (out of {expected_tot_subcircuits}))')
                 bf = np.where(b+batch_size < len(subcircuits),
                             b+batch_size, len(subcircuits))
                 b_circuits = subcircuits[b:bf]

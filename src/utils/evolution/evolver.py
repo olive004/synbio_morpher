@@ -137,21 +137,37 @@ class Evolver():
             return circuit
 
         def all_mutator(circuit: Circuit, algorithm: str):
+
+            def get_position_idxs(flat_idx: int, length: int, nesting: int):
+                """ Returns index of size `nesting` corresponding to indexing a nesting-dimensional 
+                array that is composed of np.arange(length), but repeated recursively. Such an 
+                array grows exponentially in size and a 1-D version of it can simply be indexed
+                multiple times instead. """
+                return sorted(set([np.mod(int(np.divide(flat_idx, np.power(length, i))), length) for i in range(nesting)]))
+
             mutation_nums_per_position = [len(
                 self.mutation_type_mapping.keys()) - 1]
             for i, specie in enumerate(circuit.model.species):
                 circuit.mutations[specie.name] = {}
                 sequence = specie.physical_data
-                for positions in ([i] for i in range(len(sequence))):
-                    mutation_types, positions = self.sample_mutations(
-                        sequence, positions, mutation_nums_per_position)
-                    for i, (mt, p) in enumerate(zip(mutation_types, positions)):
-                        mutation_idx = mutation_nums_per_position[0]*p + i
-                        mutations = self.make_mutations(
-                            specie=specie, positions=[
-                                p], mutation_idx=mutation_idx, mutation_types=[
-                                mt], algorithm=algorithm, template_file=circuit.data.source)
-                        circuit.mutations[specie.name][mutations.mutation_name] = mutations
+                sequence_l = len(sequence)
+                if sequence_l == 0:
+                    continue
+                
+                for mutation_nums_within_sequence in circuit.mutations_args['mutation_nums_within_sequence']:
+                    total_mutations = np.power(sequence_l, mutation_nums_within_sequence)
+
+                    for r in range(total_mutations):
+                        positions = get_position_idxs(r, sequence_l, mutation_nums_within_sequence)
+                        mutation_types, positions = self.sample_mutations(
+                            sequence, positions, mutation_nums_per_position)
+                        for i, (mt, p) in enumerate(zip(mutation_types, positions)):
+                            mutation_idx = mutation_nums_per_position[0]*p + i
+                            mutations = self.make_mutations(
+                                specie=specie, positions=[
+                                    p], mutation_idx=mutation_idx, mutation_types=[
+                                    mt], algorithm=algorithm, template_file=circuit.data.source)
+                            circuit.mutations[specie.name][mutations.mutation_name] = mutations
             return circuit
 
         if algorithm == "random":

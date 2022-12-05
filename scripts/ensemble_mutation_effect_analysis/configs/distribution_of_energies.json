@@ -44,7 +44,7 @@
             "data_path": null,
             "experiment": {
                 "purpose": "mutation_effect_on_interactions_signal",
-                "no_visualisations": false
+                "no_visualisations": true
             },
             "interaction_simulator": {
                 "name": "IntaRNA",
@@ -58,7 +58,6 @@
             "mutations": {
                 "algorithm": "all",
                 "mutation_counts": 10,
-                "mutation_nums_within_sequencex": [1, 2, 3, 5, 7, 10],
                 "mutation_nums_within_sequence": [1, 2],
                 "mutation_nums_per_position": 1,
                 "concurrent_species_to_mutate": "single_species_at_a_time"
