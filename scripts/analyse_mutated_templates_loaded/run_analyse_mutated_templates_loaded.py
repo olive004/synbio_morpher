@@ -107,6 +107,7 @@ def main(config=None, data_writer=None):
                             out_name=out_name + log_text,
                             exclude_rows_nonempty_in_cols=['mutation_name'],
                             # threshold_value_max=binding_rates_threshold_upper,
+                            selection_conditions = [('mutation_num', operator.ne, 0)],
                             log_axis=log_opt,
                             use_sns=True,
                             title=title,
