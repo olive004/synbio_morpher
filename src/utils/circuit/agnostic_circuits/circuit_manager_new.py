@@ -27,7 +27,7 @@ from src.utils.evolution.mutation import implement_mutation
 from src.utils.modelling.base import Modeller
 
 
-TEST_MODE = False
+TEST_MODE = True
 
 
 class CircuitModeller():
@@ -380,7 +380,7 @@ class CircuitModeller():
             ref_circuit = subcircuits[0]
             for b in range(0, len(subcircuits), batch_size):
                 logging.warning(
-                    f'Batching {b} - {b+batch_size} circuits (out of {len(subcircuits)} (out of {vi} / {len(circuits)} of {expected_tot_subcircuits}))')
+                    f'Batching {b} - {b+batch_size} circuits (out of {vi*len(subcircuits)} - {expected_tot_subcircuits}))')
                 bf = np.where(b+batch_size < len(subcircuits),
                             b+batch_size, len(subcircuits))
                 b_circuits = subcircuits[b:bf]

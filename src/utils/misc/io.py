@@ -77,8 +77,6 @@ def get_pathnames(search_dir: str, file_key: Union[List, str] = '', first_only: 
 
 
 def get_subdirectories(parent_dir, only_basedir=False, min_condition: int = 0):
-    # return [name for name in os.listdir(parent_dir)
-    #         if os.path.isdir(os.path.join(parent_dir, name))]
     subdirectories = [f.path for f in os.scandir(
         parent_dir) if f.is_dir() and len(os.listdir(f.path)) > min_condition]
     if only_basedir:

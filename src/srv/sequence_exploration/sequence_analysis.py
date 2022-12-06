@@ -260,7 +260,7 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFrame:
 
     info_table = init_info_table()
 
-    circuit_dirs = get_subdirectories(source_dir, min_condition=3)
+    circuit_dirs = get_subdirectories(source_dir) #, min_condition=3)
     for circ_idx, circuit_dir in enumerate(circuit_dirs):
         circuit_name = os.path.basename(circuit_dir)
         mutations_pathname = get_pathnames(
