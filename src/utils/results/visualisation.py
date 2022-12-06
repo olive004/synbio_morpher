@@ -254,8 +254,6 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                 else:
                     cols[i] = potential_cols
         return flatten_listlike(cols, safe=True)
-    if plot_kwargs.get('xlabel') == 'response_time' or plot_kwargs.get('xlabel') == 'Response time':
-        plot_kwargs
     cols_x = process_cols(cols_x, complete_colx_by_str)
     cols_y = process_cols(cols_y, complete_coly_by_str)
 
@@ -627,7 +625,8 @@ class VisODE():
             "multiple": "dodge",  # "stack", "fill", "dodge"
             "palette": "deep",
             # palette="light:m_r",
-            "title": plot_kwargs.get('title')
+            "title": plot_kwargs.get('title'),
+            "hue": plot_kwargs.get('hue')
         }
         default_kwargs.update(histplot_kwargs)
         self.sns_generic_plot(sns.histplot, out_path,
