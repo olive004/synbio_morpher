@@ -14,7 +14,7 @@ from src.srv.io.loaders.data_loader import GeneCircuitLoader
 from src.srv.io.loaders.experiment_loading import INTERACTION_FILE_ADDONS
 from src.utils.misc.numerical import NUMERICAL, cast_astype
 from src.utils.misc.type_handling import flatten_nested_listlike
-from src.utils.results.analytics.timeseries import get_analytics_types
+from src.utils.results.analytics.timeseries import get_analytics_types_all
 from src.utils.results.visualisation import expand_data_by_col
 from src.utils.results.writer import DataWriter
 from src.srv.parameter_prediction.interactions import InteractionMatrix
@@ -249,7 +249,7 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFrame:
         return table
 
     def write_results(info_table: pd.DataFrame) -> None:
-        result_report_keys = get_analytics_types()
+        result_report_keys = get_analytics_types_all()
         info_table = expand_data_by_col(info_table, columns=result_report_keys, find_all_similar_columns=True,
                                         column_for_expanding_coldata='sample_names', idx_for_expanding_coldata=0)
         data_writer.output(
@@ -489,7 +489,7 @@ def b_tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFram
         return table
 
     def write_results(info_table: pd.DataFrame) -> None:
-        result_report_keys = get_analytics_types()
+        result_report_keys = get_analytics_types_all()
         info_table = expand_data_by_col(info_table, columns=result_report_keys, find_all_similar_columns=True,
                                         column_for_expanding_coldata='sample_names', idx_for_expanding_coldata=0)
         data_writer.output(

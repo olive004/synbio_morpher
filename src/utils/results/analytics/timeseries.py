@@ -1,10 +1,12 @@
 import logging
 import numpy as np
 import jax.numpy as jnp
-from typing import List
+from typing import List, Tuple
 
 
 NUM_DTYPE = np.float32
+DIFF_KEY = '_diff_to_base_circuit'
+RATIO_KEY = '_ratio_from_mutation_to_base'
 
 
 def get_derivative(data):
@@ -131,6 +133,9 @@ def frequency(data):
     freq = jnp.fft.fftfreq(len(spectrum))
     return freq
 
+def get_analytics_types_all():
+    return get_analytics_types() + get_analytics_types_diffs() + get_analytics_types_ratios()
+
 def get_analytics_types():
     """ The naming here has to be unique and not include small 
     raw values like diff, ratio, max, min. """
@@ -148,9 +153,13 @@ def get_signal_dependent_analytics():
             'sensitivity',
             'sensitivity_estimate']
 
-def generate_analytics(data, time, labels: List[str], signal_onehot=None, ref_circuit_data=None):
-    signal_idxs = jnp.where(signal_onehot == 1)[0]
-    signal_idxs = signal_idxs if len(signal_idxs) >= 1 else None
+def get_analytics_types_diffs():
+    return [a+DIFF_KEY for a in get_analytics_types()]
+
+def get_analytics_types_ratios():
+    return [a+RATIO_KEY for a in get_analytics_types()] 
+
+def generate_analytics_2(data: np.ndarray, time: np.ndarray, labels: List[str], signal_idxs: np.ndarray, ref_circuit_data: np.ndarray):
     analytics = {
         'first_derivative': get_derivative(data),
         'fold_change': fold_change(data),
@@ -164,27 +173,9 @@ def generate_analytics(data, time, labels: List[str], signal_onehot=None, ref_ci
     analytics['overshoot'] = get_overshoot(data, 
         analytics['steady_states'])
 
-    # analytics['response_time'] = {}
-    # analytics['precision'] = {}
-    # analytics['precision_estimate'] = {}
-    # analytics['sensitivity'] = {}
-    # analytics['sensitivity_estimate'] = {}
     if signal_idxs is not None:
-        signal_labels = list(map(labels. __getitem__, signal_idxs))
+        signal_labels = list(map(labels.__getitem__, signal_idxs))
         for s, s_idx in zip(signal_labels, signal_idxs):
-            # analytics['response_time'], \
-            #     analytics['response_time_high'], \
-            #     analytics['response_time_low'] = get_response_times(
-            #     analytics['steady_states'], analytics['first_derivative'], signal_idxs=signal_onehot)
-            # analytics['precision'][s] = get_precision(
-            #     analytics['steady_states'], s_idx)
-            # analytics['precision_estimate'][s] = get_precision(
-            #     analytics['steady_states'], s_idx, ignore_denominator=True)
-            # analytics['response_time'][s] = get_step_response_times(
-            #     analytics['steady_states'], analytics['first_derivative'], signal_idx=s_idx)
-            # analytics['sensitivity'] = get_sensitivity(s_idx)
-            # analytics['sensitivity_estimate'] = get_sensitivity(
-            #     s_idx, ignore_denominator=True)
             analytics[f'precision_wrt_species-{s_idx}'] = get_precision(
                 data, analytics['steady_states'], s_idx)
             analytics[f'precision_estimate_wrt_species-{s_idx}'] = get_precision(
@@ -194,12 +185,29 @@ def generate_analytics(data, time, labels: List[str], signal_onehot=None, ref_ci
             analytics[f'sensitivity_wrt_species-{s_idx}'] = get_sensitivity(data, s_idx)
             analytics[f'sensitivity_estimate_wrt_species-{s_idx}'] = get_sensitivity(
                 data, s_idx)
-    # else:
-    #     analytics['response_time'] = None  # {s: None for s in labels}
-    #     analytics['precision'] = None  # {s: None for s in labels}
-    #     analytics['precision_estimate'] = None  # {s: None for s in labels}
-    #     analytics['sensitivity'] = None
-    #     analytics['sensitivity_estimate'] = None
+    return analytics
+
+
+def generate_differences_ratios(analytics: dict, ref_analytics) -> Tuple[dict]:
+    differences = {}
+    ratios = {}
+    for k in ref_analytics.keys():
+        differences[k + DIFF_KEY] = jnp.subtract(ref_analytics[k], analytics[k])
+        ratios[k + RATIO_KEY] = jnp.divide(analytics[k], ref_analytics[k])
+    return differences, ratios
+
+
+def generate_analytics(data, time, labels: List[str], ref_circuit_data, signal_onehot):
+    signal_idxs = jnp.where(signal_onehot == 1)[0]
+    signal_idxs = signal_idxs if len(signal_idxs) >= 1 else None
+    analytics = generate_analytics_2(data=data, time=time, labels=labels, 
+        signal_idxs=signal_idxs, ref_circuit_data=ref_circuit_data)
+    
+    # Differences
+    ref_analytics = generate_analytics(data=ref_circuit_data, time=time, labels=labels, 
+        signal_idxs=signal_idxs, ref_circuit_data=ref_circuit_data)
+    
+    differences, ratios = generate_differences_ratios()
 
     return analytics
 

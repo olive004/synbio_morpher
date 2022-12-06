@@ -4,7 +4,7 @@ import logging
 import os
 
 import numpy as np
-from src.utils.results.analytics.timeseries import get_analytics_types
+from src.utils.results.analytics.timeseries import get_analytics_types_all
 from src.utils.results.results import Result
 from src.utils.results.writer import DataWriter
 from src.utils.results.visualisation import Graph
@@ -68,7 +68,7 @@ class ResultWriter(DataWriter):
 
     def write_analytics(self, result: Result, new_report=False):
         analytics = result.analytics
-        writeables = get_analytics_types()
+        writeables = get_analytics_types_all()
         self.write_report(writeables, analytics, new_report,
                           out_name=f'report_{result.name}')
 
