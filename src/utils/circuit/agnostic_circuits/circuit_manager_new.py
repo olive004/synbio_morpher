@@ -1,6 +1,7 @@
 from copy import deepcopy
 from typing import List, Dict
 from functools import partial
+from datetime import datetime
 import inspect
 import os
 import logging
@@ -353,7 +354,7 @@ class CircuitModeller():
                        write_to_subsystem=True):
         batch_size = len(circuits) if batch_size is None else batch_size
 
-        max_circuits = 1000
+        max_circuits = 800
         num_subcircuits = len(flatten_nested_dict(circuits[0].mutations))
         expected_tot_subcircuits = len(circuits) * (1+num_subcircuits)
         if expected_tot_subcircuits > max_circuits:
@@ -363,9 +364,11 @@ class CircuitModeller():
 
         logging.warning(f'\t From {len(circuits)} circuits, a total of {expected_tot_subcircuits} mutated circuits will be simulated.')
         
+        start_time = datetime.now()
         for vi in range(0, len(circuits), viable_circuit_num):
+            single_batch_time = datetime.now()
             vf = min(vi+viable_circuit_num, len(circuits))
-            # Preallocate then create subcircuits
+            # Preallocate then create subcircuits - otherwise memory leak
             subcircuits = [circuits[0]] * (viable_circuit_num * (1+num_subcircuits))
             c_idx = 0
             for circuit in circuits[vi: vf]:
@@ -380,7 +383,7 @@ class CircuitModeller():
             ref_circuit = subcircuits[0]
             for b in range(0, len(subcircuits), batch_size):
                 logging.warning(
-                    f'Batching {b} - {b+batch_size} circuits (out of {vi*len(subcircuits)} - {vf*len(subcircuits)} (total: {expected_tot_subcircuits})) ({vi} - {vf} of {len(circuits)})')
+                    f'\tBatching {b} - {b+batch_size} circuits (out of {vi*len(subcircuits)} - {vf*len(subcircuits)} (total: {expected_tot_subcircuits})) (Circuits: {vi} - {vf} of {len(circuits)})')
                 bf = np.where(b+batch_size < len(subcircuits),
                             b+batch_size, len(subcircuits))
                 b_circuits = subcircuits[b:bf]
@@ -390,7 +393,9 @@ class CircuitModeller():
                     b_circuits, methods, ref_circuit=ref_circuit,
                     include_normal_run=include_normal_run,
                     write_to_subsystem=write_to_subsystem)
-                # subcircuits[b:bf] = b_circuits
+
+            single_batch_time = datetime.now() - single_batch_time
+            logging.warning(f'Single batch: {single_batch_time} \nProjected time: {single_batch_time.total_seconds() * len(circuits)/viable_circuit_num} \nTotal time: {str(datetime.now() - start_time)}')
         return circuits
 
     def run_batch(self,

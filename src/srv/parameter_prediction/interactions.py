@@ -2,6 +2,7 @@
 
 import logging
 import numpy as np
+import jax.numpy as jnp
 import os
 import pandas as pd
 from typing import Tuple, List
@@ -187,23 +188,27 @@ class InteractionSimulator():
 
 
 def b_get_stats(interactions: List[InteractionMatrix]):
-    interaction_attrs = {}
+    b_interaction_attrs = {}
     for interaction_attr in INTERACTION_TYPES:
-        interaction_attrs[interaction_attr] = np.concatenate([np.expand_dims(
+        b_interaction_attrs[interaction_attr] = np.concatenate([np.expand_dims(
             i.interactions.__getattribute__(interaction_attr), axis=0) for i in interactions], axis=0)
-    idxs_interacting = interactions.get_unique_interacting_idxs()
-    interacting = interactions.get_interacting_species(idxs_interacting)
-    self_interacting = interactions.get_selfinteracting_species(
-        idxs_interacting)
+    batch_dim = b_interaction_attrs['eqconstants'].ndim -2
+    idxs_interacting = get_unique_interacting_idxs(
+        b_interaction_attrs['eqconstants'])
+
+    idxs_other_interacting = get_interacting_species(idxs_interacting)
+    idxs_self_interacting = get_selfinteracting_species(idxs_interacting)
+
+    idxs_other_interacting = [idxs_other_interacting[idxs_other_interacting[:, 0] == i] for i in range(len(interactions))]
+    idxs_self_interacting = [idxs_self_interacting[idxs_self_interacting[:, 0] == i] for i in range(len(interactions))]
 
     stats = {
         "name": [i.name for i in interactions],
-        "interacting": interacting,
-        "self_interacting": self_interacting,
-        "interacting_names": sorted([(interactions.sample_names[i[0]], interactions.sample_names[i[1]]) for i in interacting]),
-        "self_interacting_names": sorted([(interactions.sample_names[i[0]], interactions.sample_names[i[1]]) for i in self_interacting]),
-        "num_interacting": len(set(flatten_listlike(interacting))),
-        "num_self_interacting": len(set(self_interacting)),
+        "interacting": idxs_other_interacting,
+        "self_interacting": idxs_self_interacting,
+        "names": [i.sample_names for i in interactions],
+        "num_interacting": len(set(flatten_listlike(idxs_other_interacting))),
+        "num_self_interacting": len(set(idxs_self_interacting)),
         "max_interaction": np.max(interactions.__getattribute__(interaction_attr)),
         "min_interaction": np.min(interactions.__getattribute__(interaction_attr))
     }
@@ -212,16 +217,18 @@ def b_get_stats(interactions: List[InteractionMatrix]):
     return stats
 
 
-def get_interacting_species(self, idxs_interacting):
-    return [idx for idx in idxs_interacting if len(set(idx)) > 1]
+def get_interacting_species(idxs_interacting: jnp.ndarray):
+    assert idxs_interacting.ndim == 2, f'Array of indices should be 2-D: {idxs_interacting}'
+    return idxs_interacting[idxs_interacting[:, -1] != idxs_interacting[:, -2], :]
 
 
-def get_selfinteracting_species(self, idxs_interacting):
-    return [idx for idx in idxs_interacting if len(set(idx)) == 1]
+def get_selfinteracting_species(idxs_interacting: jnp.ndarray):
+    assert idxs_interacting.ndim == 2, f'Array of indices should be 2-D: {idxs_interacting}'
+    return idxs_interacting[idxs_interacting[:, -1] == idxs_interacting[:, -2], :]
 
 
-def get_unique_interacting_idxs(self):
-    idxs_interacting = np.argwhere(self.interactions.eqconstants != 1)
+def get_unique_interacting_idxs(interaction_attr: jnp.ndarray):
+    return jnp.argwhere(interaction_attr != 1)
     # Assuming symmetry in interactions
-    idxs_interacting = sorted([tuple(sorted(i)) for i in idxs_interacting])
-    return list(set(idxs_interacting))
+    # idxs_interacting = sorted([tuple(sorted(i)) for i in idxs_interacting])
+    # return list(set(idxs_interacting))

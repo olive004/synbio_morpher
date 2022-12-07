@@ -338,6 +338,29 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFrame:
     info_table = pd.read_csv(info_table_path)
     return info_table
 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+
 
 # Batched hopefully
 
@@ -364,9 +387,9 @@ def b_tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFram
         for i, source_interaction_dir in enumerate(source_interaction_dirs):
             interaction_matrices[i] = InteractionMatrix(
                 matrix_paths=get_pathnames(file_key=INTERACTION_TYPES,
-                                           search_dir=source_interaction_dir,
-                                           subdirs=INTERACTION_TYPES,
-                                           as_dict=True, first_only=True)
+                                            search_dir=source_interaction_dir,
+                                            subdirs=INTERACTION_TYPES,
+                                            as_dict=True, first_only=True)
             )
             interaction_stats = {}
             for interaction_type in INTERACTION_TYPES:
