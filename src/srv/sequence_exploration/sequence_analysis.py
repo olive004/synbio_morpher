@@ -387,19 +387,23 @@ def b_tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFram
                 assert table[target] in table[pathname], \
                     f'Name {table[target]} should be in path {table[pathname]}.'
 
-    def make_interaction_stats_and_sample_names(source_interaction_dir: str):
-        interaction_stats = {}
-        interactions = InteractionMatrix(
-            matrix_paths=get_pathnames(file_key=INTERACTION_TYPES,
-                                       search_dir=source_interaction_dir,
-                                       subdirs=INTERACTION_TYPES,
-                                       as_dict=True, first_only=True)
-        )
-        for interaction_type in INTERACTION_TYPES:
-            interaction_stats[interaction_type] = interactions.get_stats(
-                interaction_type)
+    def make_interaction_stats_and_sample_names(source_interaction_dirs: List[str]):
+        interaction_matrices = [None] * len(source_interaction_dirs)
+        interaction_stats_all = {}
+        for i, source_interaction_dir in enumerate(source_interaction_dirs):
+            interaction_matrices[i] = InteractionMatrix(
+                matrix_paths=get_pathnames(file_key=INTERACTION_TYPES,
+                                        search_dir=source_interaction_dir,
+                                        subdirs=INTERACTION_TYPES,
+                                        as_dict=True, first_only=True)
+            )
+            interaction_stats = {}
+            for interaction_type in INTERACTION_TYPES:
+                interaction_stats[interaction_type] = interactions.get_stats(
+                    interaction_type)
+            interaction_stats_all[source_interaction_dir] = interaction_stats
 
-        return interaction_stats, interactions.sample_names
+        return interaction_stats_all, interactions.sample_names
 
     def upate_table_with_results(table: dict, reference_table: dict, results: dict) -> dict:
         table.update(results)
@@ -539,23 +543,26 @@ def b_tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFram
         info_table = update_info_table(info_table, curr_table=current_og_table, int_stats=interaction_stats,
                                        ref_stats=interaction_stats, ref_table=current_og_table, source_dir=interaction_dir)
 
+        interaction_stats, sample_names = make_interaction_stats_and_sample_names(
+                mutation_dirs)
+
         # Mutated circuits
         mutation_table = {
-                'circuit_name': [circuit_name] * len(mutation_dirs),
-                'mutation_name': mutations['mutation_name'],
-                'source_species': mutations['template_name'].values[0],
-                'sample_names': curr_sample_names,
-                'mutation_num': curr_mutation['count'].unique()[0],
-                'mutation_type': cast_astype(curr_mutation['mutation_types'], int).values[0],
-                'mutation_positions': cast_astype(curr_mutation['positions'], int).values[0],
-                'path_to_steady_state_data': get_pathnames(first_only=True,
-                                                           file_key='steady_states_data',
-                                                           search_dir=mutation_dir),
-                'path_to_signal_data': get_pathnames(first_only=True,
-                                                     file_key='signal_data',
-                                                     search_dir=mutation_dir),
-                'path_to_template_circuit': curr_mutation['template_file'].values[0]
-            }
+            'circuit_name': [circuit_name] * len(mutation_dirs),
+            'mutation_name': mutations['mutation_name'],
+            'source_species': mutations['template_name'],
+            'sample_names': sample_names,
+            'mutation_num': mutations['count'],
+            'mutation_type': cast_astype(mutations['mutation_types'], int),
+            'mutation_positions': cast_astype(mutations['positions'], int),
+            # 'path_to_steady_state_data': get_pathnames(first_only=True,
+            #                                             file_key='steady_states_data',
+            #                                             search_dir=mutation_dir),
+            # 'path_to_signal_data': get_pathnames(first_only=True,
+            #                                         file_key='signal_data',
+            #                                         search_dir=mutation_dir),
+            'path_to_template_circuit': mutations['template_file']
+        }
 
         for mutation_dir in mutation_dirs:
             curr_mutation = mutations[mutations['mutation_name'] == os.path.basename(

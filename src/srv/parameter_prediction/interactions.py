@@ -4,7 +4,7 @@ import logging
 import numpy as np
 import os
 import pandas as pd
-from typing import Tuple
+from typing import Tuple, List
 
 from src.srv.parameter_prediction.simulator import RawSimulationHandling
 from src.srv.io.loaders.experiment_loading import INTERACTION_FILE_ADDONS, load_param, load_units
@@ -180,3 +180,38 @@ class InteractionSimulator():
         data = InteractionData(
             data, simulation_handler=self.simulation_handler)
         return data
+
+
+def b_get_stats(interactions: List[InteractionMatrix]):
+    eqconstants = np.concatenate([np.expand_dims(i.interactions.eqconstants, axis=0) for i in interactions], axis=0)
+    eqconstants = np.concatenate([np.expand_dims(i.interactions.eqconstants, axis=0) for i in interactions], axis=0)
+    idxs_interacting = interactions.get_unique_interacting_idxs()
+    interacting = interactions.get_interacting_species(idxs_interacting)
+    self_interacting = interactions.get_selfinteracting_species(idxs_interacting)
+
+    stats = {
+        "name": [i.name for i in interactions],
+        "interacting": interacting,
+        "self_interacting": self_interacting,
+        "interacting_names": sorted([(interactions.sample_names[i[0]], interactions.sample_names[i[1]]) for i in interacting]),
+        "self_interacting_names": sorted([(interactions.sample_names[i[0]], interactions.sample_names[i[1]]) for i in self_interacting]),
+        "num_interacting": len(set(flatten_listlike(interacting))),
+        "num_self_interacting": len(set(self_interacting)),
+        "max_interaction": np.max(interactions.__getattribute__(interaction_attr)),
+        "min_interaction": np.min(interactions.__getattribute__(interaction_attr))
+    }
+    stats = {k: [v] for k, v in stats.items()}
+    stats = pd.DataFrame.from_dict(stats, dtype=object)
+    return stats
+
+def get_interacting_species(self, idxs_interacting):
+    return [idx for idx in idxs_interacting if len(set(idx)) > 1]
+
+def get_selfinteracting_species(self, idxs_interacting):
+    return [idx for idx in idxs_interacting if len(set(idx)) == 1]
+
+def get_unique_interacting_idxs(self):
+    idxs_interacting = np.argwhere(self.interactions.eqconstants != 1)
+    # Assuming symmetry in interactions
+    idxs_interacting = sorted([tuple(sorted(i)) for i in idxs_interacting])
+    return list(set(idxs_interacting))

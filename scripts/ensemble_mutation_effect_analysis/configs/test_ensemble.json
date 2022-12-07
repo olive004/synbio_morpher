@@ -13,7 +13,7 @@
             },
             "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
             "circuit_generation": {
-                "repetitions": 5,
+                "repetitions": 1,
                 "species_count": 3,
                 "sequence_length": 20,
                 "generator_protocol": "template_mutate",
@@ -58,8 +58,8 @@
             "mutations": {
                 "algorithm": "random",
                 "mutation_counts": 2,
-                "mutation_nums_within_sequencex": 1,
-                "mutation_nums_within_sequence": [1, 2],
+                "mutation_nums_within_sequence": 1,
+                "mutation_nums_within_sequencex": [1, 2],
                 "y": [ 3, 5, 7, 10, 15, 20],
                 "mutation_nums_per_position": 1,
                 "concurrent_species_to_mutate": "single_species_at_a_time"
@@ -80,7 +80,7 @@
                 "t1": 1000,
                 "solver": "diffrax",
                 "use_batch_mutations": true,
-                "batch_size": 6
+                "batch_size": 100
             },
             "source_of_interaction_stats": {
                 "is_source_dir_incomplete": true,
@@ -117,7 +117,7 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "analyse_mutated_templates_loaded_1": {
+        "xanalyse_mutated_templates_loaded_1": {
             "experiment": {
                 "purpose": "analyse_mutated_templates_loaded_1"
             },
@@ -131,7 +131,7 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "analyse_mutated_templates_loaded_2": {
+        "xanalyse_mutated_templates_loaded_2": {
             "experiment": {
                 "purpose": "analyse_mutated_templates_loaded_2"
             },
@@ -145,7 +145,7 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "analyse_mutated_templates_loaded_3": {
+        "xanalyse_mutated_templates_loaded_3": {
             "experiment": {
                 "purpose": "analyse_mutated_templates_loaded_3"
             },
@@ -159,7 +159,7 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "analyse_mutated_templates_loaded_4": {
+        "xanalyse_mutated_templates_loaded_4": {
             "experiment": {
                 "purpose": "analyse_mutated_templates_loaded_4"
             },

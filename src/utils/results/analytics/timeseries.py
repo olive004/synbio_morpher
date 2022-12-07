@@ -140,11 +140,16 @@ def get_signal_dependent_analytics():
             'sensitivity',
             'sensitivity_estimate']
 
+def get_signal_dependent_analytics_all():
+    return get_signal_dependent_analytics() + \
+        [a + DIFF_KEY for a in get_signal_dependent_analytics()] + \
+        [a + RATIO_KEY for a in get_signal_dependent_analytics()]
+
 def get_analytics_types_diffs():
-    return [a + DIFF_KEY for a in get_analytics_types_base()] + [a + '_wrt' + DIFF_KEY for a in get_signal_dependent_analytics()]
+    return [a + DIFF_KEY for a in get_analytics_types()] #+ [a + '_wrt' + DIFF_KEY for a in get_signal_dependent_analytics()]
 
 def get_analytics_types_ratios():
-    return [a + RATIO_KEY for a in get_analytics_types_base()] + [a + '_wrt' + RATIO_KEY for a in get_signal_dependent_analytics()]
+    return [a + RATIO_KEY for a in get_analytics_types()] #+ [a + '_wrt' + RATIO_KEY for a in get_signal_dependent_analytics()]
 
 def generate_base_analytics(data: np.ndarray, time: np.ndarray, labels: List[str], signal_idxs: np.ndarray, ref_circuit_data: np.ndarray) -> dict:
     if data is None:

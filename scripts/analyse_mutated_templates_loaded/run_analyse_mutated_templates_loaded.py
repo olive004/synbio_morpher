@@ -9,7 +9,7 @@ from fire import Fire
 from src.srv.io.manage.script_manager import script_preamble
 from src.utils.misc.scripts_io import get_search_dir, load_experiment_config_original
 from src.utils.misc.string_handling import prettify_keys_for_label
-from src.utils.results.analytics.timeseries import get_analytics_types_all, get_signal_dependent_analytics
+from src.utils.results.analytics.timeseries import get_analytics_types_all, get_signal_dependent_analytics_all, DIFF_KEY, RATIO_KEY
 
 from src.utils.results.experiments import Experiment, Protocol
 from src.utils.results.result_writer import ResultWriter
@@ -262,10 +262,6 @@ def main(config=None, data_writer=None):
 
     # Analytics histplots
     analytics_types = get_analytics_types_all()
-    visualisation_types = [
-        '', '_ratio_from_mutation_to_base', '_diff_to_base_circuit']
-    visualisation_type_titles = [
-        '', ' ratio', ' difference']
     for log_opt in [(False, False)]:
         log_text = '_log' if any(log_opt) else ''
         for m in num_mutations+['all']:
@@ -277,37 +273,37 @@ def main(config=None, data_writer=None):
                 plot_grammar_m = 's' if m > 1 else ''
                 hue = None
                 selection_conditions = [('mutation_num', operator.eq, m)]
-            for v, vt in zip(visualisation_types, visualisation_type_titles):
-                for analytics_type, cols_x, title, xlabel in [
-                        [
-                            analytics_type,
-                            f'{analytics_type}{v}',
-                            f'{prettify_keys_for_label(analytics_type)}{vt}: circuit\nand mutated counterparts, {m} mutation{plot_grammar_m}',
-                            f'{prettify_keys_for_label(analytics_type)}{vt}'
-                        ] for analytics_type in analytics_types]:
+            # for v, vt in zip(visualisation_types, visualisation_type_titles):
+            for analytics_type, cols_x, title, xlabel in [
+                    [
+                        analytics_type,
+                        f'{analytics_type}',
+                        f'{prettify_keys_for_label(analytics_type)}: circuit\nand mutated counterparts, {m} mutation{plot_grammar_m}',
+                        f'{prettify_keys_for_label(analytics_type)}'
+                    ] for analytics_type in analytics_types]:
 
-                    complete_colx_by_str = analytics_type + \
-                        '_wrt' if analytics_type in get_signal_dependent_analytics() else None
-                    protocols.append(
-                        Protocol(
-                            partial(
-                                visualise_data,
-                                data_writer=data_writer, cols_x=[cols_x],
-                                plot_type='histplot',
-                                out_name=f'{cols_x}{log_text}_m{m}',
-                                complete_colx_by_str=complete_colx_by_str,
-                                exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
-                                selection_conditions=selection_conditions,
-                                log_axis=log_opt,
-                                use_sns=True,
-                                hue=hue,
-                                title=title,
-                                xlabel=xlabel),
-                            req_input=True,
-                            name='visualise_interactions_difference',
-                            skip=config_file.get('only_visualise_circuits', False)
-                        )
+                complete_colx_by_str = analytics_type.replace(DIFF_KEY, '').replace(RATIO_KEY, '') + '_wrt' if \
+                    analytics_type in get_signal_dependent_analytics_all() else None
+                protocols.append(
+                    Protocol(
+                        partial(
+                            visualise_data,
+                            data_writer=data_writer, cols_x=[cols_x],
+                            plot_type='histplot',
+                            out_name=f'{cols_x}{log_text}_m{m}',
+                            complete_colx_by_str=complete_colx_by_str,
+                            exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
+                            selection_conditions=selection_conditions,
+                            log_axis=log_opt,
+                            use_sns=True,
+                            hue=hue,
+                            title=title,
+                            xlabel=xlabel),
+                        req_input=True,
+                        name='visualise_interactions_difference',
+                        skip=config_file.get('only_visualise_circuits', False)
                     )
+                )
 
     experiment = Experiment(config=config, config_file=config_file, protocols=protocols,
                             data_writer=data_writer)

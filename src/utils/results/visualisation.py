@@ -425,6 +425,8 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                     logging.warning(f'Unknown plot type given "{plot_type}"')
 
                 if not data.empty:
+                    if col_x == 'Response time with respect to diff to base circuit':
+                        col_x
                     data_writer.output(out_type='svg', out_name=out_name,
                                        write_func=write_func,
                                        **merge_dicts({'x': col_x, 'y': col_y, 'data': data,
