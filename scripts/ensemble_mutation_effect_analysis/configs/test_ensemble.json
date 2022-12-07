@@ -51,7 +51,7 @@
                 "postprocess": true
             },
             "filters": {
-                "min_num_interacting": 2,
+                "min_num_interacting": 0,
                 "max_self_interacting": null,
                 "max_total": 50
             },

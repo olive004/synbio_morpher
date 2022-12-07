@@ -17,13 +17,12 @@ from src.utils.misc.type_handling import flatten_nested_listlike
 from src.utils.results.analytics.timeseries import get_analytics_types_all
 from src.utils.results.visualisation import expand_data_by_col
 from src.utils.results.writer import DataWriter
-from src.srv.parameter_prediction.interactions import InteractionMatrix
+from src.srv.parameter_prediction.interactions import InteractionMatrix, INTERACTION_TYPES
 from src.utils.misc.io import get_pathnames, get_subdirectories
 from src.utils.misc.scripts_io import get_path_from_output_summary, get_root_experiment_folder, \
     load_experiment_config, load_experiment_output_summary, load_result_report
 
 
-INTERACTION_TYPES = list(INTERACTION_FILE_ADDONS.keys())
 INTERACTION_STATS = ['num_self_interacting',
                      'num_interacting',
                      'max_interaction',
@@ -260,7 +259,7 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFrame:
 
     info_table = init_info_table()
 
-    circuit_dirs = get_subdirectories(source_dir) #, min_condition=3)
+    circuit_dirs = get_subdirectories(source_dir)  # , min_condition=3)
     for circ_idx, circuit_dir in enumerate(circuit_dirs):
         circuit_name = os.path.basename(circuit_dir)
         mutations_pathname = get_pathnames(
@@ -340,34 +339,6 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFrame:
     return info_table
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # Batched hopefully
 
 def b_tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFrame:
@@ -393,9 +364,9 @@ def b_tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFram
         for i, source_interaction_dir in enumerate(source_interaction_dirs):
             interaction_matrices[i] = InteractionMatrix(
                 matrix_paths=get_pathnames(file_key=INTERACTION_TYPES,
-                                        search_dir=source_interaction_dir,
-                                        subdirs=INTERACTION_TYPES,
-                                        as_dict=True, first_only=True)
+                                           search_dir=source_interaction_dir,
+                                           subdirs=INTERACTION_TYPES,
+                                           as_dict=True, first_only=True)
             )
             interaction_stats = {}
             for interaction_type in INTERACTION_TYPES:
@@ -544,7 +515,7 @@ def b_tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFram
                                        ref_stats=interaction_stats, ref_table=current_og_table, source_dir=interaction_dir)
 
         interaction_stats, sample_names = make_interaction_stats_and_sample_names(
-                mutation_dirs)
+            mutation_dirs)
 
         # Mutated circuits
         mutation_table = {

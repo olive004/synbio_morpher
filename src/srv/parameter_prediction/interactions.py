@@ -14,6 +14,9 @@ from src.utils.data.data_format_tools.common import determine_file_format
 from src.utils.misc.type_handling import flatten_listlike
 
 
+INTERACTION_TYPES = list(INTERACTION_FILE_ADDONS.keys())
+
+
 class MolecularInteractions():
 
     def __init__(self, coupled_binding_rates,
@@ -146,7 +149,8 @@ class InteractionData():
 
     def parse(self, data: dict) -> MolecularInteractions:
         matrix, a_rates, d_rates = self.make_matrix(data)
-        coupled_binding_rates = self.calculate_full_coupling_of_rates(matrix, d_rates)
+        coupled_binding_rates = self.calculate_full_coupling_of_rates(
+            matrix, d_rates)
         return MolecularInteractions(
             coupled_binding_rates=coupled_binding_rates, binding_rates_association=a_rates,
             binding_rates_dissociation=d_rates, eqconstants=matrix)
@@ -183,11 +187,14 @@ class InteractionSimulator():
 
 
 def b_get_stats(interactions: List[InteractionMatrix]):
-    eqconstants = np.concatenate([np.expand_dims(i.interactions.eqconstants, axis=0) for i in interactions], axis=0)
-    eqconstants = np.concatenate([np.expand_dims(i.interactions.eqconstants, axis=0) for i in interactions], axis=0)
+    interaction_attrs = {}
+    for interaction_attr in INTERACTION_TYPES:
+        interaction_attrs[interaction_attr] = np.concatenate([np.expand_dims(
+            i.interactions.__getattribute__(interaction_attr), axis=0) for i in interactions], axis=0)
     idxs_interacting = interactions.get_unique_interacting_idxs()
     interacting = interactions.get_interacting_species(idxs_interacting)
-    self_interacting = interactions.get_selfinteracting_species(idxs_interacting)
+    self_interacting = interactions.get_selfinteracting_species(
+        idxs_interacting)
 
     stats = {
         "name": [i.name for i in interactions],
@@ -204,11 +211,14 @@ def b_get_stats(interactions: List[InteractionMatrix]):
     stats = pd.DataFrame.from_dict(stats, dtype=object)
     return stats
 
+
 def get_interacting_species(self, idxs_interacting):
     return [idx for idx in idxs_interacting if len(set(idx)) > 1]
 
+
 def get_selfinteracting_species(self, idxs_interacting):
     return [idx for idx in idxs_interacting if len(set(idx)) == 1]
+
 
 def get_unique_interacting_idxs(self):
     idxs_interacting = np.argwhere(self.interactions.eqconstants != 1)

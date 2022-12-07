@@ -13,8 +13,8 @@ from src.utils.misc.type_handling import flatten_listlike
 from pyvis.network import Network
 from src.utils.misc.type_handling import merge_dicts
 import seaborn as sns
-import matplotlib
-matplotlib.use('TkAgg',force=True)
+# import matplotlib
+# matplotlib.use('TkAgg',force=True)
 from matplotlib import pyplot as plt
 plt.ioff()
 

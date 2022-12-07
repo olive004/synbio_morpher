@@ -27,7 +27,7 @@ from src.utils.evolution.mutation import implement_mutation
 from src.utils.modelling.base import Modeller
 
 
-TEST_MODE = True
+TEST_MODE = False
 
 
 class CircuitModeller():
@@ -343,7 +343,7 @@ class CircuitModeller():
             self.apply_to_circuit(subcircuit, methods, ref_circuit=circuit)
             self.result_writer.unsubdivide_last_dir()
         self.result_writer.unsubdivide()
-        return all_subcircuits
+        return circuit
 
     def batch_circuits(self,
                        circuits: List[Circuit],
@@ -380,7 +380,7 @@ class CircuitModeller():
             ref_circuit = subcircuits[0]
             for b in range(0, len(subcircuits), batch_size):
                 logging.warning(
-                    f'Batching {b} - {b+batch_size} circuits (out of {vi*len(subcircuits)} - {expected_tot_subcircuits}))')
+                    f'Batching {b} - {b+batch_size} circuits (out of {vi*len(subcircuits)} - {vf*len(subcircuits)} (total: {expected_tot_subcircuits})) ({vi} - {vf} of {len(circuits)})')
                 bf = np.where(b+batch_size < len(subcircuits),
                             b+batch_size, len(subcircuits))
                 b_circuits = subcircuits[b:bf]
@@ -390,9 +390,8 @@ class CircuitModeller():
                     b_circuits, methods, ref_circuit=ref_circuit,
                     include_normal_run=include_normal_run,
                     write_to_subsystem=write_to_subsystem)
-                subcircuits[b:bf] = b_circuits
-            subcircuits[vi:vf] = subcircuits
-        return subcircuits
+                # subcircuits[b:bf] = b_circuits
+        return circuits
 
     def run_batch(self,
                   subcircuits: List[Circuit],
@@ -411,7 +410,7 @@ class CircuitModeller():
                         f'Could not find method @{method} in class {self}')
             else:
                 logging.warning(
-                    f'\t\t{len(subcircuits)} Subcircuits - {subcircuits[0].name}): {method}')
+                    f'\t\tRunning {len(subcircuits)} Subcircuits - {subcircuits[0].name}: {method}')
                 for i, subcircuit in enumerate(subcircuits):
                     dir_name = subcircuit.name if subcircuit.subname == 'ref_circuit' or not write_to_subsystem else os.path.join(
                         subcircuit.name, 'mutations', subcircuit.subname)
@@ -426,34 +425,6 @@ class CircuitModeller():
                     subcircuits[i] = subcircuit
                 self.result_writer.unsubdivide()
         return subcircuits, ref_circuit
-
-    def run_batch_old(self,
-                      subcircuits: Dict[str, Dict[str, Circuit]],
-                      methods: dict,
-                      include_normal_run: bool = True,
-                      write_to_subsystem: bool = False) -> Dict[str, Dict[str, Circuit]]:
-        # ref_circuit = None
-        for method, kwargs in methods.items():
-            if kwargs.get('batch') == True:  # method is batchable
-                if hasattr(self, method):
-                    subcircuits = getattr(self, method)(subcircuits, **kwargs)
-                else:
-                    logging.warning(
-                        f'Could not find method @{method} in class {self}')
-            else:
-                for top_name, v in subcircuits.items():
-                    for sub_name, subcircuit in v.items():
-                        dir_name = top_name if sub_name == 'ref_circuit' or not write_to_subsystem else os.path.join(
-                            top_name, 'mutations', sub_name)
-                        self.result_writer.subdivide_writing(
-                            dir_name, safe_dir_change=True)
-                        if not include_normal_run and sub_name == 'ref_circuit':
-                            continue
-                        subcircuit = self.apply_to_circuit(
-                            subcircuit, {method: kwargs}, ref_circuit=subcircuits[top_name]['ref_circuit'])
-                        subcircuits[top_name][sub_name] = subcircuit
-                self.result_writer.unsubdivide()
-        return subcircuits
 
     def apply_to_circuit(self, circuit: Circuit, _methods: dict, ref_circuit: Circuit):
         methods = deepcopy(_methods)
