@@ -4,7 +4,7 @@ import logging
 import os
 
 import numpy as np
-from src.utils.results.analytics.timeseries import get_analytics_types
+from src.utils.results.analytics.timeseries import get_analytics_types_all
 from src.utils.results.results import Result
 from src.utils.results.writer import DataWriter
 from src.utils.results.visualisation import Graph
@@ -68,7 +68,7 @@ class ResultWriter(DataWriter):
 
     def write_analytics(self, result: Result, new_report=False):
         analytics = result.analytics
-        writeables = get_analytics_types()
+        writeables = get_analytics_types_all()
         self.write_report(writeables, analytics, new_report,
                           out_name=f'report_{result.name}')
 
@@ -111,8 +111,8 @@ class ResultWriter(DataWriter):
         out_path = os.path.join(self.write_dir, 'graph')
         if mode == 'pyvis':
             from src.utils.results.visualisation import visualise_graph_pyvis
-            visualise_graph_pyvis(graph=graph,
+            visualise_graph_pyvis(graph=graph.graph,
                                   out_path=out_path, new_vis=new_vis)
         else:
             from src.utils.results.visualisation import visualise_graph_pyplot
-            visualise_graph_pyplot(graph=graph, new_vis=new_vis)
+            visualise_graph_pyplot(graph=graph.graph, new_vis=new_vis)

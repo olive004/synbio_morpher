@@ -9,7 +9,7 @@ from fire import Fire
 from src.srv.io.manage.script_manager import script_preamble
 from src.utils.misc.scripts_io import get_search_dir, load_experiment_config_original
 from src.utils.misc.string_handling import prettify_keys_for_label
-from src.utils.results.analytics.timeseries import get_analytics_types, get_signal_dependent_analytics
+from src.utils.results.analytics.timeseries import get_analytics_types_all, get_signal_dependent_analytics_all, DIFF_KEY, RATIO_KEY
 
 from src.utils.results.experiments import Experiment, Protocol
 from src.utils.results.result_writer import ResultWriter
@@ -23,7 +23,7 @@ from src.utils.data.data_format_tools.common import load_json_as_dict, load_json
 def main(config=None, data_writer=None):
     # Set configs
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
-        "scripts", "analyse_mutated_templates_loaded", "configs", "base_config_test_2.json"))
+        "scripts", "analyse_mutated_templates_loaded", "configs", "base_config.json"))
     config_file = load_json_as_dict(config)
 
     # Start_experiment
@@ -90,15 +90,15 @@ def main(config=None, data_writer=None):
     ]
 
     # Binding rates interactions og min and max
-    cols_xs = ['eqconstants_max_interaction',
-               'eqconstants_min_interaction']
-    out_names = ['eqconstants_max_freqs',
-                 'eqconstants_min_freqs']
-    titles = ['Maximum equilibrium constant, unmutated circuits',
-              'Minimum equilibrium constant, unmutated circuits']
     log_opts = [(False, False), (True, False)]
     for log_opt in log_opts:
         log_text = '_log' if any(log_opt) else ''
+        cols_xs = ['eqconstants_max_interaction',
+                   'eqconstants_min_interaction']
+        out_names = ['eqconstants_max_freqs',
+                     'eqconstants_min_freqs']
+        titles = ['Maximum equilibrium constant, unmutated circuits',
+                  'Minimum equilibrium constant, unmutated circuits']
         for cols_x, out_name, title in zip(cols_xs, out_names, titles):
             protocols.append(
                 Protocol(
@@ -107,6 +107,7 @@ def main(config=None, data_writer=None):
                             out_name=out_name + log_text,
                             exclude_rows_nonempty_in_cols=['mutation_name'],
                             # threshold_value_max=binding_rates_threshold_upper,
+                            selection_conditions = [('mutation_num', operator.ne, 0)],
                             log_axis=log_opt,
                             use_sns=True,
                             title=title,
@@ -116,9 +117,16 @@ def main(config=None, data_writer=None):
                 )
             )
 
-        for m in num_mutations:
+        for m in num_mutations+['all']:
             # Eqconstants max, min mutations
-            plot_grammar_m = 's' if m > 1 else ''
+            if m == 'all':
+                plot_grammar_m = 's'
+                hue = 'mutation_num'
+                selection_conditions = None
+            else:
+                plot_grammar_m = 's' if m > 1 else ''
+                hue = None
+                selection_conditions = [('mutation_num', operator.eq, m)]
             all_cols_x = ['eqconstants_max_interaction',
                           'eqconstants_max_interaction_diff_to_base_circuit',
                           'eqconstants_min_interaction',
@@ -137,49 +145,16 @@ def main(config=None, data_writer=None):
                             plot_type='histplot',
                             out_name=out_name + log_text,
                             exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
+                            selection_conditions=selection_conditions,
                             # threshold_value_max=binding_rates_threshold_upper,
                             log_axis=log_opt,
                             use_sns=True,
+                            hue=hue,
                             title=title,
                             xlabel='Equilibrium constant (unitless)'),
                     req_input=True,
                     name='visualise_mutated_interactions'
                 ))
-
-    # Interaction histplots og
-    protocols.append(
-        Protocol(
-            partial(visualise_data, data_writer=data_writer, cols_x=['binding_rates_dissociation_max_interaction'],
-                    plot_type='histplot',
-                    out_name='binding_rates_dissociation_max_interaction_og',
-                    exclude_rows_nonempty_in_cols=['mutation_name'],
-                    # threshold_value_max=binding_rates_threshold_upper,
-                    log_axis=(False, False),
-                    use_sns=True,
-                    title='Maximum ' + r'$k_d$' + ', unmutated circuits',
-                    xlabel='Dissociation rate ' + r'$k_d$' + ' (' +
-                    f'{rate_unit})'),  # +
-            # f'{binding_rates_threshold_upper_text}'),
-            req_input=True,
-            name='visualise_mutated_interactions'
-        )
-    )
-    protocols.append(
-        Protocol(
-            partial(visualise_data, data_writer=data_writer, cols_x=['binding_rates_dissociation_min_interaction'],
-                    plot_type='histplot',
-                    out_name='binding_rates_dissociation_min_interaction_og',
-                    exclude_rows_nonempty_in_cols=['mutation_name'],
-                    # threshold_value_max=binding_rates_threshold_upper,
-                    log_axis=(False, False),
-                    use_sns=True,
-                    title=f'Minimum ' + r'$k_d$' + ', unmutated circuits',
-                    xlabel='Dissociation rate ' + r'$k_d$' + ' (' +
-                    f'{rate_unit})'),
-            req_input=True,
-            name='visualise_mutated_interactions'
-        )
-    )
 
     # Interaction histplots
     # The choice for these is in the csv generated by the summarise_simulation script
@@ -192,27 +167,35 @@ def main(config=None, data_writer=None):
     # With mutated circuits
     for log_opt in [(False, False)]:
         log_text = '_log' if any(log_opt) else ''
-        for m in num_mutations:
+        for m in num_mutations+['all']:
 
+            if m == 'all':
+                plot_grammar_m = 's'
+                hue = 'mutation_num'
+                selection_conditions = None
+            else:
+                plot_grammar_m = 's' if m > 1 else ''
+                hue = None
+                selection_conditions = [('mutation_num', operator.eq, m)]
             titles = [
                 # Binding rates dissociation
-                f'Maximum ' + r'$k_d$' + f', {m} mutation{plot_grammar}',
+                f'Maximum ' + r'$k_d$' + f', {m} mutation{plot_grammar_m}',
                 f'Difference between circuit\nand mutated (maximum ' +
-                r'$k_d$' + f'), {m} mutation{plot_grammar}',
+                r'$k_d$' + f'), {m} mutation{plot_grammar_m}',
                 f'Ratio between mutated and \noriginal circuit (maximum ' +
-                r'$k_d$' + f'), {m} mutation{plot_grammar}',
-                f'Minimum ' + r'$k_d$' + f', {m} mutation{plot_grammar}',
+                r'$k_d$' + f'), {m} mutation{plot_grammar_m}',
+                f'Minimum ' + r'$k_d$' + f', {m} mutation{plot_grammar_m}',
                 f'Difference between circuit\nand mutated (minimum ' +
-                r'$k_d$' + f'), {m} mutation{plot_grammar}',
+                r'$k_d$' + f'), {m} mutation{plot_grammar_m}',
                 f'Ratio between mutated and \noriginal circuit (minimum ' +
-                r'$k_d$' + f'), {m} mutation{plot_grammar}',
+                r'$k_d$' + f'), {m} mutation{plot_grammar_m}',
                 # eqconstant
-                f'Maximum equilibrium constant, {m} mutation{plot_grammar}',
-                f'Difference between reference and mutated\ncircuits, equilibrium constant (max), {m} mutation{plot_grammar}',
-                f'Ratio between mutated and original circuit\nequilibrium constant (max), {m} mutation{plot_grammar}',
-                f'Minimum equilibrium constant, {m} mutation{plot_grammar}',
-                f'Difference between reference and mutated\ncircuits, equilibrium constant (min), {m} mutation{plot_grammar}',
-                f'Ratio between mutated and original circuit\nequilibrium constant (min), {m} mutation{plot_grammar}'
+                f'Maximum equilibrium constant, {m} mutation{plot_grammar_m}',
+                f'Difference between reference and mutated\ncircuits, equilibrium constant (max), {m} mutation{plot_grammar_m}',
+                f'Ratio between mutated and original circuit\nequilibrium constant (max), {m} mutation{plot_grammar_m}',
+                f'Minimum equilibrium constant, {m} mutation{plot_grammar_m}',
+                f'Difference between reference and mutated\ncircuits, equilibrium constant (min), {m} mutation{plot_grammar_m}',
+                f'Ratio between mutated and original circuit\nequilibrium constant (min), {m} mutation{plot_grammar_m}'
             ]
             title_count = 0
             for interaction_type in interaction_types_chosen:
@@ -223,6 +206,8 @@ def main(config=None, data_writer=None):
                         xlabel = 'Dissociation rate ' + r'$k_d$' + ' (' \
                             f'{rate_unit})' \
                             f'{binding_rates_threshold_upper_text}'
+                    if 'Difference' in titles[title_count]:
+                        xlabel = r'$\Delta$ ' + xlabel
 
                     cols_x = f'{interaction_type}{visualisation_type}'
                     out_name = f'{cols_x}{log_text}_m{m}'
@@ -232,12 +217,11 @@ def main(config=None, data_writer=None):
                                     plot_type='histplot',
                                     out_name=out_name,
                                     exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
-                                    threshold_value_max=binding_rates_threshold_upper,
-                                    selection_conditions=[(
-                                        'mutation_num', operator.eq, m
-                                    )],
+                                    # threshold_value_max=binding_rates_threshold_upper,
+                                    selection_conditions=selection_conditions,
                                     log_axis=log_opt,
                                     use_sns=True,
+                                    hue=hue,
                                     title=titles[title_count],
                                     xlabel=xlabel),
                             req_input=True,
@@ -264,9 +248,9 @@ def main(config=None, data_writer=None):
                 Protocol(
                     partial(visualise_data, data_writer=data_writer, cols_x=[cols_x],
                             plot_type='histplot',
-                            out_name=f'{cols_x}_unmutated',
+                            out_name=f'{cols_x}_unmutated' + log_text,
                             exclude_rows_nonempty_in_cols=['mutation_name'],
-                            threshold_value_max=binding_rates_threshold_upper,
+                            # threshold_value_max=binding_rates_threshold_upper,
                             log_axis=log_opt,
                             use_sns=True,
                             title=title,
@@ -277,31 +261,42 @@ def main(config=None, data_writer=None):
             )
 
     # Analytics histplots
-    analytics_types = get_analytics_types()
+    analytics_types = get_analytics_types_all()
     for log_opt in [(False, False)]:
-        for m in num_mutations:
+        log_text = '_log' if any(log_opt) else ''
+        for m in num_mutations+['all']:
+            if m == 'all':
+                plot_grammar_m = 's'
+                hue = 'mutation_num'
+                selection_conditions = None
+            else:
+                plot_grammar_m = 's' if m > 1 else ''
+                hue = None
+                selection_conditions = [('mutation_num', operator.eq, m)]
+            # for v, vt in zip(visualisation_types, visualisation_type_titles):
             for analytics_type, cols_x, title, xlabel in [
                     [
                         analytics_type,
-                        f'{analytics_type}_diff_to_base_circuit',
-                        f'{prettify_keys_for_label(analytics_type)} difference between circuit\nand mutated counterparts, {m} mutation{plot_grammar}',
-                        f'{prettify_keys_for_label(analytics_type)} difference'
+                        f'{analytics_type}',
+                        f'{prettify_keys_for_label(analytics_type)}: circuit\nand mutated counterparts, {m} mutation{plot_grammar_m}',
+                        f'{prettify_keys_for_label(analytics_type)}'
                     ] for analytics_type in analytics_types]:
 
-                log_text = '_log' if log_opt[0] or log_opt[1] else ''
-                complete_colx_by_str = analytics_type + \
-                    '_wrt' if analytics_type in get_signal_dependent_analytics() else None
+                complete_colx_by_str = analytics_type.replace(DIFF_KEY, '').replace(RATIO_KEY, '') + '_wrt' if \
+                    analytics_type in get_signal_dependent_analytics_all() else None
                 protocols.append(
                     Protocol(
                         partial(
                             visualise_data,
                             data_writer=data_writer, cols_x=[cols_x],
                             plot_type='histplot',
-                            out_name=f'{analytics_type}{log_text}_m{m}',
+                            out_name=f'{cols_x}{log_text}_m{m}',
                             complete_colx_by_str=complete_colx_by_str,
                             exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
+                            selection_conditions=selection_conditions,
                             log_axis=log_opt,
                             use_sns=True,
+                            hue=hue,
                             title=title,
                             xlabel=xlabel),
                         req_input=True,

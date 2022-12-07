@@ -16,6 +16,8 @@ SCRIPT_DIR = 'scripts'
 def import_script_func(script_name):
     script_filepath = os.path.join(
         SCRIPT_DIR, script_name, f'run_{script_name}.py')
+    if not os.path.isfile(script_filepath):
+        return None
     script_module = __import__(
         convert_pathname_to_module(script_filepath), fromlist=[''])
     return getattr(script_module, 'main')
@@ -44,6 +46,8 @@ class Ensembler():
     def run(self):
         for script_name in self.subscripts:
             script = import_script_func(script_name)
+            if not script:
+                continue
             logging.warning(f'\tRunning script {script_name}\n')
             config = self.ensemble_configs[script_name]
             if config["experiment"]["purpose"] != script_name:

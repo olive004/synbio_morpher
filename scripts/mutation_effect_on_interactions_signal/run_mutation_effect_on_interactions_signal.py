@@ -99,7 +99,8 @@ def main(config=None, data_writer=None):
                 "init_circuit": {},
                 "simulate_signal": {'save_numerical_vis_data': True, 'ref_circuit': None,
                                     'solver': config_file['signal'].get('solver', 'naive')},
-                "write_results": {'no_visualisations': config_file['experiment'].get('no_visualisations', False)}
+                "write_results": {'no_visualisations': config_file['experiment'].get('no_visualisations', False),
+                                  'no_numerical': config_file['experiment'].get('no_numerical', False)}
             }),
                 req_input=True,
                 name="simulate_visualisations"
@@ -114,7 +115,8 @@ def main(config=None, data_writer=None):
                 "init_circuit": {},
                 "simulate_signal_batch": {'save_numerical_vis_data': True, 'ref_circuit': None,
                                           'batch': True},
-                "write_results": {'no_visualisations': config_file['experiment'].get('no_visualisations', True)}
+                "write_results": {'no_visualisations': config_file['experiment'].get('no_visualisations', True),
+                                  'no_numerical': config_file['experiment'].get('no_numerical', False)}
             }),
                 req_input=True,
                 name="simulate_visualisations"

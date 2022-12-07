@@ -33,11 +33,12 @@ class Evolver():
     def batch_mutate(self, circuits: List[Circuit], algorithm: str, write_to_subsystem=True, batch=True):
         c_idx = 0
         if not all([self.is_mutation_possible(c) for c in circuits]):
-            raise ValueError('Could not mutate: mutation settings not found for some circuits')
+            raise ValueError(
+                'Could not mutate: mutation settings not found for some circuits')
         mutator = self.get_mutator(algorithm)
         mutations_args = circuits[c_idx].mutations_args
-        assert all([mutations_args == c.mutations_args for c in circuits]), 'Cannot batch with varying mutation args.'
-
+        assert all([mutations_args == c.mutations_args for c in circuits]
+                   ), 'Cannot batch with varying mutation args.'
 
     def get_batch_mutator(self, algorithm):
 
@@ -45,7 +46,8 @@ class Evolver():
             if sequence_length < num_mutations:
                 logging.warning(
                     f'For sequences of length {sequence_length}, cannot mutate {num_mutations} times.')
-            positions = np.random.choice(sequence_length, size=(num_mutations, batch_size), replace=False)
+            positions = np.random.choice(sequence_length, size=(
+                num_mutations, batch_size), replace=False)
             return positions
 
         def sample_mutations(self, sequence: str, positions: list, mutation_nums_per_position: list) -> Tuple[list, list]:
@@ -81,7 +83,7 @@ class Evolver():
         #                         sequence, positions, circuit.mutations_args['mutation_nums_per_position'])
 
         #                     mutation = self.make_mutations(
-        #                         specie=specie, positions=positions, 
+        #                         specie=specie, positions=positions,
         #                         mutation_idx=mutation_idx,
         #                         mutation_types=mutation_types, algorithm=algorithm,
         #                         template_file=circuit.data.source)
@@ -106,7 +108,8 @@ class Evolver():
             if sequence_length < num_mutations:
                 logging.warning(
                     f'For sequences of length {sequence_length}, cannot mutate {num_mutations} times.')
-            positions = np.random.choice(sequence_length, size=(num_mutations, batch_size), replace=False)
+            positions = np.random.choice(sequence_length, size=(
+                num_mutations, batch_size), replace=False)
             return positions
 
         def rand_mutator(circuit: Circuit, algorithm: str, positions_chosen=None):
@@ -125,7 +128,7 @@ class Evolver():
                                 sequence, positions, circuit.mutations_args['mutation_nums_per_position'])
 
                             mutation = self.make_mutations(
-                                specie=specie, positions=positions, 
+                                specie=specie, positions=positions,
                                 mutation_idx=mutation_idx,
                                 mutation_types=mutation_types, algorithm=algorithm,
                                 template_file=circuit.data.source)
@@ -134,21 +137,37 @@ class Evolver():
             return circuit
 
         def all_mutator(circuit: Circuit, algorithm: str):
+
+            def get_position_idxs(flat_idx: int, length: int, nesting: int):
+                """ Returns index of size `nesting` corresponding to indexing a nesting-dimensional 
+                array that is composed of np.arange(length), but repeated recursively. Such an 
+                array grows exponentially in size and a 1-D version of it can simply be indexed
+                multiple times instead. """
+                return sorted(set([np.mod(int(np.divide(flat_idx, np.power(length, i))), length) for i in range(nesting)]))
+
             mutation_nums_per_position = [len(
                 self.mutation_type_mapping.keys()) - 1]
             for i, specie in enumerate(circuit.model.species):
                 circuit.mutations[specie.name] = {}
                 sequence = specie.physical_data
-                for positions in ([i] for i in range(len(sequence))):
-                    mutation_types, positions = self.sample_mutations(
-                        sequence, positions, mutation_nums_per_position)
-                    for i, (mt, p) in enumerate(zip(mutation_types, positions)):
-                        mutation_idx = mutation_nums_per_position[0]*p + i
-                        mutations = self.make_mutations(
-                            species=specie, positions=[
-                                p], mutation_idx=mutation_idx, mutation_types=[
-                                mt], algorithm=algorithm, template_file=circuit.data.source)
-                        circuit.mutations[specie.name][mutations.mutation_name] = mutations
+                sequence_l = len(sequence)
+                if sequence_l == 0:
+                    continue
+                
+                for mutation_nums_within_sequence in circuit.mutations_args['mutation_nums_within_sequence']:
+                    total_mutations = np.power(sequence_l, mutation_nums_within_sequence)
+
+                    for r in range(total_mutations):
+                        positions = get_position_idxs(r, sequence_l, mutation_nums_within_sequence)
+                        mutation_types, positions = self.sample_mutations(
+                            sequence, positions, mutation_nums_per_position)
+                        for i, (mt, p) in enumerate(zip(mutation_types, positions)):
+                            mutation_idx = mutation_nums_per_position[0]*p + i
+                            mutations = self.make_mutations(
+                                specie=specie, positions=[
+                                    p], mutation_idx=mutation_idx, mutation_types=[
+                                    mt], algorithm=algorithm, template_file=circuit.data.source)
+                            circuit.mutations[specie.name][mutations.mutation_name] = mutations
             return circuit
 
         if algorithm == "random":
@@ -156,7 +175,8 @@ class Evolver():
         elif algorithm == "all":
             return partial(all_mutator, algorithm=algorithm)
         else:
-            raise ValueError(f'Unrecognised mutation algorithm choice "{algorithm}"')
+            raise ValueError(
+                f'Unrecognised mutation algorithm choice "{algorithm}"')
 
     def sample_mutations(self, sequence: str, positions: list, mutation_nums_per_position: list) -> Tuple[list, list]:
         mutation_types = {}

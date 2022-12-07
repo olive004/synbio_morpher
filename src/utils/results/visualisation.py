@@ -13,6 +13,8 @@ from src.utils.misc.type_handling import flatten_listlike
 from pyvis.network import Network
 from src.utils.misc.type_handling import merge_dicts
 import seaborn as sns
+# import matplotlib
+# matplotlib.use('TkAgg',force=True)
 from matplotlib import pyplot as plt
 plt.ioff()
 
@@ -87,7 +89,7 @@ class Graph():
         source_matrix = np.zeros(
             (len(labels), len(labels))) if source_matrix is None else source_matrix
         self._node_labels = labels
-        self.build_graph(source_matrix)
+        self.graph = self.build_graph(source_matrix)
 
     def build_graph(self, source_matrix: np.ndarray) -> nx.DiGraph:
         graph = nx.from_numpy_matrix(source_matrix, create_using=nx.DiGraph)
@@ -135,25 +137,26 @@ def expand_data_by_col(data: pd.DataFrame, columns: Union[str, list], column_for
     is given for expanding the column data """
 
     def make_expansion_df(df_lists, col_names: list) -> pd.DataFrame:
-        temp_data = deepcopy(data)
         expanded_data = pd.DataFrame(columns=data.columns, dtype=object)
         for c in col_names:
+            temp_data = deepcopy(data)
+            temp_data.drop(columns, axis=1, inplace=True)
             expanded_df_col = pd.DataFrame.from_dict(
                 dict(zip(columns + [column_for_expanding_coldata],
                      [df_lists.loc[column][c] for column in columns] + [c])),
                 dtype=object
             )
             # {column: df_lists[c], column_for_expanding_coldata: c})
-            temp_data.drop(columns, axis=1, inplace=True)
-            temp_data = temp_data.assign(
-                **dict(zip(
-                    columns + [column_for_expanding_coldata],
-                    [pd.Series(expanded_df_col[column].values) for column in columns] + [pd.Series(
-                        expanded_df_col[column_for_expanding_coldata].values)]))
-                # column: pd.Series(expanded_df_col[column].values),
-                # column_for_expanding_coldata: pd.Series(
-                #     expanded_df_col[column_for_expanding_coldata].values)
-            )
+            # temp_data = temp_data.assign(
+            #     **dict(zip(
+            #         columns + [column_for_expanding_coldata],
+            #         [pd.Series(expanded_df_col[column].values) for column in columns] + [pd.Series(
+            #             expanded_df_col[column_for_expanding_coldata].values)]))
+            #     # column: pd.Series(expanded_df_col[column].values),
+            #     # column_for_expanding_coldata: pd.Series(
+            #     #     expanded_df_col[column_for_expanding_coldata].values)
+            # )
+            temp_data = pd.concat([temp_data, expanded_df_col], axis=1)
             expanded_data = pd.concat(
                 [expanded_data, temp_data], axis=0, ignore_index=True)
         return expanded_data
@@ -243,10 +246,15 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
             return [None]
         if complete_col_by_str is not None:
             for i, col in enumerate(cols):
-                rex = np.asarray([re.search(f"^{complete_col_by_str}.*{col.split(complete_col_by_str.split('wrt')[0])[-1]}", c) for c in data.columns])
+                end = col.split(complete_col_by_str.split('_wrt')[0])[-1]
+                rex = np.asarray([re.search(f"^{complete_col_by_str}.*{end}", c) for c in data.columns])
                 if not list(data.columns[np.where(rex != None)[0]]):
                     logging.warning(f'Could not find complete column name for {col} with str {complete_col_by_str}')
-                cols[i] = list(data.columns[np.where(rex != None)[0]])
+                potential_cols = list(data.columns[np.where(rex != None)[0]])
+                if not end:
+                    cols[i] = min(potential_cols)
+                else:
+                    cols[i] = potential_cols
         return flatten_listlike(cols, safe=True)
     cols_x = process_cols(cols_x, complete_colx_by_str)
     cols_y = process_cols(cols_y, complete_coly_by_str)
@@ -417,6 +425,8 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                     logging.warning(f'Unknown plot type given "{plot_type}"')
 
                 if not data.empty:
+                    if col_x == 'Response time with respect to diff to base circuit':
+                        col_x
                     data_writer.output(out_type='svg', out_name=out_name,
                                        write_func=write_func,
                                        **merge_dicts({'x': col_x, 'y': col_y, 'data': data,
@@ -619,7 +629,8 @@ class VisODE():
             "multiple": "dodge",  # "stack", "fill", "dodge"
             "palette": "deep",
             # palette="light:m_r",
-            "title": plot_kwargs.get('title')
+            "title": plot_kwargs.get('title'),
+            "hue": plot_kwargs.get('hue')
         }
         default_kwargs.update(histplot_kwargs)
         self.sns_generic_plot(sns.histplot, out_path,

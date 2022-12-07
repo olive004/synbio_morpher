@@ -30,6 +30,5 @@ logging.basicConfig(level=logging.INFO, format=FORMAT)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-
 if __name__ == "__main__":
     Fire(main)

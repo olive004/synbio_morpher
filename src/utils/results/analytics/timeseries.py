@@ -1,50 +1,48 @@
 import logging
 import numpy as np
 import jax.numpy as jnp
-from typing import List
+from typing import List, Tuple
+from src.utils.misc.type_handling import merge_dicts
 
 
 NUM_DTYPE = np.float32
+DIFF_KEY = '_diff_to_base_circuit'
+RATIO_KEY = '_ratio_from_mutation_to_base'
 
 
 def get_derivative(data):
     deriv = jnp.gradient(data)[1]
     return deriv  # get column derivative
 
+
 def get_steady_state(data):
     """ Last 5% of data considered steady state """
     steady_state_threshold = 0.01
     final_deriv = jnp.average(
         get_derivative(data)[:, -3:], axis=1)
-    is_steady_state_reached = final_deriv < steady_state_threshold
     steady_states = jnp.expand_dims(
         data[:, -1], axis=1).astype(jnp.float32)
-    return steady_states, is_steady_state_reached, final_deriv
+    return steady_states, final_deriv
+
 
 def fold_change(data):
-    # division_matrix = jnp.divide(
-    #     data[:, -1].clip(1), data[:, 0].clip(1))
     fold_change = jnp.divide(
         data[:, -1], jnp.where(data[:, 0] == 0, 1, data[:, 0]))
-    # if jnp.ndim(fold_change) == 1:
-    #     return jnp.expand_dims(fold_change, axis=1)
-    # else:
-    #     return fold_change
     return jnp.expand_dims(fold_change, axis=1)
+
 
 def get_overshoot(data, steady_states):
     return (jnp.expand_dims(jnp.max(data, axis=1), axis=1) - steady_states)
 
+
 def calculate_precision(output_diff, starting_states, signal_diff, signal_start) -> jnp.ndarray:
-    # precision = jnp.absolute(jnp.divide(
-    #     output_diff / starting_states,
-    #     signal_diff / signal_start
-    # )).astype(NUM_DTYPE)
     denom = jnp.where(signal_start != 0, signal_diff / signal_start, 1)
-    numer = jnp.where((starting_states != 0).astype(int), output_diff / starting_states, 1)
+    numer = jnp.where((starting_states != 0).astype(int),
+                      output_diff / starting_states, 1)
     precision = jnp.absolute(jnp.divide(
         numer, denom))
     return jnp.divide(1, precision)
+
 
 def get_precision(data, steady_states, signal_idx: int):
     if signal_idx is None:
@@ -59,11 +57,14 @@ def get_precision(data, steady_states, signal_idx: int):
 
     return calculate_precision(output_diff, starting_states, signal_diff, signal_start)
 
+
 def calculate_sensitivity(output_diff, starting_states, signal_diff, signal_low) -> jnp.ndarray:
     denom = jnp.where(signal_low != 0, signal_diff / signal_low, 1)
-    numer = jnp.where((starting_states != 0).astype(int), output_diff / starting_states, 1)
+    numer = jnp.where((starting_states != 0).astype(int),
+                      output_diff / starting_states, 1)
     return jnp.expand_dims(jnp.absolute(jnp.divide(
         numer, denom)), axis=1)
+
 
 def get_sensitivity(data, signal_idx: int):
     if signal_idx is None:
@@ -76,8 +77,9 @@ def get_sensitivity(data, signal_idx: int):
     """ IF YOU IGNORE THE DENOMINATOR THE DIVIDE BY ZERO GOES AWAY AND YOU GET UNSCALED SENSITIVITY """
     output_diff = peaks - starting_states
     signal_diff = signal_high - signal_low
-    
+
     return calculate_sensitivity(output_diff, starting_states, signal_diff, signal_low)
+
 
 def get_rmse(data, ref_circuit_data):
     if ref_circuit_data is None:
@@ -86,6 +88,7 @@ def get_rmse(data, ref_circuit_data):
     rmse = jnp.sqrt(
         jnp.sum(jnp.divide(jnp.power(data, 2), len(data)), axis=1))
     return jnp.expand_dims(rmse, axis=1)
+
 
 def get_step_response_times(data, t, steady_states, deriv1, signal_idx: jnp.ndarray):
     time = t * jnp.ones_like(steady_states)
@@ -99,25 +102,20 @@ def get_step_response_times(data, t, steady_states, deriv1, signal_idx: jnp.ndar
     zd = (deriv1 < fm) & (deriv1 > -fm)  # This is just dx/dt == 0
 
     # Start time of signal change
-    # t0 = t[jnp.where(zd[signal_idx] == False)[0][0] - 1]
     t0 = jnp.max(t * (zd[signal_idx] == False).astype(int))
 
     # The time all species start to change where the derivative is not zero
-    # tstart_idxs = jnp.argmax(
-    #     (zd == False) & (time > t0), axis=1)
-    # tstart = t[tstart_idxs]
     tstart = jnp.max(t * ((zd == False) & (time > t0)).astype(int), axis=1)
 
     # Stop measuring response time where the species is within the
     # steady state margin and has a zero derivative after its start time
     idxs_first_zd_after_signal = jnp.argmax(
         (time * zd > jnp.expand_dims(tstart, axis=1)) & (cond_out == False), axis=1)
-    # tstop = jnp.where(idxs_first_zd_after_signal != 0,
-    #                     time[jnp.arange(len(steady_states)), idxs_first_zd_after_signal], tstart)
 
-    argmax_workaround = jnp.ones_like(steady_states) * jnp.arange(len(t)) == jnp.expand_dims(idxs_first_zd_after_signal, axis=1)
-    tstop = jnp.where(jnp.max(time * argmax_workaround, axis=1) != 0, 
-        jnp.max(time * argmax_workaround, axis=1), tstart)
+    argmax_workaround = jnp.ones_like(
+        steady_states) * jnp.arange(len(t)) == jnp.expand_dims(idxs_first_zd_after_signal, axis=1)
+    tstop = jnp.where(jnp.max(time * argmax_workaround, axis=1) != 0,
+                      jnp.max(time * argmax_workaround, axis=1), tstart)
 
     response_times = tstop - tstart
 
@@ -125,21 +123,32 @@ def get_step_response_times(data, t, steady_states, deriv1, signal_idx: jnp.ndar
         return jnp.expand_dims(response_times, axis=1)
     return response_times
 
+
 def frequency(data):
     spectrum = jnp.fft.fft(data)/len(data)
     spectrum = spectrum[range(int(len(data)/2))]
     freq = jnp.fft.fftfreq(len(spectrum))
     return freq
 
+
+def get_analytics_types_all():
+    return get_analytics_types() + get_analytics_types_diffs() + get_analytics_types_ratios()
+
+
 def get_analytics_types():
     """ The naming here has to be unique and not include small 
     raw values like diff, ratio, max, min. """
+    return get_analytics_types_base() + get_signal_dependent_analytics()
+
+
+def get_analytics_types_base():
     return ['fold_change',
             'overshoot',
             'max_amount',
             'min_amount',
             'RMSE',
-            'steady_states'] + get_signal_dependent_analytics()
+            'steady_states']
+
 
 def get_signal_dependent_analytics():
     return ['response_time',
@@ -148,9 +157,26 @@ def get_signal_dependent_analytics():
             'sensitivity',
             'sensitivity_estimate']
 
-def generate_analytics(data, time, labels: List[str], signal_onehot=None, ref_circuit_data=None):
-    signal_idxs = jnp.where(signal_onehot == 1)[0]
-    signal_idxs = signal_idxs if len(signal_idxs) >= 1 else None
+
+def get_signal_dependent_analytics_all():
+    return get_signal_dependent_analytics() + \
+        [a + DIFF_KEY for a in get_signal_dependent_analytics()] + \
+        [a + RATIO_KEY for a in get_signal_dependent_analytics()]
+
+
+def get_analytics_types_diffs():
+    # + [a + '_wrt' + DIFF_KEY for a in get_signal_dependent_analytics()]
+    return [a + DIFF_KEY for a in get_analytics_types()]
+
+
+def get_analytics_types_ratios():
+    # + [a + '_wrt' + RATIO_KEY for a in get_signal_dependent_analytics()]
+    return [a + RATIO_KEY for a in get_analytics_types()]
+
+
+def generate_base_analytics(data: np.ndarray, time: np.ndarray, labels: List[str], signal_idxs: np.ndarray, ref_circuit_data: np.ndarray) -> dict:
+    if data is None:
+        return {}
     analytics = {
         'first_derivative': get_derivative(data),
         'fold_change': fold_change(data),
@@ -159,49 +185,47 @@ def generate_analytics(data, time, labels: List[str], signal_onehot=None, ref_ci
         'min_amount': jnp.expand_dims(jnp.min(data, axis=1), axis=1)
     }
     analytics['steady_states'], \
-        analytics['is_steady_state_reached'], \
         analytics['final_deriv'] = get_steady_state(data)
-    analytics['overshoot'] = get_overshoot(data, 
-        analytics['steady_states'])
+    analytics['overshoot'] = get_overshoot(data,
+                                           analytics['steady_states'])
 
-    # analytics['response_time'] = {}
-    # analytics['precision'] = {}
-    # analytics['precision_estimate'] = {}
-    # analytics['sensitivity'] = {}
-    # analytics['sensitivity_estimate'] = {}
     if signal_idxs is not None:
-        signal_labels = list(map(labels. __getitem__, signal_idxs))
+        signal_labels = list(map(labels.__getitem__, signal_idxs))
         for s, s_idx in zip(signal_labels, signal_idxs):
-            # analytics['response_time'], \
-            #     analytics['response_time_high'], \
-            #     analytics['response_time_low'] = get_response_times(
-            #     analytics['steady_states'], analytics['first_derivative'], signal_idxs=signal_onehot)
-            # analytics['precision'][s] = get_precision(
-            #     analytics['steady_states'], s_idx)
-            # analytics['precision_estimate'][s] = get_precision(
-            #     analytics['steady_states'], s_idx, ignore_denominator=True)
-            # analytics['response_time'][s] = get_step_response_times(
-            #     analytics['steady_states'], analytics['first_derivative'], signal_idx=s_idx)
-            # analytics['sensitivity'] = get_sensitivity(s_idx)
-            # analytics['sensitivity_estimate'] = get_sensitivity(
-            #     s_idx, ignore_denominator=True)
             analytics[f'precision_wrt_species-{s_idx}'] = get_precision(
                 data, analytics['steady_states'], s_idx)
             analytics[f'precision_estimate_wrt_species-{s_idx}'] = get_precision(
                 data, analytics['steady_states'], s_idx)
             analytics[f'response_time_wrt_species-{s_idx}'] = get_step_response_times(
                 data, time, analytics['steady_states'], analytics['first_derivative'], signal_idx=s_idx)
-            analytics[f'sensitivity_wrt_species-{s_idx}'] = get_sensitivity(data, s_idx)
+            analytics[f'sensitivity_wrt_species-{s_idx}'] = get_sensitivity(
+                data, s_idx)
             analytics[f'sensitivity_estimate_wrt_species-{s_idx}'] = get_sensitivity(
                 data, s_idx)
-    # else:
-    #     analytics['response_time'] = None  # {s: None for s in labels}
-    #     analytics['precision'] = None  # {s: None for s in labels}
-    #     analytics['precision_estimate'] = None  # {s: None for s in labels}
-    #     analytics['sensitivity'] = None
-    #     analytics['sensitivity_estimate'] = None
-
     return analytics
+
+
+def generate_differences_ratios(analytics: dict, ref_analytics) -> Tuple[dict]:
+    differences = {}
+    ratios = {}
+    for k in ref_analytics.keys():
+        differences[k +
+                    DIFF_KEY] = jnp.subtract(ref_analytics[k], analytics[k])
+        ratios[k + RATIO_KEY] = jnp.divide(analytics[k], ref_analytics[k])
+    return differences, ratios
+
+
+def generate_analytics(data, time, labels: List[str], ref_circuit_data=None, signal_onehot=None):
+    signal_idxs = jnp.where(signal_onehot == 1)[0]
+    signal_idxs = signal_idxs if len(signal_idxs) >= 1 else None
+    analytics = generate_base_analytics(data=data, time=time, labels=labels,
+                                        signal_idxs=signal_idxs, ref_circuit_data=ref_circuit_data)
+
+    # Differences & ratios
+    ref_analytics = generate_base_analytics(data=ref_circuit_data, time=time, labels=labels,
+                                            signal_idxs=signal_idxs, ref_circuit_data=ref_circuit_data)
+    differences, ratios = generate_differences_ratios(analytics, ref_analytics)
+    return merge_dicts(analytics, differences, ratios)
 
 
 class Timeseries():
