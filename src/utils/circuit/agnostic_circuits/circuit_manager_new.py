@@ -28,7 +28,7 @@ from src.utils.evolution.mutation import implement_mutation
 from src.utils.modelling.base import Modeller
 
 
-TEST_MODE = False
+TEST_MODE = True
 
 
 class CircuitModeller():

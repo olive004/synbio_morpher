@@ -194,7 +194,7 @@ def b_get_stats(interactions: List[InteractionMatrix]):
             i.interactions.__getattribute__(interaction_attr), axis=0) for i in interactions], axis=0)
     batch_dim = b_interaction_attrs['eqconstants'].ndim -2
     idxs_interacting = get_unique_interacting_idxs(
-        b_interaction_attrs['eqconstants'])
+        b_interaction_attrs['eqconstants'], batch_dim)
 
     idxs_other_interacting = get_interacting_species(idxs_interacting)
     idxs_self_interacting = get_selfinteracting_species(idxs_interacting)
@@ -207,11 +207,14 @@ def b_get_stats(interactions: List[InteractionMatrix]):
         "interacting": idxs_other_interacting,
         "self_interacting": idxs_self_interacting,
         "names": [i.sample_names for i in interactions],
-        "num_interacting": len(set(flatten_listlike(idxs_other_interacting))),
-        "num_self_interacting": len(set(idxs_self_interacting)),
+        "num_interacting": idxs_other_interacting.shape[0],
+        "num_self_interacting": idxs_self_interacting.shape[0],
+    }
+
+    for interaction_attr in INTERACTION_TYPES:
+        stats['max_interaction' + interaction_attr]
         "max_interaction": np.max(interactions.__getattribute__(interaction_attr)),
         "min_interaction": np.min(interactions.__getattribute__(interaction_attr))
-    }
     stats = {k: [v] for k, v in stats.items()}
     stats = pd.DataFrame.from_dict(stats, dtype=object)
     return stats
@@ -227,8 +230,11 @@ def get_selfinteracting_species(idxs_interacting: jnp.ndarray):
     return idxs_interacting[idxs_interacting[:, -1] == idxs_interacting[:, -2], :]
 
 
-def get_unique_interacting_idxs(interaction_attr: jnp.ndarray):
-    return jnp.argwhere(interaction_attr != 1)
+def get_unique_interacting_idxs(interaction_attr: jnp.ndarray, batch_dim: int):
+    idxs_interacting = jnp.argwhere(interaction_attr != 1)
+    idxs_interacting = np.concatenate((idxs_interacting[:, :batch_dim], idxs_interacting[:, batch_dim:].sort(axis=1)), axis=1)
+    idxs_interacting = np.unique(idxs_interacting, axis=0)
+    return idxs_interacting
     # Assuming symmetry in interactions
     # idxs_interacting = sorted([tuple(sorted(i)) for i in idxs_interacting])
     # return list(set(idxs_interacting))
