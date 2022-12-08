@@ -390,35 +390,10 @@ def b_tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFram
             )
         return b_get_stats(interaction_matrices), interaction_matrices[0].sample_names
 
-    def upate_table_with_results(table: dict, reference_table: dict, results: dict) -> dict:
+    def upate_table_with_results(table: pd.DataFrame, results: pd.DataFrame) -> pd.DataFrame:
+        """ The index for the results starts with 0 for each new mutation that it refers to.
+        The table must be expanded appropriately. """
         table.update(results)
-        max_len = 0
-        for k in results.keys():
-            if type(table[k]) == np.ndarray and max_len < len(table[k]):
-                max_len = len(table[k])
-
-            reference_v = reference_table[k]
-            diff = (np.asarray(
-                table[k]) - np.asarray(reference_v)).flatten()
-            # np.where(np.asarray(reference_v) != 0, np.asarray(
-            # table[k]) - np.asarray(reference_v), 0).flatten()
-            if np.shape(np.asarray(table[k])) < np.shape(np.asarray(reference_v)):
-                table[k] = np.expand_dims(table[k], axis=1)
-            ratio = np.where((np.asarray(reference_v) != 0) & (np.asarray(reference_v) != np.nan),
-                             np.divide(np.asarray(table[k]), np.asarray(reference_v)), np.nan)
-            ratio = np.expand_dims(
-                ratio, axis=0) if not np.shape(ratio) else ratio
-            if np.size(diff) == 1 and type(diff) == np.ndarray:
-                diff = diff[0]
-            elif diff.ndim > 1:
-                diff = diff.flatten()
-            if np.size(ratio) == 1 and type(ratio) == np.ndarray and np.shape(ratio):
-                ratio = ratio[0]
-            elif ratio.ndim > 1:
-                ratio = ratio.flatten()
-
-            table[f'{k}_diff_to_base_circuit'] = diff
-            table[f'{k}_ratio_from_mutation_to_base'] = ratio
         table = remove_invalid_json_values(table)
         return table
 
@@ -478,10 +453,9 @@ def b_tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFram
 
 
         curr_table = pd.concat([pd.DataFrame.from_dict(
-            curr_table), diff_interactions, ratio_interactions,
-            diff_results, ratio_results], axis=1)
+            curr_table), diff_interactions, ratio_interactions], axis=1)
         curr_table = upate_table_with_results(
-            curr_table, reference_table=ref_table, results=result_report)
+            curr_table, results=result_report)
         if check_coherent:
             check_coherency(curr_table)
         info_table = pd.concat([info_table, pd.DataFrame([curr_table])])

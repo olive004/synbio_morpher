@@ -226,6 +226,7 @@ class CircuitModeller():
         signal.update_time_interval(self.dt)
 
         # Batch
+        logging.warning('part 1')
         b_steady_states = [None] * len(circuits)
         b_forward_rates = [None] * len(circuits)
         b_reverse_rates = [None] * len(circuits)
@@ -233,7 +234,11 @@ class CircuitModeller():
             b_steady_states[i] = c.result_collector.get_result('steady_states').analytics['steady_states'].flatten() 
             b_forward_rates[i] = c.qreactions.reactions.forward_rates 
             b_reverse_rates[i] = c.qreactions.reactions.reverse_rates
+        b_steady_states = np.asarray(b_steady_states)
+        b_forward_rates = np.asarray(b_forward_rates)
+        b_reverse_rates = np.asarray(b_reverse_rates)
 
+        logging.warning('part 2')
         solution = jax.vmap(
             partial(bioreaction_sim_dfx_expanded,
                     t0=self.t0, t1=self.t1, dt0=self.dt,
@@ -246,6 +251,7 @@ class CircuitModeller():
         b_new_copynumbers = solution.ys[:, :tf, :]
         t = solution.ts[0, :tf]
 
+        logging.warning('part 3')
         if np.shape(b_new_copynumbers)[1] != ref_circuit.circuit_size and np.shape(b_new_copynumbers)[-1] == ref_circuit.circuit_size:
             b_new_copynumbers = np.swapaxes(b_new_copynumbers, 1, 2)
 
@@ -260,6 +266,7 @@ class CircuitModeller():
                     ref_circuit)]
             else:
                 ref_circuit_data = ref_circuit_result.data  # .flatten()
+        logging.warning('part 4')
         b_analytics = jax.vmap(partial(generate_analytics, time=t, labels=[s.name for s in ref_circuit.model.species],
                                        signal_onehot=signal.onehot, ref_circuit_data=ref_circuit_data))(data=b_new_copynumbers)
         b_analytics_l = []
@@ -270,6 +277,7 @@ class CircuitModeller():
             b_analytics_l.append(b_analytics_k)
 
         # Save for all circuits
+        logging.warning('part 5')
         for i, (circuit, analytics) in enumerate(zip(circuits, b_analytics_l)):
             circuits[i].result_collector.add_result(
                 data=b_new_copynumbers[i],
@@ -332,7 +340,7 @@ class CircuitModeller():
                        write_to_subsystem=True):
         batch_size = len(circuits) if batch_size is None else batch_size
 
-        max_circuits = 800
+        max_circuits = 5000
         num_subcircuits = len(flatten_nested_dict(circuits[0].mutations))
         expected_tot_subcircuits = len(circuits) * (1+num_subcircuits)
         if expected_tot_subcircuits > max_circuits:
