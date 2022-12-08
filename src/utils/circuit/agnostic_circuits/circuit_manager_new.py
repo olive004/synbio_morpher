@@ -44,7 +44,6 @@ class CircuitModeller():
     def init_circuit(self, circuit: Circuit):
         circuit = self.compute_interaction_strengths(circuit)
         circuit = self.find_steady_states(circuit)
-        self.write_misc_info(circuit)
         return circuit
 
     def make_modelling_func(self, modelling_func, circuit: Circuit,
@@ -227,14 +226,13 @@ class CircuitModeller():
         signal.update_time_interval(self.dt)
 
         # Batch
-        b_steady_states = np.array(
-            [c.result_collector.get_result('steady_states').analytics['steady_states'].flatten(
-            ) * invert_onehot(signal.onehot) for c in circuits]
-        )
-        b_forward_rates = np.array(
-            [c.qreactions.reactions.forward_rates for c in circuits])
-        b_reverse_rates = np.array(
-            [c.qreactions.reactions.reverse_rates for c in circuits])
+        b_steady_states = [None] * len(circuits)
+        b_forward_rates = [None] * len(circuits)
+        b_reverse_rates = [None] * len(circuits)
+        for i, c in enumerate(circuits):
+            b_steady_states[i] = c.result_collector.get_result('steady_states').analytics['steady_states'].flatten() 
+            b_forward_rates[i] = c.qreactions.reactions.forward_rates 
+            b_reverse_rates[i] = c.qreactions.reactions.reverse_rates
 
         solution = jax.vmap(
             partial(bioreaction_sim_dfx_expanded,
@@ -374,10 +372,12 @@ class CircuitModeller():
                     b_circuits, methods, ref_circuit=ref_circuit,
                     include_normal_run=include_normal_run,
                     write_to_subsystem=write_to_subsystem)
+                del b_circuits
 
             single_batch_time = datetime.now() - single_batch_time
             logging.warning(
                 f'Single batch: {single_batch_time} \nProjected time: {single_batch_time.total_seconds() * len(circuits)/viable_circuit_num} \nTotal time: {str(datetime.now() - start_time)}')
+            del subcircuits
         return circuits
 
     def run_batch(self,
@@ -387,6 +387,8 @@ class CircuitModeller():
                   include_normal_run: bool = True,
                   write_to_subsystem: bool = True) -> List[Circuit]:
         for method, kwargs in methods.items():
+            logging.warning(
+                f'\t\tRunning {len(subcircuits)} Subcircuits - {subcircuits[0].name}: {method}')
             if kwargs.get('batch'):  # method is batchable
                 if hasattr(self, method):
                     if 'ref_circuit' in inspect.getfullargspec(getattr(self, method)).args:
@@ -396,8 +398,7 @@ class CircuitModeller():
                     logging.warning(
                         f'Could not find method @{method} in class {self}')
             else:
-                logging.warning(
-                    f'\t\tRunning {len(subcircuits)} Subcircuits - {subcircuits[0].name}: {method}')
+
                 for i, subcircuit in enumerate(subcircuits):
                     dir_name = subcircuit.name if subcircuit.subname == 'ref_circuit' or not write_to_subsystem else os.path.join(
                         subcircuit.name, 'mutations', subcircuit.subname)
@@ -428,15 +429,15 @@ class CircuitModeller():
     def visualise_graph(self, circuit: Circuit, mode="pyvis", new_vis=False):
         self.result_writer.visualise_graph(circuit, mode, new_vis)
 
+    # def write_misc_info(self, circuit: Circuit):
+    #     misc_info = {
+    #         'all_sample_names': [s.name for s in circuit.model.species]
+    #     }
+    #     self.result_writer.output(out_type='csv', out_name='misc_info', data=misc_info)
+
     def write_results(self, circuit: Circuit, new_report: bool = False, no_visualisations: bool = False,
                       only_numerical: bool = False, no_numerical: bool = False):
         self.result_writer.write_all(
             circuit, new_report, no_visualisations=no_visualisations, only_numerical=only_numerical,
             no_numerical=no_numerical)
         return circuit
-
-    def write_misc_info(self, circuit: Circuit):
-        misc_info = {
-            'all_sample_names': [s.name for s in circuit.model.species]
-        }
-        self.result_writer.output(out_type='csv', out_name='misc_info', data=misc_info)

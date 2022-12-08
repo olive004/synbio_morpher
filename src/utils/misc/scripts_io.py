@@ -137,12 +137,12 @@ def load_experiment_output_summary(experiment_folder) -> pd.DataFrame:
     return load_csv(summary_path)
 
 
-def load_result_report(local_experiment_folder: str, result_type: str = 'signal'):
+def load_result_report(local_experiment_folder: str, result_type: str = 'signal', index=slice(None)):
     def process_pre_result_report(jdict):
         iterable_like = make_iterable_like(jdict)
         for k, v in iterable_like:
             if type(v) == list:
-                jdict[k] = flatten_listlike(v, safe=True)
+                jdict[k] = np.asarray(flatten_listlike(v, safe=True))[index]
                 # jdict[k] = process_pre_result_report(v)
             if type(v) == str:
                 jdict[k] = np.float32(v)
