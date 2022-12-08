@@ -11,7 +11,6 @@ import pandas as pd
 
 
 from src.srv.io.loaders.data_loader import GeneCircuitLoader
-from src.srv.io.loaders.experiment_loading import INTERACTION_FILE_ADDONS
 from src.utils.misc.numerical import NUMERICAL, cast_astype
 from src.utils.misc.type_handling import flatten_nested_listlike
 from src.utils.results.analytics.timeseries import get_analytics_types_all
@@ -90,7 +89,7 @@ def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path
         return []
 
     interaction_path_keys = {
-        k: f'path_{k}' for k in INTERACTION_FILE_ADDONS.keys()}
+        k: f'path_{k}' for k in INTERACTION_TYPES}
     a_pathname = filt_stats[list(interaction_path_keys.values())[
         0]].to_list()[0]
     experiment_folder = get_root_experiment_folder(a_pathname)
@@ -338,28 +337,28 @@ def tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFrame:
     info_table = pd.read_csv(info_table_path)
     return info_table
 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
 
 
 # Batched hopefully
@@ -382,8 +381,15 @@ def b_tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFram
                     f'Name {table[target]} should be in path {table[pathname]}.'
 
     def make_interaction_stats_and_sample_names(source_interaction_dirs: List[str]):
-        stats = b_get_stats(source_interaction_dirs)
-        return stats
+        interaction_matrices = [None] * len(source_interaction_dirs)
+        for i, source_interaction_dir in enumerate(source_interaction_dirs):
+            interaction_matrices[i] = InteractionMatrix(
+                matrix_paths=get_pathnames(file_key=INTERACTION_TYPES,
+                                           search_dir=source_interaction_dir,
+                                           subdirs=INTERACTION_TYPES,
+                                           as_dict=True, first_only=True)
+            )
+        return b_get_stats(interaction_matrices)
 
     def upate_table_with_results(table: dict, reference_table: dict, results: dict) -> dict:
         table.update(results)
@@ -417,48 +423,23 @@ def b_tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFram
         table = remove_invalid_json_values(table)
         return table
 
-    def update_diff_to_base_circuit(curr_table: dict, int_stats: pd.DataFrame,
-                                    ref_stats: pd.DataFrame, cols: list) -> dict:
-        for i_type in INTERACTION_TYPES:
-            for col in cols:
-                current_stat = np.asarray(list(int_stats[i_type][col]))
-                ref_stat = np.asarray(list(ref_stats[i_type][col]))
-                curr_table[f'{i_type}_{col}'] = np.asarray(current_stat)[0]
-                if type(current_stat) == list or type(ref_stat) == list:
-                    diff = np.asarray(current_stat) - np.asarray(ref_stat)
-                    curr_table[f'{i_type}_{col}_diff_to_base_circuit'] = diff
+    def update_diff_to_base_circuit(int_stats: pd.DataFrame,
+                                    ref_stats: pd.DataFrame, diff_cols: list) -> pd.DataFrame:
 
-                    ratio = np.where(np.asarray(ref_stat) != 0,
-                                     np.divide(np.asarray(current_stat), np.asarray(ref_stat)), 0)
-                    curr_table[f'{i_type}_{col}_ratio_from_mutation_to_base'] = ratio
-                else:
-                    diff = current_stat - ref_stat
-                    ratio = np.where((current_stat != 0) & (current_stat != np.nan), np.divide(np.asarray(
-                        current_stat), np.asarray(ref_stat)), np.nan)
-                if np.size(diff) == 1:
-                    diff = diff[0]
-                    ratio = ratio[0]
-                curr_table[f'{i_type}_{col}_diff_to_base_circuit'] = diff
-                curr_table[f'{i_type}_{col}_ratio_from_mutation_to_base'] = ratio
-        return curr_table
+        interaction_cols = [c for c in int_stats.columns if any(
+            [col in c for col in diff_cols])]
 
-    def update_info_table(info_table: pd.DataFrame, curr_table: dict, int_stats: pd.DataFrame,
-                          ref_stats: pd.DataFrame, ref_table: dict, source_dir: str, check_coherent: bool = False) -> pd.DataFrame:
-        diff_cols = ['num_self_interacting',
-                     'num_interacting',
-                     'max_interaction',
-                     'min_interaction']
-        curr_table = update_diff_to_base_circuit(curr_table, int_stats,
-                                                 ref_stats, cols=diff_cols)
-        result_report = load_result_report(source_dir)
-        result_report = remove_invalid_json_values(
-            load_result_report(source_dir))
-        curr_table = upate_table_with_results(
-            curr_table, reference_table=ref_table, results=result_report)
-        if check_coherent:
-            check_coherency(curr_table)
-        info_table = pd.concat([info_table, pd.DataFrame([curr_table])])
-        return info_table
+        diff_table = ref_stats[interaction_cols].values.squeeze(
+        ) - int_stats[interaction_cols]
+        diff_table = diff_table.rename(
+            columns={i: i + '_diff_to_base_circuit' for i in interaction_cols})
+
+        ratio_table = int_stats[interaction_cols] / \
+            ref_stats[interaction_cols].values.squeeze()
+        ratio_table = ratio_table.rename(
+            columns={i: i + '_ratio_from_mutation_to_base' for i in interaction_cols})
+
+        return diff_table, ratio_table
 
     def remove_invalid_json_values(table: Union[pd.DataFrame, dict]) -> Union[pd.DataFrame, dict]:
         if type(table) == pd.DataFrame:
@@ -471,6 +452,31 @@ def b_tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFram
                     v[v == np.nan] = NUMERICAL['nan']
                     table[k] = v
         return table
+
+    def update_info_table(info_table: pd.DataFrame, curr_table: dict, int_stats: pd.DataFrame,
+                          ref_stats: pd.DataFrame, ref_table: dict, result_source_dirs: List[str], check_coherent: bool = False) -> pd.DataFrame:
+        diff_cols = ['num_self_interacting',
+                     'num_interacting',
+                     'max_interaction',
+                     'min_interaction']
+        diff_table, ratio_table = update_diff_to_base_circuit(
+            int_stats, ref_stats, diff_cols=diff_cols)
+
+
+        curr_table = pd.concat([pd.DataFrame.from_dict(curr_table), diff_table, ratio_table], axis=1)
+        
+        result_reports = []
+        for result_source_dir in result_source_dirs:
+            result_reports.append(pd.DataFrame.from_dict(load_result_report(result_source_dir, result_type='signal')))
+        result_table = pd.concat(result_reports, axis=0)
+        # result_report = remove_invalid_json_values(
+        #     load_result_report(result_source_dirs))
+        curr_table = upate_table_with_results(
+            curr_table, reference_table=ref_table, results=result_report)
+        if check_coherent:
+            check_coherency(curr_table)
+        info_table = pd.concat([info_table, pd.DataFrame([curr_table])])
+        return info_table
 
     def write_results(info_table: pd.DataFrame) -> None:
         result_report_keys = get_analytics_types_all()
@@ -485,6 +491,7 @@ def b_tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFram
     info_table = init_info_table()
 
     circuit_dirs = get_subdirectories(source_dir, min_condition=3)
+    all_sample_names = circuit_dirs[0]
     for circ_idx, circuit_dir in enumerate(circuit_dirs):
         circuit_name = os.path.basename(circuit_dir)
         mutations_pathname = get_pathnames(
@@ -500,14 +507,13 @@ def b_tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFram
         # interaction_dir = os.path.dirname(
         #     os.path.dirname(mutations['template_file'].values[0]))
         interaction_dir = circuit_dir
-        interaction_stats, sample_names = make_interaction_stats_and_sample_names(
-            interaction_dir)
+        interaction_stats_og = make_interaction_stats_and_sample_names(
+            [interaction_dir])
 
         current_og_table = {
             'circuit_name': circuit_name,
             'mutation_name': '',
             'source_species': '',
-            'sample_names': sample_names,
             'mutation_num': 0,
             'mutation_type': '',
             'mutation_positions': '',
@@ -521,13 +527,13 @@ def b_tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFram
         }
         # Expand the interaction keys in the table
         info_table = update_info_table(info_table, curr_table=current_og_table, int_stats=interaction_stats,
-                                       ref_stats=interaction_stats, ref_table=current_og_table, source_dir=interaction_dir)
+                                       ref_stats=interaction_stats, ref_table=current_og_table, result_source_dirs=interaction_dir)
 
         interaction_stats = make_interaction_stats_and_sample_names(
             mutation_dirs)
 
         # Mutated circuits
-        mutation_table = {
+        mutation_table = pd.DataFrame.from_dict({
             'circuit_name': [circuit_name] * len(mutation_dirs),
             'mutation_name': mutations['mutation_name'],
             'source_species': mutations['template_name'],
@@ -541,13 +547,12 @@ def b_tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFram
             #                                         file_key='signal_data',
             #                                         search_dir=mutation_dir),
             'path_to_template_circuit': mutations['template_file']
-        }
-
-            # Expand the interaction keys in the table
+        })
+        # Expand the interaction keys in the table
         info_table = update_info_table(info_table, curr_table=mutation_table,
-                                        int_stats=interaction_stats,
-                                        ref_stats=interaction_stats, ref_table=current_og_table,
-                                        source_dir=mutation_dir, check_coherent=True)
+                                       int_stats=interaction_stats,
+                                       ref_stats=interaction_stats_og, ref_table=current_og_table,
+                                       result_source_dirs=circuit_dir, check_coherent=True)
         if circ_idx != 0 and np.mod(circ_idx, 10) == 0:
             info_table = write_results(info_table)
             info_table = init_info_table()

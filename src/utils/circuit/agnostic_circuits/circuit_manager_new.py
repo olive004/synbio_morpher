@@ -44,6 +44,7 @@ class CircuitModeller():
     def init_circuit(self, circuit: Circuit):
         circuit = self.compute_interaction_strengths(circuit)
         circuit = self.find_steady_states(circuit)
+        self.write_misc_info(circuit)
         return circuit
 
     def make_modelling_func(self, modelling_func, circuit: Circuit,
@@ -247,31 +248,6 @@ class CircuitModeller():
         b_new_copynumbers = solution.ys[:, :tf, :]
         t = solution.ts[0, :tf]
 
-        # Attempt 1
-        # t = np.arange(self.t0, self.t1, self.dt)
-        # b_new_copynumbers = jax.vmap(
-        #     partial(bioreactions_simulate_signal_scan,
-        #             time=t, signal=signal.func, signal_onehot=signal.onehot,
-        #             inputs=circuits[circuit_idx].qreactions.reactions.inputs,
-        #             outputs=circuits[circuit_idx].qreactions.reactions.outputs))(
-        #                 copynumbers=b_steady_states, forward_rates=b_forward_rates,
-        #                 reverse_rates=b_reverse_rates)
-        # b_new_copynumbers = np.array(b_new_copynumbers[1])
-
-        # Attempt 2
-        # b_new_copynumbers = jax.vmap(partial(simulate_signal_scan,
-        #                                      # b_new_copynumbers = partial(simulate_signal_scan,
-        #                                      time=t,
-        #                                      creation_rates=circuits[circuit_idx].species.creation_rates.flatten(
-        #                                      ),
-        #                                      degradation_rates=circuits[circuit_idx].species.degradation_rates.flatten(
-        #                                      ),
-        #                                      identity_matrix=np.identity(
-        #                                          circuits[circuit_idx].species.size),
-        #                                      signal=signal.real_signal, signal_idx=circuits[circuit_idx].species.identities.get(
-        #                                          'input'),
-        #                                      one_step_func=modeller_signal.dxdt_RNA_jnp))(b_starting_copynumbers, full_interactions=b_interactions)
-
         if np.shape(b_new_copynumbers)[1] != ref_circuit.circuit_size and np.shape(b_new_copynumbers)[-1] == ref_circuit.circuit_size:
             b_new_copynumbers = np.swapaxes(b_new_copynumbers, 1, 2)
 
@@ -288,11 +264,15 @@ class CircuitModeller():
                 ref_circuit_data = ref_circuit_result.data  # .flatten()
         b_analytics = jax.vmap(partial(generate_analytics, time=t, labels=[s.name for s in ref_circuit.model.species],
                                        signal_onehot=signal.onehot, ref_circuit_data=ref_circuit_data))(data=b_new_copynumbers)
-        b_analytics = [{k: v[i] for k, v in b_analytics.items()}
-                       for i in range(len(circuits))]
+        b_analytics_l = []
+        for i in range(len(circuits)):
+            b_analytics_k = {}
+            for k, v in b_analytics.items():
+                b_analytics_k[k] = v[i]
+            b_analytics_l.append(b_analytics_k)
 
         # Save for all circuits
-        for i, (circuit, analytics) in enumerate(zip(circuits, b_analytics)):
+        for i, (circuit, analytics) in enumerate(zip(circuits, b_analytics_l)):
             circuits[i].result_collector.add_result(
                 data=b_new_copynumbers[i],
                 name='signal',
@@ -362,14 +342,15 @@ class CircuitModeller():
         else:
             viable_circuit_num = len(circuits)
 
-        logging.warning(f'\t From {len(circuits)} circuits, a total of {expected_tot_subcircuits} mutated circuits will be simulated.')
-        
+        logging.warning(
+            f'\t From {len(circuits)} circuits, a total of {expected_tot_subcircuits} mutated circuits will be simulated.')
+
         start_time = datetime.now()
         for vi in range(0, len(circuits), viable_circuit_num):
             single_batch_time = datetime.now()
             vf = min(vi+viable_circuit_num, len(circuits))
             # Preallocate then create subcircuits - otherwise memory leak
-            subcircuits = [circuits[0]] * (viable_circuit_num * (1+num_subcircuits))
+            subcircuits = [None] * (viable_circuit_num * (1+num_subcircuits))
             c_idx = 0
             for circuit in circuits[vi: vf]:
                 subcircuits[c_idx] = circuit
@@ -383,9 +364,9 @@ class CircuitModeller():
             ref_circuit = subcircuits[0]
             for b in range(0, len(subcircuits), batch_size):
                 logging.warning(
-                    f'\tBatching {b} - {b+batch_size} circuits (out of {vi*len(subcircuits)} - {vf*len(subcircuits)} (total: {expected_tot_subcircuits})) (Circuits: {vi} - {vf} of {len(circuits)})')
+                    f'\tBatching {b} - {b+batch_size} circuits (out of {vi/viable_circuit_num*len(subcircuits)} - {vf/viable_circuit_num*len(subcircuits)} (total: {expected_tot_subcircuits})) (Circuits: {vi} - {vf} of {len(circuits)})')
                 bf = np.where(b+batch_size < len(subcircuits),
-                            b+batch_size, len(subcircuits))
+                              b+batch_size, len(subcircuits))
                 b_circuits = subcircuits[b:bf]
                 if not b_circuits:
                     continue
@@ -395,7 +376,8 @@ class CircuitModeller():
                     write_to_subsystem=write_to_subsystem)
 
             single_batch_time = datetime.now() - single_batch_time
-            logging.warning(f'Single batch: {single_batch_time} \nProjected time: {single_batch_time.total_seconds() * len(circuits)/viable_circuit_num} \nTotal time: {str(datetime.now() - start_time)}')
+            logging.warning(
+                f'Single batch: {single_batch_time} \nProjected time: {single_batch_time.total_seconds() * len(circuits)/viable_circuit_num} \nTotal time: {str(datetime.now() - start_time)}')
         return circuits
 
     def run_batch(self,
@@ -446,9 +428,15 @@ class CircuitModeller():
     def visualise_graph(self, circuit: Circuit, mode="pyvis", new_vis=False):
         self.result_writer.visualise_graph(circuit, mode, new_vis)
 
-    def write_results(self, circuit, new_report: bool = False, no_visualisations: bool = False,
+    def write_results(self, circuit: Circuit, new_report: bool = False, no_visualisations: bool = False,
                       only_numerical: bool = False, no_numerical: bool = False):
         self.result_writer.write_all(
             circuit, new_report, no_visualisations=no_visualisations, only_numerical=only_numerical,
             no_numerical=no_numerical)
         return circuit
+
+    def write_misc_info(self, circuit: Circuit):
+        misc_info = {
+            'all_sample_names': [s.name for s in circuit.model.species]
+        }
+        self.result_writer.output(out_type='csv', out_name='misc_info', data=misc_info)

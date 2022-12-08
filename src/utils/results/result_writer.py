@@ -59,7 +59,7 @@ class ResultWriter(DataWriter):
 
         if new_report:
             out_name = out_name + '_' + make_time_str()
-        self.output(out_type, out_name, overwrite=not(
+        self.output(out_type, out_name, overwrite=not (
             new_report), data=report)
 
     def write_numerical(self, data, out_name: str):
@@ -76,8 +76,9 @@ class ResultWriter(DataWriter):
                       only_numerical=False, no_analytics=False, no_numerical=False):
 
         for _name, result in results.items():
-            result.vis_kwargs.update(
-                {'new_vis': new_report, 'data': result.data})
+            if not no_visualisations:
+                result.vis_kwargs.update(
+                    {'new_vis': new_report, 'data': result.data})
 
             if not no_numerical:
                 self.write_numerical(
@@ -106,7 +107,7 @@ class ResultWriter(DataWriter):
 
     def visualise_graph(self, circuit: Circuit, mode="pyvis", new_vis=False):
         graph = Graph(source_matrix=circuit.interactions.eqconstants, labels=[
-                           s.name for s in circuit.model.species])
+            s.name for s in circuit.model.species])
 
         out_path = os.path.join(self.write_dir, 'graph')
         if mode == 'pyvis':

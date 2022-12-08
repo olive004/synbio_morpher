@@ -11,6 +11,7 @@ from src.srv.io.loaders.misc import load_csv
 from src.utils.data.data_format_tools.common import load_json_as_dict, make_iterable_like
 from src.utils.misc.errors import ConfigError
 from src.utils.misc.io import get_pathnames, get_subdirectories
+from src.utils.misc.type_handling import flatten_listlike
 
 
 DATADIR = 'data'
@@ -141,7 +142,8 @@ def load_result_report(local_experiment_folder: str, result_type: str = 'signal'
         iterable_like = make_iterable_like(jdict)
         for k, v in iterable_like:
             if type(v) == list:
-                jdict[k] = process_pre_result_report(v)
+                jdict[k] = flatten_listlike(v, safe=True)
+                # jdict[k] = process_pre_result_report(v)
             if type(v) == str:
                 jdict[k] = np.float32(v)
         return jdict
