@@ -17,7 +17,7 @@ from src.utils.misc.type_handling import flatten_nested_listlike
 from src.utils.results.analytics.timeseries import get_analytics_types_all
 from src.utils.results.visualisation import expand_data_by_col
 from src.utils.results.writer import DataWriter
-from src.srv.parameter_prediction.interactions import InteractionMatrix, INTERACTION_TYPES
+from src.srv.parameter_prediction.interactions import InteractionMatrix, INTERACTION_TYPES, b_get_stats
 from src.utils.misc.io import get_pathnames, get_subdirectories
 from src.utils.misc.scripts_io import get_path_from_output_summary, get_root_experiment_folder, \
     load_experiment_config, load_experiment_output_summary, load_result_report
@@ -382,22 +382,8 @@ def b_tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFram
                     f'Name {table[target]} should be in path {table[pathname]}.'
 
     def make_interaction_stats_and_sample_names(source_interaction_dirs: List[str]):
-        interaction_matrices = [None] * len(source_interaction_dirs)
-        interaction_stats_all = {}
-        for i, source_interaction_dir in enumerate(source_interaction_dirs):
-            interaction_matrices[i] = InteractionMatrix(
-                matrix_paths=get_pathnames(file_key=INTERACTION_TYPES,
-                                            search_dir=source_interaction_dir,
-                                            subdirs=INTERACTION_TYPES,
-                                            as_dict=True, first_only=True)
-            )
-            interaction_stats = {}
-            for interaction_type in INTERACTION_TYPES:
-                interaction_stats[interaction_type] = interactions.get_stats(
-                    interaction_type)
-            interaction_stats_all[source_interaction_dir] = interaction_stats
-
-        return interaction_stats_all, interactions.sample_names
+        stats = b_get_stats(source_interaction_dirs)
+        return stats
 
     def upate_table_with_results(table: dict, reference_table: dict, results: dict) -> dict:
         table.update(results)
@@ -537,7 +523,7 @@ def b_tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFram
         info_table = update_info_table(info_table, curr_table=current_og_table, int_stats=interaction_stats,
                                        ref_stats=interaction_stats, ref_table=current_og_table, source_dir=interaction_dir)
 
-        interaction_stats, sample_names = make_interaction_stats_and_sample_names(
+        interaction_stats = make_interaction_stats_and_sample_names(
             mutation_dirs)
 
         # Mutated circuits
@@ -545,7 +531,6 @@ def b_tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFram
             'circuit_name': [circuit_name] * len(mutation_dirs),
             'mutation_name': mutations['mutation_name'],
             'source_species': mutations['template_name'],
-            'sample_names': sample_names,
             'mutation_num': mutations['count'],
             'mutation_type': cast_astype(mutations['mutation_types'], int),
             'mutation_positions': cast_astype(mutations['positions'], int),
@@ -558,35 +543,11 @@ def b_tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFram
             'path_to_template_circuit': mutations['template_file']
         }
 
-        for mutation_dir in mutation_dirs:
-            curr_mutation = mutations[mutations['mutation_name'] == os.path.basename(
-                mutation_dir)]
-            mutation_name = curr_mutation['mutation_name'].values[0]
-
-            interaction_stats_current, curr_sample_names = make_interaction_stats_and_sample_names(
-                mutation_dir)
-
-            current_table = {
-                'circuit_name': circuit_name,
-                'mutation_name': mutation_name,
-                'source_species': curr_mutation['template_name'].values[0],
-                'sample_names': curr_sample_names,
-                'mutation_num': curr_mutation['count'].unique()[0],
-                'mutation_type': cast_astype(curr_mutation['mutation_types'], int).values[0],
-                'mutation_positions': cast_astype(curr_mutation['positions'], int).values[0],
-                'path_to_steady_state_data': get_pathnames(first_only=True,
-                                                           file_key='steady_states_data',
-                                                           search_dir=mutation_dir),
-                'path_to_signal_data': get_pathnames(first_only=True,
-                                                     file_key='signal_data',
-                                                     search_dir=mutation_dir),
-                'path_to_template_circuit': curr_mutation['template_file'].values[0]
-            }
             # Expand the interaction keys in the table
-            info_table = update_info_table(info_table, curr_table=current_table,
-                                           int_stats=interaction_stats_current,
-                                           ref_stats=interaction_stats, ref_table=current_og_table,
-                                           source_dir=mutation_dir, check_coherent=True)
+        info_table = update_info_table(info_table, curr_table=mutation_table,
+                                        int_stats=interaction_stats,
+                                        ref_stats=interaction_stats, ref_table=current_og_table,
+                                        source_dir=mutation_dir, check_coherent=True)
         if circ_idx != 0 and np.mod(circ_idx, 10) == 0:
             info_table = write_results(info_table)
             info_table = init_info_table()

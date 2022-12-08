@@ -199,23 +199,22 @@ def b_get_stats(interactions: List[InteractionMatrix]):
     idxs_other_interacting = get_interacting_species(idxs_interacting)
     idxs_self_interacting = get_selfinteracting_species(idxs_interacting)
 
-    idxs_other_interacting = [idxs_other_interacting[idxs_other_interacting[:, 0] == i] for i in range(len(interactions))]
-    idxs_self_interacting = [idxs_self_interacting[idxs_self_interacting[:, 0] == i] for i in range(len(interactions))]
+    idxs_other_interacting = [idxs_other_interacting[(idxs_other_interacting[:, :batch_dim] == i).flatten()][:, batch_dim:] for i in range(len(interactions))]
+    idxs_self_interacting = [idxs_self_interacting[(idxs_self_interacting[:, :batch_dim] == i).flatten()][:, batch_dim:] for i in range(len(interactions))]
 
     stats = {
         "name": [i.name for i in interactions],
         "interacting": idxs_other_interacting,
         "self_interacting": idxs_self_interacting,
-        "names": [i.sample_names for i in interactions],
-        "num_interacting": idxs_other_interacting.shape[0],
-        "num_self_interacting": idxs_self_interacting.shape[0],
+        "sample_names": [i.sample_names for i in interactions],
+        "num_interacting": [len(i) for i in idxs_other_interacting],
+        "num_self_interacting": [len(i) for i in idxs_self_interacting],
     }
 
     for interaction_attr in INTERACTION_TYPES:
-        stats['max_interaction' + interaction_attr]
-        "max_interaction": np.max(interactions.__getattribute__(interaction_attr)),
-        "min_interaction": np.min(interactions.__getattribute__(interaction_attr))
-    stats = {k: [v] for k, v in stats.items()}
+        stats['max_interaction_' + interaction_attr] = np.max(np.max(b_interaction_attrs[interaction_attr], axis=1), axis=1)
+        stats['min_interaction_' + interaction_attr] = np.min(np.min(b_interaction_attrs[interaction_attr], axis=1), axis=1)
+    # stats = {k: [v] for k, v in stats.items()}
     stats = pd.DataFrame.from_dict(stats, dtype=object)
     return stats
 
