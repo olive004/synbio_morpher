@@ -11,3 +11,4 @@ data/*
 !data/example
 lib/*
 bioreaction
+*deb
