@@ -247,9 +247,11 @@ class CircuitModeller():
                     outputs=ref_circuit.qreactions.reactions.outputs))(
             y0=b_steady_states, forward_rates=b_forward_rates, reverse_rates=b_reverse_rates)
 
+        logging.warning('part 2.5')
         tf = np.argmax(solution.ts == np.inf)
         b_new_copynumbers = solution.ys[:, :tf, :]
         t = solution.ts[0, :tf]
+        del solution
 
         logging.warning('part 3')
         if np.shape(b_new_copynumbers)[1] != ref_circuit.circuit_size and np.shape(b_new_copynumbers)[-1] == ref_circuit.circuit_size:

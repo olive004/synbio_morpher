@@ -12,3 +12,4 @@ data/*
 lib/*
 bioreaction
 *.deb
+Miniconda3*

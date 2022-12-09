@@ -18,6 +18,7 @@ WORKDIR /usr/lib
 COPY ./requirements.txt /usr/lib/install_requirements/requirements.txt
 RUN cd /usr/lib/install_requirements && \
     pip install -r ./requirements.txt 
+RUN pip install --upgrade "jax[cuda]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 # RUN apt-get install libstdc++6
 # RUN ubuntu bash -c "apt install libstdc"
 
