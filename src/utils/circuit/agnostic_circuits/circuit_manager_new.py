@@ -37,11 +37,13 @@ class CircuitModeller():
         self.result_writer = ResultWriter() if result_writer is None else result_writer
         self.steady_state_solver = config.get("steady_state_solver", 'ivp')
         self.simulator_args = config['interaction_simulator']
+        self.discard_numerical_mutations = config['experiment'].get('no_numerical', False)
         self.dt = config.get('simulation', {}).get('dt', 1)
         self.t0 = config.get('simulation', {}).get('t0', 0)
         self.t1 = config.get('simulation', {}).get('t1', 10)
 
-        jax.config.update('jax_platform_name', config.get('simulation', 'cpu'))
+        jax.config.update('jax_platform_name', config.get('simulation', {}).get('device', 'cpu'))
+        logging.warning(f'Using device {config.get("simulation", {}).get("device", "cpu")}')
 
     def init_circuit(self, circuit: Circuit):
         circuit = self.compute_interaction_strengths(circuit)
@@ -283,8 +285,12 @@ class CircuitModeller():
         # Save for all circuits
         logging.warning('part 5')
         for i, (circuit, analytics) in enumerate(zip(circuits, b_analytics_l)):
+            if self.discard_numerical_mutations and circuit.subname != 'ref_circuit':
+                sig_data = None
+            else:
+                sig_data = b_new_copynumbers[i]
             circuits[i].result_collector.add_result(
-                data=b_new_copynumbers[i],
+                data=sig_data,
                 name='signal',
                 category='time_series',
                 vis_func=VisODE().plot,
@@ -419,6 +425,7 @@ class CircuitModeller():
                     self.result_writer.subdivide_writing(
                         dir_name, safe_dir_change=True)
                     if subcircuit.subname == 'ref_circuit':
+                        ref_circuit.result_collector.delete_result('signal')
                         ref_circuit = subcircuit
                         if not include_normal_run:
                             continue

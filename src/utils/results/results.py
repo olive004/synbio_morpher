@@ -1,6 +1,7 @@
 
 
 from copy import deepcopy
+from typing import Dict
 import logging
 import numpy as np
 from src.utils.misc.type_handling import assert_uniform_type
@@ -35,7 +36,7 @@ class ResultCollector():
 
     def __init__(self) -> None:
 
-        self.results = {}
+        self.results: Dict[Result] = {}
 
     def add_result(self, data, category: str, vis_func, name: str,
                    time: np.ndarray = None, save_numerical_vis_data: bool = False,
@@ -45,6 +46,16 @@ class ResultCollector():
         result_entry = Result(name, data, category, vis_func, time, save_numerical_vis_data,
                               vis_kwargs, analytics_kwargs, analytics)
         self.results[name] = result_entry
+
+    def delete_result(self, key, just_data=True):
+        if key in self.results and just_data:
+            self.results[key].data = None
+        elif not just_data:
+            del self.results[key]
+
+    def delete_result_data(self):
+        for key in self.results.keys():
+            self.results[key].data = None
 
     def add_modified_duplicate_result(self, key, **add_kwargs):
         result = deepcopy(self.get_result(key))
