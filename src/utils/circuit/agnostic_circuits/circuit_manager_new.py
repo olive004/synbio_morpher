@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import List, Dict
+from typing import List
 from functools import partial
 from datetime import datetime
 import inspect
@@ -40,6 +40,8 @@ class CircuitModeller():
         self.dt = config.get('simulation', {}).get('dt', 1)
         self.t0 = config.get('simulation', {}).get('t0', 0)
         self.t1 = config.get('simulation', {}).get('t1', 10)
+
+        jax.config.update('jax_platform_name', config.get('simulation', 'cpu'))
 
     def init_circuit(self, circuit: Circuit):
         circuit = self.compute_interaction_strengths(circuit)
@@ -351,12 +353,14 @@ class CircuitModeller():
             viable_circuit_num = len(circuits)
 
         logging.warning(
-            f'\t From {len(circuits)} circuits, a total of {expected_tot_subcircuits} mutated circuits will be simulated.')
+            f'\tFrom {len(circuits)} circuits, a total of {expected_tot_subcircuits} mutated circuits will be simulated.')
 
         start_time = datetime.now()
         for vi in range(0, len(circuits), viable_circuit_num):
             single_batch_time = datetime.now()
             vf = min(vi+viable_circuit_num, len(circuits))
+            logging.warning(f'\t\tStarting new round of viable circuits ({vi} - {vf})')
+            
             # Preallocate then create subcircuits - otherwise memory leak
             subcircuits = [None] * (viable_circuit_num * (1+num_subcircuits))
             c_idx = 0
