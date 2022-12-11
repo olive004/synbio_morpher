@@ -4,6 +4,7 @@ from functools import partial
 from datetime import datetime
 import inspect
 import os
+# import sys
 import logging
 import numpy as np
 import jax
@@ -42,8 +43,8 @@ class CircuitModeller():
         self.t0 = config.get('simulation', {}).get('t0', 0)
         self.t1 = config.get('simulation', {}).get('t1', 10)
 
-        jax.config.update('jax_platform_name', config.get('simulation', {}).get('device', 'cpu'))
-        logging.warning(f'Using device {config.get("simulation", {}).get("device", "cpu")}')
+        # jax.config.update('jax_platform_name', config.get('simulation', {}).get('device', 'cpu'))
+        # logging.warning(f'Using device {config.get("simulation", {}).get("device", "cpu")}')
 
     def init_circuit(self, circuit: Circuit):
         circuit = self.compute_interaction_strengths(circuit)
@@ -272,9 +273,11 @@ class CircuitModeller():
                     ref_circuit)]
             else:
                 ref_circuit_data = ref_circuit_result.data  # .flatten()
+        # logging.warning(f'Size of b_new_copynumbers: {sys.getsizeof(b_new_copynumbers)} bytes')
         logging.warning('part 4')
         b_analytics = jax.vmap(partial(generate_analytics, time=t, labels=[s.name for s in ref_circuit.model.species],
                                        signal_onehot=signal.onehot, ref_circuit_data=ref_circuit_data))(data=b_new_copynumbers)
+        # logging.warning(f'Size of b_analytics: {sys.getsizeof(b_analytics)} bytes')
         b_analytics_l = []
         for i in range(len(circuits)):
             b_analytics_k = {}
@@ -350,7 +353,7 @@ class CircuitModeller():
                        write_to_subsystem=True):
         batch_size = len(circuits) if batch_size is None else batch_size
 
-        max_circuits = 5000
+        max_circuits = 2000
         num_subcircuits = len(flatten_nested_dict(circuits[0].mutations))
         expected_tot_subcircuits = len(circuits) * (1+num_subcircuits)
         if expected_tot_subcircuits > max_circuits:
@@ -371,7 +374,7 @@ class CircuitModeller():
             subcircuits = [None] * (viable_circuit_num * (1+num_subcircuits))
             c_idx = 0
             for circuit in circuits[vi: vf]:
-                subcircuits[c_idx] = circuit
+                subcircuits[c_idx] = deepcopy(circuit)
                 c_idx += 1
                 for subname, mutation in flatten_nested_dict(circuit.mutations).items():
                     subcircuits[c_idx] = self.make_subcircuit(
@@ -383,8 +386,8 @@ class CircuitModeller():
             for b in range(0, len(subcircuits), batch_size):
                 logging.warning(
                     f'\tBatching {b} - {b+batch_size} circuits (out of {vi/viable_circuit_num*len(subcircuits)} - {vf/viable_circuit_num*len(subcircuits)} (total: {expected_tot_subcircuits})) (Circuits: {vi} - {vf} of {len(circuits)})')
-                bf = np.where(b+batch_size < len(subcircuits),
-                              b+batch_size, len(subcircuits))
+                bf = b+batch_size if b+batch_size < len(subcircuits) else len(subcircuits)
+                
                 b_circuits = subcircuits[b:bf]
                 if not b_circuits:
                     continue
