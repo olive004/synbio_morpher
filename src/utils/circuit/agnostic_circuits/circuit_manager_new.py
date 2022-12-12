@@ -7,6 +7,7 @@ import os
 # import sys
 import logging
 import numpy as np
+
 import jax
 from scipy import integrate
 from bioreaction.model.data_containers import Species
@@ -29,19 +30,22 @@ from src.utils.evolution.mutation import implement_mutation
 from src.utils.modelling.base import Modeller
 
 
-TEST_MODE = True
-
-
 class CircuitModeller():
 
     def __init__(self, result_writer=None, config: dict = {}) -> None:
         self.result_writer = ResultWriter() if result_writer is None else result_writer
         self.steady_state_solver = config.get("steady_state_solver", 'ivp')
         self.simulator_args = config['interaction_simulator']
-        self.discard_numerical_mutations = config['experiment'].get('no_numerical', False)
+        self.discard_numerical_mutations = config['experiment'].get(
+            'no_numerical', False)
         self.dt = config.get('simulation', {}).get('dt', 1)
         self.t0 = config.get('simulation', {}).get('t0', 0)
         self.t1 = config.get('simulation', {}).get('t1', 10)
+
+        self.test_mode = config.get('experiment', {}).get('test_mode', False)
+
+        # os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
+        os.environ["XLA_PYTHON_CLIENT_ALLOCATOR"] = "platform"
 
         # jax.config.update('jax_platform_name', config.get('simulation', {}).get('device', 'cpu'))
         # logging.warning(f'Using device {config.get("simulation", {}).get("device", "cpu")}')
@@ -65,7 +69,7 @@ class CircuitModeller():
 
     # @time_it
     def compute_interaction_strengths(self, circuit: Circuit):
-        if circuit.interactions_state == 'uninitialised' and not TEST_MODE:
+        if circuit.interactions_state == 'uninitialised' and not self.test_mode:
             interactions = self.run_interaction_simulator(
                 sorted(get_unique(flatten_listlike([r.input for r in circuit.model.reactions]))))
             circuit = update_species_simulated_rates(
@@ -236,8 +240,9 @@ class CircuitModeller():
         b_forward_rates = [None] * len(circuits)
         b_reverse_rates = [None] * len(circuits)
         for i, c in enumerate(circuits):
-            b_steady_states[i] = c.result_collector.get_result('steady_states').analytics['steady_states'].flatten() 
-            b_forward_rates[i] = c.qreactions.reactions.forward_rates 
+            b_steady_states[i] = c.result_collector.get_result(
+                'steady_states').analytics['steady_states'].flatten()
+            b_forward_rates[i] = c.qreactions.reactions.forward_rates
             b_reverse_rates[i] = c.qreactions.reactions.reverse_rates
         b_steady_states = np.asarray(b_steady_states)
         b_forward_rates = np.asarray(b_forward_rates)
@@ -256,7 +261,8 @@ class CircuitModeller():
         tf = np.argmax(solution.ts == np.inf)
         b_new_copynumbers = solution.ys[:, :tf, :]
         t = solution.ts[0, :tf]
-        del solution
+        # t = np.arange(self.t0, self.t1, self.dt)
+        # b_new_copynumbers = np.repeat(np.reshape(t, (1, len(t))), len(b_steady_states), axis=0)
 
         logging.warning('part 3')
         if np.shape(b_new_copynumbers)[1] != ref_circuit.circuit_size and np.shape(b_new_copynumbers)[-1] == ref_circuit.circuit_size:
@@ -277,6 +283,7 @@ class CircuitModeller():
         logging.warning('part 4')
         b_analytics = jax.vmap(partial(generate_analytics, time=t, labels=[s.name for s in ref_circuit.model.species],
                                        signal_onehot=signal.onehot, ref_circuit_data=ref_circuit_data))(data=b_new_copynumbers)
+        # b_analytics_l = [{'fold_change': np.ones_like(t)} for i in range(len(circuits))]
         # logging.warning(f'Size of b_analytics: {sys.getsizeof(b_analytics)} bytes')
         b_analytics_l = []
         for i in range(len(circuits)):
@@ -368,8 +375,9 @@ class CircuitModeller():
         for vi in range(0, len(circuits), viable_circuit_num):
             single_batch_time = datetime.now()
             vf = min(vi+viable_circuit_num, len(circuits))
-            logging.warning(f'\t\tStarting new round of viable circuits ({vi} - {vf})')
-            
+            logging.warning(
+                f'\t\tStarting new round of viable circuits ({vi} - {vf} / {len(circuits)})')
+
             # Preallocate then create subcircuits - otherwise memory leak
             subcircuits = [None] * (viable_circuit_num * (1+num_subcircuits))
             c_idx = 0
@@ -386,21 +394,20 @@ class CircuitModeller():
             for b in range(0, len(subcircuits), batch_size):
                 logging.warning(
                     f'\tBatching {b} - {b+batch_size} circuits (out of {vi/viable_circuit_num*len(subcircuits)} - {vf/viable_circuit_num*len(subcircuits)} (total: {expected_tot_subcircuits})) (Circuits: {vi} - {vf} of {len(circuits)})')
-                bf = b+batch_size if b+batch_size < len(subcircuits) else len(subcircuits)
-                
+                bf = b+batch_size if b + \
+                    batch_size < len(subcircuits) else len(subcircuits)
+
                 b_circuits = subcircuits[b:bf]
                 if not b_circuits:
                     continue
-                b_circuits, ref_circuit = self.run_batch(
+                ref_circuit = self.run_batch(
                     b_circuits, methods, ref_circuit=ref_circuit,
                     include_normal_run=include_normal_run,
                     write_to_subsystem=write_to_subsystem)
-                del b_circuits
 
             single_batch_time = datetime.now() - single_batch_time
             logging.warning(
                 f'Single batch: {single_batch_time} \nProjected time: {single_batch_time.total_seconds() * len(circuits)/viable_circuit_num} \nTotal time: {str(datetime.now() - start_time)}')
-            del subcircuits
         return circuits
 
     def run_batch(self,
@@ -409,9 +416,11 @@ class CircuitModeller():
                   ref_circuit: Circuit = None,
                   include_normal_run: bool = True,
                   write_to_subsystem: bool = True) -> List[Circuit]:
+
         for method, kwargs in methods.items():
             logging.warning(
                 f'\t\tRunning {len(subcircuits)} Subcircuits - {subcircuits[0].name}: {method}')
+
             if kwargs.get('batch'):  # method is batchable
                 if hasattr(self, method):
                     if 'ref_circuit' in inspect.getfullargspec(getattr(self, method)).args:
@@ -421,22 +430,26 @@ class CircuitModeller():
                     logging.warning(
                         f'Could not find method @{method} in class {self}')
             else:
-
                 for i, subcircuit in enumerate(subcircuits):
+
                     dir_name = subcircuit.name if subcircuit.subname == 'ref_circuit' or not write_to_subsystem else os.path.join(
                         subcircuit.name, 'mutations', subcircuit.subname)
+
                     self.result_writer.subdivide_writing(
                         dir_name, safe_dir_change=True)
+
                     if subcircuit.subname == 'ref_circuit':
                         ref_circuit.result_collector.delete_result('signal')
                         ref_circuit = subcircuit
                         if not include_normal_run:
                             continue
+
                     subcircuit = self.apply_to_circuit(
                         subcircuit, {method: kwargs}, ref_circuit=ref_circuit)
                     subcircuits[i] = subcircuit
                 self.result_writer.unsubdivide()
-        return subcircuits, ref_circuit
+        del subcircuits
+        return ref_circuit
 
     def apply_to_circuit(self, circuit: Circuit, _methods: dict, ref_circuit: Circuit):
         methods = deepcopy(_methods)

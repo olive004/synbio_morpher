@@ -425,7 +425,7 @@ def b_tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFram
         return table
 
     def update_info_table(info_table: pd.DataFrame, curr_table: dict, int_stats: pd.DataFrame,
-                          ref_stats: pd.DataFrame, ref_table: dict, result_source_dirs: List[str],
+                          ref_stats: pd.DataFrame, result_source_dirs: List[str],
                           # Needed to load the right results
                           all_sample_names: List[str], chosen_sample_names: List[str],
                           check_coherent: bool = False) -> pd.DataFrame:
@@ -437,28 +437,53 @@ def b_tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFram
             int_stats, ref_stats, diffable_cols=[c for c in int_stats.columns if any(
                 [col in c for col in diff_cols])])
 
-        result_reports = []
-        for result_source_dir in result_source_dirs:
-            result_report = pd.DataFrame.from_dict(
-                load_result_report(result_source_dir, result_type='signal', index=list(
+        def make_result_report(source_dir, all_sample_names, chosen_sample_names):
+            result = pd.DataFrame.from_dict(
+                load_result_report(source_dir, result_type='signal', index=list(
                     map(all_sample_names.index, chosen_sample_names)))
             )
-            result_report['sample_name'] = chosen_sample_names
-            result_reports.append(result_report)
+            result['sample_name'] = chosen_sample_names
+            result['result_source_dir'] = source_dir
+            return result
+
+        def process_results(table):
+            """ Contracts the columns of the table into list (reverse of explode) """
+            table = table.groupby('result_source_dir').agg(
+                {c: lambda x: x.tolist() for c in table.columns})
+            table = table.drop(columns=['result_source_dir']).reset_index().drop(
+                columns=['result_source_dir'])
+            return table
+
+        result_reports = []
+        for result_source_dir in result_source_dirs:
+            result_reports.append(
+                make_result_report(result_source_dir,
+                                   all_sample_names, chosen_sample_names)
+            )
         result_table = pd.concat(result_reports, axis=0)
-        diff_results, ratio_results = update_diff_to_base_circuit(
-            stats=result_table, ref_stats=ref_table, diffable_cols=result_table.columns
-        )
 
+        # Contract columns so that the results match the length of the current table
+        result_table = process_results(result_table)
 
+        # Difference & Ratio to original
 
-        curr_table = pd.concat([pd.DataFrame.from_dict(
-            curr_table), diff_interactions, ratio_interactions], axis=1)
-        curr_table = upate_table_with_results(
-            curr_table, results=result_report)
+        # ref_report = make_result_report(ref_source_dir, all_sample_names, chosen_sample_names)
+        # diff_results, ratio_results = update_diff_to_base_circuit(
+        #     stats=result_table, ref_stats=ref_report, diffable_cols=list(set(result_table.columns) - set(['sample_name', 'result_source_dir']))
+        # )
+        # diff_results['result_source_dir'] = result_table['result_source_dir']
+        # ratio_results['result_source_dir'] = result_table['result_source_dir']
+        # diff_results['sample_name'] = result_table['sample_name']
+        # ratio_results['sample_name'] = result_table['sample_name']
+        # diff_results, ratio_results = process_results(
+        #     diff_results), process_results(ratio_results)
+
+        new_table = pd.concat([pd.DataFrame.from_dict(
+            curr_table), diff_interactions, ratio_interactions, result_table], axis=1)
+        new_table = new_table.explode(list(result_table.columns))
         if check_coherent:
-            check_coherency(curr_table)
-        info_table = pd.concat([info_table, pd.DataFrame([curr_table])])
+            check_coherency(new_table)
+        info_table = pd.concat([info_table, new_table])
         return info_table
 
     def write_results(info_table: pd.DataFrame) -> None:
@@ -501,17 +526,21 @@ def b_tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFram
             'mutation_num': 0,
             'mutation_type': '',
             'mutation_positions': '',
-            'path_to_steady_state_data': get_pathnames(first_only=True,
-                                                       file_key='steady_states_data',
-                                                       search_dir=circuit_dir),
-            'path_to_signal_data': get_pathnames(first_only=True,
-                                                 file_key='signal_data',
-                                                 search_dir=circuit_dir),
+            # 'path_to_steady_state_data': get_pathnames(first_only=True,
+            #                                            file_key='steady_states_data',
+            #                                            search_dir=circuit_dir),
+            # 'path_to_signal_data': get_pathnames(first_only=True,
+            #                                      file_key='signal_data',
+            #                                      search_dir=circuit_dir),
             'path_to_template_circuit': ''
         }
+        current_og_table = pd.DataFrame.from_dict(
+            {k: [v] for k, v in current_og_table.items()})
         # Expand the interaction keys in the table
-        info_table = update_info_table(info_table, curr_table=current_og_table, int_stats=interaction_stats,
-                                       ref_stats=interaction_stats, ref_table=current_og_table, result_source_dir=interaction_dir)
+        info_table = update_info_table(info_table, curr_table=current_og_table, int_stats=interaction_stats_og,
+                                       ref_stats=interaction_stats_og, ref_source_dir=interaction_dir, result_source_dirs=[
+                                           interaction_dir],
+                                       all_sample_names=all_sample_names, chosen_sample_names=sample_names)
 
         interaction_stats = make_interaction_stats_and_sample_names(
             mutation_dirs)

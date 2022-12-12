@@ -9,7 +9,8 @@
                 "postprocess": true
             },
             "experiment": {
-                "purpose": "generate_species_templates"
+                "purpose": "generate_species_templates",
+                "test_mode": true
             },
             "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
             "circuit_generation": {
@@ -44,7 +45,9 @@
             "data_path": null,
             "experiment": {
                 "purpose": "mutation_effect_on_interactions_signal",
-                "no_visualisations": true
+                "no_visualisations": true,
+                "no_numerical": true,
+                "test_mode": true
             },
             "interaction_simulator": {
                 "name": "IntaRNA",
@@ -80,7 +83,8 @@
                 "t1": 1000,
                 "solver": "diffrax",
                 "use_batch_mutations": true,
-                "batch_size": 100
+                "batch_size": 100,
+                "device": "cpu"
             },
             "source_of_interaction_stats": {
                 "is_source_dir_incomplete": true,
