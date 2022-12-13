@@ -79,7 +79,7 @@
                 "t1": 1200,
                 "solver": "diffrax",
                 "use_batch_mutations": true,
-                "batch_size": 20,
+                "batch_size": 1,
                 "device": "gpu"
             },
             "source_of_interaction_stats": {

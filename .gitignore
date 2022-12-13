@@ -13,3 +13,4 @@ lib/*
 bioreaction
 *.deb
 Miniconda3*
+*tar.gz
