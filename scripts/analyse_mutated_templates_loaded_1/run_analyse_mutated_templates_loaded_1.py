@@ -10,7 +10,7 @@ from src.srv.io.manage.script_manager import script_preamble
 from src.utils.misc.io import get_pathnames_from_mult_dirs
 from src.utils.misc.scripts_io import get_search_dir, load_experiment_config_original
 from src.utils.misc.string_handling import prettify_keys_for_label
-from src.utils.results.analytics.timeseries import get_analytics_types_all, get_signal_dependent_analytics
+from src.utils.results.analytics.timeseries import get_analytics_types, get_signal_dependent_analytics
 
 from src.utils.results.experiments import Experiment, Protocol
 from src.utils.results.result_writer import ResultWriter
@@ -152,7 +152,7 @@ def main(config=None, data_writer=None):
     ))
 
     # Analytics visualisation
-    analytics_types = get_analytics_types_all()
+    analytics_types = get_analytics_types()
     # Log histplots with mutation number hue
     # Difference
     for filltype in ['dodge', 'fill']:

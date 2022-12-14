@@ -237,7 +237,6 @@ class CircuitModeller():
         signal.update_time_interval(self.dt)
 
         # Batch
-        logging.warning('part 1')
         b_steady_states = [None] * len(circuits)
         b_forward_rates = [None] * len(circuits)
         b_reverse_rates = [None] * len(circuits)
@@ -250,7 +249,6 @@ class CircuitModeller():
         b_forward_rates = np.asarray(b_forward_rates)
         b_reverse_rates = np.asarray(b_reverse_rates)
 
-        logging.warning('part 2')
         sim_func = jax.vmap(
             partial(bioreaction_sim_dfx_expanded,
                     t0=self.t0, t1=self.t1, dt0=self.dt,
@@ -260,14 +258,12 @@ class CircuitModeller():
         solution = sim_func(
             y0=b_steady_states, forward_rates=b_forward_rates, reverse_rates=b_reverse_rates)
 
-        logging.warning('part 2.5')
         tf = np.argmax(solution.ts == np.inf)
         b_new_copynumbers = solution.ys[:, :tf, :]
         t = solution.ts[0, :tf]
         # t = np.arange(self.t0, self.t1, self.dt)
         # b_new_copynumbers = np.repeat(np.reshape(t, (1, len(t))), len(b_steady_states), axis=0)
 
-        logging.warning('part 3')
         if np.shape(b_new_copynumbers)[1] != ref_circuit.circuit_size and np.shape(b_new_copynumbers)[-1] == ref_circuit.circuit_size:
             b_new_copynumbers = np.swapaxes(b_new_copynumbers, 1, 2)
 
@@ -283,7 +279,6 @@ class CircuitModeller():
             else:
                 ref_circuit_data = ref_circuit_result.data  # .flatten()
         # logging.warning(f'Size of b_new_copynumbers: {sys.getsizeof(b_new_copynumbers)} bytes')
-        logging.warning('part 4')
         analytics_func = jax.vmap(partial(generate_analytics, time=t, labels=[s.name for s in ref_circuit.model.species],
                                        signal_onehot=signal.onehot, ref_circuit_data=ref_circuit_data))
         b_analytics = analytics_func(data=b_new_copynumbers)
@@ -297,7 +292,6 @@ class CircuitModeller():
             b_analytics_l.append(b_analytics_k)
 
         # Save for all circuits
-        logging.warning('part 5')
         for i, (circuit, analytics) in enumerate(zip(circuits, b_analytics_l)):
             if self.discard_numerical_mutations and circuit.subname != 'ref_circuit':
                 sig_data = None
@@ -471,12 +465,6 @@ class CircuitModeller():
 
     def visualise_graph(self, circuit: Circuit, mode="pyvis", new_vis=False):
         self.result_writer.visualise_graph(circuit, mode, new_vis)
-
-    # def write_misc_info(self, circuit: Circuit):
-    #     misc_info = {
-    #         'all_sample_names': [s.name for s in circuit.model.species]
-    #     }
-    #     self.result_writer.output(out_type='csv', out_name='misc_info', data=misc_info)
 
     def write_results(self, circuit: Circuit, new_report: bool = False, no_visualisations: bool = False,
                       only_numerical: bool = False, no_numerical: bool = False):
