@@ -396,7 +396,8 @@ def b_tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFram
             columns={i: i + '_diff_to_base_circuit' for i in diffable_cols})
 
         ratio_table = stats[diffable_cols] / \
-            ref_stats[diffable_cols].values.squeeze()
+            np.where(ref_stats[diffable_cols].values.squeeze() != 0,
+                     ref_stats[diffable_cols].values.squeeze(), np.nan)
         ratio_table = ratio_table.rename(
             columns={i: i + '_ratio_from_mutation_to_base' for i in diffable_cols})
 
