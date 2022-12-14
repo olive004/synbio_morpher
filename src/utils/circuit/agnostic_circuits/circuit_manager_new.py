@@ -19,6 +19,7 @@ from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
 from src.srv.parameter_prediction.interactions import InteractionData, InteractionSimulator
 from src.utils.misc.numerical import invert_onehot, zero_out_negs
 from src.utils.misc.type_handling import flatten_nested_dict, flatten_listlike, get_unique
+from src.utils.misc.runtime import clear_caches
 from src.srv.io.loaders.experiment_loading import INTERACTION_FILE_ADDONS
 from src.utils.misc.helper import vanilla_return
 from src.utils.results.visualisation import VisODE
@@ -311,6 +312,7 @@ class CircuitModeller():
                             'out_type': 'svg'})
         # return {top_name: {subname: circuits[len(v)*i + j] for j, subname in enumerate(v.keys())}
         #         for i, (top_name, v) in enumerate(.items())}
+        clear_caches()
         return circuits
 
     def make_subcircuit(self, circuit: Circuit, mutation_name: str, mutation=None):
@@ -360,7 +362,7 @@ class CircuitModeller():
                        write_to_subsystem=True):
         batch_size = len(circuits) if batch_size is None else batch_size
 
-        max_circuits = 2000
+        max_circuits = 5000
         num_subcircuits = len(flatten_nested_dict(circuits[0].mutations))
         expected_tot_subcircuits = len(circuits) * (1+num_subcircuits)
         if expected_tot_subcircuits > max_circuits:
@@ -388,6 +390,8 @@ class CircuitModeller():
                     subcircuits[c_idx] = self.make_subcircuit(
                         circuit, subname, mutation)
                     c_idx += 1
+            if c_idx != len(subcircuits):
+                subcircuits = list(filter(lambda item: item is not None, subcircuits))
 
             # Batch
             ref_circuit = subcircuits[0]
