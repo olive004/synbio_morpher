@@ -137,7 +137,7 @@ def main(config=None, data_writer=None):
         partial(
             visualise_data, data_writer=data_writer,
             cols_x=['mutation_num'],
-            cols_y=['eqconstants_num_interacting'],
+            cols_y=['num_interacting'],
             plot_type='bar_plot',
             out_name='num_interacting_barplot',
             threshold_value_max=binding_rates_threshold_upper,

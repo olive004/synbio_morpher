@@ -22,7 +22,7 @@ from src.utils.data.data_format_tools.common import load_json_as_dict, load_json
 def main(config=None, data_writer=None):
     # Set configs
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
-            # "scripts", "analyse_mutated_templates_loaded", "configs", "base_config_test_2.json"))
+            # "scripts", "num_interacting", "configs", "base_config_test_2.json"))
             # "scripts", "analyse_mutated_templates_loaded", "configs", "base_config.json"))
             # "scripts", "analyse_mutated_templates_loaded", "configs", "analyse_large.json"))
             # "scripts", "analyse_mutated_templates_loaded", "configs", "analyse_large_highmag.json"))
@@ -135,7 +135,7 @@ def main(config=None, data_writer=None):
         partial(
             visualise_data, data_writer=data_writer,
             cols_x=['mutation_num'],
-            cols_y=['eqconstants_num_interacting'],
+            cols_y=['num_interacting'],
             plot_type='bar_plot',
             out_name='num_interacting_barplot',
             threshold_value_max=binding_rates_threshold_upper,

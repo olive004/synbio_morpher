@@ -42,7 +42,8 @@ class CircuitModeller():
         self.dt = config.get('simulation', {}).get('dt', 1)
         self.t0 = config.get('simulation', {}).get('t0', 0)
         self.t1 = config.get('simulation', {}).get('t1', 10)
-
+        
+        self.max_circuits = config.get('simulation', {}).get('max_circuits', 10000)  # Maximum number of circuits to hold in memory
         self.test_mode = config.get('experiment', {}).get('test_mode', False)
 
         # os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
@@ -258,7 +259,6 @@ class CircuitModeller():
                     outputs=ref_circuit.qreactions.reactions.outputs))
         solution = sim_func(
             y0=b_steady_states, forward_rates=b_forward_rates, reverse_rates=b_reverse_rates)
-        del sim_func
 
         logging.warning('part 2.5')
         tf = np.argmax(solution.ts == np.inf)
@@ -287,7 +287,6 @@ class CircuitModeller():
         analytics_func = jax.vmap(partial(generate_analytics, time=t, labels=[s.name for s in ref_circuit.model.species],
                                        signal_onehot=signal.onehot, ref_circuit_data=ref_circuit_data))
         b_analytics = analytics_func(data=b_new_copynumbers)
-        del analytics_func
         # b_analytics_l = [{'fold_change': np.ones_like(t)} for i in range(len(circuits))]
         # logging.warning(f'Size of b_analytics: {sys.getsizeof(b_analytics)} bytes')
         b_analytics_l = []
@@ -366,11 +365,10 @@ class CircuitModeller():
                        write_to_subsystem=True):
         batch_size = len(circuits) if batch_size is None else batch_size
 
-        max_circuits = 5000
         num_subcircuits = len(flatten_nested_dict(circuits[0].mutations))
         expected_tot_subcircuits = len(circuits) * (1+num_subcircuits)
-        if expected_tot_subcircuits > max_circuits:
-            viable_circuit_num = int(max_circuits / (num_subcircuits+1))
+        if expected_tot_subcircuits > self.max_circuits:
+            viable_circuit_num = int(self.max_circuits / (num_subcircuits+1))
         else:
             viable_circuit_num = len(circuits)
 

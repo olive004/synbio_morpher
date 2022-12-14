@@ -14,7 +14,7 @@
             },
             "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
             "circuit_generation": {
-                "repetitions": 200,
+                "repetitions": 2,
                 "species_count": 3,
                 "sequence_length": 20,
                 "generator_protocol": "template_mutate",
@@ -82,6 +82,7 @@
                 "solver": "diffrax",
                 "use_batch_mutations": true,
                 "batch_size": 1000,
+                "max_circuits": 10000,
                 "device": "gpu"
             },
             "source_of_interaction_stats": {

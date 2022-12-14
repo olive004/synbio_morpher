@@ -26,7 +26,6 @@ ENV ROOT_DIR=/workdir
 ENV PYTHONPATH=/workdir
 ENV MNT ./..
 WORKDIR /workdir
-COPY /usr/local/lib/libstdc++.so.6 /usr/local/lib/python3.10/site-packages/jax/_src/lib/
 # ENTRYPOINT ["/bin/bash"]
 
 # GPU
@@ -37,3 +36,5 @@ RUN conda install -c conda-forge cudatoolkit=11.2 cudnn=8.1.0
 RUN export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_PREFIX/lib/
 RUN mkdir -p $CONDA_PREFIX/etc/conda/activate.d
 RUN echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_PREFIX/lib/' > $CONDA_PREFIX/etc/conda/activate.d/env_vars.sh
+
+COPY /usr/local/lib/libstdc++.so.6 /usr/local/lib/python3.10/site-packages/jax/_src/lib/

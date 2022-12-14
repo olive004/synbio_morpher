@@ -14,11 +14,8 @@ def clear_caches():
         for obj_name in dir(module):
             obj = getattr(module, obj_name)
             if hasattr(obj, "cache_clear"):
-                logging.warning('\t\tcache')
-                logging.warning(f'\t\t{module_name}')
                 try:
                     obj.cache_clear()
-                    logging.warning('f')
                 except:
                     pass
     gc.collect()

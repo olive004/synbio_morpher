@@ -171,37 +171,40 @@ def expand_data_by_col(data: pd.DataFrame, columns: Union[str, list], column_for
             all_similar_columns += similar_cols
         columns = get_unique(all_similar_columns)
 
-    if column_for_expanding_coldata is None:
-        # I haven't added the handling here for expanding multiple columns with lists in them simulatenously
-        column = columns[0]
-        expand_vertically = True
-        s = data.apply(lambda x: pd.Series(
-            x[column]), axis=1).stack().reset_index(level=1, drop=True)
-        s.name = column
-        expanded_data = data.drop(column, axis=1).join(s)
-    else:
-        # Retain the expanding column
-        new_expanding_column_name = 'all_' + column_for_expanding_coldata
-        if new_expanding_column_name not in list(data.columns):
-            data = data.rename(
-                columns={column_for_expanding_coldata: new_expanding_column_name})
-        # for c in columns:
-        #     for r in data[c]:
-        #         print(pd.Series(r))
-        df_lists = data[columns].unstack().apply(partial(flatten_listlike, safe=True)).apply(pd.Series)
-        # df_lists = data[columns].unstack().apply(pd.Series)
-        col_names = data[new_expanding_column_name].iloc[idx_for_expanding_coldata]
-        if type(col_names) != list:
-            logging.warning(
-                f'The column {column_for_expanding_coldata} chosen for unstacking other columns has one value')
-        if len(df_lists.columns) == 1:
-            logging.warning(
-                f'The current column {columns} may not be expandable with {col_names}')
-        df_lists = df_lists.rename(columns=dict(
-            zip(df_lists.columns.values, col_names)))
+    if any([type(data[c].iloc[0]) == list for c in columns]):
+        if column_for_expanding_coldata is None:
+            # I haven't added the handling here for expanding multiple columns with lists in them simulatenously
+            column = columns[0]
+            expand_vertically = True
+            s = data.apply(lambda x: pd.Series(
+                x[column]), axis=1).stack().reset_index(level=1, drop=True)
+            s.name = column
+            expanded_data = data.drop(column, axis=1).join(s)
+        else:
+            # Retain the expanding column
+            new_expanding_column_name = 'all_' + column_for_expanding_coldata
+            if new_expanding_column_name not in list(data.columns):
+                data = data.rename(
+                    columns={column_for_expanding_coldata: new_expanding_column_name})
+            # for c in columns:
+            #     for r in data[c]:
+            #         print(pd.Series(r))
+            df_lists = data[columns].unstack().apply(partial(flatten_listlike, safe=True)).apply(pd.Series)
+            # df_lists = data[columns].unstack().apply(pd.Series)
+            col_names = data[new_expanding_column_name].iloc[idx_for_expanding_coldata]
+            if type(col_names) != list:
+                logging.warning(
+                    f'The column {column_for_expanding_coldata} chosen for unstacking other columns has one value')
+            if len(df_lists.columns) == 1:
+                logging.warning(
+                    f'The current column {columns} may not be expandable with {col_names}')
+            df_lists = df_lists.rename(columns=dict(
+                zip(df_lists.columns.values, col_names)))
 
-        # Make dataframe with expanded lists in one column labelled in expansion column
-        expanded_data = make_expansion_df(df_lists, col_names)
+            # Make dataframe with expanded lists in one column labelled in expansion column
+            expanded_data = make_expansion_df(df_lists, col_names)
+    else:
+        expanded_data = data
 
     expanded_data.reset_index(drop=True, inplace=True)
     return expanded_data
@@ -268,21 +271,20 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                 if log_option:
                     data = data[data[col] != 0]
                     data = data.drop(col, axis=1).join(data[col].abs())
-                    new_col = r'$Log_{10}$' + ' of ' + \
-                        plot_kwrgs.get(col_label, col)
+                    new_col = r'$Log_{10}$' + ' of ' + col_label
                     if plot_type not in exempt_from_log:
                         log_df = np.log10(data[col])
                         data = data.drop(col, axis=1).join(log_df)
                 else:
-                    new_col = plot_kwrgs.get(col_label, col)
+                    new_col = col_label
 
                 data = data.rename(columns={col: new_col})
             return data, new_col
 
         if column_x is not None:
-            data, column_x = process_log(data, column_x, log_axis[0], 'xlabel')
+            data, column_x = process_log(data, column_x, log_axis[0], plot_kwrgs.get('xlabel', column_x))
         if column_y is not None:
-            data, column_y = process_log(data, column_y, log_axis[1], 'ylabel')
+            data, column_y = process_log(data, column_y, log_axis[1], plot_kwrgs.get('ylabel', column_y))
         if column_x is None and column_y is None:
             logging.warning('No columns given as input to histplot.')
         data.reset_index(drop=True, inplace=True)
