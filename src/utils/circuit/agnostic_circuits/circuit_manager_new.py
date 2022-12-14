@@ -250,13 +250,15 @@ class CircuitModeller():
         b_reverse_rates = np.asarray(b_reverse_rates)
 
         logging.warning('part 2')
-        solution = jax.vmap(
+        sim_func = jax.vmap(
             partial(bioreaction_sim_dfx_expanded,
                     t0=self.t0, t1=self.t1, dt0=self.dt,
                     signal=signal.func, signal_onehot=signal.onehot,
                     inputs=ref_circuit.qreactions.reactions.inputs,
-                    outputs=ref_circuit.qreactions.reactions.outputs))(
+                    outputs=ref_circuit.qreactions.reactions.outputs))
+        solution = sim_func(
             y0=b_steady_states, forward_rates=b_forward_rates, reverse_rates=b_reverse_rates)
+        del sim_func
 
         logging.warning('part 2.5')
         tf = np.argmax(solution.ts == np.inf)
@@ -282,8 +284,10 @@ class CircuitModeller():
                 ref_circuit_data = ref_circuit_result.data  # .flatten()
         # logging.warning(f'Size of b_new_copynumbers: {sys.getsizeof(b_new_copynumbers)} bytes')
         logging.warning('part 4')
-        b_analytics = jax.vmap(partial(generate_analytics, time=t, labels=[s.name for s in ref_circuit.model.species],
-                                       signal_onehot=signal.onehot, ref_circuit_data=ref_circuit_data))(data=b_new_copynumbers)
+        analytics_func = jax.vmap(partial(generate_analytics, time=t, labels=[s.name for s in ref_circuit.model.species],
+                                       signal_onehot=signal.onehot, ref_circuit_data=ref_circuit_data))
+        b_analytics = analytics_func(data=b_new_copynumbers)
+        del analytics_func
         # b_analytics_l = [{'fold_change': np.ones_like(t)} for i in range(len(circuits))]
         # logging.warning(f'Size of b_analytics: {sys.getsizeof(b_analytics)} bytes')
         b_analytics_l = []
