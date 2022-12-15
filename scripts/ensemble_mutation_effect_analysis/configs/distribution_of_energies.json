@@ -82,7 +82,7 @@
                 "solver": "diffrax",
                 "use_batch_mutations": true,
                 "batch_size": 100,
-                "max_circuits": 10000,
+                "max_circuits": 5000,
                 "device": "cpu"
             },
             "source_of_interaction_stats": {
