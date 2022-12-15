@@ -215,6 +215,9 @@ def generate_differences_ratios(analytics: dict, ref_analytics) -> Tuple[dict]:
     return differences, ratios
 
 
+# def generate_means(analytics: dict):
+
+
 def generate_analytics(data, time, labels: List[str], ref_circuit_data=None, signal_onehot=None):
     signal_idxs = jnp.where(signal_onehot == 1)[0]
     signal_idxs = signal_idxs if len(signal_idxs) >= 1 else None

@@ -261,35 +261,44 @@ class CircuitModeller():
         tf = np.argmax(solution.ts == np.inf)
         b_new_copynumbers = solution.ys[:, :tf, :]
         t = solution.ts[0, :tf]
-        # t = np.arange(self.t0, self.t1, self.dt)
-        # b_new_copynumbers = np.repeat(np.reshape(t, (1, len(t))), len(b_steady_states), axis=0)
 
         if np.shape(b_new_copynumbers)[1] != ref_circuit.circuit_size and np.shape(b_new_copynumbers)[-1] == ref_circuit.circuit_size:
             b_new_copynumbers = np.swapaxes(b_new_copynumbers, 1, 2)
 
         # Get analytics batched too
-        if ref_circuit is None:
-            ref_circuit_data = None
-        else:
-            ref_circuit_result = ref_circuit.result_collector.get_result(
-                'signal')
-            if ref_circuit_result is None:
-                ref_circuit_data = b_new_copynumbers[circuits.index(
-                    ref_circuit)]
-            else:
-                ref_circuit_data = ref_circuit_result.data  # .flatten()
-        # logging.warning(f'Size of b_new_copynumbers: {sys.getsizeof(b_new_copynumbers)} bytes')
-        analytics_func = jax.vmap(partial(generate_analytics, time=t, labels=[s.name for s in ref_circuit.model.species],
-                                       signal_onehot=signal.onehot, ref_circuit_data=ref_circuit_data))
-        b_analytics = analytics_func(data=b_new_copynumbers)
-        # b_analytics_l = [{'fold_change': np.ones_like(t)} for i in range(len(circuits))]
-        # logging.warning(f'Size of b_analytics: {sys.getsizeof(b_analytics)} bytes')
+        def append_nest_dicts(l: list, i0: int, i1: int, d: dict) -> list:
+            for i in range(i0, i1):
+                b_analytics_k = {}
+                for k, v in d.items():
+                    b_analytics_k[k] = v[i]
+                l.append(b_analytics_k)
+            return l
+
+        ref_circuits = [s for s in circuits if s.subname == 'ref_circuit']
+        ref_idxs = [circuits.index(s) for s in ref_circuits]
         b_analytics_l = []
-        for i in range(len(circuits)):
-            b_analytics_k = {}
-            for k, v in b_analytics.items():
-                b_analytics_k[k] = v[i]
-            b_analytics_l.append(b_analytics_k)
+
+        # First check if the ref_circuit is leading
+        if ref_circuit not in circuits:
+            ref_idxs.insert(0, None)
+        ref_idxs2 = [len(circuits)] if len(ref_idxs) < 2 else ref_idxs[1:] + [len(circuits)]
+        for ref_idx, ref_idx2 in zip(ref_idxs, ref_idxs2):
+            
+            if ref_idx is None:
+                ref_circuit_result = ref_circuit.result_collector.get_result('signal')
+                if ref_circuit_result is None:
+                    raise ValueError('Reference circuit was not simulated and was not in this batch.')
+                else:
+                    ref_idx = 0
+                    ref_circuit_data = ref_circuit_result.data
+            else:
+                ref_circuit_data = b_new_copynumbers[ref_idx]
+
+            analytics_func = jax.vmap(partial(generate_analytics, time=t, labels=[s.name for s in ref_circuit.model.species],
+                                        signal_onehot=signal.onehot, ref_circuit_data=ref_circuit_data))
+            b_analytics = analytics_func(data=b_new_copynumbers[ref_idx:ref_idx2])
+            b_analytics_l = append_nest_dicts(b_analytics_l, ref_idx, ref_idx2, b_analytics)
+        assert len(b_analytics_l) == len(circuits), f'There was a mismatch in length of analytics ({len(b_analytics_l)}) and circuits ({len(circuit)})'
 
         # Save for all circuits
         for i, (circuit, analytics) in enumerate(zip(circuits, b_analytics_l)):
