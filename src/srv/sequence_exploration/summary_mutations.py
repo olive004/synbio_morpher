@@ -5,7 +5,7 @@ import pandas as pd
 
 def summarise_mutation_groups(data: pd.DataFrame):
 
-    data.groupby('circuit_name').agg()
+    data.groupby('circuit_name').agg({k: 'mean' for k in data.columns})
 
 
 if __name__ == "main":

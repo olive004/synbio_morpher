@@ -281,6 +281,8 @@ class CircuitModeller():
         # First check if the ref_circuit is leading
         if ref_circuit not in circuits:
             ref_idxs.insert(0, None)
+        else:
+            assert circuits.index(ref_circuit) == 0, f'The reference circuit should be leading or at idx 0, but is at idx {circuits.index(ref_circuit)}'
         ref_idxs2 = [len(circuits)] if len(ref_idxs) < 2 else ref_idxs[1:] + [len(circuits)]
         for ref_idx, ref_idx2 in zip(ref_idxs, ref_idxs2):
             

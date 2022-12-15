@@ -10,7 +10,7 @@
             },
             "experiment": {
                 "purpose": "generate_species_templates",
-                "test_mode": true
+                "test_mode": false
             },
             "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
             "circuit_generation": {
@@ -47,7 +47,7 @@
                 "purpose": "mutation_effect_on_interactions_signal",
                 "no_visualisations": true,
                 "no_numerical": true,
-                "test_mode": true
+                "test_mode": false
             },
             "interaction_simulator": {
                 "name": "IntaRNA",
