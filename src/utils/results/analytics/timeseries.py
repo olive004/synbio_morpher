@@ -131,7 +131,7 @@ def frequency(data):
     return freq
 
 
-def get_analytics_types_base():
+def get_analytics_types_base() -> List[str]:
     return ['fold_change',
             'overshoot',
             'max_amount',
@@ -140,7 +140,7 @@ def get_analytics_types_base():
             'steady_states']
 
 
-def get_signal_dependent_analytics():
+def get_signal_dependent_analytics() -> List[str]:
     return ['response_time',
             'precision',
             'precision_estimate',
@@ -148,36 +148,48 @@ def get_signal_dependent_analytics():
             'sensitivity_estimate']
 
 
-def get_analytics_types_all():
+def get_analytics_types_all() -> List[str]:
     return get_analytics_types() + get_analytics_types_diffs() + get_analytics_types_ratios()
 
 
-def get_analytics_types():
+def get_analytics_types() -> List[str]:
     """ The naming here has to be unique and not include small 
     raw values like diff, ratio, max, min. """
     return get_analytics_types_base() + get_signal_dependent_analytics()
 
 
-def get_diffs(analytics_func=get_analytics_types):
+def get_diffs(analytics_func=get_analytics_types) -> List[str]:
     return [a + DIFF_KEY for a in analytics_func()]
 
 
-def get_ratios(analytics_func=get_analytics_types):
+def get_ratios(analytics_func=get_analytics_types) -> List[str]:
     return [a + RATIO_KEY for a in analytics_func()]
 
 
-def get_signal_dependent_analytics_all():
+def get_signal_dependent_analytics_all() -> List[str]:
     return get_signal_dependent_analytics() + \
         get_diffs(get_signal_dependent_analytics) + \
         get_ratios(get_signal_dependent_analytics)
 
 
-def get_analytics_types_diffs():
+def get_analytics_types_diffs() -> List[str]:
     return get_diffs(get_analytics_types)
 
 
-def get_analytics_types_ratios():
+def get_analytics_types_ratios() -> List[str]:
     return get_ratios(get_analytics_types)
+
+
+def get_signal_dependent_true_names(candidate_cols: List[str]) -> List[str]:
+    true_names = []
+    analytics = get_signal_dependent_analytics()
+    for c in candidate_cols:
+        for a in analytics:
+            if a in c:
+                if (c - a).startswith('_wrt'):
+                    true_name = c - DIFF_KEY - RATIO_KEY
+                    true_names.append(true_name)
+    return true_names
 
 
 def generate_base_analytics(data: np.ndarray, time: np.ndarray, labels: List[str], signal_idxs: np.ndarray, ref_circuit_data: np.ndarray) -> dict:
