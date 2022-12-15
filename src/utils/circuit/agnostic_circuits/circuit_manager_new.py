@@ -298,7 +298,7 @@ class CircuitModeller():
                                         signal_onehot=signal.onehot, ref_circuit_data=ref_circuit_data))
             b_analytics = analytics_func(data=b_new_copynumbers[ref_idx:ref_idx2])
             b_analytics_l = append_nest_dicts(b_analytics_l, ref_idx, ref_idx2, b_analytics)
-        assert len(b_analytics_l) == len(circuits), f'There was a mismatch in length of analytics ({len(b_analytics_l)}) and circuits ({len(circuit)})'
+        assert len(b_analytics_l) == len(circuits), f'There was a mismatch in length of analytics ({len(b_analytics_l)}) and circuits ({len(circuits)})'
 
         # Save for all circuits
         for i, (circuit, analytics) in enumerate(zip(circuits, b_analytics_l)):
@@ -410,7 +410,7 @@ class CircuitModeller():
                 if not b_circuits:
                     continue
                 ref_circuit = self.run_batch(
-                    b_circuits, methods, ref_circuit=ref_circuit,
+                    b_circuits, methods, leading_ref_circuit=ref_circuit,
                     include_normal_run=include_normal_run,
                     write_to_subsystem=write_to_subsystem)
 
@@ -422,11 +422,12 @@ class CircuitModeller():
     def run_batch(self,
                   subcircuits: List[Circuit],
                   methods: dict,
-                  ref_circuit: Circuit = None,
+                  leading_ref_circuit: Circuit = None,
                   include_normal_run: bool = True,
                   write_to_subsystem: bool = True) -> List[Circuit]:
 
         for method, kwargs in methods.items():
+            ref_circuit = leading_ref_circuit
             logging.warning(
                 f'\t\tRunning {len(subcircuits)} Subcircuits - {subcircuits[0].name}: {method}')
 
@@ -457,8 +458,11 @@ class CircuitModeller():
                         subcircuit, {method: kwargs}, ref_circuit=ref_circuit)
                     subcircuits[i] = subcircuit
                 self.result_writer.unsubdivide()
-        del subcircuits
-        return ref_circuit
+        # Update the leading reference circuit to be the last ref circuti from this batch
+        ref_circuits = [c for c in subcircuits if c.subname == 'ref_circuit']
+        if ref_circuits:
+            leading_ref_circuit = ref_circuits[-1]
+        return leading_ref_circuit
 
     def apply_to_circuit(self, circuit: Circuit, _methods: dict, ref_circuit: Circuit):
         methods = deepcopy(_methods)
