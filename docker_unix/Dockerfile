@@ -30,11 +30,17 @@ WORKDIR /workdir
 
 # GPU
 RUN pip install --upgrade "jax[cuda]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
-RUN curl https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -o Miniconda3-latest-Linux-x86_64.sh
+# RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
 RUN bash Miniconda3-latest-Linux-x86_64.sh
 RUN conda install -c conda-forge cudatoolkit=11.2 cudnn=8.1.0
 RUN export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_PREFIX/lib/
 RUN mkdir -p $CONDA_PREFIX/etc/conda/activate.d
 RUN echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_PREFIX/lib/' > $CONDA_PREFIX/etc/conda/activate.d/env_vars.sh
+
+# Go
+# RUN wget https://go.dev/dl/go1.19.4.linux-amd64.tar.gz
+# RUN tar -C /usr/local -xzf go1.19.4.linux-amd64.tar.gz
+# RUN export PATH=$PATH:/usr/local/go/bin
+# RUN export GOPATH="/mnt/c/Users/${user}/directory/to/your/golang/workspace"
 
 COPY /usr/local/lib/libstdc++.so.6 /usr/local/lib/python3.10/site-packages/jax/_src/lib/

@@ -419,6 +419,7 @@ class CircuitModeller():
             single_batch_time = datetime.now() - single_batch_time
             logging.warning(
                 f'Single batch: {single_batch_time} \nProjected time: {single_batch_time.total_seconds() * len(circuits)/viable_circuit_num} \nTotal time: {str(datetime.now() - start_time)}')
+            del subcircuits
         return circuits
 
     def run_batch(self,
@@ -464,6 +465,7 @@ class CircuitModeller():
         ref_circuits = [c for c in subcircuits if c.subname == 'ref_circuit']
         if ref_circuits:
             leading_ref_circuit = ref_circuits[-1]
+        del subcircuits
         return leading_ref_circuit
 
     def apply_to_circuit(self, circuit: Circuit, _methods: dict, ref_circuit: Circuit):
