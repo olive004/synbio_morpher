@@ -1,17 +1,22 @@
 
 
 import pandas as pd
-from src.utils.results.analytics.timeseries import get_analytics_types_base, get_diffs, get_ratios
+from src.utils.results.analytics.timeseries import get_true_names_analytics
+from src.utils.results.writer import DataWriter
 
 
-def summarise_mutation_groups(data: pd.DataFrame):
+def summarise_mutation_groups(data: pd.DataFrame, data_writer: DataWriter = None):
 
-    path = 'data/ensemble_mutation_effect_analysis/2022_12_15_012941/summarise_simulation/tabulated_mutation_info.json'
-    data = pd.read_json(path)
-    summarise_mutation_groups
+    # path = 'data/ensemble_mutation_effect_analysis/2022_12_14_183947/summarise_simulation/tabulated_mutation_info.json'
+    # data = pd.read_json(path)
  
-    analytics = get_analytics_types_base() + get_diffs(get_analytics_types_base) + get_ratios(get_analytics_types_base)
+    analytics = get_true_names_analytics(data.columns)
     data.groupby(['circuit_name', 'sample_name']).agg({k: ['mean', 'std'] for k in analytics})
+
+    if data_writer:
+        data_writer.output(
+            out_type='csv', out_name='mutation_means_stds', **{'data': data})
+    return data
 
 
 if __name__ == "__main__":

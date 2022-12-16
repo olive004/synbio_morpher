@@ -1,16 +1,11 @@
 from functools import partial
-import logging
-import operator
 import os
-import numpy as np
 import pandas as pd
 
 from src.srv.io.manage.script_manager import script_preamble
 from src.utils.misc.io import get_pathnames_from_mult_dirs
-from src.utils.misc.numerical import cast_astype
 from src.utils.misc.scripts_io import get_search_dir, load_experiment_config_original
-from src.utils.misc.string_handling import prettify_keys_for_label
-from src.utils.results.analytics.timeseries import get_analytics_types, get_signal_dependent_analytics
+from src.srv.sequence_exploration.summary_mutations import summarise_mutation_groups
 
 from src.utils.results.experiments import Experiment, Protocol
 from src.utils.results.result_writer import ResultWriter
@@ -61,16 +56,35 @@ def main(config=None, data_writer=None):
             req_input=True,
             req_output=True,
             name='concatenate_dfs'
+        ),
+        Protocol(
+            summarise_mutation_groups,
+            req_input=True,
+            req_output=True,
+            name='summarise_means'
         )
     ]
 
 
-    # protocols.append(
-    #     partial(visualise_data(
-    #         data_writer=data_writer,
+    source_config = load_experiment_config_original(
+        source_dirs[0], target_purpose='mutation_effect_on_interactions_signal')
+    num_mutations = source_config['mutations']['mutation_nums_within_sequence']
+    num_mutations = [num_mutations] if type(
+        num_mutations) != list else num_mutations
+    num_mutations = num_mutations + ['all']
+    log_opts = [(False, False), (True, False)]
 
-    #     )
-    # )
+
+    for s in ['mean', 'std']:
+        for m in num_mutations:
+            for log_opt in log_opts:
+                for c in get_
+    protocols.append(
+        partial(visualise_data(
+            data_writer=data_writer,
+
+        )
+    )
 
     
 

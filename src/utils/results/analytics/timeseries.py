@@ -172,6 +172,12 @@ def get_signal_dependent_analytics_all() -> List[str]:
         get_ratios(get_signal_dependent_analytics)
 
 
+def get_base_analytics_all() -> List[str]:
+    return get_analytics_types_base() + \
+        get_diffs(get_analytics_types_base) + \
+        get_ratios(get_analytics_types_base)
+
+
 def get_analytics_types_diffs() -> List[str]:
     return get_diffs(get_analytics_types)
 
@@ -180,15 +186,20 @@ def get_analytics_types_ratios() -> List[str]:
     return get_ratios(get_analytics_types)
 
 
-def get_signal_dependent_true_names(candidate_cols: List[str]) -> List[str]:
+def get_true_names_analytics(candidate_cols: List[str]) -> List[str]:
     true_names = []
-    analytics = get_signal_dependent_analytics()
+    analytics_sig = get_signal_dependent_analytics()
+    analytics_base = get_base_analytics_all()
+
     for c in candidate_cols:
-        for a in analytics:
-            if a in c:
-                if (c - a).startswith('_wrt'):
-                    true_name = c - DIFF_KEY - RATIO_KEY
-                    true_names.append(true_name)
+        for s in analytics_sig:
+            if s in c:
+                if (c.replace(s, '')).startswith('_wrt'):
+                    # true_name = c.replace(DIFF_KEY, '').replace(RATIO_KEY, '')
+                    true_names.append(c)
+        for b in analytics_base:
+            if b == c:
+                true_names.append(c)
     return true_names
 
 
