@@ -38,9 +38,11 @@ def expand_model_config(in_config: dict, out_config: dict, sample_names: List[st
 
 
 def process_molecular_params(params: dict) -> dict:
+    new_params = {}
     for k, v in params.items():
         if 'rate' in k and '_per_molecule' not in k:
-            params[k + '_per_molecule'] = per_mol_to_per_molecule(v)
+            new_params[k + '_per_molecule'] = per_mol_to_per_molecule(v)
+    params.update(new_params)
     return params
 
 

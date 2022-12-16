@@ -81,7 +81,7 @@
                 "t1": 1200,
                 "solver": "diffrax",
                 "use_batch_mutations": true,
-                "batch_size": 100,
+                "batch_size": 1000,
                 "max_circuits": 1000,
                 "device": "cpu"
             },
