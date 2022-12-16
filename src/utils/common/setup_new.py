@@ -6,7 +6,7 @@ from src.utils.data.common import Data
 from src.srv.io.manage.sys_interface import make_filename_safely
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.srv.io.manage.data_manager import DataManager
-from src.utils.misc.units import per_mol_to_per_molecules
+from src.utils.misc.units import per_mol_to_per_molecule
 from src.utils.misc.io import isolate_filename
 from src.utils.misc.type_handling import cast_all_values_as_list
 from src.utils.signal.configs import get_signal_type, parse_sig_args
@@ -39,8 +39,8 @@ def expand_model_config(in_config: dict, out_config: dict, sample_names: List[st
 
 def process_molecular_params(params: dict) -> dict:
     for k, v in params.items():
-        if 'rate' in k:
-            params[k] = per_mol_to_per_molecules(v)
+        if 'rate' in k and '_per_molecule' not in k:
+            params[k + '_per_molecule'] = per_mol_to_per_molecule(v)
     return params
 
 

@@ -5,7 +5,7 @@ import numpy as np
 from functools import partial
 from src.utils.misc.helper import vanilla_return, processor
 from src.utils.misc.numerical import SCIENTIFIC
-from src.utils.misc.units import per_mol_to_per_molecules
+from src.utils.misc.units import per_mol_to_per_molecule
 
 
 SIMULATOR_UNITS = {
@@ -29,7 +29,7 @@ class RawSimulationHandling():
         self.postprocess = config.get('postprocess')
         self.sim_kwargs = config.get('simulator_kwargs', {})
         self.fixed_rate_k_a = config.get(
-            'molecular_params').get('association_binding_rate')
+            'molecular_params').get('association_binding_rate' + '_per_molecule')
         self.units = ''
 
     def get_sim_interpretation_protocol(self):

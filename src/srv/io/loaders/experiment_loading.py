@@ -4,7 +4,7 @@ from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.misc.scripts_io import get_root_experiment_folder, load_experiment_config
 from src.utils.misc.type_handling import nest_list_dict
-from src.utils.misc.units import per_mol_to_per_molecules
+from src.utils.misc.units import per_mol_to_per_molecule
 
 
 INTERACTION_FILE_ADDONS = {
@@ -22,7 +22,7 @@ def load_param(filepath, param):
     except ValueError:
         raise ValueError(
             f'Supply a valid experiment directory instead of {filepath}')
-    p = per_mol_to_per_molecules(load_json_as_dict(
+    p = per_mol_to_per_molecule(load_json_as_dict(
         experiment_config.get('molecular_params'))[param])
     return p
 

@@ -26,9 +26,11 @@ def get_steady_state(data):
 
 
 def fold_change(data):
-    fold_change = jnp.divide(
-        data[:, -1], jnp.where(data[:, 0] == 0, 1, data[:, 0]))
-    return jnp.expand_dims(fold_change, axis=1)
+    fold_change = jnp.where(data[:, -1] != 0, 
+        data[:, -1] / data[:, 0], np.inf)
+    if len(np.shape(fold_change)) > 1:
+        fold_change = jnp.expand_dims(fold_change, axis=1)
+    return fold_change
 
 
 def get_overshoot(data, steady_states):
@@ -59,9 +61,9 @@ def get_precision(data, steady_states, signal_idx: int):
 
 
 def calculate_sensitivity(output_diff, starting_states, signal_diff, signal_low) -> jnp.ndarray:
-    denom = jnp.where(signal_low != 0, signal_diff / signal_low, 1)
+    denom = jnp.where(signal_low != 0, signal_diff / signal_low, np.inf)
     numer = jnp.where((starting_states != 0).astype(int),
-                      output_diff / starting_states, 1)
+                      output_diff / starting_states, np.inf)
     return jnp.expand_dims(jnp.absolute(jnp.divide(
         numer, denom)), axis=1)
 
@@ -84,9 +86,8 @@ def get_sensitivity(data, signal_idx: int):
 def get_rmse(data, ref_circuit_data):
     if ref_circuit_data is None:
         return jnp.zeros(shape=(jnp.shape(data)[0], 1))
-    data = data - ref_circuit_data
     rmse = jnp.sqrt(
-        jnp.sum(jnp.divide(jnp.power(data, 2), len(data)), axis=1))
+        jnp.sum(jnp.divide(jnp.power(data - ref_circuit_data, 2), jnp.shape(data)[1]), axis=1))
     return jnp.expand_dims(rmse, axis=1)
 
 
@@ -203,7 +204,7 @@ def get_true_names_analytics(candidate_cols: List[str]) -> List[str]:
     return true_names
 
 
-def generate_base_analytics(data: np.ndarray, time: np.ndarray, labels: List[str], signal_idxs: np.ndarray, ref_circuit_data: np.ndarray) -> dict:
+def generate_base_analytics(data: jnp.ndarray, time: jnp.ndarray, labels: List[str], signal_idxs: jnp.ndarray, ref_circuit_data: jnp.ndarray) -> dict:
     if data is None:
         return {}
     analytics = {

@@ -26,7 +26,7 @@ INTERACTION_STATS = ['max_interaction',
 MUTATION_INFO_COLUMN_NAMES = [
     'circuit_name',
     'mutation_name',
-    'source_species',
+    # 'source_species',
     'sample_names',
     'mutation_num',
     'mutation_type',
@@ -276,11 +276,11 @@ def b_tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFram
 
         current_og_table = {
             'circuit_name': circuit_name,
-            'mutation_name': '',
-            'source_species': '',
+            'mutation_name': 'ref_circuit',
+            # 'source_species': '',
             'mutation_num': 0,
-            'mutation_type': '',
-            'mutation_positions': '',
+            'mutation_type': [],
+            'mutation_positions': [],
             # 'path_to_steady_state_data': get_pathnames(first_only=True,
             #                                            file_key='steady_states_data',
             #                                            search_dir=circuit_dir),
@@ -297,14 +297,14 @@ def b_tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFram
                                            circuit_dir],
                                        all_sample_names=all_sample_names, chosen_sample_names=sample_names)
 
-        interaction_stats, mutation_sample_names = make_interaction_stats_and_sample_names(
-            mutation_dirs)
+        interaction_stats = make_interaction_stats_and_sample_names(
+            mutation_dirs)[0]
 
         # Mutated circuits
         mutation_table = pd.DataFrame.from_dict({
             'circuit_name': [circuit_name] * len(mutation_dirs),
             'mutation_name': mutations['mutation_name'],
-            'source_species': mutations['template_name'],
+            # 'source_species': mutations['template_name'],
             'mutation_num': mutations['count'],
             'mutation_type': cast_astype(mutations['mutation_types'], int),
             'mutation_positions': cast_astype(mutations['positions'], int),
