@@ -56,6 +56,8 @@ def prettify_keys_for_label(key: str):
     key = key.replace('_', ' ')
     key = key.replace('wrt', 'with respect to')
     key = key.replace('number', 'num').replace('num', 'number')
+    key = key.replace('diff', 'difference')
+    key = key.replace('std', 'standard deviation')
     key = key.capitalize()
     return key
 

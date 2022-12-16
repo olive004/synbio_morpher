@@ -7,16 +7,16 @@ from src.utils.results.writer import DataWriter
 
 def summarise_mutation_groups(data: pd.DataFrame, data_writer: DataWriter = None):
 
-    # path = 'data/ensemble_mutation_effect_analysis/2022_12_14_183947/summarise_simulation/tabulated_mutation_info.json'
+    # path = 'data/ensemble_mutation_effect_analysis/2022_12_15_012941/summarise_simulation/tabulated_mutation_info.json'
     # data = pd.read_json(path)
  
     analytics = get_true_names_analytics(data.columns)
-    data.groupby(['circuit_name', 'sample_name']).agg({k: ['mean', 'std'] for k in analytics})
+    summary = data.groupby(['circuit_name', 'sample_name', 'mutation_num']).agg({k: ['mean', 'std'] for k in analytics})
 
     if data_writer:
         data_writer.output(
-            out_type='csv', out_name='mutation_means_stds', **{'data': data})
-    return data
+            out_type='csv', out_name='mutation_means_stds', **{'data': summary})
+    return summary.reset_index()
 
 
 if __name__ == "__main__":

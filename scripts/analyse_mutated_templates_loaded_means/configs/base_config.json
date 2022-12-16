@@ -1,0 +1,13 @@
+{
+    "experiment": {
+        "purpose": "analyse_mutated_templates_loaded_means"
+    },
+    "source_dirs": {
+        "is_source_dir_incomplete": false,
+        "source_dir": ["data/summarise_simulation/2022_12_16_125147"],
+        "purpose_to_get_source_dir_from": null,
+        "source_dir_actually_used_POSTERITY": null
+    },
+    "preprocessing_func": null,
+    "only_visualise_circuits": false
+}

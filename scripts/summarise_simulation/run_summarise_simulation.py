@@ -10,7 +10,6 @@ from src.utils.misc.scripts_io import get_search_dir
 from src.utils.results.experiments import Experiment, Protocol
 from src.utils.results.result_writer import ResultWriter
 from src.srv.sequence_exploration.sequence_analysis import b_tabulate_mutation_info
-from src.srv.sequence_exploration.summary_mutations import summarise_mutation_groups
 from src.utils.data.data_format_tools.common import load_json_as_dict, load_multiple_as_list
 
 
@@ -24,8 +23,6 @@ def main(config=None, data_writer=None):
     # Start_experiment
     if data_writer is None:
         data_writer = ResultWriter(purpose=config_file.get('experiment', {}).get('purpose'))
-
-    summarise_mutation_groups(None)
 
     config_file, source_dirs = get_search_dir(
         config_searchdir_key='source_dirs', config_file=config_file)

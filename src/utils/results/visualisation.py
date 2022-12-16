@@ -188,7 +188,8 @@ def expand_data_by_col(data: pd.DataFrame, columns: Union[str, list], column_for
         # for c in columns:
         #     for r in data[c]:
         #         print(pd.Series(r))
-        df_lists = data[columns].unstack().apply(partial(flatten_listlike, safe=True)).apply(pd.Series)
+        df_lists = data[columns].unstack().apply(
+            partial(flatten_listlike, safe=True)).apply(pd.Series)
         # df_lists = data[columns].unstack().apply(pd.Series)
         col_names = data[new_expanding_column_name].iloc[idx_for_expanding_coldata]
         if type(col_names) != list:
@@ -238,7 +239,11 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                    plot_cols_on_same_graph=False,
                    misc_histplot_kwargs=None,
                    **plot_kwargs):
-    """ Plot type can be any attributes of VisODE() """
+    """ Plot type can be any attributes of VisODE() 
+    This function is a mess - only for visualisation.
+    Args:
+    cols_x and cols_y: list of columns. If a column is a tuple, the other columns in the tuple
+    will be treated as increasingly nested subcolumns """
     data = deepcopy(og_data)
 
     hue = hue if hue is not None else column_name_for_expanding_xcoldata
@@ -249,15 +254,18 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
         if complete_col_by_str is not None:
             for i, col in enumerate(cols):
                 end = col.split(complete_col_by_str.split('_wrt')[0])[-1]
-                rex = np.asarray([re.search(f"^{complete_col_by_str}.*{end}", c) for c in data.columns])
+                rex = np.asarray(
+                    [re.search(f"^{complete_col_by_str}.*{end}", c) for c in data.columns])
                 if not list(data.columns[np.where(rex != None)[0]]):
-                    logging.warning(f'Could not find complete column name for {col} with str {complete_col_by_str}')
+                    logging.warning(
+                        f'Could not find complete column name for {col} with str {complete_col_by_str}')
                 potential_cols = list(data.columns[np.where(rex != None)[0]])
                 if not end:
                     cols[i] = min(potential_cols)
                 else:
                     cols[i] = potential_cols
-        return flatten_listlike(cols, safe=True)
+            cols = flatten_listlike(cols, safe=True)
+        return cols
     cols_x = process_cols(cols_x, complete_colx_by_str)
     cols_y = process_cols(cols_y, complete_coly_by_str)
 
@@ -270,20 +278,31 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                 if log_option:
                     data = data[data[col] != 0]
                     data = data.drop(col, axis=1).join(data[col].abs())
-                    new_col = r'$Log_{10}$' + ' of ' + col_label
+                    log_l = r'$Log_{10}$' + ' of '
+                    if type(col_label) == tuple:
+                        col_label = list(col_label)
+                        new_col = tuple([log_l + col_label[0]] + col_label[1:])
+                    else:
+                        new_col = r'$Log_{10}$' + ' of ' + col_label
                     if plot_type not in exempt_from_log:
                         log_df = np.log10(data[col])
                         data = data.drop(col, axis=1).join(log_df)
                 else:
                     new_col = col_label
 
-                data = data.rename(columns={col: new_col})
+                if type(col) == tuple:
+                    assert type(new_col) == tuple, 'If using multi-indexing, make sure new column names are also input as tuples'
+                    data = data.rename(columns={c: n for c, n in zip(col, new_col)})
+                else:
+                    data = data.rename(columns={col: new_col})
             return data, new_col
 
         if column_x is not None:
-            data, column_x = process_log(data, column_x, log_axis[0], plot_kwrgs.get('xlabel', column_x))
+            data, column_x = process_log(
+                data, column_x, log_axis[0], plot_kwrgs.get('xlabel', column_x))
         if column_y is not None:
-            data, column_y = process_log(data, column_y, log_axis[1], plot_kwrgs.get('ylabel', column_y))
+            data, column_y = process_log(
+                data, column_y, log_axis[1], plot_kwrgs.get('ylabel', column_y))
         if column_x is None and column_y is None:
             logging.warning('No columns given as input to histplot.')
         data.reset_index(drop=True, inplace=True)
@@ -380,9 +399,9 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
     def is_data_plotable(data: pd.DataFrame, col_x: str, col_y: str):
         if data.empty:
             return False
-        if col_x and ((data[col_x].all() and data[col_x].iloc[0] is np.nan) or data[col_x].isnull().all()):
+        if col_x is not None and ((data[col_x].all() and data[col_x].iloc[0] is np.nan) or data[col_x].isnull().all()):
             return False
-        if col_y and ((data[col_y].all() and data[col_y].iloc[0] is np.nan) or data[col_y].isnull().all()):
+        if col_y is not None and ((data[col_y].all() and data[col_y].iloc[0] is np.nan) or data[col_y].isnull().all()):
             return False
         return True
 
@@ -531,7 +550,8 @@ class VisODE():
         if plot_kwargs.get('hue'):
             data = data.rename(
                 columns={plot_kwargs.get('hue'): prettify_keys_for_label(plot_kwargs.get('hue'))})
-            plot_kwargs['hue'] = prettify_keys_for_label(plot_kwargs.get('hue'))
+            plot_kwargs['hue'] = prettify_keys_for_label(
+                plot_kwargs.get('hue'))
             plot_kwargs.update({
                 # 'palette': sns.color_palette("husl", len(data[plot_kwargs.get('hue')].unique()))
                 # 'palette': sns.color_palette("plasma", len(data[plot_kwargs.get('hue')].unique()))
