@@ -30,7 +30,7 @@ def expand_model_config(in_config: dict, out_config: dict, sample_names: List[st
         for s in sample_names:
             out_config['starting_concentration'][s] = in_config['molecular_params'].get(
                 'starting_copynumbers', 1)
-    if in_config.get('interactions', {}):
+    if in_config.get('interactions') is not None or in_config.get('interactions_loaded'):
         out_config['interactions_state'] = 'loaded'
     else:
         out_config['interactions_state'] = 'uninitialised'
@@ -64,6 +64,7 @@ def compose_kwargs(prev_configs: dict = None, config: dict = None) -> dict:
         "data_path": data_manager.source,
         # For pre-loading interactions
         "interactions": config["interactions"],
+        "interactions_loaded": config["interactions_loaded"],
         "interaction_simulator": config["interaction_simulator"],
         "molecular_params": config["molecular_params"],
         "mutations": cast_all_values_as_list(config["mutations"]),
@@ -79,6 +80,7 @@ def compose_kwargs(prev_configs: dict = None, config: dict = None) -> dict:
 
 def expand_config(config: dict) -> dict:
     config["interactions"] = config.get("interactions", {})
+    config["interactions_loaded"] = config.get("interactions_loaded")
     config["interaction_simulator"] = config.get("interaction_simulator", {"name": "IntaRNA"})
     config["molecular_params"] = process_molecular_params(deepcopy(load_json_as_dict(config.get("molecular_params"))))
     config["mutations"] = config.get("mutations", {})

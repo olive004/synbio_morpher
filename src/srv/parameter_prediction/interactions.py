@@ -37,7 +37,8 @@ class InteractionMatrix():
                  matrix_paths: dict = None,
                  experiment_dir: str = None,
                  num_nodes: int = None,
-                 units=''):
+                 units: str='',
+                 interactions_kwargs: dict = None):
         super().__init__()
 
         self.name = None
@@ -54,7 +55,10 @@ class InteractionMatrix():
             binding_rates_dissociation=random_matrices[:, :, 2],
             eqconstants=random_matrices[:, :, 3], units='test'
         )
-        if matrix_paths is not None:
+        if interactions_kwargs is not None:
+            self.interactions = MolecularInteractions(**interactions_kwargs)
+
+        elif matrix_paths is not None:
             for matrix_type, matrix_path in matrix_paths.items():
                 loaded_matrix, self.units, self.sample_names = self.load(
                     matrix_path)

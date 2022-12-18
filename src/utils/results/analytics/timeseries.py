@@ -26,8 +26,12 @@ def get_steady_state(data):
 
 
 def fold_change(data):
-    fold_change = jnp.where(data[:, -1] != 0, 
-        data[:, -1] / data[:, 0], np.inf)
+    # fold_change = jnp.where(data[:, 0] != 0, 
+    #     data[:, -1] / data[:, 0], np.inf)
+    denom = jnp.where(data[:, 0] != 0, 
+        data[:, 0], -1)
+    fold_change = jnp.where(denom != -1, 
+        data[:, -1] / denom, np.inf)
     if len(np.shape(fold_change)) > 1:
         fold_change = jnp.expand_dims(fold_change, axis=1)
     return fold_change

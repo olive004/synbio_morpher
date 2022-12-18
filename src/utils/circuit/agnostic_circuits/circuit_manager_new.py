@@ -100,7 +100,7 @@ class CircuitModeller():
 
     def find_steady_states(self, circuit: Circuit):
         modeller_steady_state = Deterministic(
-            max_time=500, time_interval=0.1)
+            max_time=10, time_interval=0.1)
 
         steady_states = self.compute_steady_states(modeller_steady_state,
                                                    circuit=circuit,
@@ -136,6 +136,10 @@ class CircuitModeller():
                     'Steady state could not be found through solve_ivp - possibly because units '
                     f'are in {circuit.interactions.units}. {SIMULATOR_UNITS}')
             copynumbers = steady_state_result.y
+        # elif solver_type == 'jax':
+        #     partial(bioreaction_sim, args=None, reactions=circuit.qreactions.reactions, signal=vanilla_return,
+        #                 signal_onehot=np.zeros_like(circuit.signal.onehot)),
+        #         (0, modeller.max_time)
         return copynumbers
 
     def model_circuit(self, y0: np.ndarray, circuit: Circuit):
@@ -451,7 +455,7 @@ class CircuitModeller():
                     self.result_writer.subdivide_writing(
                         dir_name, safe_dir_change=True)
 
-                    if subcircuit.subname == 'ref_circuit':
+                    if subcircuit.subname == 'ref_circuit' and subcircuit != ref_circuit:
                         ref_circuit.result_collector.delete_result('signal')
                         ref_circuit = subcircuit
                         if not include_normal_run:

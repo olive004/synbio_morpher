@@ -52,7 +52,7 @@ class Circuit():
         self.qreactions = self.init_reactions(self.model, config)
         self.interactions_state: str = config.get(
             'interactions_state', 'uninitialised')
-        self.interactions = self.init_interactions(config.get('interactions'))
+        self.interactions = self.init_interactions(config.get('interactions'), config.get('interactions_loaded'))
         self.signal: Signal = None
         self.mutations = {}
         self.mutations_args: dict = config.get('mutations', {})
@@ -64,8 +64,8 @@ class Circuit():
         qreactions.init_properties(model, config)
         return qreactions
 
-    def init_interactions(self, interaction_cfg: dict) -> MolecularInteractions:
-        if not interaction_cfg:
+    def init_interactions(self, interaction_cfg: dict, interactions_loaded: dict) -> MolecularInteractions:
+        if interaction_cfg is None or interactions_loaded is None:
             # matrix = np.zeros(
             #     (len(self.model.species), len(self.model.species)))
             # for r in self.model.reactions:
@@ -85,7 +85,7 @@ class Circuit():
                 eqconstants=random_matrices[:, :, 3], units='test'
             )
         assert self.interactions_state != 'uninitialised', f'The interactions should have been initialised from {interaction_cfg}'
-        return InteractionMatrix(matrix_paths=interaction_cfg).interactions
+        return InteractionMatrix(matrix_paths=interaction_cfg, interactions_kwargs=interactions_loaded).interactions
 
     def reset_to_initial_state(self):
         self.result_collector.reset()

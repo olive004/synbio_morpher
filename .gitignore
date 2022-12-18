@@ -4,6 +4,7 @@
 *.pyc
 *.pysave
 *.cpython-38.pyc
+*.pyc
 __pycache__
 *.txt
 !requirements.txt
