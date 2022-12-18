@@ -59,11 +59,11 @@ class TestCircuit(unittest.TestCase):
         species_num = 9
 
         paths = [
-            os.path.join('tests', 'configs', 'strong.fasta'),
-            os.path.join('tests', 'configs', 'med_strong.fasta'),
-            os.path.join('tests', 'configs', 'medium.fasta'),
-            os.path.join('tests', 'configs', 'med_weak.fasta'),
-            os.path.join('tests', 'configs', 'weak.fasta')
+            os.path.join('tests', 'configs', '0_weak.fasta'),
+            os.path.join('tests', 'configs', '1_med_weak.fasta'),
+            os.path.join('tests', 'configs', '2_medium.fasta'),
+            os.path.join('tests', 'configs', '3_med_strong.fasta'),
+            os.path.join('tests', 'configs', '4_strong.fasta')
         ]
         interactions = np.expand_dims(np.expand_dims(np.arange(
             len(paths)), axis=1), axis=2) * np.ones((len(paths), species_num, species_num))
