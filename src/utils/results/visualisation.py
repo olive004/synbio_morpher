@@ -296,7 +296,9 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                 else:
                     new_col = col_label
 
-                if type(col) == tuple:
+                if type(col) == list:
+                    return data, col
+                elif type(col) == tuple:
                     assert type(new_col) == tuple, 'If using multi-indexing, make sure new column names are also input as tuples'
                     data = data.rename(columns={c: n for c, n in zip(col, new_col)})
                 else:
@@ -402,12 +404,12 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
         data.reset_index(drop=True, inplace=True)
         return data
 
-    def is_data_plotable(data: pd.DataFrame, col_x: str, col_y: str):
+    def is_data_plotable(data: pd.DataFrame, col_x: Union[str, List[str]], col_y: Union[str, List[str]]):
         if data.empty:
             return False
-        if col_x is not None and ((data[col_x].all() and data[col_x].iloc[0] is np.nan) or data[col_x].isnull().all()):
+        if col_x is not None and ((all(pd.Series(data[col_x].all())) and data[col_x].iloc[0] is np.nan) or all(pd.Series(data[col_x].isnull().all()))):
             return False
-        if col_y is not None and ((data[col_y].all() and data[col_y].iloc[0] is np.nan) or data[col_y].isnull().all()):
+        if col_y is not None and ((all(pd.Series(data[col_y].all())) and data[col_y].iloc[0] is np.nan) or all(pd.Series(data[col_y].isnull().all()))):
             return False
         return True
 

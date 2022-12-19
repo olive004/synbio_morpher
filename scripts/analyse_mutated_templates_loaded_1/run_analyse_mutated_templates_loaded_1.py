@@ -40,9 +40,9 @@ def main(config=None, data_writer=None):
         config_searchdir_key='source_dirs', config_file=config_file)
     if type(source_dirs) != list:
         source_dirs = [source_dirs]
-    # source_dir = source_dirs[0]
-    # source_config = load_experiment_config_original(
-    #     source_dir, 'mutation_effect_on_interactions_signal')
+    source_dir = source_dirs[0]
+    source_config = load_experiment_config_original(
+        source_dir, 'mutation_effect_on_interactions_signal')
     
 
     # binding_rates_threshold_upper = np.power(10, 6)
@@ -89,10 +89,17 @@ def main(config=None, data_writer=None):
         num_mutations = list(data['mutation_num'].unique())
         for interaction_type in interaction_types:
             interaction_cols = [c for c in data.columns if interaction_type in c and DIFF_KEY not in c and RATIO_KEY not in c and 'max' not in c and 'min' not in c]
+            units_text = f'({SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]}) ' if 'rate' in interaction_type else ''
             for log_opt in log_opts:
                 log_text = '_log' if any(log_opt) else ''
                 for m in num_mutations+['all'] + ['all-pooled']:
-                    if 'all' in m:
+                    df = pd.concat(objs=[
+                        pd.DataFrame.from_dict(
+                            {interaction_col: data[interaction_col],
+                            'mutation_num': data['mutation_num']}
+                        ) for interaction_col in interaction_cols
+                    ])
+                    if 'all' in str(m):
                         plot_grammar_m = 's'
                         hue = 'mutation_num'
                         selection_conditions = None
@@ -104,16 +111,16 @@ def main(config=None, data_writer=None):
                         selection_conditions = [('mutation_num', operator.eq, m)]
 
                     visualise_data(
-                        og_data=data,
-                        cols_x=interaction_cols,
+                        og_data=df,
+                        cols_x=[interaction_cols],
                         plot_type='histplot',
                         data_writer=data_writer,
-                        out_name=interaction_type + log_text + '_m' + m,
+                        out_name=interaction_type + log_text + '_m' + str(m),
                         hue=hue,
                         selection_conditions=selection_conditions,
                         log_axis=log_opt,
                         use_sns=True,
-                        title=f'{prettify_keys_for_label(interaction_type)} for {m} mutation{plot_grammar_m}'
+                        title=f'{prettify_keys_for_label(interaction_type)} {units_text}for {m} mutation{plot_grammar_m}'
                     )
             
 
@@ -123,7 +130,7 @@ def main(config=None, data_writer=None):
                 visualise_interactions_raw,
                 interaction_types=INTERACTION_TYPES,
                 data_writer=data_writer
-            )
+            ),
             req_input=True,
             name='visualise'
         )

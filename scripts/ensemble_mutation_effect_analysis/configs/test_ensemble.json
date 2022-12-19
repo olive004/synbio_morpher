@@ -108,7 +108,7 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "analyse_mutated_templates_loaded": {
+        "xanalyse_mutated_templates_loaded": {
             "experiment": {
                 "purpose": "analyse_mutated_templates_loaded"
             },
