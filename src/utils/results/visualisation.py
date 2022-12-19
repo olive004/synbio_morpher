@@ -68,8 +68,14 @@ class NetworkCustom(Network):
                     # for edge parameters options.
                     e[2]["label"] = e[2]["weight"]
                 if use_weighted_opacity:
-                    squashed_w = np.interp(
-                        e[2]['weight'], edge_w_range, opacity_range)
+                    if edge_w_range[1] - edge_w_range[0] == 0:
+                        if e[2]['weight'] > 1:
+                            squashed_w = 1 - 1/e[2]['weight']
+                        else:
+                            squashed_w = e[2]['weight']
+                    else:
+                        squashed_w = np.interp(
+                            e[2]['weight'], edge_w_range, opacity_range)
                     e[2]["value"] = 1
                     e[2]["color"] = {}
                     e[2]["font"] = {}

@@ -10,6 +10,7 @@ from src.utils.results.writer import DataWriter
 from src.utils.results.visualisation import Graph
 from src.utils.misc.numerical import transpose_arraylike
 from src.utils.misc.string_handling import make_time_str
+from src.utils.misc.type_handling import flatten_listlike
 from src.utils.circuit.agnostic_circuits.circuit_new import Circuit
 
 
@@ -106,8 +107,14 @@ class ResultWriter(DataWriter):
         self.output(out_name=out_name, write_func=writer, **vis_kwargs)
 
     def visualise_graph(self, circuit: Circuit, mode="pyvis", new_vis=False):
-        graph = Graph(source_matrix=circuit.interactions.eqconstants, labels=[
-            s.name for s in circuit.model.species])
+        input_species = sorted(set(flatten_listlike(
+            [r.input for r in circuit.model.reactions if r.output and r.input])))
+        idxs = [circuit.model.species.index(i) for i in input_species]
+        input_eqconstants = np.asarray([
+            [circuit.interactions.eqconstants[i, ii] for ii in idxs] for i in idxs])
+        input_eqconstants = np.ones_like(input_eqconstants) * 1
+        graph = Graph(source_matrix=input_eqconstants, labels=[
+            s.name for s in input_species])
 
         out_path = os.path.join(self.write_dir, 'graph')
         if mode == 'pyvis':

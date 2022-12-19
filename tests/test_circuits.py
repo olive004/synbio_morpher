@@ -56,6 +56,7 @@ class TestCircuit(unittest.TestCase):
         config, data_writer = script_preamble(config=config, data_writer=None)
         config = prepare_config(config_file=config)
 
+        default_interaction = 0.0015
         species_num = 9
 
         paths = [
@@ -66,15 +67,15 @@ class TestCircuit(unittest.TestCase):
             os.path.join('tests', 'configs', '4_strong.fasta')
         ]
         interactions = np.expand_dims(np.expand_dims(np.arange(
-            len(paths)), axis=1), axis=2) * np.ones((len(paths), species_num, species_num))
+            len(paths)), axis=1), axis=2) * np.ones((len(paths), species_num, species_num)) * default_interaction
 
         circuits = [construct_circuit_from_cfg(
             {'data_path': p, 'interactions_loaded': {
                 'coupled_binding_rates': i,
-                'binding_rates_association': i,
+                'binding_rates_association': np.ones_like(i)*default_interaction,
                 'binding_rates_dissociation': i,
                 'eqconstants': i
-            }}, config) for p, i in zip(paths, interactions)]
+            }}, config) for p, i in zip(paths, interactions[::-1])]
 
         CircuitModeller(result_writer=data_writer, config=config).batch_circuits(
             circuits=circuits,
@@ -87,6 +88,7 @@ class TestCircuit(unittest.TestCase):
                 "write_results": {'no_visualisations': False,
                                   'no_numerical': False}
             })
+        pass
 
     def test_refcircuits():
         # make sure that each simulation used the correct reference circuit 
