@@ -18,7 +18,8 @@ from fire import Fire
 # from scripts.analyse_mutated_templates_loaded_4.run_analyse_mutated_templates_loaded_4 import main
 # from scripts.analyse_mutated_templates_loaded_means.run_analyse_mutated_templates_loaded_means import main
 # from scripts.intarna_sandbox.run_intarna_sandbox import main
-from scripts.ensemble_mutation_effect_analysis.run_ensemble_mutation_effect_analysis import main
+# from scripts.ensemble_mutation_effect_analysis.run_ensemble_mutation_effect_analysis import main
+from scripts.ensemble_visualisation import main
 # from scripts.parameter_based_simulation.run_parameter_based_simulation import main
 # from scripts.stitch_parameter_grid.run_stitch_parameter_grid import main
 # from scripts.parameter_grid_analysis.run_parameter_grid_analysis import main

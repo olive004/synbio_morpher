@@ -73,3 +73,17 @@ class Ensembler():
         self.data_writer.output(
             out_type='json', out_name='ensemble_config', data=self.config, write_master=False,
             write_to_top_dir=True)
+
+
+
+def ensemble_func(config, data_writer):
+
+    config_file = load_json_as_dict(config)
+
+    if data_writer is None:
+        data_writer = ResultWriter(
+            purpose=config_file.get('experiment', {}).get('purpose'))
+
+    ensembler = Ensembler(data_writer=data_writer, config=config)
+
+    ensembler.run()

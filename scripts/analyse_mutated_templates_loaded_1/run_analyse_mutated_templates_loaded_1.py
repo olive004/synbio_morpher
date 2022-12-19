@@ -95,7 +95,7 @@ def main(config=None, data_writer=None):
                 for m in num_mutations+['all'] + ['all-pooled']:
                     df = pd.concat(objs=[
                         pd.DataFrame.from_dict(
-                            {interaction_col: data[interaction_col],
+                            {interaction_type: data[interaction_col],
                             'mutation_num': data['mutation_num']}
                         ) for interaction_col in interaction_cols
                     ])
@@ -112,7 +112,7 @@ def main(config=None, data_writer=None):
 
                     visualise_data(
                         og_data=df,
-                        cols_x=[interaction_cols],
+                        cols_x=[interaction_type],
                         plot_type='histplot',
                         data_writer=data_writer,
                         out_name=interaction_type + log_text + '_m' + str(m),

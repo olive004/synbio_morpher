@@ -1,0 +1,90 @@
+{
+    "experiment": {
+        "purpose": "ensemble_mutation_effect_analysis"
+    },
+    "base_configs_ensemble": {
+        "analyse_mutated_templates_loaded": {
+            "experiment": {
+                "purpose": "analyse_mutated_templates_loaded"
+            },
+            "source_dirs": {
+                "is_source_dir_incomplete": true,
+                "source_dir": "./data/ensemble_mutation_effect_analysis/2022_12_16_160419",
+                "purpose_to_get_source_dir_from": "summarise_simulation",
+                "source_dir_actually_used_POSTERITY": null
+            },
+            "tabulated_info_differentiator": "mutation_num",
+            "preprocessing_func": null,
+            "only_visualise_circuits": false
+        },
+        "analyse_mutated_templates_loaded_1": {
+            "experiment": {
+                "purpose": "analyse_mutated_templates_loaded_1"
+            },
+            "source_dirs": {
+                "is_source_dir_incomplete": true,
+                "source_dir": "./data/ensemble_mutation_effect_analysis",
+                "purpose_to_get_source_dir_from": "summarise_simulation",
+                "source_dir_actually_used_POSTERITY": null
+            },
+            "tabulated_info_differentiator": "mutation_num",
+            "preprocessing_func": null,
+            "only_visualise_circuits": false
+        },
+        "analyse_mutated_templates_loaded_2": {
+            "experiment": {
+                "purpose": "analyse_mutated_templates_loaded_2"
+            },
+            "source_dirs": {
+                "is_source_dir_incomplete": true,
+                "source_dir": "./data/ensemble_mutation_effect_analysis",
+                "purpose_to_get_source_dir_from": "summarise_simulation",
+                "source_dir_actually_used_POSTERITY": null
+            },
+            "tabulated_info_differentiator": "mutation_num",
+            "preprocessing_func": null,
+            "only_visualise_circuits": false
+        },
+        "analyse_mutated_templates_loaded_3": {
+            "experiment": {
+                "purpose": "analyse_mutated_templates_loaded_3"
+            },
+            "source_dirs": {
+                "is_source_dir_incomplete": true,
+                "source_dir": "./data/ensemble_mutation_effect_analysis",
+                "purpose_to_get_source_dir_from": "summarise_simulation",
+                "source_dir_actually_used_POSTERITY": null
+            },
+            "tabulated_info_differentiator": "mutation_num",
+            "preprocessing_func": null,
+            "only_visualise_circuits": false
+        },
+        "analyse_mutated_templates_loaded_4": {
+            "experiment": {
+                "purpose": "analyse_mutated_templates_loaded_4"
+            },
+            "source_dirs": {
+                "is_source_dir_incomplete": true,
+                "source_dir": "./data/ensemble_mutation_effect_analysis",
+                "purpose_to_get_source_dir_from": "summarise_simulation",
+                "source_dir_actually_used_POSTERITY": null
+            },
+            "tabulated_info_differentiator": "mutation_num",
+            "preprocessing_func": null,
+            "only_visualise_circuits": false
+        },
+        "analyse_mutated_templates_loaded_means": {
+            "experiment": {
+                "purpose": "analyse_mutated_templates_loaded_means"
+            },
+            "source_dirs": {
+                "is_source_dir_incomplete": true,
+                "source_dir": "./data/ensemble_mutation_effect_analysis",
+                "purpose_to_get_source_dir_from": "summarise_simulation",
+                "source_dir_actually_used_POSTERITY": null
+            },
+            "preprocessing_func": null,
+            "only_visualise_circuits": false
+        }
+    }
+}
