@@ -26,12 +26,12 @@ def get_steady_state(data):
 
 
 def fold_change(data):
-    # fold_change = jnp.where(data[:, 0] != 0, 
+    # fold_change = jnp.where(data[:, 0] != 0,
     #     data[:, -1] / data[:, 0], np.inf)
-    denom = jnp.where(data[:, 0] != 0, 
-        data[:, 0], -1)
-    fold_change = jnp.where(denom != -1, 
-        data[:, -1] / denom, np.inf)
+    denom = jnp.where(data[:, 0] != 0,
+                      data[:, 0], -1)
+    fold_change = jnp.where(denom != -1,
+                            data[:, -1] / denom, np.inf)
     if len(np.shape(fold_change)) > 1:
         fold_change = jnp.expand_dims(fold_change, axis=1)
     return fold_change
@@ -244,8 +244,9 @@ def generate_differences_ratios(analytics: dict, ref_analytics) -> Tuple[dict]:
     ratios = {}
     for k in ref_analytics.keys():
         differences[k +
-                    DIFF_KEY] = jnp.subtract(ref_analytics[k], analytics[k])
-        ratios[k + RATIO_KEY] = jnp.divide(analytics[k], ref_analytics[k])
+                    DIFF_KEY] = jnp.subtract(analytics[k], ref_analytics[k])
+        ratios[k + RATIO_KEY] = jnp.where(ref_analytics[k] !=
+                                          0, jnp.divide(analytics[k], ref_analytics[k]), np.inf)
     return differences, ratios
 
 

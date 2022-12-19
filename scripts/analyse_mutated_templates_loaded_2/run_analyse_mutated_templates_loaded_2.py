@@ -22,11 +22,11 @@ from src.utils.data.data_format_tools.common import load_json_as_dict, load_json
 def main(config=None, data_writer=None):
     # Set configs
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
-            # "scripts", "num_interacting", "configs", "base_config_test_2.json"))
-            # "scripts", "analyse_mutated_templates_loaded", "configs", "base_config.json"))
-            # "scripts", "analyse_mutated_templates_loaded", "configs", "analyse_large.json"))
-            # "scripts", "analyse_mutated_templates_loaded", "configs", "analyse_large_highmag.json"))
-            "scripts", "analyse_mutated_templates_loaded_2", "configs", "base_config.json"))
+        # "scripts", "num_interacting", "configs", "base_config_test_2.json"))
+        # "scripts", "analyse_mutated_templates_loaded", "configs", "base_config.json"))
+        # "scripts", "analyse_mutated_templates_loaded", "configs", "analyse_large.json"))
+        # "scripts", "analyse_mutated_templates_loaded", "configs", "analyse_large_highmag.json"))
+        "scripts", "analyse_mutated_templates_loaded_2", "configs", "base_config.json"))
     config_file = load_json_as_dict(config)
 
     # Start_experiment
@@ -78,7 +78,7 @@ def main(config=None, data_writer=None):
             req_output=True,
             name='concatenate_dfs'
         ),
-        # Binding rates min int's mutations
+        # Binding rates min interactions mutations
         Protocol(
             partial(
                 visualise_data, data_writer=data_writer, cols_x=[
@@ -110,10 +110,10 @@ def main(config=None, data_writer=None):
         SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"])
     protocols.append(Protocol(
         partial(
-            visualise_data, data_writer=data_writer, cols_x=[
-                'binding_rates_dissociation_min_interaction'],
+            visualise_data,
+            data_writer=data_writer,
+            cols_x=['binding_rates_dissociation_min_interaction'],
             plot_type='histplot',
-            hue='mutation_num',
             out_name='binding_rates_dissociation_min_freqs_mutations_logs',
             threshold_value_max=binding_rates_threshold_upper,
             exclude_rows_zero_in_cols=['mutation_num'],
@@ -123,6 +123,7 @@ def main(config=None, data_writer=None):
                 "element": "poly"},
             log_axis=(True, False),
             use_sns=True,
+            hue='mutation_num',
             title=f'Minimum ' + r'$k_d$' + ' strength',
             xlabel='Dissociation rate ' + r'$k_d$' + ' (' +
             f'{rate_unit})' +

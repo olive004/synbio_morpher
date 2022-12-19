@@ -287,7 +287,7 @@ def b_tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFram
             # 'path_to_signal_data': get_pathnames(first_only=True,
             #                                      file_key='signal_data',
             #                                      search_dir=circuit_dir),
-            'path_to_template_circuit': ''
+            'path_to_template_circuit': mutations['template_file'].iloc[0]
         }
         current_og_table = pd.DataFrame.from_dict(
             {k: [v] for k, v in current_og_table.items()})

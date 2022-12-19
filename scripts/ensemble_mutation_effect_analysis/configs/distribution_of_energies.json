@@ -175,6 +175,19 @@
             "tabulated_info_differentiator": "mutation_num",
             "preprocessing_func": null,
             "only_visualise_circuits": false
+        },
+        "analyse_mutated_templates_loaded_means": {
+            "experiment": {
+                "purpose": "analyse_mutated_templates_loaded_means"
+            },
+            "source_dirs": {
+                "is_source_dir_incomplete": true,
+                "source_dir": "./data/ensemble_mutation_effect_analysis",
+                "purpose_to_get_source_dir_from": "summarise_simulation",
+                "source_dir_actually_used_POSTERITY": null
+            },
+            "preprocessing_func": null,
+            "only_visualise_circuits": false
         }
     }
 }

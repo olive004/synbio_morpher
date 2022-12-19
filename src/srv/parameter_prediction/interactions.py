@@ -16,6 +16,7 @@ from src.utils.misc.type_handling import flatten_listlike
 
 
 INTERACTION_TYPES = list(INTERACTION_FILE_ADDONS.keys())
+INTERACTION_TYPES.remove('coupled_binding_rates')
 
 
 class MolecularInteractions():
@@ -209,15 +210,18 @@ def b_get_stats(interactions: List[InteractionMatrix]):
     )][:, batch_dim:] for i in range(len(interactions))]
 
     stats = {
-        "name": [i.name for i in interactions],
+        # "name": [i.name for i in interactions],
         "interacting": idxs_other_interacting,
         "self_interacting": idxs_self_interacting,
         "sample_names": [i.sample_names for i in interactions],
         "num_interacting": [len(i) for i in idxs_other_interacting],
-        "num_self_interacting": [len(i) for i in idxs_self_interacting],
+        "num_self_interacting": [len(i) for i in idxs_self_interacting]
     }
 
     for interaction_attr in INTERACTION_TYPES:
+        for i, s in  enumerate(interactions[0].sample_names):
+            for ii, s in  enumerate(interactions[0].sample_names):
+                stats[interaction_attr + '_' + str(i) + '-' + str(ii)] = b_interaction_attrs[interaction_attr][:, i, ii]
         stats[interaction_attr + '_' + 'max_interaction'] = np.max(
             np.max(b_interaction_attrs[interaction_attr], axis=1), axis=1)
         stats[interaction_attr + '_' + 'min_interaction'] = np.min(
