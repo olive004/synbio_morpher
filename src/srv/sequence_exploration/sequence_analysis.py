@@ -332,4 +332,5 @@ def b_tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFram
     info_table_path = get_pathnames(
         search_dir=data_writer.write_dir, file_key='tabulated_mutation_info.csv', first_only=True)
     info_table = pd.read_csv(info_table_path)
+    write_results(info_table)
     return info_table

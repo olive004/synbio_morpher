@@ -17,7 +17,7 @@ from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.misc.io import get_pathnames_from_mult_dirs
 
 from src.utils.results.visualisation import visualise_data
-from src.utils.data.data_format_tools.common import load_json_as_dict, load_json_mult
+from src.utils.data.data_format_tools.common import load_json_as_dict, load_csv_mult
 
 
 def main(config=None, data_writer=None):
@@ -64,15 +64,15 @@ def main(config=None, data_writer=None):
             partial(
                 get_pathnames_from_mult_dirs,
                 search_dirs=source_dirs,
-                file_key='tabulated_mutation_info.json',
+                file_key='tabulated_mutation_info.csv',
                 first_only=True),
             req_output=True,
             name='get_pathnames_from_mult_dirs'
         ),
         Protocol(
             partial(
-                load_json_mult,
-                as_type=pd.DataFrame
+                load_csv_mult
+                # as_type=pd.DataFrame
             ),
             req_input=True,
             req_output=True,

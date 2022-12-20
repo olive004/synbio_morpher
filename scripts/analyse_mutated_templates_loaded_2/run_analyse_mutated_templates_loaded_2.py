@@ -16,7 +16,7 @@ from src.utils.results.experiments import Experiment, Protocol
 from src.utils.results.result_writer import ResultWriter
 from src.utils.results.visualisation import visualise_data
 from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
-from src.utils.data.data_format_tools.common import load_json_as_dict, load_json_mult
+from src.utils.data.data_format_tools.common import load_json_as_dict, load_csv_mult
 
 
 def main(config=None, data_writer=None):
@@ -62,8 +62,8 @@ def main(config=None, data_writer=None):
         ),
         Protocol(
             partial(
-                load_json_mult,
-                as_type=pd.DataFrame
+                load_csv_mult
+                # as_type=pd.DataFrame
             ),
             req_input=True,
             req_output=True,
