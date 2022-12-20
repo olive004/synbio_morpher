@@ -4,7 +4,7 @@ import logging
 import os
 
 import numpy as np
-from src.utils.results.analytics.timeseries import get_analytics_types_all
+from src.utils.results.analytics.analytics import get_analytics_types_all
 from src.utils.results.results import Result
 from src.utils.results.writer import DataWriter
 from src.utils.results.visualisation import Graph

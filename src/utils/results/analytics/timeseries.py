@@ -3,11 +3,10 @@ import numpy as np
 import jax.numpy as jnp
 from typing import List, Tuple
 from src.utils.misc.type_handling import merge_dicts
+from src.utils.results.analytics.analytics import DIFF_KEY, RATIO_KEY
 
 
 NUM_DTYPE = np.float32
-DIFF_KEY = '_diff_to_base_circuit'
-RATIO_KEY = '_ratio_from_mutation_to_base'
 
 
 def get_derivative(data):
@@ -134,78 +133,6 @@ def frequency(data):
     spectrum = spectrum[range(int(len(data)/2))]
     freq = jnp.fft.fftfreq(len(spectrum))
     return freq
-
-
-def get_analytics_types_base() -> List[str]:
-    return ['fold_change',
-            'overshoot',
-            'max_amount',
-            'min_amount',
-            'RMSE',
-            'steady_states']
-
-
-def get_signal_dependent_analytics() -> List[str]:
-    return ['response_time',
-            'precision',
-            'precision_estimate',
-            'sensitivity',
-            'sensitivity_estimate']
-
-
-def get_analytics_types_all() -> List[str]:
-    return get_analytics_types() + get_analytics_types_diffs() + get_analytics_types_ratios()
-
-
-def get_analytics_types() -> List[str]:
-    """ The naming here has to be unique and not include small 
-    raw values like diff, ratio, max, min. """
-    return get_analytics_types_base() + get_signal_dependent_analytics()
-
-
-def get_diffs(analytics_func=get_analytics_types) -> List[str]:
-    return [a + DIFF_KEY for a in analytics_func()]
-
-
-def get_ratios(analytics_func=get_analytics_types) -> List[str]:
-    return [a + RATIO_KEY for a in analytics_func()]
-
-
-def get_signal_dependent_analytics_all() -> List[str]:
-    return get_signal_dependent_analytics() + \
-        get_diffs(get_signal_dependent_analytics) + \
-        get_ratios(get_signal_dependent_analytics)
-
-
-def get_base_analytics_all() -> List[str]:
-    return get_analytics_types_base() + \
-        get_diffs(get_analytics_types_base) + \
-        get_ratios(get_analytics_types_base)
-
-
-def get_analytics_types_diffs() -> List[str]:
-    return get_diffs(get_analytics_types)
-
-
-def get_analytics_types_ratios() -> List[str]:
-    return get_ratios(get_analytics_types)
-
-
-def get_true_names_analytics(candidate_cols: List[str]) -> List[str]:
-    true_names = []
-    analytics_sig = get_signal_dependent_analytics()
-    analytics_base = get_base_analytics_all()
-
-    for c in candidate_cols:
-        for s in analytics_sig:
-            if s in c:
-                if (c.replace(s, '')).startswith('_wrt'):
-                    # true_name = c.replace(DIFF_KEY, '').replace(RATIO_KEY, '')
-                    true_names.append(c)
-        for b in analytics_base:
-            if b == c:
-                true_names.append(c)
-    return true_names
 
 
 def generate_base_analytics(data: jnp.ndarray, time: jnp.ndarray, labels: List[str], signal_idxs: jnp.ndarray, ref_circuit_data: jnp.ndarray) -> dict:

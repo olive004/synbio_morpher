@@ -12,7 +12,7 @@ from bioreaction.model.data_tools import construct_model_fromnames
 from src.srv.io.loaders.data_loader import GeneCircuitLoader
 from src.utils.misc.numerical import NUMERICAL, cast_astype
 from src.utils.misc.type_handling import flatten_nested_listlike
-from src.utils.results.analytics.timeseries import get_analytics_types_all
+from src.utils.results.analytics.analytics import get_analytics_types_all
 from src.utils.results.visualisation import expand_data_by_col
 from src.utils.results.writer import DataWriter
 from src.srv.parameter_prediction.interactions import InteractionMatrix, INTERACTION_TYPES, b_get_stats

@@ -251,6 +251,12 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
     cols_x and cols_y: list of columns. If a column is a tuple, the other columns in the tuple
     will be treated as increasingly nested subcolumns """
     data = deepcopy(og_data)
+    logging.warning(f'{out_name}')
+    logging.warning(f'{hue}')
+    logging.warning(f'{cols_x}')
+    logging.warning(f'{cols_y}')
+    logging.warning(f'{log_axis}')
+    logging.warning(f'{plot_kwargs}')
 
     hue = hue if hue is not None else column_name_for_expanding_xcoldata
 

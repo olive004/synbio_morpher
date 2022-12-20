@@ -4,7 +4,6 @@ import logging
 import os
 from typing import Union
 import numpy as np
-import jaxlib
 import pandas as pd
 
 from src.utils.misc.type_handling import inverse_dict
@@ -97,6 +96,7 @@ def make_iterable_like(dict_like):
 
 
 def process_dict_for_json(dict_like) -> Union[list, dict]:
+    import jaxlib
     iterable_like = make_iterable_like(dict_like)
     for k, v in iterable_like:
         if type(v) == dict or type(v) == list:
@@ -118,6 +118,7 @@ def process_json(json_dict):
 
 
 def write_csv(data: pd.DataFrame, out_path: str, overwrite=False):
+    import jaxlib
     if type(data) == dict:
         data = {k: [v] for k, v in data.items()}
         data = pd.DataFrame.from_dict(data, dtype=object)
