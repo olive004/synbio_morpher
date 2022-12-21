@@ -58,7 +58,7 @@ def main(config=None, data_writer=None):
             partial(
                 get_pathnames_from_mult_dirs,
                 search_dirs=source_dirs,
-                file_key='tabulated_mutation_info.json',
+                file_key='tabulated_mutation_info.csv',
                 first_only=True),
             req_output=True,
             name='get_pathnames_from_mult_dirs'
@@ -89,6 +89,8 @@ def main(config=None, data_writer=None):
         num_mutations = list(data['mutation_num'].unique())
         for interaction_type in interaction_types:
             interaction_cols = [c for c in data.columns if interaction_type in c and DIFF_KEY not in c and RATIO_KEY not in c and 'max' not in c and 'min' not in c]
+            if not interaction_cols:
+                continue
             units_text = f'({SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]}) ' if 'rate' in interaction_type else ''
             for log_opt in log_opts:
                 log_text = '_log' if any(log_opt) else ''

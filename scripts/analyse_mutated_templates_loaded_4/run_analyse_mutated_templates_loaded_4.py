@@ -51,7 +51,7 @@ def main(config=None, data_writer=None):
             partial(
                 get_pathnames_from_mult_dirs,
                 search_dirs=source_dirs,
-                file_key='tabulated_mutation_info.json',
+                file_key='tabulated_mutation_info.csv',
                 first_only=True),
             req_output=True,
             name='get_pathnames_from_mult_dirs'

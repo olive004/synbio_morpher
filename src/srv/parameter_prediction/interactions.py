@@ -2,7 +2,6 @@
 
 import logging
 import numpy as np
-import jax.numpy as jnp
 import os
 import pandas as pd
 from typing import Tuple, List
@@ -231,18 +230,18 @@ def b_get_stats(interactions: List[InteractionMatrix]):
     return stats
 
 
-def get_interacting_species(idxs_interacting: jnp.ndarray):
+def get_interacting_species(idxs_interacting: np.ndarray):
     assert idxs_interacting.ndim == 2, f'Array of indices should be 2-D: {idxs_interacting}'
     return idxs_interacting[idxs_interacting[:, -1] != idxs_interacting[:, -2], :]
 
 
-def get_selfinteracting_species(idxs_interacting: jnp.ndarray):
+def get_selfinteracting_species(idxs_interacting: np.ndarray):
     assert idxs_interacting.ndim == 2, f'Array of indices should be 2-D: {idxs_interacting}'
     return idxs_interacting[idxs_interacting[:, -1] == idxs_interacting[:, -2], :]
 
 
-def get_unique_interacting_idxs(interaction_attr: jnp.ndarray, batch_dim: int):
-    idxs_interacting = jnp.argwhere(interaction_attr != 1)
+def get_unique_interacting_idxs(interaction_attr: np.ndarray, batch_dim: int):
+    idxs_interacting = np.argwhere(interaction_attr != 1)
     idxs_interacting = np.concatenate(
         (idxs_interacting[:, :batch_dim], idxs_interacting[:, batch_dim:].sort(axis=1)), axis=1)
     idxs_interacting = np.unique(idxs_interacting, axis=0)

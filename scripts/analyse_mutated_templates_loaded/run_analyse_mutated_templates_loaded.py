@@ -210,6 +210,8 @@ def main(config=None, data_writer=None):
                         xlabel = r'$\Delta$ ' + xlabel
 
                     cols_x = f'{interaction_type}{visualisation_type}'
+                    if cols_x == 'RMSE_ratio_from_mutation_to_base':
+                        continue
                     out_name = f'{cols_x}{log_text}_m{m}'
                     protocols.append(
                         Protocol(

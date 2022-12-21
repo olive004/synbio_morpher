@@ -10,7 +10,6 @@ from src.utils.misc.type_handling import get_unique
 from src.utils.results.writer import DataWriter
 from src.utils.misc.string_handling import add_outtype, get_all_similar, make_time_str, prettify_keys_for_label
 from src.utils.misc.type_handling import flatten_listlike, merge_dicts
-from src.utils.results.graph import NetworkCustom
 import seaborn as sns
 # import matplotlib
 # matplotlib.use('TkAgg',force=True)
@@ -136,12 +135,6 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
     cols_x and cols_y: list of columns. If a column is a tuple, the other columns in the tuple
     will be treated as increasingly nested subcolumns """
     data = deepcopy(og_data)
-    logging.warning(f'{out_name}')
-    logging.warning(f'{hue}')
-    logging.warning(f'{cols_x}')
-    logging.warning(f'{cols_y}')
-    logging.warning(f'{log_axis}')
-    logging.warning(f'{plot_kwargs}')
 
     hue = hue if hue is not None else column_name_for_expanding_xcoldata
 
@@ -367,6 +360,7 @@ def visualise_graph_pyvis(graph: nx.DiGraph,
                           out_type='html'):
     import webbrowser
     import os
+    from src.utils.results.graph import NetworkCustom
 
     if new_vis:
         out_path = f'{out_path}_{make_time_str()}'

@@ -7,7 +7,6 @@ import numpy as np
 from src.utils.results.analytics.analytics import get_analytics_types_all
 from src.utils.results.results import Result
 from src.utils.results.writer import DataWriter
-from src.utils.results.graph import Graph
 from src.utils.misc.numerical import transpose_arraylike
 from src.utils.misc.string_handling import make_time_str
 from src.utils.misc.type_handling import flatten_listlike
@@ -107,6 +106,7 @@ class ResultWriter(DataWriter):
         self.output(out_name=out_name, write_func=writer, **vis_kwargs)
 
     def visualise_graph(self, circuit: Circuit, mode="pyvis", new_vis=False):
+        from src.utils.results.graph import Graph
         input_species = sorted(set(flatten_listlike(
             [r.input for r in circuit.model.reactions if r.output and r.input])))
         idxs = [circuit.model.species.index(i) for i in input_species]
