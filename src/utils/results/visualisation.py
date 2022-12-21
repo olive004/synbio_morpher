@@ -242,11 +242,12 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
 
             return data, column
 
-        def postprocess(data, column, postprocessor_func):
+        def postprocess(data: pd.DataFrame, column: Union[str, tuple], postprocessor_func):
             if postprocessor_func:
                 data = data.drop(column, axis=1).join(
                     postprocessor_func(data[column]))
             return data
+
         data, column_x = preprocess(
             data, column_x, expand_xcoldata_using_col, normalise_data_x,
             preprocessor_func_x, column_name_for_expanding_xcoldata,

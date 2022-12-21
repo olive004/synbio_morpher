@@ -23,10 +23,10 @@ from src.utils.data.data_format_tools.common import load_json_as_dict, load_csv_
 def main(config=None, data_writer=None):
     # Set configs
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
-            # "scripts", "analyse_mutated_templates_loaded", "configs", "base_config_test_2.json"))
-            # "scripts", "analyse_mutated_templates_loaded", "configs", "analyse_large.json"))
-            # "scripts", "analyse_mutated_templates_loaded", "configs", "analyse_large_highmag.json"))
-            "scripts", "analyse_mutated_templates_loaded_4", "configs", "base_config.json"))
+        # "scripts", "analyse_mutated_templates_loaded", "configs", "base_config_test_2.json"))
+        # "scripts", "analyse_mutated_templates_loaded", "configs", "analyse_large.json"))
+        # "scripts", "analyse_mutated_templates_loaded", "configs", "analyse_large_highmag.json"))
+        "scripts", "analyse_mutated_templates_loaded_4", "configs", "base_config.json"))
     config_file = load_json_as_dict(config)
 
     # Start_experiment
@@ -89,99 +89,50 @@ def main(config=None, data_writer=None):
 
         log_text = '_log' if any(log_axis) else ''
         outlier_save_text = '_nooutliers' if remove_outliers else ''
-        # Difference
-        for analytics_type, cols_x, cols_y, title, xlabel, ylabel in [
-                [
-                    analytics_type,
-                    mutation_attr,
-                    f'{analytics_type}_diff_to_base_circuit',
-                    f'{prettify_keys_for_label(mutation_attr)} vs. {prettify_keys_for_label(analytics_type)} difference between circuit\nand mutated counterparts',
-                    f'{prettify_keys_for_label(mutation_attr)}',
-                    f'{prettify_keys_for_label(analytics_type)} difference{outlier_text}'
-                ] for analytics_type in analytics_types]:
-            complete_coly_by_str = analytics_type + \
-                '_wrt' if analytics_type in get_signal_dependent_analytics() else None
-            protocols.append(Protocol(
-                partial(
-                    visualise_data,
-                    data_writer=data_writer,
-                    cols_x=[cols_x], cols_y=[cols_y],
-                    plot_type=plot_type,
-                    out_name=f'{cols_x}_{cols_y}{log_text}{outlier_save_text}',
-                    exclude_rows_zero_in_cols=['mutation_num'],
-                    complete_coly_by_str=complete_coly_by_str,
-                    postprocessor_func_x=partial(cast_astype, 
-                        dtypes=[int, float]),
-                    selection_conditions=[(
-                        mutation_attr, operator.ne, ''
-                    )],
-                    log_axis=log_axis,
-                    use_sns=True,
-                    hue='mutation_num',
-                    expand_xcoldata_using_col=True,
-                    # expand_ycoldata_using_col=True,
-                    column_name_for_expanding_xcoldata=None,
-                    # column_name_for_expanding_ycoldata='sample_names',
-                    idx_for_expanding_xcoldata=1,
-                    # idx_for_expanding_ycoldata=0,
-                    remove_outliers_y=remove_outliers,
-                    outlier_std_threshold_y=outlier_std_threshold,
-                    title=title,
-                    xlabel=xlabel,
-                    ylabel=ylabel
-                ),
-                req_input=True,
-                name='visualise_interactions_difference',
-                skip=config_file.get('only_visualise_circuits', False)
-            )
-            )
-
-        # Ratios
-        for analytics_type, cols_x, cols_y, title, xlabel, ylabel in [
-                [
-                    analytics_type,
-                    mutation_attr,
-                    f'{analytics_type}_ratio_from_mutation_to_base',
-                    f'{prettify_keys_for_label(mutation_attr)} vs. {prettify_keys_for_label(analytics_type)} ratio from mutated\nto original circuit',
-                    f'{prettify_keys_for_label(mutation_attr)}',
-                    f'{prettify_keys_for_label(analytics_type)} ratio{outlier_text}'
-                ] for analytics_type in analytics_types]:
-            complete_coly_by_str = analytics_type + \
-                '_wrt' if analytics_type in get_signal_dependent_analytics() else None
-            protocols.append(Protocol(
-                partial(
-                    visualise_data,
-                    data_writer=data_writer,
-                    cols_x=[cols_x], cols_y=[cols_y],
-                    plot_type=plot_type,
-                    out_name=f'{cols_x}_{cols_y}{log_text}{outlier_save_text}',
-                    exclude_rows_zero_in_cols=['mutation_num'],
-                    complete_coly_by_str=complete_coly_by_str,
-                    postprocessor_func_x=partial(cast_astype, 
-                        dtypes=[int, float]),
-                    selection_conditions=[(
-                        mutation_attr, operator.ne, ''
-                    )],
-                    log_axis=log_axis,
-                    use_sns=True,
-                    hue='mutation_num',
-                    expand_xcoldata_using_col=True,
-                    # expand_ycoldata_using_col=True,
-                    column_name_for_expanding_xcoldata=None,
-                    # column_name_for_expanding_ycoldata='sample_names',
-                    idx_for_expanding_xcoldata=1,
-                    # idx_for_expanding_ycoldata=0,
-                    remove_outliers_y=remove_outliers,
-                    outlier_std_threshold_y=outlier_std_threshold,
-                    title=title,
-                    xlabel=xlabel,
-                    ylabel=ylabel
-                ),
-                req_input=True,
-                name='visualise_interactions_difference',
-                skip=config_file.get('only_visualise_circuits', False)
-            )
-            )
+        for diff_type in ['', '_diff_to_base_circuit', '_ratio_from_mutation_to_base']:
+            # Difference
+            for analytics_type, cols_x, cols_y in [
+                    [
+                        analytics_type,
+                        mutation_attr,
+                        f'{analytics_type}{diff_type}'
+                    ] for analytics_type in analytics_types]:
+                complete_coly_by_str = analytics_type + \
+                    '_wrt' if analytics_type in get_signal_dependent_analytics() else None
+                protocols.append(Protocol(
+                    partial(
+                        visualise_data,
+                        data_writer=data_writer,
+                        cols_x=[cols_x], cols_y=[cols_y],
+                        plot_type=plot_type,
+                        out_name=f'{cols_x}_{cols_y}{log_text}{outlier_save_text}',
+                        exclude_rows_zero_in_cols=['mutation_num'],
+                        complete_coly_by_str=complete_coly_by_str,
+                        postprocessor_func_x=partial(cast_astype,
+                                                     dtypes=[int, float]),
+                        selection_conditions=[(
+                            mutation_attr, operator.ne, ''
+                        )],
+                        log_axis=log_axis,
+                        use_sns=True,
+                        hue='mutation_num',
+                        expand_xcoldata_using_col=True,
+                        # expand_ycoldata_using_col=True,
+                        column_name_for_expanding_xcoldata=None,
+                        # column_name_for_expanding_ycoldata='sample_names',
+                        idx_for_expanding_xcoldata=1,
+                        # idx_for_expanding_ycoldata=0,
+                        remove_outliers_y=remove_outliers,
+                        outlier_std_threshold_y=outlier_std_threshold,
+                        title=f'{prettify_keys_for_label(cols_x)} vs. {prettify_keys_for_label(cols_y)}',
+                        xlabel=f'{prettify_keys_for_label(mutation_attr)}',
+                        ylabel=f'{prettify_keys_for_label(cols_x)}{outlier_text}'
+                    ),
+                    req_input=True,
+                    name='visualise_interactions_difference',
+                    skip=config_file.get('only_visualise_circuits', False)
+                )
+                )
 
     for remove_outliers in [False, True]:
         for log_axis in [(False, False), (False, True)]:

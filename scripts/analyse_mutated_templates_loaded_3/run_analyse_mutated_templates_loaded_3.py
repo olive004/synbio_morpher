@@ -77,84 +77,50 @@ def main(config=None, data_writer=None):
     analytics_types = get_analytics_types()
 
     ## Line plots
+    for remove_outliers in (True, False):
+        outlier_std_threshold=3
+        outlier_name = '' if remove_outliers else '_nooutliers'
+        outlier_text = f', outliers removed (>{outlier_std_threshold} standard deviations)' if remove_outliers else ''
 
-    remove_outliers=True
-    outlier_std_threshold=3
-    outlier_text = f', outliers removed (>{outlier_std_threshold} standard deviations)' if remove_outliers else ''
-
-    for mutation_attr in ['mutation_positions']:  #, 'mutation_type']: -> should be barplot
-        # Difference
-        for analytics_type, cols_x, cols_y, title, xlabel, ylabel in [
-                [
-                    analytics_type,
-                    mutation_attr,
-                    f'{analytics_type}_diff_to_base_circuit',
-                    f'{prettify_keys_for_label(mutation_attr)} vs. {prettify_keys_for_label(analytics_type)} difference between circuit\nand mutated counterparts',
-                    f'{prettify_keys_for_label(mutation_attr)}',
-                    f'{prettify_keys_for_label(analytics_type)} difference{outlier_text}'
-                ] for analytics_type in analytics_types]:
-            
-            complete_coly_by_str = analytics_type + \
-                '_wrt' if analytics_type in get_signal_dependent_analytics() else None
-            protocols.append(Protocol(
-                partial(
-                    visualise_data,
-                    data_writer=data_writer,
-                    cols_x=[cols_x], cols_y=[cols_y],
-                    plot_type='line_plot',
-                    out_name=f'{cols_x}_{cols_y}',
-                    complete_coly_by_str=complete_coly_by_str,
-                    exclude_rows_zero_in_cols=['mutation_num'],
-                    expand_xcoldata_using_col=True,
-                    log_axis=(False, True),
-                    use_sns=True,
-                    hue='mutation_num',
-                    remove_outliers_y=remove_outliers,
-                    outlier_std_threshold_y=outlier_std_threshold,
-                    title=title,
-                    xlabel=xlabel,
-                    ylabel=ylabel
-                ),
-                req_input=True,
-                name='visualise_interactions_difference',
-                skip=config_file.get('only_visualise_circuits', False)
-            )
-            )
-
-        # Ratio
-        for analytics_type, cols_x, cols_y, title, xlabel, ylabel in [
-                [
-                    analytics_type,
-                    mutation_attr,
-                    f'{analytics_type}_ratio_from_mutation_to_base',
-                    f'{prettify_keys_for_label(mutation_attr)} vs. {prettify_keys_for_label(analytics_type)} ratio from mutated\nto original circuit',
-                    f'{prettify_keys_for_label(mutation_attr)}',
-                    f'{prettify_keys_for_label(analytics_type)} ratio'
-                ] for analytics_type in analytics_types]:
-            complete_coly_by_str = analytics_type + \
-                '_wrt' if analytics_type in get_signal_dependent_analytics() else None
-            protocols.append(Protocol(
-                partial(
-                    visualise_data,
-                    data_writer=data_writer,
-                    cols_x=[cols_x], cols_y=[cols_y],
-                    plot_type='line_plot',
-                    out_name=f'{cols_x}_{cols_y}',
-                    complete_coly_by_str=complete_coly_by_str,
-                    exclude_rows_zero_in_cols=['mutation_num'],
-                    expand_xcoldata_using_col=True,
-                    log_axis=(False, False),
-                    use_sns=True,
-                    hue='mutation_num',
-                    title=title,
-                    xlabel=xlabel,
-                    ylabel=ylabel
-                ),
-                req_input=True,
-                name='visualise_interactions_difference',
-                skip=config_file.get('only_visualise_circuits', False)
-            )
-            )
+        for mutation_attr in ['mutation_positions']:  #, 'mutation_type']: -> should be barplot
+            for diff_type in ['', '_diff_to_base_circuit', '_ratio_from_mutation_to_base']:
+                # Difference
+                for analytics_type, cols_x, cols_y, title, xlabel, ylabel in [
+                        [
+                            analytics_type,
+                            mutation_attr,
+                            f'{analytics_type}{diff_type}',
+                            f'{prettify_keys_for_label(mutation_attr)} vs. {prettify_keys_for_label(analytics_type)} difference between circuit\nand mutated counterparts',
+                            f'{prettify_keys_for_label(mutation_attr)}',
+                            f'{prettify_keys_for_label(analytics_type)} difference{outlier_text}'
+                        ] for analytics_type in analytics_types]:
+                    
+                    complete_coly_by_str = analytics_type + \
+                        '_wrt' if analytics_type in get_signal_dependent_analytics() else None
+                    protocols.append(Protocol(
+                        partial(
+                            visualise_data,
+                            data_writer=data_writer,
+                            cols_x=[cols_x], cols_y=[cols_y],
+                            plot_type='line_plot',
+                            out_name=f'{cols_x}_{cols_y}{outlier_name}',
+                            complete_coly_by_str=complete_coly_by_str,
+                            exclude_rows_zero_in_cols=['mutation_num'],
+                            expand_xcoldata_using_col=True,
+                            log_axis=(False, True),
+                            use_sns=True,
+                            hue='mutation_num',
+                            remove_outliers_y=remove_outliers,
+                            outlier_std_threshold_y=outlier_std_threshold,
+                            title=title,
+                            xlabel=xlabel,
+                            ylabel=ylabel
+                        ),
+                        req_input=True,
+                        name='visualise_interactions_difference',
+                        skip=config_file.get('only_visualise_circuits', False)
+                    )
+                    )
 
     experiment = Experiment(config=config, config_file=config_file, protocols=protocols,
                             data_writer=data_writer)
