@@ -248,9 +248,9 @@ def b_tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFram
                                         column_for_expanding_coldata='sample_names', idx_for_expanding_coldata=0)
         data_writer.output(
             out_type='csv', out_name='tabulated_mutation_info', **{'data': info_table})
-        json_info_table = remove_invalid_json_values(info_table)
-        data_writer.output(
-            out_type='json', out_name='tabulated_mutation_info', **{'data': json_info_table})
+        # json_info_table = remove_invalid_json_values(info_table)
+        # data_writer.output(
+        #     out_type='json', out_name='tabulated_mutation_info', **{'data': json_info_table})
 
     info_table = init_info_table()
     circuit_dirs = get_subdirectories(source_dir, min_condition=3)
@@ -332,5 +332,4 @@ def b_tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFram
     info_table_path = get_pathnames(
         search_dir=data_writer.write_dir, file_key='tabulated_mutation_info.csv', first_only=True)
     info_table = pd.read_csv(info_table_path)
-    write_results(info_table)
     return info_table
