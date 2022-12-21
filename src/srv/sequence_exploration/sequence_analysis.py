@@ -221,19 +221,6 @@ def b_tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFram
         # Contract columns so that the results match the length of the current table
         result_table = process_results(result_table)
 
-        # Difference & Ratio to original
-
-        # ref_report = make_result_report(ref_source_dir, all_sample_names, chosen_sample_names)
-        # diff_results, ratio_results = update_diff_to_base_circuit(
-        #     stats=result_table, ref_stats=ref_report, diffable_cols=list(set(result_table.columns) - set(['sample_name', 'result_source_dir']))
-        # )
-        # diff_results['result_source_dir'] = result_table['result_source_dir']
-        # ratio_results['result_source_dir'] = result_table['result_source_dir']
-        # diff_results['sample_name'] = result_table['sample_name']
-        # ratio_results['sample_name'] = result_table['sample_name']
-        # diff_results, ratio_results = process_results(
-        #     diff_results), process_results(ratio_results)
-
         new_table = pd.concat([pd.DataFrame.from_dict(
             curr_table), int_stats, diff_interactions, ratio_interactions, result_table], axis=1)
         new_table = new_table.explode(list(result_table.columns))
@@ -265,10 +252,6 @@ def b_tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFram
         else:
             mutation_dirs = sorted(get_subdirectories(circuit_dir))
 
-        # Unmutated circuit
-        # interaction_dir = os.path.dirname(
-        #     os.path.dirname(mutations['template_file'].values[0]))
-
         interaction_stats_og, sample_names = make_interaction_stats_and_sample_names(
             [circuit_dir])
         all_sample_names = [
@@ -277,16 +260,9 @@ def b_tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFram
         current_og_table = {
             'circuit_name': circuit_name,
             'mutation_name': 'ref_circuit',
-            # 'source_species': '',
             'mutation_num': 0,
             'mutation_type': [],
             'mutation_positions': [],
-            # 'path_to_steady_state_data': get_pathnames(first_only=True,
-            #                                            file_key='steady_states_data',
-            #                                            search_dir=circuit_dir),
-            # 'path_to_signal_data': get_pathnames(first_only=True,
-            #                                      file_key='signal_data',
-            #                                      search_dir=circuit_dir),
             'path_to_template_circuit': mutations['template_file'].iloc[0]
         }
         current_og_table = pd.DataFrame.from_dict(
