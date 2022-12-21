@@ -15,16 +15,17 @@ from src.utils.misc.type_handling import flatten_listlike
 
 
 INTERACTION_TYPES = list(INTERACTION_FILE_ADDONS.keys())
-INTERACTION_TYPES.remove('coupled_binding_rates')
+# INTERACTION_TYPES.remove('coupled_binding_rates')
 
 
 class MolecularInteractions():
 
-    def __init__(self, coupled_binding_rates,
+    def __init__(self,
+                 # coupled_binding_rates,
                  binding_rates_association=None,
                  binding_rates_dissociation=None,
                  eqconstants=None, units=None) -> None:
-        self.coupled_binding_rates = coupled_binding_rates
+        # self.coupled_binding_rates = coupled_binding_rates
         self.binding_rates_association = binding_rates_association
         self.binding_rates_dissociation = binding_rates_dissociation
         self.eqconstants = eqconstants
@@ -37,7 +38,7 @@ class InteractionMatrix():
                  matrix_paths: dict = None,
                  experiment_dir: str = None,
                  num_nodes: int = None,
-                 units: str='',
+                 units: str = '',
                  interactions_kwargs: dict = None):
         super().__init__()
 
@@ -50,7 +51,7 @@ class InteractionMatrix():
         random_matrices = np.random.rand(
             init_nodes, init_nodes, 4) * 0.000001
         self.interactions = MolecularInteractions(
-            coupled_binding_rates=random_matrices[:, :, 0],
+            # coupled_binding_rates=random_matrices[:, :, 0],
             binding_rates_association=random_matrices[:, :, 1],
             binding_rates_dissociation=random_matrices[:, :, 2],
             eqconstants=random_matrices[:, :, 3], units='test'
@@ -138,7 +139,7 @@ class InteractionData():
             self.interactions = self.parse(data)
         else:
             self.interactions = MolecularInteractions(
-                coupled_binding_rates=np.random.rand(len(data), len(data)),
+                # coupled_binding_rates=np.random.rand(len(data), len(data)),
                 binding_rates_association=np.random.rand(len(data), len(data)),
                 binding_rates_dissociation=np.random.rand(
                     len(data), len(data)),
@@ -154,10 +155,10 @@ class InteractionData():
 
     def parse(self, data: dict) -> MolecularInteractions:
         matrix, a_rates, d_rates = self.make_matrix(data)
-        coupled_binding_rates = self.calculate_full_coupling_of_rates(
-            matrix, d_rates)
+        # coupled_binding_rates = self.calculate_full_coupling_of_rates(
+        #     matrix, d_rates)
         return MolecularInteractions(
-            coupled_binding_rates=coupled_binding_rates, binding_rates_association=a_rates,
+            binding_rates_association=a_rates,
             binding_rates_dissociation=d_rates, eqconstants=matrix)
 
     def make_matrix(self, data: dict) -> Tuple[np.ndarray, np.ndarray]:
@@ -218,9 +219,10 @@ def b_get_stats(interactions: List[InteractionMatrix]):
     }
 
     for interaction_attr in INTERACTION_TYPES:
-        for i, s in  enumerate(interactions[0].sample_names):
-            for ii, s in  enumerate(interactions[0].sample_names):
-                stats[interaction_attr + '_' + str(i) + '-' + str(ii)] = b_interaction_attrs[interaction_attr][:, i, ii]
+        for i, s in enumerate(interactions[0].sample_names):
+            for ii, s in enumerate(interactions[0].sample_names):
+                stats[interaction_attr + '_' + str(i) + '-' + str(
+                    ii)] = b_interaction_attrs[interaction_attr][:, i, ii]
         stats[interaction_attr + '_' + 'max_interaction'] = np.max(
             np.max(b_interaction_attrs[interaction_attr], axis=1), axis=1)
         stats[interaction_attr + '_' + 'min_interaction'] = np.min(

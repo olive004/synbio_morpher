@@ -69,7 +69,6 @@ def five_circuits():
 
     circuits = [construct_circuit_from_cfg(
         {'data_path': p, 'interactions_loaded': {
-            'coupled_binding_rates': i,
             'binding_rates_association': np.ones_like(i)*default_interaction,
             'binding_rates_dissociation': i,
             'eqconstants': i

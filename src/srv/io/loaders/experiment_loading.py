@@ -8,7 +8,7 @@ from src.utils.misc.units import per_mol_to_per_molecule
 
 
 INTERACTION_FILE_ADDONS = {
-    'coupled_binding_rates': SIMULATOR_UNITS['IntaRNA']['rate'],
+    # 'coupled_binding_rates': SIMULATOR_UNITS['IntaRNA']['rate'],
     'binding_rates_dissociation': SIMULATOR_UNITS['IntaRNA']['rate'],
     'eqconstants': 'eqconstants'
 }

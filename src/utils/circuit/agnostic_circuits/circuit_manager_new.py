@@ -57,17 +57,17 @@ class CircuitModeller():
         circuit = self.find_steady_states(circuit)
         return circuit
 
-    def make_modelling_func(self, modelling_func, circuit: Circuit,
-                            fixed_value=None,
-                            fixed_value_idx: int = None):
+    # def make_modelling_func(self, modelling_func, circuit: Circuit,
+    #                         fixed_value=None,
+    #                         fixed_value_idx: int = None):
 
-        return partial(modelling_func, full_interactions=circuit.interactions.coupled_binding_rates,
-                       creation_rates=circuit.qreactions.reactions.forward_rates.flatten(),
-                       degradation_rates=circuit.qreactions.reactions.reverse_rates.flatten(),
-                       signal=fixed_value,
-                       signal_idx=fixed_value_idx,
-                       identity_matrix=np.identity(circuit.circuit_size)
-                       )
+    #     return partial(modelling_func, full_interactions=circuit.interactions.coupled_binding_rates,
+    #                    creation_rates=circuit.qreactions.reactions.forward_rates.flatten(),
+    #                    degradation_rates=circuit.qreactions.reactions.reverse_rates.flatten(),
+    #                    signal=fixed_value,
+    #                    signal_idx=fixed_value_idx,
+    #                    identity_matrix=np.identity(circuit.circuit_size)
+    #                    )
 
     # @time_it
     def compute_interaction_strengths(self, circuit: Circuit):
@@ -81,7 +81,7 @@ class CircuitModeller():
         filename_addons = sorted(INTERACTION_FILE_ADDONS.keys())
         for interaction_matrix, filename_addon in zip(
             [circuit.interactions.binding_rates_dissociation,
-             circuit.interactions.coupled_binding_rates,
+            #  circuit.interactions.coupled_binding_rates,
              circuit.interactions.eqconstants], filename_addons
         ):
             self.result_writer.output(
