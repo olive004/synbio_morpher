@@ -6,6 +6,7 @@
 *.cpython-38.pyc
 *.pyc
 __pycache__
+__pycache__/*
 *.txt
 !requirements.txt
 data/*
