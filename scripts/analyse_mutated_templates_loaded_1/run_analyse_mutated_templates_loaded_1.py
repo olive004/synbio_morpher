@@ -43,7 +43,6 @@ def main(config=None, data_writer=None):
     source_dir = source_dirs[0]
     source_config = load_experiment_config_original(
         source_dir, 'mutation_effect_on_interactions_signal')
-    
 
     # binding_rates_threshold_upper = np.power(10, 6)
     binding_rates_threshold_upper = None
@@ -88,7 +87,8 @@ def main(config=None, data_writer=None):
         log_opts = [(False, False), (True, False)]
         num_mutations = list(data['mutation_num'].unique())
         for interaction_type in interaction_types:
-            interaction_cols = [c for c in data.columns if interaction_type in c and DIFF_KEY not in c and RATIO_KEY not in c and 'max' not in c and 'min' not in c]
+            interaction_cols = [
+                c for c in data.columns if interaction_type in c and DIFF_KEY not in c and RATIO_KEY not in c and 'max' not in c and 'min' not in c]
             if not interaction_cols:
                 continue
             units_text = f'({SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]}) ' if 'rate' in interaction_type else ''
@@ -98,7 +98,7 @@ def main(config=None, data_writer=None):
                     df = pd.concat(objs=[
                         pd.DataFrame.from_dict(
                             {interaction_type: data[interaction_col],
-                            'mutation_num': data['mutation_num']}
+                             'mutation_num': data['mutation_num']}
                         ) for interaction_col in interaction_cols
                     ])
                     if 'all' in str(m):
@@ -110,7 +110,8 @@ def main(config=None, data_writer=None):
                     else:
                         plot_grammar_m = 's' if m > 1 else ''
                         hue = None
-                        selection_conditions = [('mutation_num', operator.eq, m)]
+                        selection_conditions = [
+                            ('mutation_num', operator.eq, m)]
 
                     visualise_data(
                         og_data=df,
@@ -124,7 +125,6 @@ def main(config=None, data_writer=None):
                         use_sns=True,
                         title=f'{prettify_keys_for_label(interaction_type)} {units_text}for {m} mutation{plot_grammar_m}'
                     )
-            
 
     protocols.append(
         Protocol(
@@ -137,7 +137,6 @@ def main(config=None, data_writer=None):
             name='visualise'
         )
     )
-
 
     experiment = Experiment(config=config, config_file=config_file, protocols=protocols,
                             data_writer=data_writer)

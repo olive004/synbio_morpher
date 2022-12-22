@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import os
 from src.utils.common.setup_new import construct_circuit_from_cfg, prepare_config
 from src.srv.io.manage.script_manager import script_preamble
@@ -58,21 +59,62 @@ def five_circuits():
     species_num = 9
 
     paths = [
-        os.path.join('tests', 'configs', '0_weak.fasta'), # toy_mRNA_circuit_1890
-        os.path.join('tests', 'configs', '1_med_weak.fasta'), # toy_mRNA_circuit_1916
-        os.path.join('tests', 'configs', '2_medium.fasta'), # toy_mRNA_circuit_1598
-        os.path.join('tests', 'configs', '3_med_strong.fasta'), # toy_mRNA_circuit_1196
-        os.path.join('tests', 'configs', '4_strong.fasta') # toy_mRNA_circuit_1491
+        # toy_mRNA_circuit_1890
+        os.path.join('tests', 'configs', 'circuits', '0_weak.fasta'),
+        # toy_mRNA_circuit_1916
+        os.path.join('tests', 'configs', 'circuits', '1_med_weak.fasta'),
+        # toy_mRNA_circuit_1598
+        os.path.join('tests', 'configs', 'circuits', '2_medium.fasta'),
+        # toy_mRNA_circuit_1196
+        os.path.join('tests', 'configs', 'circuits', '3_med_strong.fasta'),
+        # toy_mRNA_circuit_1491
+        os.path.join('tests', 'configs', 'circuits', '4_strong.fasta')
     ]
-    interactions = np.expand_dims(np.expand_dims(np.arange(
-        len(paths)), axis=1), axis=2) * np.ones((len(paths), species_num, species_num)) * default_interaction
+
+    binding_rates_dissociation_paths = [
+        # toy_mRNA_circuit_1890
+        os.path.join('tests', 'configs', 'binding_rates_association',
+                     '0_weak_binding_rates_association.csv'),
+        # toy_mRNA_circuit_1916
+        os.path.join('tests', 'configs', 'binding_rates_association',
+                     '1_med_weak_binding_rates_association.csv'),
+        # toy_mRNA_circuit_1598
+        os.path.join('tests', 'configs', 'binding_rates_association',
+                     '2_medium_binding_rates_association.csv'),
+        # toy_mRNA_circuit_1196
+        os.path.join('tests', 'configs', 'binding_rates_association',
+                     '3_med_strong_binding_rates_association.csv'),
+        # toy_mRNA_circuit_1491
+        os.path.join('tests', 'configs', 'binding_rates_association',
+                     '4_strong_binding_rates_association.csv')
+    ]
+    eqconstants_paths = [
+        # toy_mRNA_circuit_1890
+        os.path.join('tests', 'configs', 'eqconstants',
+                     '0_weak_eqconstants.csv'),
+        # toy_mRNA_circuit_1916
+        os.path.join('tests', 'configs', 'eqconstants',
+                     '1_med_weak_eqconstants.csv'),
+        # toy_mRNA_circuit_1598
+        os.path.join('tests', 'configs', 'eqconstants',
+                     '2_medium_eqconstants.csv'),
+        # toy_mRNA_circuit_1196
+        os.path.join('tests', 'configs', 'eqconstants',
+                     '3_med_strong_eqconstants.csv'),
+        # toy_mRNA_circuit_1491
+        os.path.join('tests', 'configs', 'eqconstants',
+                     '4_strong_eqconstants.csv')
+    ]
+
+    # interactions = np.expand_dims(np.expand_dims(np.arange(
+    #     len(paths)), axis=1), axis=2) * np.ones((len(paths), species_num, species_num)) * default_interaction
+    interactions_cfg = [
+        {'binding_rates_association': config['molecular_params']
+            ['creation_rate'], 'binding_rates_dissociation': bp, 'eqconstants': ep}
+        for bp, ep in zip(binding_rates_dissociation_paths, eqconstants_paths)]
 
     circuits = [construct_circuit_from_cfg(
-        {'data_path': p, 'interactions_loaded': {
-            'binding_rates_association': np.ones_like(i)*default_interaction,
-            'binding_rates_dissociation': i,
-            'eqconstants': i
-        }}, config) for p, i in zip(paths, interactions[::-1])]
+        {'data_path': p, 'interactions': i}, config) for p, i in zip(paths, interactions_cfg)]
 
     CircuitModeller(result_writer=data_writer, config=config).batch_circuits(
         circuits=circuits,
@@ -81,7 +123,7 @@ def five_circuits():
         methods={
             "init_circuit": {},
             "simulate_signal_batch": {'save_numerical_vis_data': True, 'ref_circuit': None,
-                                        'batch': True},
+                                      'batch': True},
             "write_results": {'no_visualisations': False,
-                                'no_numerical': False}
+                              'no_numerical': False}
         })
