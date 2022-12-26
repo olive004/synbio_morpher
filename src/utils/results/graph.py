@@ -11,7 +11,7 @@ class NetworkCustom(Network):
 
     def from_nx(self, nx_graph, node_size_transf=(lambda x: x), edge_weight_transf=(lambda x: x),
                 default_node_size=10, default_edge_weight=1, show_edge_weights=False,
-                use_weighted_opacity=True, invert_opacity=True):
+                use_weighted_opacity=True, invert_opacity=False):
         """
         Overriding default pyvis Network() function to allow show_edge_weights
         """

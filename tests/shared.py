@@ -71,47 +71,28 @@ def five_circuits():
         os.path.join('tests', 'configs', 'circuits', '4_strong.fasta')
     ]
 
-    binding_rates_dissociation_paths = [
-        # toy_mRNA_circuit_1890
-        os.path.join('tests', 'configs', 'binding_rates_association',
-                     '0_weak_binding_rates_association.csv'),
-        # toy_mRNA_circuit_1916
-        os.path.join('tests', 'configs', 'binding_rates_association',
-                     '1_med_weak_binding_rates_association.csv'),
-        # toy_mRNA_circuit_1598
-        os.path.join('tests', 'configs', 'binding_rates_association',
-                     '2_medium_binding_rates_association.csv'),
-        # toy_mRNA_circuit_1196
-        os.path.join('tests', 'configs', 'binding_rates_association',
-                     '3_med_strong_binding_rates_association.csv'),
-        # toy_mRNA_circuit_1491
-        os.path.join('tests', 'configs', 'binding_rates_association',
-                     '4_strong_binding_rates_association.csv')
-    ]
-    eqconstants_paths = [
-        # toy_mRNA_circuit_1890
-        os.path.join('tests', 'configs', 'eqconstants',
-                     '0_weak_eqconstants.csv'),
-        # toy_mRNA_circuit_1916
-        os.path.join('tests', 'configs', 'eqconstants',
-                     '1_med_weak_eqconstants.csv'),
-        # toy_mRNA_circuit_1598
-        os.path.join('tests', 'configs', 'eqconstants',
-                     '2_medium_eqconstants.csv'),
-        # toy_mRNA_circuit_1196
-        os.path.join('tests', 'configs', 'eqconstants',
-                     '3_med_strong_eqconstants.csv'),
-        # toy_mRNA_circuit_1491
-        os.path.join('tests', 'configs', 'eqconstants',
-                     '4_strong_eqconstants.csv')
-    ]
+    interaction_paths = []
+    for inter in ['binding_rates_association', 'eqconstants']:
+        interaction_paths.append([
+            # toy_mRNA_circuit_1890
+            os.path.join('tests', 'configs', inter, f'0_weak_{inter}.csv'),
+            # toy_mRNA_circuit_1916
+            os.path.join('tests', 'configs', inter, f'1_med_weak_{inter}.csv'),
+            # toy_mRNA_circuit_1598
+            os.path.join('tests', 'configs', inter, f'2_medium_{inter}.csv'),
+            # toy_mRNA_circuit_1196
+            os.path.join('tests', 'configs', inter,
+                         f'3_med_strong_{inter}.csv'),
+            # toy_mRNA_circuit_1491
+            os.path.join('tests', 'configs', inter, f'4_strong_{inter}.csv')
+        ])
 
     # interactions = np.expand_dims(np.expand_dims(np.arange(
     #     len(paths)), axis=1), axis=2) * np.ones((len(paths), species_num, species_num)) * default_interaction
     interactions_cfg = [
         {'binding_rates_association': config['molecular_params']
             ['creation_rate'], 'binding_rates_dissociation': bp, 'eqconstants': ep}
-        for bp, ep in zip(binding_rates_dissociation_paths, eqconstants_paths)]
+        for bp, ep in zip(interaction_paths[0], interaction_paths[1])]
 
     circuits = [construct_circuit_from_cfg(
         {'data_path': p, 'interactions': i}, config) for p, i in zip(paths, interactions_cfg)]
