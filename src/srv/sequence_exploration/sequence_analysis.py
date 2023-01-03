@@ -10,15 +10,16 @@ from bioreaction.model.data_tools import construct_model_fromnames
 
 
 from src.srv.io.loaders.data_loader import GeneCircuitLoader
+from src.utils.data.data_format_tools.common import load_csv_mult
 from src.utils.misc.numerical import NUMERICAL, cast_astype
+from src.utils.misc.io import get_pathnames, get_subdirectories, get_pathnames_from_mult_dirs
+from src.utils.misc.scripts_io import get_path_from_output_summary, get_root_experiment_folder, \
+    load_experiment_config, load_experiment_output_summary, load_result_report
 from src.utils.misc.type_handling import flatten_nested_listlike
 from src.utils.results.analytics.analytics import get_analytics_types_all
 from src.utils.results.visualisation import expand_data_by_col
 from src.utils.results.writer import DataWriter
 from src.srv.parameter_prediction.interactions import InteractionMatrix, INTERACTION_TYPES, b_get_stats
-from src.utils.misc.io import get_pathnames, get_subdirectories
-from src.utils.misc.scripts_io import get_path_from_output_summary, get_root_experiment_folder, \
-    load_experiment_config, load_experiment_output_summary, load_result_report
 
 
 INTERACTION_STATS = ['max_interaction',
@@ -35,6 +36,19 @@ MUTATION_INFO_COLUMN_NAMES = [
     # 'path_to_signal_data',
     'path_to_template_circuit'
 ]
+
+
+def load_tabulated_info(source_dirs: list):
+
+    info_pathnames = get_pathnames_from_mult_dirs(
+        search_dirs=source_dirs,
+        file_key='tabulated_mutation_info.csv',
+        first_only=True)
+    info = load_csv_mult(info_pathnames)
+    info = pd.concat(info,
+                     axis=0,
+                     ignore_index=True)
+    return info
 
 
 def generate_interaction_stats(path_name: dict, writer: DataWriter = None, experiment_dir: str = None, **stat_addons) -> pd.DataFrame:
@@ -125,7 +139,7 @@ def get_mutation_info_columns():
     return info_column_names
 
 
-def b_tabulate_mutation_info(source_dir, data_writer: DataWriter) -> pd.DataFrame:
+def b_tabulate_mutation_info(source_dir: str, data_writer: DataWriter) -> pd.DataFrame:
 
     def init_info_table() -> pd.DataFrame:
         info_column_names = get_mutation_info_columns()

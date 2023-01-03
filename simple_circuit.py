@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import os
 from src.utils.common.setup_new import construct_circuit_from_cfg, prepare_config
+from src.srv.sequence_exploration.sequence_analysis import load_tabulated_info, b_tabulate_mutation_info
 from src.srv.io.manage.script_manager import script_preamble
 from src.utils.circuit.agnostic_circuits.circuit_manager_new import CircuitModeller
 
@@ -108,5 +109,9 @@ def five_circuits():
             "write_results": {'no_visualisations': False,
                               'no_numerical': False}
         })
+
+    b_tabulate_mutation_info(data_writer.ensemble_write_dir, data_writer=data_writer)
+    source_dirs = [data_writer.ensemble_write_dir]
+    info = load_tabulated_info(source_dirs)
 
 five_circuits()

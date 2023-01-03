@@ -2,6 +2,7 @@
 
 from copy import deepcopy
 from datetime import datetime
+from typing import Tuple
 import logging
 import os
 from src.utils.results.writer import DataWriter
@@ -23,7 +24,7 @@ def import_script_func(script_name):
     return getattr(script_module, 'main')
 
 
-def script_preamble(config, data_writer, alt_cfg_filepath: str = None, use_resultwriter=True) -> tuple:
+def script_preamble(config, data_writer, alt_cfg_filepath: str = None, use_resultwriter=True) -> Tuple[dict, DataWriter]:
     Writer = ResultWriter if use_resultwriter else DataWriter
     if config is None:
         config = alt_cfg_filepath

@@ -4,6 +4,7 @@ import os
 from src.utils.misc.string_handling import remove_file_extension
 from src.utils.misc.type_handling import nest_list_dict, flatten_nested_listlike
 from src.utils.misc.helper import vanilla_return
+from src.utils.misc.errors import ScriptError
 from src.utils.data.data_format_tools.common import load_multiple_as_list
 
 
@@ -71,7 +72,7 @@ def get_pathnames(search_dir: str, file_key: Union[List, str] = '', first_only: 
         path_names = get_pathnames(os.path.join(search_dir, subdir), file_key=file_key,
                                    first_only=first_only, allow_empty=allow_empty, conditional=conditional)
     if not path_names and not allow_empty:
-        raise ValueError(
+        raise ScriptError(
             f'Could not find file matching "{file_key}" in {search_dir}.')
     return path_names
 
