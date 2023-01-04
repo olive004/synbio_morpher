@@ -39,14 +39,16 @@ class InteractionMatrix():
                  experiment_dir: str = None,
                  num_nodes: int = None,
                  units: str = '',
+                 experiment_config: dict = None,
                  interactions_kwargs: dict = None):
         super().__init__()
 
         self.name = None
+        self.sample_names = None
         self.units = units
         self.experiment_dir = experiment_dir
+        self.experiment_config = experiment_config
 
-        self.sample_names = None
         init_nodes = num_nodes if num_nodes is not None else 3
         random_matrices = np.random.rand(
             init_nodes, init_nodes, 4) * 0.000001
@@ -56,6 +58,7 @@ class InteractionMatrix():
             binding_rates_dissociation=random_matrices[:, :, 2],
             eqconstants=random_matrices[:, :, 3], units='test'
         )
+
         if interactions_kwargs is not None:
             self.interactions = MolecularInteractions(**interactions_kwargs)
 
@@ -66,7 +69,7 @@ class InteractionMatrix():
                 self.interactions.__setattr__(matrix_type, loaded_matrix)
                 self.interactions.units = self.units
             self.interactions.binding_rates_association = load_param(
-                list(matrix_paths.values())[0], 'association_binding_rate'
+                list(matrix_paths.values())[0], 'association_binding_rate', experiment_config=experiment_config
             ) * np.ones_like(self.interactions.binding_rates_dissociation)
 
     def load(self, filepath):
@@ -79,7 +82,7 @@ class InteractionMatrix():
         else:
             raise TypeError(
                 f'Unsupported filetype {filetype} for loading {filepath}')
-        units = load_units(filepath)
+        units = load_units(filepath, experiment_config=self.experiment_config)
         return matrix, units, sample_names
 
     def isolate_circuit_name(self, circuit_filepath, filetype):
@@ -244,8 +247,11 @@ def get_selfinteracting_species(idxs_interacting: np.ndarray):
 
 def get_unique_interacting_idxs(interaction_attr: np.ndarray, batch_dim: int):
     idxs_interacting = np.argwhere(interaction_attr != 1)
-    idxs_interacting = np.concatenate(
-        (idxs_interacting[:, :batch_dim], idxs_interacting[:, batch_dim:].sort(axis=1)), axis=1)
+    idxs_interacting.sort(axis=1)
+    samples = idxs_interacting[:, batch_dim:]
+    samples.sort(axis=1)  # In-place sorting of idxs_interacting
+    # idxs_interacting = np.concatenate(
+    #     (idxs_interacting[:, :batch_dim], samples), axis=1)
     idxs_interacting = np.unique(idxs_interacting, axis=0)
     return idxs_interacting
     # Assuming symmetry in interactions

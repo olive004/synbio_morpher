@@ -16,24 +16,25 @@ INTERACTION_FILE_ADDONS = {
 }
 
 
-def load_param(filepath, param):
-    experiment_config = load_experiment_config(
-        experiment_folder=get_root_experiment_folder(filepath))
-    p = per_mol_to_per_molecule(load_json_as_dict(
-        experiment_config.get('molecular_params'))[param])
-    return p
-
-
-def load_units(filepath):
-
-    try:
+def load_param(filepath, param, experiment_config: dict = None) -> dict:
+    if experiment_config is None:
         experiment_config = load_experiment_config(
             experiment_folder=get_root_experiment_folder(filepath))
+    return per_mol_to_per_molecule(load_json_as_dict(
+        experiment_config.get('molecular_params'))[param])
 
-    except ExperimentError:
-        logging.warning(
-            f'Supply a valid experiment directory instead of {filepath}')
-        return 'unknown'
+
+def load_units(filepath, experiment_config: dict = None):
+
+    if experiment_config is None:
+        try:
+            experiment_config = load_experiment_config(
+                experiment_folder=get_root_experiment_folder(filepath))
+
+        except (FileNotFoundError, ExperimentError):
+            logging.warning(
+                f'Supply a valid experiment directory instead of {filepath}')
+            return 'unknown'
 
     simulator_cfgs = experiment_config.get('interaction_simulator')
 

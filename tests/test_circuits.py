@@ -1,7 +1,7 @@
 import unittest
 
 
-from tests.shared import five_circuits
+from tests.shared import five_circuits, simulate
 
 
 class TestCircuit(unittest.TestCase):
@@ -11,7 +11,8 @@ class TestCircuit(unittest.TestCase):
 
     def test_refcircuits():
         # make sure that each simulation used the correct reference circuit 
-        pass
+        circuits, config, data_writer = five_circuits()
+        five_circuits()
 
 
 def main(args=None):

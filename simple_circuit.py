@@ -29,7 +29,7 @@ def five_circuits():
         },
         "mutations": {
             "algorithm": "random",
-            "mutation_counts": 2,
+            "mutation_counts": 1,
             "mutation_nums_within_sequence": [1],
             "mutation_nums_per_position": 1,
             "concurrent_species_to_mutate": "single_species_at_a_time"
@@ -111,10 +111,10 @@ def mutate(circuits, config, data_writer):
 
     for c in circuits:
         c = Evolver(data_writer=data_writer,
-                sequence_type=config.get('system_type')).mutate(
-                    c,
-                    write_to_subsystem=True,
-                    algorithm=config.get('mutations', {}).get('algorithm', 'random'))
+                    sequence_type=config.get('system_type')).mutate(
+            c,
+            write_to_subsystem=True,
+            algorithm=config.get('mutations', {}).get('algorithm', 'random'))
     return circuits, config, data_writer
 
 
@@ -132,8 +132,8 @@ def simulate(circuits, config, data_writer):
                               'no_numerical': False}
         })
 
-
-    b_tabulate_mutation_info(data_writer.ensemble_write_dir, data_writer=data_writer)
+    b_tabulate_mutation_info(data_writer.ensemble_write_dir,
+                             data_writer=data_writer, experiment_config=config)
     source_dirs = [data_writer.ensemble_write_dir]
     info = load_tabulated_info(source_dirs)
 

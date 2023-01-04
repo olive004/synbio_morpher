@@ -139,7 +139,7 @@ def get_mutation_info_columns():
     return info_column_names
 
 
-def b_tabulate_mutation_info(source_dir: str, data_writer: DataWriter) -> pd.DataFrame:
+def b_tabulate_mutation_info(source_dir: str, data_writer: DataWriter, experiment_config: dict = None) -> pd.DataFrame:
 
     def init_info_table() -> pd.DataFrame:
         info_column_names = get_mutation_info_columns()
@@ -155,14 +155,15 @@ def b_tabulate_mutation_info(source_dir: str, data_writer: DataWriter) -> pd.Dat
                 assert table[target] in table[pathname], \
                     f'Name {table[target]} should be in path {table[pathname]}.'
 
-    def make_interaction_stats_and_sample_names(source_interaction_dirs: List[str]):
+    def make_interaction_stats_and_sample_names(source_interaction_dirs: List[str], experiment_config: dict = None):
         interaction_matrices = [None] * len(source_interaction_dirs)
         for i, source_interaction_dir in enumerate(source_interaction_dirs):
             interaction_matrices[i] = InteractionMatrix(
                 matrix_paths=get_pathnames(file_key=INTERACTION_TYPES,
                                            search_dir=source_interaction_dir,
                                            subdirs=INTERACTION_TYPES,
-                                           as_dict=True, first_only=True)
+                                           as_dict=True, first_only=True),
+                experiment_config=experiment_config
             )
         return b_get_stats(interaction_matrices), interaction_matrices[0].sample_names
 
@@ -267,7 +268,7 @@ def b_tabulate_mutation_info(source_dir: str, data_writer: DataWriter) -> pd.Dat
             mutation_dirs = sorted(get_subdirectories(circuit_dir))
 
         interaction_stats_og, sample_names = make_interaction_stats_and_sample_names(
-            [circuit_dir])
+            [circuit_dir], experiment_config=experiment_config)
         all_sample_names = [
             s.name for s in construct_model_fromnames(sample_names).species]
 
@@ -288,7 +289,7 @@ def b_tabulate_mutation_info(source_dir: str, data_writer: DataWriter) -> pd.Dat
                                        all_sample_names=all_sample_names, chosen_sample_names=sample_names)
 
         interaction_stats = make_interaction_stats_and_sample_names(
-            mutation_dirs)[0]
+            mutation_dirs, experiment_config=experiment_config)[0]
 
         # Mutated circuits
         mutation_table = pd.DataFrame.from_dict({

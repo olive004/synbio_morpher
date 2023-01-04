@@ -11,55 +11,88 @@ from src.utils.circuit.agnostic_circuits.circuit_manager_new import CircuitModel
 def five_circuits():
 
     config = {
-        "interaction_simulator": {
-            "name": "IntaRNA",
-            "postprocess": True
-        },
         "experiment": {
-            "purpose": "tests",
-            "test_mode": True
+            "purpose": "ensemble_mutation_effect_analysis"
         },
-        "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
-        "circuit_generation": {
-            "repetitions": 2000,
-            "species_count": 3,
-            "sequence_length": 20,
-            "generator_protocol": "template_mutate",
-            "proportion_to_mutate": 0.5
-        },
-        "mutations": {
-            "algorithm": "all",
-            "mutation_counts": 10,
-            "mutation_nums_within_sequence": [1],
-            "mutation_nums_per_position": 1,
-            "concurrent_species_to_mutate": "single_species_at_a_time"
-        },
-        "filters": {
-            "min_num_interacting": None,
-            "max_self_interacting": None,
-            "max_total": None
-        },
-        "signal": {
-            "inputs": ["RNA0"],
-            "outputs": ["RNA1"],
-            "function_name": "step_function",
-            "function_kwargs": {
-                "impulse_center": 400,
-                "impulse_halfwidth": 5,
-                "target": 10
-            }
-        },
-        "simulation": {
-            "dt": 0.1,
-            "t0": 0,
-            "t1": 1200,
-            "solver": "diffrax",
-            "use_batch_mutations": True,
-            "batch_size": 100,
-            "max_circuits": 1000,
-            "device": "cpu"
-        },
-        "system_type": "RNA"
+        "base_configs_ensemble": {
+            "generate_species_templates": {
+                "interaction_simulator": {
+                    "name": "IntaRNA",
+                    "postprocess": True
+                },
+                "experiment": {
+                    "purpose": "tests",
+                    "test_mode": True
+                },
+                "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
+                "circuit_generation": {
+                    "repetitions": 2000,
+                    "species_count": 3,
+                    "sequence_length": 20,
+                    "generator_protocol": "template_mutate",
+                    "proportion_to_mutate": 0.5
+                },
+                "system_type": "RNA"
+            },
+            "gather_interaction_stats": {
+                "interaction_simulator": {
+                    "name": "IntaRNA",
+                    "postprocess": True
+                },
+                "interaction_file_keyword": ["eqconstants", "binding_rates_dissociation"],
+                "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
+                "experiment": {
+                    "purpose": "gather_interaction_stats"
+                },
+                "source_of_interactions": {
+                    "is_source_dir_incomplete": True,
+                    "source_dir": "./data/tests",
+                    "purpose_to_get_source_dir_from": "generate_species_templates",
+                    "source_dir_actually_used_POSTERITY": None
+                }
+            },
+            "mutation_effect_on_interactions_signal": {
+                "mutations": {
+                    "algorithm": "all",
+                    "mutation_counts": 10,
+                    "mutation_nums_within_sequence": [1],
+                    "mutation_nums_per_position": 1,
+                    "concurrent_species_to_mutate": "single_species_at_a_time"
+                },
+                "filters": {
+                    "min_num_interacting": None,
+                    "max_self_interacting": None,
+                    "max_total": None
+                },
+                "signal": {
+                    "inputs": ["RNA0"],
+                    "outputs": ["RNA1"],
+                    "function_name": "step_function",
+                    "function_kwargs": {
+                        "impulse_center": 400,
+                        "impulse_halfwidth": 5,
+                        "target": 10
+                    }
+                },
+                "simulation": {
+                    "dt": 0.1,
+                    "t0": 0,
+                    "t1": 1200,
+                    "solver": "diffrax",
+                    "use_batch_mutations": True,
+                    "batch_size": 100,
+                    "max_circuits": 1000,
+                    "device": "cpu"
+                },
+                "source_of_interaction_stats": {
+                    "is_source_dir_incomplete": True,
+                    "source_dir": "./data/tests",
+                    "purpose_to_get_source_dir_from": "gather_interaction_stats",
+                    "source_dir_actually_used_POSTERITY": None
+                },
+                "system_type": "RNA"
+            },
+        }
     }
     config, data_writer = script_preamble(config=config, data_writer=None)
     config = prepare_config(config_file=config)
@@ -111,10 +144,10 @@ def mutate(circuits, config, data_writer):
 
     for c in circuits:
         c = Evolver(data_writer=data_writer,
-                sequence_type=config.get('system_type')).mutate(
-                    c,
-                    write_to_subsystem=True,
-                    algorithm=config.get('mutations', {}).get('algorithm', 'random'))
+                    sequence_type=config.get('system_type')).mutate(
+            c,
+            write_to_subsystem=True,
+            algorithm=config.get('mutations', {}).get('algorithm', 'random'))
     return circuits, config, data_writer
 
 
