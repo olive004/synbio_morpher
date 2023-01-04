@@ -1,5 +1,6 @@
 
 
+import logging
 from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.misc.errors import ExperimentError
@@ -28,9 +29,12 @@ def load_units(filepath):
     try:
         experiment_config = load_experiment_config(
             experiment_folder=get_root_experiment_folder(filepath))
+
     except ExperimentError:
-        raise ExperimentError(
+        logging.warning(
             f'Supply a valid experiment directory instead of {filepath}')
+        return 'unknown'
+
     simulator_cfgs = experiment_config.get('interaction_simulator')
 
     if any([i for i in INTERACTION_FILE_ADDONS.keys() if i in filepath]):

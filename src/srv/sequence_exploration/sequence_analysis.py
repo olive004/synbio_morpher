@@ -182,17 +182,17 @@ def b_tabulate_mutation_info(source_dir: str, data_writer: DataWriter) -> pd.Dat
 
         return diff_table, ratio_table
 
-    def remove_invalid_json_values(table: Union[pd.DataFrame, dict]) -> Union[pd.DataFrame, dict]:
-        if type(table) == pd.DataFrame:
-            table.fillna(NUMERICAL['nan'], inplace=True)
-        elif type(table) == dict:
-            for k, v in table.items():
-                if type(v) == np.ndarray:
-                    v[v == np.inf] = NUMERICAL['infinity']
-                    v[v == -np.inf] = -NUMERICAL['infinity']
-                    v[v == np.nan] = NUMERICAL['nan']
-                    table[k] = v
-        return table
+    # def remove_invalid_json_values(table: Union[pd.DataFrame, dict]) -> Union[pd.DataFrame, dict]:
+    #     if type(table) == pd.DataFrame:
+    #         table.fillna(NUMERICAL['nan'], inplace=True)
+    #     elif type(table) == dict:
+    #         for k, v in table.items():
+    #             if type(v) == np.ndarray:
+    #                 v[v == np.inf] = NUMERICAL['infinity']
+    #                 v[v == -np.inf] = -NUMERICAL['infinity']
+    #                 v[v == np.nan] = NUMERICAL['nan']
+    #                 table[k] = v
+    #     return table
 
     def update_info_table(info_table: pd.DataFrame, curr_table: pd.DataFrame, int_stats: pd.DataFrame,
                           ref_stats: pd.DataFrame, result_source_dirs: List[str],
@@ -294,16 +294,9 @@ def b_tabulate_mutation_info(source_dir: str, data_writer: DataWriter) -> pd.Dat
         mutation_table = pd.DataFrame.from_dict({
             'circuit_name': [circuit_name] * len(mutation_dirs),
             'mutation_name': mutations['mutation_name'],
-            # 'source_species': mutations['template_name'],
             'mutation_num': mutations['count'],
             'mutation_type': cast_astype(mutations['mutation_types'], int),
             'mutation_positions': cast_astype(mutations['positions'], int),
-            # 'path_to_steady_state_data': get_pathnames(first_only=True,
-            #                                             file_key='steady_states_data',
-            #                                             search_dir=mutation_dir),
-            # 'path_to_signal_data': get_pathnames(first_only=True,
-            #                                         file_key='signal_data',
-            #                                         search_dir=mutation_dir),
             'path_to_template_circuit': mutations['template_file']
         })
         # Expand the interaction keys in the table
