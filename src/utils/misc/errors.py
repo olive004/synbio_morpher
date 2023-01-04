@@ -6,7 +6,7 @@ class ConfigError(Exception):
     pass
 
 
-class ScriptError(Exception):
+class ExperimentError(Exception):
     """ Raised when the script was not used in the intended
     manner, for example inputs in the wrong format """
     pass

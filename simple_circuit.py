@@ -28,8 +28,8 @@ def five_circuits():
             "proportion_to_mutate": 0.5
         },
         "mutations": {
-            "algorithm": "all",
-            "mutation_counts": 10,
+            "algorithm": "random",
+            "mutation_counts": 2,
             "mutation_nums_within_sequence": [1],
             "mutation_nums_per_position": 1,
             "concurrent_species_to_mutate": "single_species_at_a_time"
@@ -139,4 +139,5 @@ def simulate(circuits, config, data_writer):
 
 
 circuits, config, data_writer = five_circuits()
+mutate(circuits, config, data_writer)
 simulate(circuits, config, data_writer)

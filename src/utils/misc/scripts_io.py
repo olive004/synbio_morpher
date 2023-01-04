@@ -9,7 +9,7 @@ import pandas as pd
 
 from src.srv.io.loaders.misc import load_csv
 from src.utils.data.data_format_tools.common import load_json_as_dict, make_iterable_like
-from src.utils.misc.errors import ConfigError
+from src.utils.misc.errors import ConfigError, ExperimentError
 from src.utils.misc.io import get_pathnames, get_subdirectories
 from src.utils.misc.type_handling import flatten_listlike
 
@@ -100,7 +100,8 @@ def get_search_dir(config_file: dict, config_searchdir_key: str = None,
                                   get_recent_experiment_folder(sourcing_config.get(
                                       source_dir_key)), sourcing_config.get("purpose_to_get_source_dir_from"))
         if not os.path.isdir(source_dir):
-            raise ConfigError(f'Could not find directory {source_dir} (maybe it is not the most recent experiment directory anymore)')
+            raise ConfigError(
+                f'Could not find directory {source_dir} (maybe it is not the most recent experiment directory anymore)')
         if modify_config_for_posterity:
             config_file[config_searchdir_key]['source_dir_actually_used_POSTERITY'] = source_dir
         return config_file, source_dir
@@ -191,13 +192,14 @@ def load_experiment_config_original(starting_experiment_folder: str, target_purp
 
 def load_experiment_config(experiment_folder: str) -> dict:
     if experiment_folder is None:
-        raise ValueError('If trying to load something from the experiment config, please supply '
-                         f'a valid directory for the source experiment instead of {experiment_folder}')
+        raise ExperimentError('If trying to load a file from the experiment config, please supply '
+                              f'a valid directory for the source experiment instead of {experiment_folder}')
     experiment_report = load_experiment_report(experiment_folder)
     try:
         experiment_config = experiment_report['config_params']
     except KeyError:
-        raise KeyError(f'Could not retrieve original configs from experiment, instead got {experiment_report}')
+        raise KeyError(
+            f'Could not retrieve original configs from experiment, instead got {experiment_report}')
     return experiment_config
 
 
