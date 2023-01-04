@@ -132,10 +132,6 @@ def simulate(circuits, config, data_writer):
                               'no_numerical': False}
         })
 
-    b_tabulate_mutation_info(data_writer.ensemble_write_dir,
-                             data_writer=data_writer, experiment_config=config)
-    source_dirs = [data_writer.ensemble_write_dir]
-    info = load_tabulated_info(source_dirs)
 
 
 circuits, config, data_writer = five_circuits()
