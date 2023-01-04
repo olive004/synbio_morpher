@@ -4,6 +4,7 @@ import os
 from src.utils.common.setup_new import construct_circuit_from_cfg, prepare_config
 from src.srv.sequence_exploration.sequence_analysis import load_tabulated_info, b_tabulate_mutation_info
 from src.srv.io.manage.script_manager import script_preamble
+from src.utils.evolution.evolver import Evolver
 from src.utils.circuit.agnostic_circuits.circuit_manager_new import CircuitModeller
 
 
@@ -104,6 +105,20 @@ def five_circuits():
 
     return [construct_circuit_from_cfg(
         {'data_path': p, 'interactions': i}, config) for p, i in zip(paths, interactions_cfg)], config, data_writer
+
+
+def mutate(circuits, config, data_writer):
+
+    for c in circuits:
+        c = Evolver(data_writer=data_writer,
+                sequence_type=config.get('system_type')).mutate(
+                    c,
+                    write_to_subsystem=True,
+                    algorithm=config.get('mutations', {}).get('algorithm', 'random'))
+    return circuits, config, data_writer
+
+
+def simulate(circuits, config, data_writer):
 
     CircuitModeller(result_writer=data_writer, config=config).batch_circuits(
         circuits=circuits,
