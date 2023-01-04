@@ -5,22 +5,22 @@ from src.srv.io.manage.script_manager import script_preamble
 from src.utils.circuit.agnostic_circuits.circuit_manager_new import CircuitModeller
 from src.utils.common.setup_new import construct_circuit_from_cfg, prepare_config
 from src.utils.evolution.evolver import Evolver
-from src.utils.misc.type_handling import merge_dicts
+from src.utils.misc.type_handling import merge_dicts, replace_value
 
 
-ensembled_config = {
+ENSEMBLE_CONFIG = {
     "experiment": {
         "purpose": "tests"
     },
     "base_configs_ensemble": {
         "generate_species_templates": {
+            "experiment": {
+                "purpose": "generate_species_templates",
+                "test_mode": False
+            },
             "interaction_simulator": {
                 "name": "IntaRNA",
                 "postprocess": True
-            },
-            "experiment": {
-                "purpose": "generate_species_templates",
-                "test_mode": True
             },
             "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
             "circuit_generation": {
@@ -33,15 +33,16 @@ ensembled_config = {
             "system_type": "RNA"
         },
         "gather_interaction_stats": {
+            "experiment": {
+                "purpose": "gather_interaction_stats",
+                "test_mode": False
+            },
             "interaction_simulator": {
                 "name": "IntaRNA",
                 "postprocess": True
             },
             "interaction_file_keyword": ["eqconstants", "binding_rates_dissociation"],
             "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
-            "experiment": {
-                "purpose": "gather_interaction_stats"
-            },
             "source_of_interactions": {
                 "is_source_dir_incomplete": True,
                 "source_dir": "./data/tests",
@@ -50,6 +51,10 @@ ensembled_config = {
             }
         },
         "mutation_effect_on_interactions_signal": {
+            "experiment": {
+                "purpose": "mutation_effect_on_interactions_signal",
+                "test_mode": False
+            },
             "mutations": {
                 "algorithm": "all",
                 "mutation_counts": 10,
@@ -93,13 +98,16 @@ ensembled_config = {
     }
 }
 
-config = merge_dicts(list(ensembled_config["base_configs_ensemble"].values()))
+CONFIG = merge_dicts(*list(ENSEMBLE_CONFIG["base_configs_ensemble"].values()) + [
+                     {k: v for k, v in ENSEMBLE_CONFIG.items() if k == 'experiment'}])
+TEST_CONFIG = replace_value(CONFIG, 'test_mode', True)
 
 
-def five_circuits(config: dict, data_writer = None):
+def five_circuits(config: dict, data_writer=None):
     """ Use a config with params from generate_species_templates """
 
-    config, data_writer = script_preamble(config=config, data_writer=data_writer)
+    config, data_writer = script_preamble(
+        config=config, data_writer=data_writer)
     config = prepare_config(config_file=config)
 
     paths = [
