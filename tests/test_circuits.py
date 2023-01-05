@@ -1,10 +1,12 @@
 import unittest
 import numpy as np
+import pandas as pd
 
 
 from tests.shared import five_circuits, mutate, simulate  # CONFIG
 from tests.shared import TEST_CONFIG as CONFIG
 from src.srv.sequence_exploration.sequence_analysis import load_tabulated_info, b_tabulate_mutation_info
+from src.utils.results.analytics.analytics import get_true_names_analytics
 
 
 circuits, config, data_writer = five_circuits(CONFIG, data_writer=None)
@@ -23,7 +25,7 @@ class TestCircuit(unittest.TestCase):
         pass
 
     def test_refcircuits(self):
-        # make sure that each simulation used the correct reference circuit
+        """ Make sure that each simulation used the correct reference circuit """
 
         ref_circuits = info1[info1["mutation_name"] == "ref_circuit"]
 
@@ -32,6 +34,7 @@ class TestCircuit(unittest.TestCase):
         self.assertEqual(ref_circuits["mutation_type"].unique()[0], '[]',
                          f'The reference circuits should have no mutations.')
 
+        # Make sure the reference circuits have no difference to their original values
         for col in ref_circuits.columns:
             if '_diff_' in col:
                 self.assertEqual(ref_circuits[col].unique()[0], 0,
@@ -40,9 +43,11 @@ class TestCircuit(unittest.TestCase):
                 self.assertTrue((ref_circuits[col].unique()[0] == 1) or (ref_circuits[col].unique()[0] == np.inf),
                                 f'The reference circuits should have a ratio of one or infinity to the base circuit since they are the base circuit.')
 
-        for circ in ref_circuits['circuit_name'].unique():
-            curr_circuits = info1[info1['circuit_name'] == circ]
-            curr_circuits
+        analytics_cols = get_true_names_analytics(candidate_cols=info1.columns)
+        diffs = info1.set_index(['circuit_name', 'sample_name', 'mutation_name']).groupby('mutation_name', group_keys=False)[analytics_cols].apply(
+            lambda x: x - ref_circuits.set_index(['circuit_name', 'sample_name'])[analytics_cols])
+        ratios = info1.set_index(['circuit_name', 'sample_name', 'mutation_name']).groupby('mutation_name', group_keys=False)[analytics_cols].apply(
+            lambda x: x / ref_circuits.set_index(['circuit_name', 'sample_name'])[analytics_cols])
 
 
 class TestCircuitInfo(unittest.TestCase):
