@@ -20,7 +20,8 @@ class Result():
         if category == 'time_series' and analytics is None:
             from src.utils.results.analytics.timeseries import generate_analytics
             analytics_kwargs = analytics_kwargs if analytics_kwargs is not None else {}
-            self.analytics = generate_analytics(result_data, time, **analytics_kwargs)
+            self.analytics = generate_analytics(
+                result_data, time, **analytics_kwargs)
             #     result_data, time).generate_analytics(**analytics_kwargs)
 
     def __repr__(self):
@@ -37,8 +38,8 @@ class ResultCollector():
         self.results: Dict[Result] = {}
 
     def add_result(self, data, category: str, vis_func, name: str,
-                   time: np.ndarray = None, save_numerical_vis_data: bool = False,
-                   vis_kwargs: dict = None, analytics_kwargs: dict = None, analytics=None) -> None:
+                   time: np.ndarray = None, vis_kwargs: dict = None,
+                   analytics_kwargs: dict = None, analytics=None) -> None:
         """ category: 'time_series', 'graph' """
         name = f'Result_{len(self.results.keys())}' if not name else name
         result_entry = Result(name, data, category, vis_func, time,

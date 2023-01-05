@@ -101,7 +101,6 @@ def main(config=None, data_writer: ResultWriter = None):
                                             vis_func=VisODE(
                                                 figsize=(14, 8)).heatmap,
                                             # vis_func=custom_3D_visualisation,
-                                            save_numerical_vis_data=False,
                                             vis_kwargs={'legend': slicing_configs['species_choices'],
                                                         'out_type': 'png',
                                                         # '__setattr__': {'figsize': (10, 10)},

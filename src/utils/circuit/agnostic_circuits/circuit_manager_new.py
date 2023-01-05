@@ -183,7 +183,7 @@ class CircuitModeller():
                         1] = zero_out_negs(current_copynumbers)
         return copynumbers
 
-    def simulate_signal(self, circuit: Circuit, signal: Signal = None, save_numerical_vis_data: bool = False,
+    def simulate_signal(self, circuit: Circuit, signal: Signal = None,
                         solver: str = 'naive', ref_circuit: Circuit = None):
         signal = signal if signal is not None else circuit.signal
 
@@ -225,7 +225,6 @@ class CircuitModeller():
             category='time_series',
             time=t,
             vis_func=VisODE().plot,
-            save_numerical_vis_data=save_numerical_vis_data,
             vis_kwargs={'t': t,
                         'legend': [s.name for s in circuit.model.species],
                         'out_type': 'svg'},
@@ -236,7 +235,6 @@ class CircuitModeller():
 
     def simulate_signal_batch(self, circuits: List[Circuit],
                               ref_circuit: Circuit,
-                              save_numerical_vis_data: bool = False,
                               batch=True):
         signal = ref_circuit.signal
         signal.update_time_interval(self.dt)
@@ -325,7 +323,6 @@ class CircuitModeller():
                 name='signal',
                 category='time_series',
                 vis_func=VisODE().plot,
-                save_numerical_vis_data=save_numerical_vis_data,
                 analytics=analytics,
                 vis_kwargs={'t': t,
                             'legend': [s.name for s in circuit.model.species],
