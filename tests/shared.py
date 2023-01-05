@@ -63,6 +63,7 @@ ENSEMBLE_CONFIG = {
                 "mutation_counts": 1,
                 "mutation_nums_within_sequence": [1],
                 "mutation_nums_per_position": 1,
+                "seed": 1,
                 "concurrent_species_to_mutate": "single_species_at_a_time"
             },
             "filters": {
@@ -157,7 +158,8 @@ def mutate(circuits, config, data_writer):
 
     for c in circuits:
         c = Evolver(data_writer=data_writer,
-                    sequence_type=config.get('system_type')).mutate(
+                    sequence_type=config.get('system_type'),
+                    seed=config.get('mutations', {}).get('seed')).mutate(
             c,
             write_to_subsystem=True,
             algorithm=config.get('mutations', {}).get('algorithm', 'random'))

@@ -282,11 +282,12 @@ class CircuitModeller():
         b_analytics_l = []
 
         # First check if the ref_circuit is leading
-        if ref_circuit not in circuits:
+        if ref_circuit.name not in [c.name for c in ref_circuits]:
             ref_idxs.insert(0, None)
         else:
             assert circuits.index(
-                ref_circuit) == 0, f'The reference circuit should be leading or at idx 0, but is at idx {circuits.index(ref_circuit)}'
+                ref_circuit) == 0 or circuits[0].name == ref_circuit.name, f'The reference circuit should be leading or at idx 0, but is at idx {circuits.index(ref_circuit)}'
+        
         ref_idxs2 = [len(circuits)] if len(
             ref_idxs) < 2 else ref_idxs[1:] + [len(circuits)]
         for ref_idx, ref_idx2 in zip(ref_idxs, ref_idxs2):
@@ -461,7 +462,7 @@ class CircuitModeller():
                     self.result_writer.subdivide_writing(
                         dir_name, safe_dir_change=True)
 
-                    if subcircuit.subname == 'ref_circuit' and subcircuit != ref_circuit:
+                    if subcircuit.subname == 'ref_circuit' and subcircuit.name != ref_circuit.name:
                         ref_circuit.result_collector.delete_result('signal')
                         ref_circuit = subcircuit
                         if not include_normal_run:
@@ -474,9 +475,9 @@ class CircuitModeller():
         # Update the leading reference circuit to be the last ref circuti from this batch
         ref_circuits = [c for c in subcircuits if c.subname == 'ref_circuit']
         if ref_circuits:
-            leading_ref_circuit = ref_circuits[-1]
+            ref_circuit = ref_circuits[-1]
         del subcircuits
-        return leading_ref_circuit
+        return ref_circuit
 
     def apply_to_circuit(self, circuit: Circuit, _methods: dict, ref_circuit: Circuit):
         methods = deepcopy(_methods)

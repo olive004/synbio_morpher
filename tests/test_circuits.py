@@ -30,6 +30,8 @@ class TestCircuit(unittest.TestCase):
 
         ref_circuits = info1[info1["mutation_name"] == "ref_circuit"]
 
+        self.assertTrue(len(ref_circuits.groupby('circuit_name').agg('mean')) == ref_circuits['circuit_name'].unique())
+
         self.assertEqual(ref_circuits["mutation_num"].unique()[0], 0,
                          f'The reference circuits should have no mutations.')
         self.assertEqual(ref_circuits["mutation_type"].unique()[0], '[]',
@@ -48,7 +50,7 @@ class TestCircuit(unittest.TestCase):
             'The reference circuit should have a difference of 0 or nan to itself.')
 
         self.assertTrue(
-            all([(ratio == 0) or (np.isnan(ratio)) for ratio in sorted(
+            all([(ratio == 1) or (np.isnan(ratio)) for ratio in sorted(
                 ratios[ratios['mutation_name'] == 'ref_circuit'][analytics_cols].agg('unique'))]),
             'The reference circuit should have a ratio of 1 or nan to itself.')
 
