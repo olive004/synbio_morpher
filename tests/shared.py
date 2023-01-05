@@ -11,7 +11,9 @@ from src.utils.misc.type_handling import merge_dicts, replace_value
 ENSEMBLE_CONFIG = {
     "experiment": {
         "purpose": "tests",
-        "test_mode": False
+        "test_mode": False,
+        "no_visualisations": True,
+        "no_numerical": True
     },
     "base_configs_ensemble": {
         "generate_species_templates": {
@@ -57,8 +59,8 @@ ENSEMBLE_CONFIG = {
                 "test_mode": False
             },
             "mutations": {
-                "algorithm": "all",
-                "mutation_counts": 10,
+                "algorithm": "random",
+                "mutation_counts": 1,
                 "mutation_nums_within_sequence": [1],
                 "mutation_nums_per_position": 1,
                 "concurrent_species_to_mutate": "single_species_at_a_time"
@@ -170,8 +172,10 @@ def simulate(circuits, config, data_writer):
         batch_size=config['simulation'].get('batch_size', 100),
         methods={
             "init_circuit": {},
-            "simulate_signal_batch": {'save_numerical_vis_data': True, 'ref_circuit': None,
-                                      'batch': True},
-            "write_results": {'no_visualisations': False,
-                              'no_numerical': False}
+            "simulate_signal_batch": {'ref_circuit': None,
+                                      'batch': config['simulation']['use_batch_mutations']},
+            "write_results": {'no_visualisations': config['experiment']['no_visualisations'],
+                              'no_numerical': config['experiment']['no_numerical']}
         })
+
+    return circuits, config, data_writer

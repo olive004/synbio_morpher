@@ -195,12 +195,12 @@ class InteractionSimulator():
         return data
 
 
-def b_get_stats(interactions: List[InteractionMatrix]):
+def b_get_stats(interactions_mxs: List[InteractionMatrix]):
     b_interaction_attrs = {}
     for interaction_attr in INTERACTION_TYPES:
         b_interaction_attrs[interaction_attr] = np.concatenate([np.expand_dims(
-            i.interactions.__getattribute__(interaction_attr), axis=0) for i in interactions], axis=0)
-    batch_dim = b_interaction_attrs['eqconstants'].ndim - 2
+            im.interactions.__getattribute__(interaction_attr), axis=0) for im in interactions_mxs], axis=0)
+    batch_dim = b_interaction_attrs['eqconstants'].ndim - 2 - 1  # For 0-indexing
     idxs_interacting = get_unique_interacting_idxs(
         b_interaction_attrs['eqconstants'], batch_dim)
 
@@ -208,22 +208,22 @@ def b_get_stats(interactions: List[InteractionMatrix]):
     idxs_self_interacting = get_selfinteracting_species(idxs_interacting)
 
     idxs_other_interacting = [idxs_other_interacting[(
-        idxs_other_interacting[:, :batch_dim] == i).flatten()][:, batch_dim:] for i in range(len(interactions))]
-    idxs_self_interacting = [idxs_self_interacting[(idxs_self_interacting[:, :batch_dim] == i).flatten(
-    )][:, batch_dim:] for i in range(len(interactions))]
+        idxs_other_interacting[:, :batch_dim+1] == i).flatten()][:, batch_dim+1:] for i in range(len(interactions_mxs))]
+    idxs_self_interacting = [idxs_self_interacting[(idxs_self_interacting[:, :batch_dim+1] == i).flatten(
+    )][:, batch_dim+1:] for i in range(len(interactions_mxs))]
 
     stats = {
         # "name": [i.name for i in interactions],
         "interacting": idxs_other_interacting,
         "self_interacting": idxs_self_interacting,
-        "sample_names": [i.sample_names for i in interactions],
+        "sample_names": [i.sample_names for i in interactions_mxs],
         "num_interacting": [len(i) for i in idxs_other_interacting],
         "num_self_interacting": [len(i) for i in idxs_self_interacting]
     }
 
     for interaction_attr in INTERACTION_TYPES:
-        for i, s in enumerate(interactions[0].sample_names):
-            for ii, s in enumerate(interactions[0].sample_names):
+        for i, s in enumerate(interactions_mxs[0].sample_names):
+            for ii, s in enumerate(interactions_mxs[0].sample_names):
                 stats[interaction_attr + '_' + str(i) + '-' + str(
                     ii)] = b_interaction_attrs[interaction_attr][:, i, ii]
         stats[interaction_attr + '_' + 'max_interaction'] = np.max(
@@ -247,8 +247,7 @@ def get_selfinteracting_species(idxs_interacting: np.ndarray):
 
 def get_unique_interacting_idxs(interaction_attr: np.ndarray, batch_dim: int):
     idxs_interacting = np.argwhere(interaction_attr != 1)
-    idxs_interacting.sort(axis=1)
-    samples = idxs_interacting[:, batch_dim:]
+    samples = idxs_interacting[:, batch_dim+1:]
     samples.sort(axis=1)  # In-place sorting of idxs_interacting
     # idxs_interacting = np.concatenate(
     #     (idxs_interacting[:, :batch_dim], samples), axis=1)

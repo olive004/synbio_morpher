@@ -126,7 +126,7 @@ def simulate(circuits, config, data_writer):
         batch_size=config['simulation'].get('batch_size', 100),
         methods={
             "init_circuit": {},
-            "simulate_signal_batch": {'save_numerical_vis_data': True, 'ref_circuit': None,
+            "simulate_signal_batch": {'ref_circuit': None,
                                       'batch': True},
             "write_results": {'no_visualisations': False,
                               'no_numerical': False}

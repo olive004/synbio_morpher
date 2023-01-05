@@ -9,12 +9,10 @@ from src.utils.misc.type_handling import assert_uniform_type
 
 class Result():
     def __init__(self, name: str, result_data: np.ndarray, category: str, vis_func,
-                 time: np.ndarray = None, save_numerical_vis_data: bool = False,
-                 vis_kwargs: dict = None, analytics_kwargs: dict = None, analytics: dict = None) -> None:
+                 time: np.ndarray = None, analytics_kwargs: dict = None, analytics: dict = None) -> None:
         self.name = name
         self.data = result_data
         self.category = category
-        self.save_numerical_vis_data = save_numerical_vis_data
         self.vis_func = vis_func
         self.vis_kwargs = vis_kwargs
         self.analytics_kwargs = analytics_kwargs
@@ -43,7 +41,7 @@ class ResultCollector():
                    vis_kwargs: dict = None, analytics_kwargs: dict = None, analytics=None) -> None:
         """ category: 'time_series', 'graph' """
         name = f'Result_{len(self.results.keys())}' if not name else name
-        result_entry = Result(name, data, category, vis_func, time, save_numerical_vis_data,
+        result_entry = Result(name, data, category, vis_func, time,
                               vis_kwargs, analytics_kwargs, analytics)
         self.results[name] = result_entry
 
