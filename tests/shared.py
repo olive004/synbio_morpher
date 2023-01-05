@@ -12,8 +12,8 @@ ENSEMBLE_CONFIG = {
     "experiment": {
         "purpose": "tests",
         "test_mode": False,
-        "no_visualisations": True,
-        "no_numerical": True
+        "no_visualisations": False,
+        "no_numerical": False
     },
     "base_configs_ensemble": {
         "generate_species_templates": {

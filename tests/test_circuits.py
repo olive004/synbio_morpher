@@ -30,7 +30,7 @@ class TestCircuit(unittest.TestCase):
 
         ref_circuits = info1[info1["mutation_name"] == "ref_circuit"]
 
-        self.assertTrue(len(ref_circuits.groupby('circuit_name').agg('mean')) == ref_circuits['circuit_name'].unique())
+        self.assertEqual(len(ref_circuits.groupby('circuit_name').agg(str)), len(ref_circuits['circuit_name'].unique()))
 
         self.assertEqual(ref_circuits["mutation_num"].unique()[0], 0,
                          f'The reference circuits should have no mutations.')
