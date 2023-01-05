@@ -10,7 +10,8 @@ from src.utils.misc.type_handling import merge_dicts, replace_value
 
 ENSEMBLE_CONFIG = {
     "experiment": {
-        "purpose": "tests"
+        "purpose": "tests",
+        "test_mode": False
     },
     "base_configs_ensemble": {
         "generate_species_templates": {
@@ -68,8 +69,8 @@ ENSEMBLE_CONFIG = {
                 "max_total": None
             },
             "signal": {
-                "inputs": ["RNA0"],
-                "outputs": ["RNA1"],
+                "inputs": ["RNA_0"],
+                "outputs": ["RNA_1"],
                 "function_name": "step_function",
                 "function_kwargs": {
                     "impulse_center": 400,

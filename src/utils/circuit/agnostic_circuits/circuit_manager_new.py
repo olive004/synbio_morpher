@@ -42,8 +42,9 @@ class CircuitModeller():
         self.dt = config.get('simulation', {}).get('dt', 1)
         self.t0 = config.get('simulation', {}).get('t0', 0)
         self.t1 = config.get('simulation', {}).get('t1', 10)
-        
-        self.max_circuits = config.get('simulation', {}).get('max_circuits', 10000)  # Maximum number of circuits to hold in memory
+
+        self.max_circuits = config.get('simulation', {}).get(
+            'max_circuits', 10000)  # Maximum number of circuits to hold in memory
         self.test_mode = config.get('experiment', {}).get('test_mode', False)
 
         # os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
@@ -81,7 +82,7 @@ class CircuitModeller():
         filename_addons = sorted(INTERACTION_FILE_ADDONS.keys())
         for interaction_matrix, filename_addon in zip(
             [circuit.interactions.binding_rates_dissociation,
-            #  circuit.interactions.coupled_binding_rates,
+             #  circuit.interactions.coupled_binding_rates,
              circuit.interactions.eqconstants], filename_addons
         ):
             self.result_writer.output(
@@ -286,14 +287,18 @@ class CircuitModeller():
         if ref_circuit not in circuits:
             ref_idxs.insert(0, None)
         else:
-            assert circuits.index(ref_circuit) == 0, f'The reference circuit should be leading or at idx 0, but is at idx {circuits.index(ref_circuit)}'
-        ref_idxs2 = [len(circuits)] if len(ref_idxs) < 2 else ref_idxs[1:] + [len(circuits)]
+            assert circuits.index(
+                ref_circuit) == 0, f'The reference circuit should be leading or at idx 0, but is at idx {circuits.index(ref_circuit)}'
+        ref_idxs2 = [len(circuits)] if len(
+            ref_idxs) < 2 else ref_idxs[1:] + [len(circuits)]
         for ref_idx, ref_idx2 in zip(ref_idxs, ref_idxs2):
-            
+
             if ref_idx is None:
-                ref_circuit_result = ref_circuit.result_collector.get_result('signal')
+                ref_circuit_result = ref_circuit.result_collector.get_result(
+                    'signal')
                 if ref_circuit_result is None:
-                    raise ValueError('Reference circuit was not simulated and was not in this batch.')
+                    raise ValueError(
+                        'Reference circuit was not simulated and was not in this batch.')
                 else:
                     ref_idx = 0
                     ref_circuit_data = ref_circuit_result.data
@@ -301,10 +306,13 @@ class CircuitModeller():
                 ref_circuit_data = b_new_copynumbers[ref_idx]
 
             analytics_func = jax.vmap(partial(generate_analytics, time=t, labels=[s.name for s in ref_circuit.model.species],
-                                        signal_onehot=signal.onehot, ref_circuit_data=ref_circuit_data))
-            b_analytics = analytics_func(data=b_new_copynumbers[ref_idx:ref_idx2])
-            b_analytics_l = append_nest_dicts(b_analytics_l, ref_idx, ref_idx2, b_analytics)
-        assert len(b_analytics_l) == len(circuits), f'There was a mismatch in length of analytics ({len(b_analytics_l)}) and circuits ({len(circuits)})'
+                                              signal_onehot=signal.onehot, ref_circuit_data=ref_circuit_data))
+            b_analytics = analytics_func(
+                data=b_new_copynumbers[ref_idx:ref_idx2])
+            b_analytics_l = append_nest_dicts(
+                b_analytics_l, ref_idx, ref_idx2, b_analytics)
+        assert len(b_analytics_l) == len(
+            circuits), f'There was a mismatch in length of analytics ({len(b_analytics_l)}) and circuits ({len(circuits)})'
 
         # Save for all circuits
         for i, (circuit, analytics) in enumerate(zip(circuits, b_analytics_l)):
@@ -402,7 +410,8 @@ class CircuitModeller():
                         circuit, subname, mutation)
                     c_idx += 1
             if c_idx != len(subcircuits):
-                subcircuits = list(filter(lambda item: item is not None, subcircuits))
+                subcircuits = list(
+                    filter(lambda item: item is not None, subcircuits))
 
             # Batch
             ref_circuit = subcircuits[0]

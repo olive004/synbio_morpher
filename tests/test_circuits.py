@@ -1,7 +1,8 @@
 import unittest
 
 
-from tests.shared import five_circuits, mutate, simulate, CONFIG
+from tests.shared import five_circuits, mutate, simulate # CONFIG
+from tests.shared import TEST_CONFIG as CONFIG
 from src.srv.sequence_exploration.sequence_analysis import load_tabulated_info, b_tabulate_mutation_info
 
 
