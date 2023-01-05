@@ -1,12 +1,13 @@
 import unittest
 import numpy as np
 import pandas as pd
+import logging
 
 
 from tests.shared import five_circuits, mutate, simulate  # CONFIG
 from tests.shared import TEST_CONFIG as CONFIG
 from src.srv.sequence_exploration.sequence_analysis import load_tabulated_info, b_tabulate_mutation_info
-from src.utils.results.analytics.analytics import get_true_names_analytics
+from src.utils.results.analytics.analytics import get_true_names_analytics, DIFF_KEY, RATIO_KEY
 
 
 circuits, config, data_writer = five_circuits(CONFIG, data_writer=None)
@@ -34,20 +35,38 @@ class TestCircuit(unittest.TestCase):
         self.assertEqual(ref_circuits["mutation_type"].unique()[0], '[]',
                          f'The reference circuits should have no mutations.')
 
-        # Make sure the reference circuits have no difference to their original values
-        for col in ref_circuits.columns:
-            if '_diff_' in col:
-                self.assertEqual(ref_circuits[col].unique()[0], 0,
-                                 f'The reference circuits should not be different to the base circuit since they are the base circuit.')
-            elif '_ratio_' in col:
-                self.assertTrue((ref_circuits[col].unique()[0] == 1) or (ref_circuits[col].unique()[0] == np.inf),
-                                f'The reference circuits should have a ratio of one or infinity to the base circuit since they are the base circuit.')
-
         analytics_cols = get_true_names_analytics(candidate_cols=info1.columns)
         diffs = info1.set_index(['circuit_name', 'sample_name', 'mutation_name']).groupby('mutation_name', group_keys=False)[analytics_cols].apply(
-            lambda x: x - ref_circuits.set_index(['circuit_name', 'sample_name'])[analytics_cols])
+            lambda x: x - ref_circuits.set_index(['circuit_name', 'sample_name'])[analytics_cols]).reset_index()
         ratios = info1.set_index(['circuit_name', 'sample_name', 'mutation_name']).groupby('mutation_name', group_keys=False)[analytics_cols].apply(
-            lambda x: x / ref_circuits.set_index(['circuit_name', 'sample_name'])[analytics_cols])
+            lambda x: x / ref_circuits.set_index(['circuit_name', 'sample_name'])[analytics_cols]).reset_index()
+
+        # Make sure the reference circuits have no difference to their original values
+        self.assertTrue(
+            all([(diff == 0) or (np.isnan(diff)) for diff in sorted(
+                diffs[diffs['mutation_name'] == 'ref_circuit'][analytics_cols].agg('unique'))]),
+            'The reference circuit should have a difference of 0 or nan to itself.')
+
+        self.assertTrue(
+            all([(ratio == 0) or (np.isnan(ratio)) for ratio in sorted(
+                ratios[ratios['mutation_name'] == 'ref_circuit'][analytics_cols].agg('unique'))]),
+            'The reference circuit should have a ratio of 1 or nan to itself.')
+
+        for col in analytics_cols:
+            if DIFF_KEY in col:
+                self.assertEqual(ref_circuits[col].unique()[0], 0,
+                                 f'The reference circuits should not be different to the base circuit since they are the base circuit.')
+            elif RATIO_KEY in col:
+                self.assertTrue((ref_circuits[col].unique()[0] == 1) or (ref_circuits[col].unique()[0] == np.inf),
+                                f'The reference circuits should have a ratio of one or infinity to the base circuit since they are the base circuit.')
+            elif col + DIFF_KEY in info1.columns:
+                self.assertTrue(all(diffs[col] == info1[col + DIFF_KEY]),
+                                'The difference between the reference circuit and its subcircuits should match between the computed and the tabulated numbers.')
+            elif col + RATIO_KEY in info1.columns:
+                self.assertTrue(all(ratios[col] == info1[col + RATIO_KEY]),
+                                'The ratio between the reference circuit and its subcircuits should match between the computed and the tabulated numbers.')
+            else: 
+                logging.warning(f'Column {col} should be in the table or exist there as {col + DIFF_KEY} or {col + RATIO_KEY} - columns are {info1.columns}')
 
 
 class TestCircuitInfo(unittest.TestCase):
