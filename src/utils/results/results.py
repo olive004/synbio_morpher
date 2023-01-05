@@ -9,7 +9,7 @@ from src.utils.misc.type_handling import assert_uniform_type
 
 class Result():
     def __init__(self, name: str, result_data: np.ndarray, category: str, vis_func,
-                 time: np.ndarray = None, analytics_kwargs: dict = None, analytics: dict = None) -> None:
+                 time: np.ndarray = None, vis_kwargs: dict = None, analytics_kwargs: dict = None, analytics: dict = None) -> None:
         self.name = name
         self.data = result_data
         self.category = category

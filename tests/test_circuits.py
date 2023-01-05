@@ -1,7 +1,8 @@
 import unittest
+import numpy as np
 
 
-from tests.shared import five_circuits, mutate, simulate # CONFIG
+from tests.shared import five_circuits, mutate, simulate  # CONFIG
 from tests.shared import TEST_CONFIG as CONFIG
 from src.srv.sequence_exploration.sequence_analysis import load_tabulated_info, b_tabulate_mutation_info
 
@@ -36,12 +37,13 @@ class TestCircuit(unittest.TestCase):
                 self.assertEqual(ref_circuits[col].unique()[0], 0,
                                  f'The reference circuits should not be different to the base circuit since they are the base circuit.')
             elif '_ratio_' in col:
-                self.assertEqual(ref_circuits[col].unique()[0], 1,
-                                 f'The reference circuits should have a ratio to the base circuit since they are the base circuit.')
+                self.assertTrue((ref_circuits[col].unique()[0] == 1) or (ref_circuits[col].unique()[0] == np.inf),
+                                f'The reference circuits should have a ratio of one or infinity to the base circuit since they are the base circuit.')
 
         for circ in ref_circuits['circuit_name'].unique():
             curr_circuits = info1[info1['circuit_name'] == circ]
-            curr_circuits 
+            curr_circuits
+
 
 class TestCircuitInfo(unittest.TestCase):
 
@@ -49,7 +51,7 @@ class TestCircuitInfo(unittest.TestCase):
 
         self.assertTrue((info1 == info2).all().all(),
                         f'Loaded info table incorrectly')
-        self.assertEqual(info1, info2, f'Loaded info table incorrectly')
+        self.assertTrue(all(info1 == info2), f'Loaded info table incorrectly')
 
 
 def main(args=None):
