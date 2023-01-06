@@ -4,8 +4,8 @@ import pandas as pd
 import logging
 
 
-from tests.shared import five_circuits, mutate, simulate  # CONFIG
-from tests.shared import TEST_CONFIG as CONFIG
+from tests.shared import five_circuits, mutate, simulate, CONFIG, TEST_CONFIG
+# from tests.shared import TEST_CONFIG as CONFIG
 from src.srv.sequence_exploration.sequence_analysis import load_tabulated_info, b_tabulate_mutation_info
 from src.utils.results.analytics.analytics import get_true_names_analytics, DIFF_KEY, RATIO_KEY
 
@@ -30,7 +30,8 @@ class TestCircuit(unittest.TestCase):
 
         ref_circuits = info1[info1["mutation_name"] == "ref_circuit"]
 
-        self.assertEqual(len(ref_circuits.groupby('circuit_name').agg(str)), len(ref_circuits['circuit_name'].unique()))
+        self.assertEqual(len(ref_circuits.groupby('circuit_name').agg(
+            str)), len(ref_circuits['circuit_name'].unique()))
 
         self.assertEqual(ref_circuits["mutation_num"].unique()[0], 0,
                          f'The reference circuits should have no mutations.')
@@ -67,8 +68,9 @@ class TestCircuit(unittest.TestCase):
             elif col + RATIO_KEY in info1.columns:
                 self.assertTrue(all(ratios[col] == info1[col + RATIO_KEY]),
                                 'The ratio between the reference circuit and its subcircuits should match between the computed and the tabulated numbers.')
-            else: 
-                logging.warning(f'Column {col} should be in the table or exist there as {col + DIFF_KEY} or {col + RATIO_KEY} - columns are {info1.columns}')
+            else:
+                logging.warning(
+                    f'Column {col} should be in the table or exist there as {col + DIFF_KEY} or {col + RATIO_KEY} - columns are {info1.columns}')
 
 
 class TestCircuitInfo(unittest.TestCase):
