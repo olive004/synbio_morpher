@@ -52,7 +52,8 @@ class CircuitModeller():
         # os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
         os.environ["XLA_PYTHON_CLIENT_ALLOCATOR"] = "platform"
 
-        jax.config.update('jax_platform_name', config.get('simulation', {}).get('device', 'cpu'))
+        jax.config.update('jax_platform_name', config.get(
+            'simulation', {}).get('device', 'cpu'))
         # logging.warning(f'Using device {config.get("simulation", {}).get("device", "cpu")}')
 
     def init_circuit(self, circuit: Circuit):
@@ -293,7 +294,7 @@ class CircuitModeller():
         else:
             assert circuits.index(
                 ref_circuit) == 0 or circuits[0].name == ref_circuit.name, f'The reference circuit should be leading or at idx 0, but is at idx {circuits.index(ref_circuit)}'
-        
+
         ref_idxs2 = [len(circuits)] if len(
             ref_idxs) < 2 else ref_idxs[1:] + [len(circuits)]
         for ref_idx, ref_idx2 in zip(ref_idxs, ref_idxs2):
@@ -385,7 +386,8 @@ class CircuitModeller():
         signal = ref_circuit.signal
 
         if not all(signal == c.signal for c in circuits):
-            logging.warning(f'Signal differs between circuits, but only first signal used for simulation.')
+            logging.warning(
+                f'Signal differs between circuits, but only first signal used for simulation.')
 
         signal.update_time_interval(self.dt)
 

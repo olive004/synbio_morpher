@@ -177,7 +177,7 @@ def b_tabulate_mutation_info(source_dir: str, data_writer: DataWriter, experimen
 
         ratio_table = stats[diffable_cols] / \
             np.where(ref_stats[diffable_cols].values.squeeze() != 0,
-                     ref_stats[diffable_cols].values.squeeze(), np.nan)
+                     ref_stats[diffable_cols].values.squeeze(), np.inf)
         ratio_table = ratio_table.rename(
             columns={i: i + RATIO_KEY for i in diffable_cols})
 

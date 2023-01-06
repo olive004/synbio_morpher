@@ -28,7 +28,7 @@ class TestCircuit(unittest.TestCase):
 
     def test_refcircuits(self):
         """ Make sure that each simulation used the correct reference circuit """
-        
+
         for c in [TEST_CONFIG, CONFIG]:
             circuits, config, data_writer, info = create_test_inputs(c)
 
@@ -38,11 +38,14 @@ class TestCircuit(unittest.TestCase):
                 str)), len(ref_circuits['circuit_name'].unique()))
 
             self.assertEqual(ref_circuits["mutation_num"].unique()[0], 0,
-                            f'The reference circuits should have no mutations.')
+                             f'The reference circuits should have no mutations.')
+            self.assertEqual(ref_circuits["RMSE"].unique()[0], 0,
+                             f'The reference circuits should have an RMSE of 0.')
             self.assertEqual(ref_circuits["mutation_type"].unique()[0], '[]',
-                            f'The reference circuits should have no mutations.')
+                             f'The reference circuits should have no mutations.')
 
-            analytics_cols = get_true_names_analytics(candidate_cols=info.columns)
+            analytics_cols = get_true_names_analytics(
+                candidate_cols=info.columns)
             diffs = info.set_index(['circuit_name', 'sample_name', 'mutation_name']).groupby('mutation_name', group_keys=False)[analytics_cols].apply(
                 lambda x: x - ref_circuits.set_index(['circuit_name', 'sample_name'])[analytics_cols]).reset_index()
             ratios = info.set_index(['circuit_name', 'sample_name', 'mutation_name']).groupby('mutation_name', group_keys=False)[analytics_cols].apply(
@@ -62,7 +65,7 @@ class TestCircuit(unittest.TestCase):
             for col in analytics_cols:
                 if DIFF_KEY in col:
                     self.assertEqual(ref_circuits[col].unique()[0], 0,
-                                    f'The reference circuits should not be different to the base circuit since they are the base circuit.')
+                                     f'The reference circuits should not be different to the base circuit since they are the base circuit.')
                 elif RATIO_KEY in col:
                     self.assertTrue((ref_circuits[col].unique()[0] == 1) or (ref_circuits[col].unique()[0] == np.inf),
                                     f'The reference circuits should have a ratio of one or infinity to the base circuit since they are the base circuit.')
@@ -75,26 +78,34 @@ class TestCircuit(unittest.TestCase):
                 else:
                     logging.warning(
                         f'Column {col} should be in the table or exist there as {col + DIFF_KEY} or {col + RATIO_KEY} - columns are {info.columns}')
-        
+
     def test_numerical_results(self):
 
         for c in [TEST_CONFIG, CONFIG]:
             circuits, config, data_writer, info = create_test_inputs(c)
 
-            info 
-
+            info
 
     def test_tabulation(self):
 
-        for c in [TEST_CONFIG, CONFIG]:
+        for c, d in zip(
+            [TEST_CONFIG, CONFIG],
+            [{'test_mode': 1},
+             {'normal_mode': 1}]
+        ):
             circuits, config, data_writer, info = create_test_inputs(c)
 
             source_dirs = [data_writer.ensemble_write_dir]
             info2 = load_tabulated_info(source_dirs)
 
+            if info.isnull().any().all():
+                logging.warning(
+                    f'There are NaNs in the circuit summary table. Rethink.')
+
             self.assertTrue((info == info2).all().all(),
+                            f'Loaded info table incorrectly - there are probably unwanted NaNs')  # This won't work for nan's
+            self.assertTrue(all(info == info2),
                             f'Loaded info table incorrectly')
-            self.assertTrue(all(info == info2), f'Loaded info table incorrectly')
 
 
 def main(args=None):

@@ -34,7 +34,6 @@ class MolecularInteractions():
         self.set_precision()
         self.units = units
 
-
     def set_precision(self):
         for attr, v in self.__dict__.items():
             self.__setattr__(attr, self.precision(v))
@@ -83,7 +82,6 @@ class InteractionMatrix():
                 self.interactions.binding_rates_association = load_param(
                     list(matrix_paths.values())[0], 'association_binding_rate', experiment_config=experiment_config
                 ) * np.ones_like(self.interactions.binding_rates_dissociation)
-
 
     def load(self, filepath):
         filetype = determine_file_format(filepath)

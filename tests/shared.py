@@ -80,7 +80,7 @@ ENSEMBLE_CONFIG = {
                 "t1": 1200,
                 "solver": "diffrax",
                 "use_batch_mutations": True,
-                "batch_size": 1,
+                "batch_size": 100,
                 "max_circuits": 1000,
                 "device": "cpu"
             },
