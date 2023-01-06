@@ -41,7 +41,6 @@ class InteractionMatrix():
                  units: str = '',
                  experiment_config: dict = None,
                  interactions_kwargs: dict = None):
-        super().__init__()
 
         self.name = None
         self.sample_names = None
@@ -64,13 +63,13 @@ class InteractionMatrix():
 
         elif matrix_paths is not None:
             for matrix_type, matrix_path in matrix_paths.items():
-                loaded_matrix, self.units, self.sample_names = self.load(
-                    matrix_path)
-                self.interactions.__setattr__(matrix_type, loaded_matrix)
-                self.interactions.units = self.units
-            self.interactions.binding_rates_association = load_param(
-                list(matrix_paths.values())[0], 'association_binding_rate', experiment_config=experiment_config
-            ) * np.ones_like(self.interactions.binding_rates_dissociation)
+                if isinstance(matrix_path, str):
+                    loaded_matrix, self.units, self.sample_names = self.load(
+                        matrix_path)
+                    self.interactions.__setattr__(matrix_type, loaded_matrix)
+                    self.interactions.units = self.units
+            self.interactions.binding_rates_association = matrix_paths['binding_rates_association'] * np.ones_like(
+                self.interactions.binding_rates_dissociation)
 
     def load(self, filepath):
         filetype = determine_file_format(filepath)
@@ -200,7 +199,8 @@ def b_get_stats(interactions_mxs: List[InteractionMatrix]):
     for interaction_attr in INTERACTION_TYPES:
         b_interaction_attrs[interaction_attr] = np.concatenate([np.expand_dims(
             im.interactions.__getattribute__(interaction_attr), axis=0) for im in interactions_mxs], axis=0)
-    batch_dim = b_interaction_attrs['eqconstants'].ndim - 2 - 1  # For 0-indexing
+    # For 0-indexing
+    batch_dim = b_interaction_attrs['eqconstants'].ndim - 2 - 1
     idxs_interacting = get_unique_interacting_idxs(
         b_interaction_attrs['eqconstants'], batch_dim)
 

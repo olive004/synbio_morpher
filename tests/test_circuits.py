@@ -4,8 +4,8 @@ import pandas as pd
 import logging
 
 
-from tests.shared import five_circuits, mutate, simulate, CONFIG, TEST_CONFIG
-# from tests.shared import TEST_CONFIG as CONFIG
+from tests.shared import five_circuits, mutate, simulate #, CONFIG, TEST_CONFIG
+from tests.shared import TEST_CONFIG as CONFIG
 from src.srv.sequence_exploration.sequence_analysis import load_tabulated_info, b_tabulate_mutation_info
 from src.utils.results.analytics.analytics import get_true_names_analytics, DIFF_KEY, RATIO_KEY
 
@@ -71,6 +71,9 @@ class TestCircuit(unittest.TestCase):
             else:
                 logging.warning(
                     f'Column {col} should be in the table or exist there as {col + DIFF_KEY} or {col + RATIO_KEY} - columns are {info1.columns}')
+        
+    # def test_numerical_results(self):
+
 
 
 class TestCircuitInfo(unittest.TestCase):

@@ -128,7 +128,7 @@ def five_circuits(config: dict, data_writer=None):
     ]
 
     interaction_paths = []
-    for inter in ['binding_rates_association', 'eqconstants']:
+    for inter in ['binding_rates_dissociation', 'eqconstants']:
         interaction_paths.append([
             # toy_mRNA_circuit_1890
             os.path.join('tests', 'configs', inter, f'0_weak_{inter}.csv'),

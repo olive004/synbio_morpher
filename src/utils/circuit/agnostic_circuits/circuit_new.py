@@ -65,7 +65,7 @@ class Circuit():
         return qreactions
 
     def init_interactions(self, interaction_cfg: dict, interactions_loaded: dict) -> MolecularInteractions:
-        if interaction_cfg is None or interactions_loaded is None:
+        if interaction_cfg is None and interactions_loaded is None:
             # matrix = np.zeros(
             #     (len(self.model.species), len(self.model.species)))
             # for r in self.model.reactions:
