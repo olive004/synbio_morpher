@@ -46,6 +46,7 @@ class CircuitModeller():
         self.max_circuits = config.get('simulation', {}).get(
             'max_circuits', 10000)  # Maximum number of circuits to hold in memory
         self.test_mode = config.get('experiment', {}).get('test_mode', False)
+        self.sim_func = None
 
         # os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
         os.environ["XLA_PYTHON_CLIENT_ALLOCATOR"] = "platform"
@@ -252,13 +253,13 @@ class CircuitModeller():
         b_forward_rates = np.asarray(b_forward_rates)
         b_reverse_rates = np.asarray(b_reverse_rates)
 
-        sim_func = jax.vmap(
-            partial(bioreaction_sim_dfx_expanded,
-                    t0=self.t0, t1=self.t1, dt0=self.dt,
-                    signal=signal.func, signal_onehot=signal.onehot,
-                    inputs=ref_circuit.qreactions.reactions.inputs,
-                    outputs=ref_circuit.qreactions.reactions.outputs))
-        solution = sim_func(
+        # sim_func = jax.vmap(
+        #     partial(bioreaction_sim_dfx_expanded,
+        #             t0=self.t0, t1=self.t1, dt0=self.dt,
+        #             signal=signal.func, signal_onehot=signal.onehot,
+        #             inputs=ref_circuit.qreactions.reactions.inputs,
+        #             outputs=ref_circuit.qreactions.reactions.outputs))
+        solution = self.sim_func(
             y0=b_steady_states, forward_rates=b_forward_rates, reverse_rates=b_reverse_rates)
 
         tf = np.argmax(solution.ts == np.inf)
@@ -372,12 +373,32 @@ class CircuitModeller():
         self.result_writer.unsubdivide()
         return circuit
 
+    def prepare_internal_funcs(self, circuits: List[Circuit]):
+        """ Create simulation function. If more customisation is needed per circuit, move 
+        variables into the relevant wrapper simulation method """
+        ref_circuit = circuits[0]
+        signal = ref_circuit.signal
+
+        if not all(signal == c.signal for c in circuits):
+            logging.warning(f'Signal differs between circuits, but only first signal used for simulation.')
+
+        signal.update_time_interval(self.dt)
+
+        self.sim_func = jax.vmap(
+            partial(bioreaction_sim_dfx_expanded,
+                    t0=self.t0, t1=self.t1, dt0=self.dt,
+                    signal=signal.func, signal_onehot=signal.onehot,
+                    inputs=ref_circuit.qreactions.reactions.inputs,
+                    outputs=ref_circuit.qreactions.reactions.outputs))
+
     def batch_circuits(self,
                        circuits: List[Circuit],
                        methods: dict,
                        batch_size: int = None,
                        include_normal_run: bool = True,
                        write_to_subsystem=True):
+
+        self.prepare_internal_funcs(circuits)
         batch_size = len(circuits) if batch_size is None else batch_size
 
         num_subcircuits = len(flatten_nested_dict(circuits[0].mutations))
