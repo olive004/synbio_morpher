@@ -68,8 +68,14 @@ class InteractionMatrix():
                         matrix_path)
                     self.interactions.__setattr__(matrix_type, loaded_matrix)
                     self.interactions.units = self.units
-            self.interactions.binding_rates_association = matrix_paths['binding_rates_association'] * np.ones_like(
-                self.interactions.binding_rates_dissociation)
+            if 'binding_rates_association' in matrix_paths:
+                self.interactions.binding_rates_association = matrix_paths['binding_rates_association'] * np.ones_like(
+                    self.interactions.binding_rates_dissociation)
+            else:
+                self.interactions.binding_rates_association = load_param(
+                    list(matrix_paths.values())[0], 'association_binding_rate', experiment_config=experiment_config
+                ) * np.ones_like(self.interactions.binding_rates_dissociation)
+
 
     def load(self, filepath):
         filetype = determine_file_format(filepath)

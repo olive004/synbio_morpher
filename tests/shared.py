@@ -144,7 +144,7 @@ def five_circuits(config: dict, data_writer=None):
         for bp, ep in zip(interaction_paths[0], interaction_paths[1])]
 
     return [construct_circuit_from_cfg(
-        {'data_path': p, 'interactionsxx': i}, config) for p, i in zip(paths, interactions_cfg)], config, data_writer
+        {'data_path': p, 'interactions': i}, config) for p, i in zip(paths, interactions_cfg)], config, data_writer
 
 
 def mutate(circuits, config, data_writer):

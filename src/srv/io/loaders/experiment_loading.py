@@ -33,7 +33,7 @@ def load_units(filepath, experiment_config: dict = None):
 
         except (FileNotFoundError, ExperimentError):
             logging.warning(
-                f'Supply a valid experiment directory instead of {filepath}')
+                f'Units unknown - supply a valid experiment directory instead of {filepath}')
             return 'unknown'
 
     simulator_cfgs = experiment_config.get('interaction_simulator')
