@@ -20,6 +20,8 @@ INTERACTION_TYPES = list(INTERACTION_FILE_ADDONS.keys())
 
 class MolecularInteractions():
 
+    precision = np.float32
+
     def __init__(self,
                  # coupled_binding_rates,
                  binding_rates_association=None,
@@ -29,7 +31,13 @@ class MolecularInteractions():
         self.binding_rates_association = binding_rates_association
         self.binding_rates_dissociation = binding_rates_dissociation
         self.eqconstants = eqconstants
+        self.set_precision()
         self.units = units
+
+
+    def set_precision(self):
+        for attr, v in self.__dict__.items():
+            self.__setattr__(attr, self.precision(v))
 
 
 class InteractionMatrix():

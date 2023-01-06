@@ -56,7 +56,7 @@ ENSEMBLE_CONFIG = {
                 "mutation_counts": 1,
                 "mutation_nums_within_sequence": [1],
                 "mutation_nums_per_position": 1,
-                "seed": 1,
+                "seed": 2,
                 "concurrent_species_to_mutate": "single_species_at_a_time"
             },
             "filters": {
