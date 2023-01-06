@@ -79,7 +79,7 @@ def compose_kwargs(prev_configs: dict = None, config: dict = None) -> dict:
 
 
 def expand_config(config: dict) -> dict:
-    config["interactions"] = config.get("interactions", {})
+    config["interactions"] = config.get("interactions")
     config["interactions_loaded"] = config.get("interactions_loaded")
     config["interaction_simulator"] = config.get("interaction_simulator", {"name": "IntaRNA"})
     config["molecular_params"] = process_molecular_params(deepcopy(load_json_as_dict(config.get("molecular_params"))))

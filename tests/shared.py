@@ -26,13 +26,6 @@ ENSEMBLE_CONFIG = {
                 "postprocess": True
             },
             "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
-            "circuit_generation": {
-                "repetitions": 2000,
-                "species_count": 3,
-                "sequence_length": 20,
-                "generator_protocol": "template_mutate",
-                "proportion_to_mutate": 0.5
-            },
             "system_type": "RNA"
         },
         "gather_interaction_stats": {
@@ -151,7 +144,7 @@ def five_circuits(config: dict, data_writer=None):
         for bp, ep in zip(interaction_paths[0], interaction_paths[1])]
 
     return [construct_circuit_from_cfg(
-        {'data_path': p, 'interactions': i}, config) for p, i in zip(paths, interactions_cfg)], config, data_writer
+        {'data_path': p, 'interactionsxx': i}, config) for p, i in zip(paths, interactions_cfg)], config, data_writer
 
 
 def mutate(circuits, config, data_writer):

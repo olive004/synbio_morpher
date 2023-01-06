@@ -50,7 +50,7 @@ class CircuitModeller():
         # os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
         os.environ["XLA_PYTHON_CLIENT_ALLOCATOR"] = "platform"
 
-        # jax.config.update('jax_platform_name', config.get('simulation', {}).get('device', 'cpu'))
+        jax.config.update('jax_platform_name', config.get('simulation', {}).get('device', 'cpu'))
         # logging.warning(f'Using device {config.get("simulation", {}).get("device", "cpu")}')
 
     def init_circuit(self, circuit: Circuit):
