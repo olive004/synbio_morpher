@@ -56,7 +56,7 @@ ENSEMBLE_CONFIG = {
                 "mutation_counts": 1,
                 "mutation_nums_within_sequence": [1],
                 "mutation_nums_per_position": 1,
-                "seed": 2,
+                "seed": 3,
                 "concurrent_species_to_mutate": "single_species_at_a_time"
             },
             "filters": {
@@ -80,7 +80,7 @@ ENSEMBLE_CONFIG = {
                 "t1": 1200,
                 "solver": "diffrax",
                 "use_batch_mutations": True,
-                "batch_size": 100,
+                "batch_size": 1,
                 "max_circuits": 1000,
                 "device": "cpu"
             },
@@ -102,37 +102,38 @@ TEST_CONFIG = replace_value(CONFIG, 'test_mode', True)
 
 def five_circuits(config: dict, data_writer=None):
     """ Use a config with params from generate_species_templates """
+    # All circuits from ensemble_mutation_effect_analysis/2022_12_16_160419
 
     config, data_writer = script_preamble(
         config=config, data_writer=data_writer)
     config = prepare_config(config_file=config)
 
     paths = [
-        # toy_mRNA_circuit_1890
+        # toy_mRNA_circuit_0
         os.path.join('tests', 'configs', 'circuits', '0_weak.fasta'),
-        # toy_mRNA_circuit_1916
+        # toy_mRNA_circuit_940
         os.path.join('tests', 'configs', 'circuits', '1_med_weak.fasta'),
-        # toy_mRNA_circuit_1598
+        # toy_mRNA_circuit_1306
         os.path.join('tests', 'configs', 'circuits', '2_medium.fasta'),
-        # toy_mRNA_circuit_1196
+        # toy_mRNA_circuit_648
         os.path.join('tests', 'configs', 'circuits', '3_med_strong.fasta'),
-        # toy_mRNA_circuit_1491
+        # toy_mRNA_circuit_999
         os.path.join('tests', 'configs', 'circuits', '4_strong.fasta')
     ]
 
     interaction_paths = []
     for inter in ['binding_rates_dissociation', 'eqconstants']:
         interaction_paths.append([
-            # toy_mRNA_circuit_1890
+            # toy_mRNA_circuit_0
             os.path.join('tests', 'configs', inter, f'0_weak_{inter}.csv'),
-            # toy_mRNA_circuit_1916
+            # toy_mRNA_circuit_940
             os.path.join('tests', 'configs', inter, f'1_med_weak_{inter}.csv'),
-            # toy_mRNA_circuit_1598
+            # toy_mRNA_circuit_1306
             os.path.join('tests', 'configs', inter, f'2_medium_{inter}.csv'),
-            # toy_mRNA_circuit_1196
+            # toy_mRNA_circuit_648
             os.path.join('tests', 'configs', inter,
                          f'3_med_strong_{inter}.csv'),
-            # toy_mRNA_circuit_1491
+            # toy_mRNA_circuit_999
             os.path.join('tests', 'configs', inter, f'4_strong_{inter}.csv')
         ])
 
