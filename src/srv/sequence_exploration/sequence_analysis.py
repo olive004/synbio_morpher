@@ -16,7 +16,7 @@ from src.utils.misc.io import get_pathnames, get_subdirectories, get_pathnames_f
 from src.utils.misc.scripts_io import get_path_from_output_summary, get_root_experiment_folder, \
     load_experiment_config, load_experiment_output_summary, load_result_report
 from src.utils.misc.type_handling import flatten_nested_listlike
-from src.utils.results.analytics.analytics import get_analytics_types_all
+from src.utils.results.analytics.analytics import get_analytics_types_all, DIFF_KEY, RATIO_KEY
 from src.utils.results.visualisation import expand_data_by_col
 from src.utils.results.writer import DataWriter
 from src.srv.parameter_prediction.interactions import InteractionMatrix, INTERACTION_TYPES, b_get_stats
@@ -125,13 +125,13 @@ def get_mutation_info_columns():
 
     # Difference
     info_column_names_interactions_diff = [[[f'{i}_{s}',
-                                             f'{i}_{s}_diff_to_base_circuit'] for s in INTERACTION_STATS] for i in INTERACTION_TYPES]
+                                             f'{i}_{s}{DIFF_KEY}'] for s in INTERACTION_STATS] for i in INTERACTION_TYPES]
     info_column_names_interactions_diff = flatten_nested_listlike(
         info_column_names_interactions_diff)
 
     # Ratio
     info_column_names_interactions_ratio = [
-        [[f'{i}_{s}_ratio_from_mutation_to_base'] for s in INTERACTION_STATS] for i in INTERACTION_TYPES]
+        [[f'{i}_{s}{RATIO_KEY}'] for s in INTERACTION_STATS] for i in INTERACTION_TYPES]
     info_column_names_interactions_ratio = flatten_nested_listlike(
         info_column_names_interactions_ratio)
     info_column_names = MUTATION_INFO_COLUMN_NAMES + \
@@ -173,13 +173,13 @@ def b_tabulate_mutation_info(source_dir: str, data_writer: DataWriter, experimen
         diff_table = ref_stats[diffable_cols].values.squeeze(
         ) - stats[diffable_cols]
         diff_table = diff_table.rename(
-            columns={i: i + '_diff_to_base_circuit' for i in diffable_cols})
+            columns={i: i + DIFF_KEY for i in diffable_cols})
 
         ratio_table = stats[diffable_cols] / \
             np.where(ref_stats[diffable_cols].values.squeeze() != 0,
                      ref_stats[diffable_cols].values.squeeze(), np.nan)
         ratio_table = ratio_table.rename(
-            columns={i: i + '_ratio_from_mutation_to_base' for i in diffable_cols})
+            columns={i: i + RATIO_KEY for i in diffable_cols})
 
         return diff_table, ratio_table
 
@@ -258,6 +258,9 @@ def b_tabulate_mutation_info(source_dir: str, data_writer: DataWriter, experimen
     circuit_dirs = get_subdirectories(source_dir, min_condition=3)
     for circ_idx, circuit_dir in enumerate(circuit_dirs):
         circuit_name = os.path.basename(circuit_dir)
+        if circuit_name == '2_medium':
+            # TESTING
+            print(1)
         mutations_pathname = get_pathnames(
             first_only=True, file_key='mutations', search_dir=circuit_dir)
         mutations = GeneCircuitLoader().load_data(mutations_pathname).data
