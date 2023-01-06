@@ -93,12 +93,15 @@ def get_search_dir(config_file: dict, config_searchdir_key: str = None,
     update = sourcing_config.get(
         "is_source_dir_incomplete", None)
     if update:
+        if sourcing_config.get("purpose_to_get_source_dir_from") is None:
+            logging.warning('The source directory is incomplete = True, but no source dir + purpose pair was supplied to find the correct directory.')
         if sourcing_config.get('source_dir_actually_used_POSTERITY') is not None:
             return config_file, sourcing_config['source_dir_actually_used_POSTERITY']
 
         source_dir = os.path.join(sourcing_config.get(source_dir_key),
-                                  get_recent_experiment_folder(sourcing_config.get(
-                                      source_dir_key)), sourcing_config.get("purpose_to_get_source_dir_from"))
+                                get_recent_experiment_folder(sourcing_config.get(
+                                    source_dir_key)), sourcing_config.get("purpose_to_get_source_dir_from"))
+            
         if not os.path.isdir(source_dir):
             raise ConfigError(
                 f'Could not find directory {source_dir} (maybe it is not the most recent experiment directory anymore)')

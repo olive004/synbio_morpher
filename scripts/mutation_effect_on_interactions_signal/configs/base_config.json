@@ -2,34 +2,52 @@
     "system_type": "RNA",
     "data_path": null,
     "experiment": {
-        "purpose": "mutation_effect_on_interactions_signal"
+        "purpose": "mutation_effect_on_interactions_signal",
+        "no_visualisations": true,
+        "no_numerical": true,
+        "test_mode": true
     },
     "interaction_simulator": {
         "name": "IntaRNA",
-        "postprocess": false
-    },
-    "identities": {
-        "input": "RNA_0",
-        "output": "RNA_2"
+        "postprocess": true
     },
     "filters": {
-        "min_num_interacting": 3,
-        "max_self_interacting": 2
+        "min_num_interacting": null,
+        "max_self_interacting": null,
+        "max_total": null
     },
     "mutations": {
-        "mutation_counts": 10,
-        "mutation_nums_within_sequence": 1,
+        "algorithm": "random",
+        "mutation_counts": 2,
+        "mutation_nums_within_sequence": [1],
+        "mutation_nums_per_position": 1,
         "concurrent_species_to_mutate": "single_species_at_a_time"
     },
     "signal": {
-        "signal":[1, 0, 1, 0],
-        "signal_spec": "raw",
-        "signal_type": "abstract",
-        "total_time":10000,
-        "magnitude":10,
-        "positions":[6, 500],
-        "heights":[50, 80],
-        "durations":[50, 400]
-    }, 
-    "source_of_interaction_stats": "./data/gather_interaction_stats/2022_05_10_232313"
+        "inputs": ["RNA_0"],
+        "outputs": ["RNA_1"],
+        "function_name": "step_function",
+        "function_kwargs": {
+            "impulse_center": 400, 
+            "impulse_halfwidth": 5, 
+            "target": 10
+        }
+    },
+    "simulation": {
+        "dt": 0.1,
+        "t0": 0,
+        "t1": 1200,
+        "solver": "diffrax",
+        "use_batch_mutations": true,
+        "batch_size": 1000,
+        "max_circuits": 1000,
+        "device": "cpu"
+    },
+    "source_of_interaction_stats": {
+        "is_source_dir_incomplete": false,
+        "source_dir": "./data/gather_interaction_stats/2023_01_06_142815",
+        "purpose_to_get_source_dir_from": null,
+        "source_dir_actually_used_POSTERITY": null
+    },
+    "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json"
 }

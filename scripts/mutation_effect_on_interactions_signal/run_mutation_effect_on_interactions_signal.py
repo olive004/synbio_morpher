@@ -20,7 +20,7 @@ from src.utils.circuit.agnostic_circuits.circuit_manager_new import CircuitModel
 def main(config=None, data_writer=None):
     # Set configs
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
-        "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_20_highmag.json"))
+        "scripts", "mutation_effect_on_interactions_signal", "configs", "base_config.json"))
     config_file = load_json_as_dict(config)
 
     # Start_experiment
@@ -102,7 +102,7 @@ def main(config=None, data_writer=None):
         protocols.append(
             # Simulate signal and write results
             Protocol(partial(CircuitModeller(result_writer=data_writer, config=config_file).batch_circuits,
-                             write_to_subsystem=True, batch_size=config['simulation'].get('batch_size', 100),
+                             write_to_subsystem=True, batch_size=config_file['simulation'].get('batch_size', 100),
                              methods={
                 "init_circuit": {},
                 "simulate_signal_batch": {'ref_circuit': None,
