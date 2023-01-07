@@ -16,7 +16,7 @@ from src.utils.misc.io import get_pathnames, get_subdirectories, get_pathnames_f
 from src.utils.misc.scripts_io import get_path_from_output_summary, get_root_experiment_folder, \
     load_experiment_config, load_experiment_output_summary, load_result_report
 from src.utils.misc.type_handling import flatten_nested_listlike
-from src.utils.results.analytics.analytics import get_analytics_types_all, DIFF_KEY, RATIO_KEY
+from src.utils.results.analytics.naming import get_analytics_types_all, DIFF_KEY, RATIO_KEY
 from src.utils.results.visualisation import expand_data_by_col
 from src.utils.results.writer import DataWriter
 from src.srv.parameter_prediction.interactions import InteractionMatrix, INTERACTION_TYPES, b_get_stats
@@ -182,18 +182,6 @@ def b_tabulate_mutation_info(source_dir: str, data_writer: DataWriter, experimen
             columns={i: i + RATIO_KEY for i in diffable_cols})
 
         return diff_table, ratio_table
-
-    # def remove_invalid_json_values(table: Union[pd.DataFrame, dict]) -> Union[pd.DataFrame, dict]:
-    #     if type(table) == pd.DataFrame:
-    #         table.fillna(NUMERICAL['nan'], inplace=True)
-    #     elif type(table) == dict:
-    #         for k, v in table.items():
-    #             if type(v) == np.ndarray:
-    #                 v[v == np.inf] = NUMERICAL['infinity']
-    #                 v[v == -np.inf] = -NUMERICAL['infinity']
-    #                 v[v == np.nan] = NUMERICAL['nan']
-    #                 table[k] = v
-    #     return table
 
     def update_info_table(info_table: pd.DataFrame, curr_table: pd.DataFrame, int_stats: pd.DataFrame,
                           ref_stats: pd.DataFrame, result_source_dirs: List[str],

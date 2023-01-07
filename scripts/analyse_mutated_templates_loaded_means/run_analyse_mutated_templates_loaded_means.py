@@ -8,7 +8,7 @@ from src.srv.io.manage.script_manager import script_preamble
 from src.utils.misc.io import get_pathnames_from_mult_dirs
 from src.utils.misc.string_handling import prettify_keys_for_label
 from src.utils.misc.scripts_io import get_search_dir, load_experiment_config_original
-from src.utils.results.analytics.analytics import get_true_names_analytics
+from src.utils.results.analytics.naming import get_true_names_analytics
 from src.srv.sequence_exploration.summary_mutations import summarise_mutation_groups
 
 from src.utils.results.experiments import Experiment, Protocol

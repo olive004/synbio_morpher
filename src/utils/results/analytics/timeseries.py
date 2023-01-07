@@ -3,7 +3,7 @@ import numpy as np
 import jax.numpy as jnp
 from typing import List, Tuple
 from src.utils.misc.type_handling import merge_dicts
-from src.utils.results.analytics.analytics import DIFF_KEY, RATIO_KEY
+from src.utils.results.analytics.naming import DIFF_KEY, RATIO_KEY
 
 
 NUM_DTYPE = np.float32

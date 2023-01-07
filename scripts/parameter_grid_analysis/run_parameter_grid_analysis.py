@@ -10,7 +10,7 @@ from src.srv.io.loaders.data_loader import DataLoader, GeneCircuitLoader
 from src.srv.io.manage.script_manager import script_preamble
 from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
 from src.utils.misc.type_handling import flatten_listlike
-from src.utils.results.analytics.analytics import get_analytics_types_all
+from src.utils.results.analytics.naming import get_analytics_types_all
 from src.utils.results.experiments import Experiment, Protocol
 from src.utils.results.result_writer import ResultWriter
 from src.utils.data.data_format_tools.common import load_json_as_dict

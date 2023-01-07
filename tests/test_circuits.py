@@ -7,7 +7,7 @@ import logging
 from tests.shared import five_circuits, mutate, simulate, CONFIG, TEST_CONFIG
 # from tests.shared import TEST_CONFIG as CONFIG
 from src.srv.sequence_exploration.sequence_analysis import load_tabulated_info, b_tabulate_mutation_info
-from src.utils.results.analytics.analytics import get_true_names_analytics, DIFF_KEY, RATIO_KEY
+from src.utils.results.analytics.naming import get_true_names_analytics, DIFF_KEY, RATIO_KEY
 
 
 def create_test_inputs(config: dict):

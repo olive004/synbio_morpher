@@ -8,7 +8,7 @@ from fire import Fire
 from src.srv.io.manage.script_manager import script_preamble
 from src.utils.misc.scripts_io import load_experiment_config
 from src.utils.misc.string_handling import prettify_keys_for_label
-from src.utils.results.analytics.analytics import get_analytics_types
+from src.utils.results.analytics.naming import get_analytics_types
 
 from src.utils.results.experiments import Experiment, Protocol
 from src.utils.results.result_writer import ResultWriter

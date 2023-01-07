@@ -1,7 +1,7 @@
 
 
 import pandas as pd
-from src.utils.results.analytics.analytics import get_true_names_analytics
+from src.utils.results.analytics.naming import get_true_names_analytics
 from src.utils.results.writer import DataWriter
 
 

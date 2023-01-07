@@ -8,7 +8,7 @@ from src.srv.io.manage.sys_interface import make_filename_safely
 from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
 from src.utils.circuit.agnostic_circuits.circuit_manager_new import construct_circuit_from_cfg, prepare_config
 from src.utils.misc.decorators import time_it
-from src.utils.results.analytics.analytics import get_analytics_types_all
+from src.utils.results.analytics.naming import get_analytics_types_all
 from src.utils.results.experiments import Experiment, Protocol
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.misc.numerical import make_symmetrical_matrix_from_sequence, triangular_sequence
