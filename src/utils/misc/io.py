@@ -2,7 +2,7 @@ from typing import List, Union
 import glob
 import os
 from src.utils.misc.string_handling import remove_file_extension
-from src.utils.misc.type_handling import nest_list_dict, flatten_nested_listlike
+from src.utils.misc.type_handling import nest_list_dict
 from src.utils.misc.helper import vanilla_return
 from src.utils.misc.errors import ExperimentError
 from src.utils.data.data_format_tools.common import load_multiple_as_list
