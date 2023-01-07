@@ -28,16 +28,26 @@ ENV MNT ./..
 WORKDIR /workdir
 # ENTRYPOINT ["/bin/bash"]
 
+## A few missing files for dependencies:
+# For conda: these 2 locations were determined by running the command 
+# find /usr -name libz.so.1 
+# on the container and on an Ubuntu machine. The first location is the one from 
+# the container and the second location is where conda will look for libz.so.1
+RUN cp /usr/local/lib/libz.so.1 /usr/lib/x86_64-linux-gnu
+# For jax: similar story
+RUN cp /usr/local/lib/libstdc++.so.6 /usr/local/lib/python3.10/site-packages/jax/_src/lib/
+
 # GPU
 RUN pip install --upgrade "jax[cuda]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-# COPY /usr/local/lib/libz.so.1 /root/miniconda3/
-COPY /usr/lib/x86_64-linux-gnu/libz.so.1 /root/miniconda3/
-RUN (sleep 3; echo yes; sleep 3; echo /root/miniconda3; sleep 3; echo yes) | bash Miniconda3-latest-Linux-x86_64.sh 
-RUN conda install -c conda-forge cudatoolkit=11.2 cudnn=8.1.0
+RUN (sleep 1; echo yes; sleep 1; echo /root/miniconda3; sleep 1; echo yes) | bash Miniconda3-latest-Linux-x86_64.sh
 RUN export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_PREFIX/lib/
+RUN export LD_LIBRARY_PATH=/root/miniconda3/lib/
 RUN mkdir -p $CONDA_PREFIX/etc/conda/activate.d
 RUN echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_PREFIX/lib/' > $CONDA_PREFIX/etc/conda/activate.d/env_vars.sh
+RUN source /root/miniconda3/bin/activate 
+RUN yes | conda install -c conda-forge cudatoolkit=11.2 cudnn=8.1.0
+RUN conda deactivate
 
 # Go
 # RUN wget https://go.dev/dl/go1.19.4.linux-amd64.tar.gz
@@ -45,4 +55,3 @@ RUN echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_PREFIX/lib/' > $CONDA_P
 # RUN export PATH=$PATH:/usr/local/go/bin
 # RUN export GOPATH="/mnt/c/Users/${user}/directory/to/your/golang/workspace"
 
-COPY /usr/local/lib/libstdc++.so.6 /usr/local/lib/python3.10/site-packages/jax/_src/lib/
