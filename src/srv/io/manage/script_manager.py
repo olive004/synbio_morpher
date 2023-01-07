@@ -31,7 +31,8 @@ def script_preamble(config, data_writer, alt_cfg_filepath: str = None, use_resul
     config_file = load_json_as_dict(config)
     if data_writer is None:
         data_writer = Writer(purpose=config_file['experiment']['purpose'])
-    return config, data_writer
+    config_file['config_filepath_ifgiven_POSTERITY'] = alt_cfg_filepath
+    return config_file, data_writer
 
 
 class Ensembler():
