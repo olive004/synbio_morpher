@@ -135,6 +135,10 @@ def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
     will be treated as increasingly nested subcolumns """
 
     hue = hue if hue is not None else column_name_for_expanding_xcoldata
+    if groupby is not None and type(groupby) == str:
+        import operator
+        selection_conditions = [
+            (groupby, operator.eq, data[groupby].unique()[0])]
 
     def process_cols(cols):
         if cols is None:
