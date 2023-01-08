@@ -33,9 +33,12 @@ WORKDIR /workdir
 # For jax: similar story
 # RUN cp /usr/local/lib/libstdc++.so.6 /usr/local/lib/python3.10/site-packages/jax/_src/lib/
 
-# Conda & IntaRNA
-RUN yes | apt-get install wget && \
-    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+################################################################################
+#  Install Conda & IntaRNA dependencies
+################################################################################
+# RUN yes | apt-get install wget && \
+#     wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+RUN curl https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
 RUN (sleep 1; echo yes; sleep 1; echo /root/miniconda3; sleep 1; echo yes) | bash Miniconda3-latest-Linux-x86_64.sh && \
     # export LD_LIBRARY_PATH=/root/miniconda3/lib/ && \
     # mkdir -p $CONDA_PREFIX/etc/conda/activate.d && \
