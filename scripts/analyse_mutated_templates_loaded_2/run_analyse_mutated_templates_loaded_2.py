@@ -157,13 +157,15 @@ def main(config=None, data_writer=None):
         # Log histplots with mutation number hue
         diff_iters = [
                     [
-                        f'{analytics_type}_diff_to_base_circuit',
+                        analytics_type,
+                        # f'{analytics_type}_diff_to_base_circuit',
                         f'{prettify_keys_for_label(analytics_type)} difference between circuit\nand mutated counterparts',
                         f'{prettify_keys_for_label(analytics_type)} difference'
                     ] for analytics_type in analytics_types]
         ratio_iters = [
                 [
-                    f'{analytics_type}_ratio_from_mutation_to_base',
+                    analytics_type,
+                    # f'{analytics_type}_ratio_from_mutation_to_base',
                     f'{prettify_keys_for_label(analytics_type)} ratio from mutated\nto original circuit',
                     f'{prettify_keys_for_label(analytics_type)} ratio'
                 ] for analytics_type in analytics_types]
