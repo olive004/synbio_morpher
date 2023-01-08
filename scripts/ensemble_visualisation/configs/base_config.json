@@ -3,7 +3,7 @@
         "purpose": "ensemble_visualisation"
     },
     "base_configs_ensemble": {
-        "analyse_mutated_templates_loaded": {
+        "xanalyse_mutated_templates_loaded": {
             "experiment": {
                 "purpose": "analyse_mutated_templates_loaded"
             },
@@ -17,7 +17,7 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "analyse_mutated_templates_loaded_1": {
+        "xanalyse_mutated_templates_loaded_1": {
             "experiment": {
                 "purpose": "analyse_mutated_templates_loaded_1"
             },
@@ -31,7 +31,7 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "analyse_mutated_templates_loaded_2": {
+        "xanalyse_mutated_templates_loaded_2": {
             "experiment": {
                 "purpose": "analyse_mutated_templates_loaded_2"
             },
