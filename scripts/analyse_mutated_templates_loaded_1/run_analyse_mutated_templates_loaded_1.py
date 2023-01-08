@@ -31,11 +31,6 @@ def main(config=None, data_writer=None):
         "scripts", "analyse_mutated_templates_loaded_1", "configs", "base_config.json"))
     config_file = load_json_as_dict(config)
 
-    # Start_experiment
-    if data_writer is None:
-        data_writer = ResultWriter(purpose=config_file.get(
-            'experiment', {}).get('purpose', 'analyse_mutated_templates_loaded_1'))
-
     config_file, source_dirs = get_search_dir(
         config_searchdir_key='source_dirs', config_file=config_file)
     if type(source_dirs) != list:

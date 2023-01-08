@@ -1,14 +1,19 @@
 
 
-from copy import deepcopy
 from datetime import datetime
 from typing import Tuple
 import logging
 import os
+from functools import partial
+import pandas as pd
+
+
 from src.utils.results.writer import DataWriter
 from src.utils.results.result_writer import ResultWriter
 from src.utils.data.data_format_tools.common import load_json_as_dict
-from src.utils.misc.io import convert_pathname_to_module
+from src.utils.misc.io import convert_pathname_to_module, get_pathnames_from_mult_dirs
+from src.utils.results.experiments import Protocol
+from src.utils.data.data_format_tools.common import load_json_as_dict, load_csv_mult
 
 
 SCRIPT_DIR = 'scripts'
@@ -33,6 +38,38 @@ def script_preamble(config, data_writer, alt_cfg_filepath: str = None, use_resul
         data_writer = Writer(purpose=config_file['experiment']['purpose'])
     config_file['config_filepath_ifgiven_POSTERITY'] = alt_cfg_filepath
     return config_file, data_writer
+
+
+def visualisation_script_protocol_preamble(source_dirs: list):
+    return [
+        Protocol(
+            partial(
+                get_pathnames_from_mult_dirs,
+                search_dirs=source_dirs,
+                file_key='tabulated_mutation_info.csv',
+                first_only=True),
+            req_output=True,
+            name='get_pathnames_from_mult_dirs'
+        ),
+        Protocol(
+            partial(
+                load_csv_mult
+                # as_type=pd.DataFrame
+            ),
+            req_input=True,
+            req_output=True,
+            name='load_csv'
+        ),
+        Protocol(
+            partial(
+                pd.concat,
+                axis=0,
+                ignore_index=True),
+            req_input=True,
+            req_output=True,
+            name='concatenate_dfs'
+        )
+    ]
 
 
 class Ensembler():

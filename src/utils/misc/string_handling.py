@@ -58,6 +58,8 @@ def prettify_keys_for_label(key: str):
     key = key.replace('number', 'num').replace('num', 'number')
     key = key.replace('diff', 'difference')
     key = key.replace('std', 'standard deviation')
+    key = key.replace('eqconstants', 'Equilibrium constant')
+    key = key.replace('binding_rates_dissociation', 'Dissociation rate ' + r'$k_d$' + ' (' r'$s^{-1}$' + ')')
     key = key.capitalize()
     return key
 

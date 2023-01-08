@@ -10,7 +10,7 @@ from src.utils.misc.io import get_pathnames_from_mult_dirs
 from src.utils.misc.scripts_io import get_search_dir, load_experiment_config_original
 from src.utils.misc.string_handling import prettify_keys_for_label
 
-from src.utils.results.analytics.naming import get_analytics_types, get_signal_dependent_analytics
+from src.utils.results.analytics.naming import get_true_names_analytics, get_signal_dependent_analytics
 from src.utils.results.experiments import Experiment, Protocol
 from src.utils.results.result_writer import ResultWriter
 from src.utils.results.visualisation import visualise_data
@@ -20,14 +20,9 @@ from src.utils.data.data_format_tools.common import load_json_as_dict, load_csv_
 def main(config=None, data_writer=None):
     # Set configs
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
-            # "scripts", "analyse_mutated_templates_loaded", "configs", "base_config_test_2.json"))
-            "scripts", "analyse_mutated_templates_loaded_3", "configs", "base_config.json"))
+        # "scripts", "analyse_mutated_templates_loaded", "configs", "base_config_test_2.json"))
+        "scripts", "analyse_mutated_templates_loaded_3", "configs", "base_config.json"))
     config_file = load_json_as_dict(config)
-
-    # Start_experiment
-    if data_writer is None:
-        data_writer = ResultWriter(purpose=config_file.get(
-            'experiment', {}).get('purpose', 'analyse_mutated_templates_loaded'))
 
     config_file, source_dirs = get_search_dir(
         config_searchdir_key='source_dirs', config_file=config_file)
@@ -74,37 +69,33 @@ def main(config=None, data_writer=None):
     # Visualisations
 
     # Analytics visualisation
-    analytics_types = get_analytics_types()
+    def vis_analytics(data: pd.DataFrame):
+        analytics_types = get_true_names_analytics(data)
 
-    ## Line plots
-    for remove_outliers in (True, False):
-        outlier_std_threshold=3
-        outlier_name = '' if remove_outliers else '_nooutliers'
-        outlier_text = f', outliers removed (>{outlier_std_threshold} standard deviations)' if remove_outliers else ''
+        # Line plots
+        for remove_outliers in (True, False):
+            outlier_std_threshold = 3
+            outlier_name = '' if remove_outliers else '_nooutliers'
+            outlier_text = f', outliers removed (>{outlier_std_threshold} standard deviations)' if remove_outliers else ''
 
-        for mutation_attr in ['mutation_positions']:  #, 'mutation_type']: -> should be barplot
-            for diff_type in ['', '_diff_to_base_circuit', '_ratio_from_mutation_to_base']:
-                # Difference
-                for analytics_type, cols_x, cols_y, title, xlabel, ylabel in [
-                        [
-                            analytics_type,
-                            mutation_attr,
-                            f'{analytics_type}{diff_type}',
-                            f'{prettify_keys_for_label(mutation_attr)} vs. {prettify_keys_for_label(analytics_type)} difference between circuit\nand mutated counterparts',
-                            f'{prettify_keys_for_label(mutation_attr)}',
-                            f'{prettify_keys_for_label(analytics_type)} difference{outlier_text}'
-                        ] for analytics_type in analytics_types]:
-                    
-                    complete_coly_by_str = analytics_type + \
-                        '_wrt' if analytics_type in get_signal_dependent_analytics() else None
-                    protocols.append(Protocol(
-                        partial(
-                            visualise_data,
+            for mutation_attr in ['mutation_positions']:
+                for diff_type in ['', '_diff_to_base_circuit', '_ratio_from_mutation_to_base']:
+                    # Difference
+                    for cols_x, cols_y, title, xlabel, ylabel in [
+                            [
+                                mutation_attr,
+                                f'{analytics_type}{diff_type}',
+                                f'{prettify_keys_for_label(mutation_attr)} vs. {prettify_keys_for_label(analytics_type)} difference between circuit\nand mutated counterparts',
+                                f'{prettify_keys_for_label(mutation_attr)}',
+                                f'{prettify_keys_for_label(analytics_type)} difference{outlier_text}'
+                            ] for analytics_type in analytics_types]:
+
+                        visualise_data(
+                            og_data=data,
                             data_writer=data_writer,
                             cols_x=[cols_x], cols_y=[cols_y],
                             plot_type='line_plot',
                             out_name=f'{cols_x}_{cols_y}{outlier_name}',
-                            complete_coly_by_str=complete_coly_by_str,
                             exclude_rows_zero_in_cols=['mutation_num'],
                             expand_xcoldata_using_col=True,
                             log_axis=(False, True),
@@ -115,12 +106,16 @@ def main(config=None, data_writer=None):
                             title=title,
                             xlabel=xlabel,
                             ylabel=ylabel
-                        ),
-                        req_input=True,
-                        name='visualise_interactions_difference',
-                        skip=config_file.get('only_visualise_circuits', False)
-                    )
-                    )
+                        )
+
+    protocols.append(
+        Protocol(
+            vis_analytics,
+            req_input=True,
+            name='visualise_interactions_difference',
+            skip=config_file.get('only_visualise_circuits', False)
+        )
+    )
 
     experiment = Experiment(config=config, config_file=config_file, protocols=protocols,
                             data_writer=data_writer)

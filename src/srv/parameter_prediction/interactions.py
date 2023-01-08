@@ -14,7 +14,7 @@ from src.utils.data.data_format_tools.common import determine_file_format
 from src.utils.misc.type_handling import flatten_listlike
 
 
-INTERACTION_TYPES = list(INTERACTION_FILE_ADDONS.keys())
+INTERACTION_TYPES = sorted(INTERACTION_FILE_ADDONS.keys())
 # INTERACTION_TYPES.remove('coupled_binding_rates')
 
 
@@ -110,23 +110,24 @@ class InteractionMatrix():
         return circuit_name
 
     def get_stats(self, interaction_attr='eqconstants'):
-        idxs_interacting = self.get_unique_interacting_idxs()
-        interacting = self.get_interacting_species(idxs_interacting)
-        self_interacting = self.get_selfinteracting_species(idxs_interacting)
+        # idxs_interacting = self.get_unique_interacting_idxs()
+        # interacting = self.get_interacting_species(idxs_interacting)
+        # self_interacting = self.get_selfinteracting_species(idxs_interacting)
 
-        stats = {
-            "name": self.name,
-            "interacting": interacting,
-            "self_interacting": self_interacting,
-            "interacting_names": sorted([(self.sample_names[i[0]], self.sample_names[i[1]]) for i in interacting]),
-            "self_interacting_names": sorted([(self.sample_names[i[0]], self.sample_names[i[1]]) for i in self_interacting]),
-            "num_interacting": len(set(flatten_listlike(interacting))),
-            "num_self_interacting": len(set(self_interacting)),
-            "max_interaction": np.max(self.interactions.__getattribute__(interaction_attr)),
-            "min_interaction": np.min(self.interactions.__getattribute__(interaction_attr))
-        }
-        stats = {k: [v] for k, v in stats.items()}
-        stats = pd.DataFrame.from_dict(stats, dtype=object)
+        # stats = {
+        #     "name": self.name,
+        #     "interacting": interacting,
+        #     "self_interacting": self_interacting,
+        #     "interacting_names": sorted([(self.sample_names[i[0]], self.sample_names[i[1]]) for i in interacting]),
+        #     "self_interacting_names": sorted([(self.sample_names[i[0]], self.sample_names[i[1]]) for i in self_interacting]),
+        #     "num_interacting": len(set(flatten_listlike(interacting))),
+        #     "num_self_interacting": len(set(self_interacting)),
+        #     "max_interaction": np.max(self.interactions.__getattribute__(interaction_attr)),
+        #     "min_interaction": np.min(self.interactions.__getattribute__(interaction_attr))
+        # }
+        # stats = {k: [v] for k, v in stats.items()}
+        # stats = pd.DataFrame.from_dict(stats, dtype=object)
+        stats = b_get_stats([self])
         return stats
 
     def get_interacting_species(self, idxs_interacting):
