@@ -3,13 +3,13 @@
         "purpose": "ensemble_visualisation"
     },
     "base_configs_ensemble": {
-        "xanalyse_mutated_templates_loaded": {
+        "analyse_mutated_templates_loaded": {
             "experiment": {
                 "purpose": "analyse_mutated_templates_loaded"
             },
             "source_dirs": {
                 "is_source_dir_incomplete": false,
-                "source_dir": "./data/ensemble_mutation_effect_analysis/2022_12_20_131837/summarise_simulation",
+                "source_dir": "./data/ensemble_mutation_effect_analysis/2023_01_07_184957/summarise_simulation",
                 "purpose_to_get_source_dir_from": null,
                 "source_dir_actually_used_POSTERITY": null
             },
@@ -17,13 +17,13 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "xanalyse_mutated_templates_loaded_1": {
+        "analyse_mutated_templates_loaded_1": {
             "experiment": {
                 "purpose": "analyse_mutated_templates_loaded_1"
             },
             "source_dirs": {
                 "is_source_dir_incomplete": false,
-                "source_dir": "./data/ensemble_mutation_effect_analysis/2022_12_20_131837/summarise_simulation",
+                "source_dir": "./data/ensemble_mutation_effect_analysis/2023_01_07_184957/summarise_simulation",
                 "purpose_to_get_source_dir_from": null,
                 "source_dir_actually_used_POSTERITY": null
             },
@@ -31,13 +31,13 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "xanalyse_mutated_templates_loaded_2": {
+        "analyse_mutated_templates_loaded_2": {
             "experiment": {
                 "purpose": "analyse_mutated_templates_loaded_2"
             },
             "source_dirs": {
                 "is_source_dir_incomplete": false,
-                "source_dir": "./data/ensemble_mutation_effect_analysis/2022_12_20_131837/summarise_simulation",
+                "source_dir": "./data/ensemble_mutation_effect_analysis/2023_01_07_184957/summarise_simulation",
                 "purpose_to_get_source_dir_from": null,
                 "source_dir_actually_used_POSTERITY": null
             },
@@ -51,7 +51,7 @@
             },
             "source_dirs": {
                 "is_source_dir_incomplete": false,
-                "source_dir": "./data/ensemble_mutation_effect_analysis/2022_12_20_131837/summarise_simulation",
+                "source_dir": "./data/ensemble_mutation_effect_analysis/2023_01_07_184957/summarise_simulation",
                 "purpose_to_get_source_dir_from": null,
                 "source_dir_actually_used_POSTERITY": null
             },
@@ -65,7 +65,7 @@
             },
             "source_dirs": {
                 "is_source_dir_incomplete": false,
-                "source_dir": "./data/ensemble_mutation_effect_analysis/2022_12_20_131837/summarise_simulation",
+                "source_dir": "./data/ensemble_mutation_effect_analysis/2023_01_07_184957/summarise_simulation",
                 "purpose_to_get_source_dir_from": null,
                 "source_dir_actually_used_POSTERITY": null
             },
@@ -79,7 +79,7 @@
             },
             "source_dirs": {
                 "is_source_dir_incomplete": false,
-                "source_dir": "./data/ensemble_mutation_effect_analysis/2022_12_20_131837/summarise_simulation",
+                "source_dir": "./data/ensemble_mutation_effect_analysis/2023_01_07_184957/summarise_simulation",
                 "purpose_to_get_source_dir_from": null,
                 "source_dir_actually_used_POSTERITY": null
             },

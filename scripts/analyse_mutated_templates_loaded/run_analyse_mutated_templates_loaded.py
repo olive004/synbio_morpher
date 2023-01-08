@@ -91,7 +91,7 @@ def main(config=None, data_writer=None):
 
     # Binding rates interactions og min and max
     def interaction_vis(data: pd.DataFrame, data_writer):
-        num_mutations = list(data['mutations_num'].unique()) + ['all']
+        num_mutations = list(data['mutation_num'].unique()) + ['all']
         log_opts = [(False, False), (True, False)]
         for log_opt in log_opts:
             log_text = '_log' if any(log_opt) else ''
