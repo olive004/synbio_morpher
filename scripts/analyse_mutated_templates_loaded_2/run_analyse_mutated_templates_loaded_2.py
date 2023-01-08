@@ -156,19 +156,19 @@ def main(config=None, data_writer=None):
 
         # Log histplots with mutation number hue
         diff_iters = [
-                    [
-                        analytics_type,
-                        # f'{analytics_type}_diff_to_base_circuit',
-                        f'{prettify_keys_for_label(analytics_type)} difference between circuit\nand mutated counterparts',
-                        f'{prettify_keys_for_label(analytics_type)} difference'
-                    ] for analytics_type in analytics_types]
+            [
+                analytics_type,
+                # f'{analytics_type}_diff_to_base_circuit',
+                f'{prettify_keys_for_label(analytics_type)} difference between circuit\nand mutated counterparts',
+                f'{prettify_keys_for_label(analytics_type)} difference'
+            ] for analytics_type in analytics_types if 'diff' in analytics_type]
         ratio_iters = [
-                [
-                    analytics_type,
-                    # f'{analytics_type}_ratio_from_mutation_to_base',
-                    f'{prettify_keys_for_label(analytics_type)} ratio from mutated\nto original circuit',
-                    f'{prettify_keys_for_label(analytics_type)} ratio'
-                ] for analytics_type in analytics_types]
+            [
+                analytics_type,
+                # f'{analytics_type}_ratio_from_mutation_to_base',
+                f'{prettify_keys_for_label(analytics_type)} ratio from mutated\nto original circuit',
+                f'{prettify_keys_for_label(analytics_type)} ratio'
+            ] for analytics_type in analytics_types if 'ratio' in analytics_type]
         for filltype in ['dodge', 'fill']:
             for iters in diff_iters, ratio_iters:
                 for cols_x, title, xlabel in iters:
@@ -190,7 +190,7 @@ def main(config=None, data_writer=None):
                         title=title,
                         xlabel=xlabel
                     )
-    
+
     protocols.append(
         Protocol(
             vis_analytics,
