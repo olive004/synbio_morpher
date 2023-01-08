@@ -41,7 +41,7 @@
         "use_batch_mutations": true,
         "batch_size": 1000,
         "max_circuits": 1000,
-        "device": "cpu"
+        "device": "gpu"
     },
     "source_of_interaction_stats": {
         "is_source_dir_incomplete": false,
