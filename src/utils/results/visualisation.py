@@ -100,7 +100,7 @@ def expand_data_by_col(data: pd.DataFrame, columns: Union[str, list], column_for
     return expanded_data
 
 
-def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
+def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                    cols_x: list = None, cols_y: list = None,
                    groupby: str = None,
                    normalise_data_x: bool = False,
@@ -138,7 +138,7 @@ def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
     if groupby is not None and type(groupby) == str:
         import operator
         selection_conditions = [
-            (groupby, operator.eq, data[groupby].unique()[0])]
+            (groupby, operator.eq, og_data[groupby].unique()[0])]
 
     def process_cols(cols):
         if cols is None:
@@ -291,7 +291,7 @@ def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
     if plot_type == 'plot':
         for col_x in cols_x:
             for col_y in cols_y:
-                x, y = data[col_x], data[col_y]
+                x, y = og_data[col_x], og_data[col_y]
                 if preprocessor_func_x:
                     x = preprocessor_func_x(x.values)
                     # y = preprocessor_func_x(y.values)
@@ -303,8 +303,8 @@ def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
     for col_x in cols_x:
         for col_y in cols_y:
             if use_sns:
-                data, col_x, col_y = preprocess_data(
-                    data, preprocessor_func_x, threshold_value_max,
+                og_data, col_x, col_y = preprocess_data(
+                    og_data, preprocessor_func_x, threshold_value_max,
                     expand_xcoldata_using_col, expand_ycoldata_using_col,
                     col_x, col_y,
                     normalise_data_x, normalise_data_y,
@@ -316,8 +316,8 @@ def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
                     selection_conditions=selection_conditions,
                     postprocessor_func_x=postprocessor_func_x,
                     postprocessor_func_y=postprocessor_func_y)
-                data, col_x, col_y = process_log_sns(
-                    data, col_x, col_y, plot_kwargs, log_axis, plot_type)
+                og_data, col_x, col_y = process_log_sns(
+                    og_data, col_x, col_y, plot_kwargs, log_axis, plot_type)
                 if plot_type == 'scatter_plot':
                     write_func = visualiser.sns_scatterplot
                 elif plot_type == 'bar_plot':
@@ -335,10 +335,10 @@ def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
                 else:
                     logging.warning(f'Unknown plot type given "{plot_type}"')
 
-                if is_data_plotable(data, col_x, col_y):
+                if is_data_plotable(og_data, col_x, col_y):
                     data_writer.output(out_type='svg', out_name=out_name,
                                        write_func=write_func,
-                                       **merge_dicts({'x': col_x, 'y': col_y, 'data': data,
+                                       **merge_dicts({'x': col_x, 'y': col_y, 'data': og_data,
                                                       'hue': hue},
                                                      plot_kwargs))
                 else:
