@@ -175,22 +175,22 @@ def main(config=None, data_writer=None):
                 titles = [
                     # Binding rates dissociation
                     f'Maximum ' + r'$k_d$' + f', {m} mutation{plot_grammar_m}',
-                    f'Difference between circuit\nand mutated (maximum ' +
-                    r'$k_d$' + f'), {m} mutation{plot_grammar_m}',
                     f'Ratio between mutated and \noriginal circuit (maximum ' +
                     r'$k_d$' + f'), {m} mutation{plot_grammar_m}',
-                    f'Minimum ' + r'$k_d$' + f', {m} mutation{plot_grammar_m}',
-                    f'Difference between circuit\nand mutated (minimum ' +
+                    f'Difference between circuit\nand mutated (maximum ' +
                     r'$k_d$' + f'), {m} mutation{plot_grammar_m}',
+                    f'Minimum ' + r'$k_d$' + f', {m} mutation{plot_grammar_m}',
                     f'Ratio between mutated and \noriginal circuit (minimum ' +
+                    r'$k_d$' + f'), {m} mutation{plot_grammar_m}',
+                    f'Difference between circuit\nand mutated (minimum ' +
                     r'$k_d$' + f'), {m} mutation{plot_grammar_m}',
                     # eqconstant
                     f'Maximum equilibrium constant, {m} mutation{plot_grammar_m}',
-                    f'Difference between reference and mutated\ncircuits, equilibrium constant (max), {m} mutation{plot_grammar_m}',
                     f'Ratio between mutated and original circuit\nequilibrium constant (max), {m} mutation{plot_grammar_m}',
+                    f'Difference between reference and mutated\ncircuits, equilibrium constant (max), {m} mutation{plot_grammar_m}',
                     f'Minimum equilibrium constant, {m} mutation{plot_grammar_m}',
-                    f'Difference between reference and mutated\ncircuits, equilibrium constant (min), {m} mutation{plot_grammar_m}',
-                    f'Ratio between mutated and original circuit\nequilibrium constant (min), {m} mutation{plot_grammar_m}'
+                    f'Ratio between mutated and original circuit\nequilibrium constant (min), {m} mutation{plot_grammar_m}',
+                    f'Difference between reference and mutated\ncircuits, equilibrium constant (min), {m} mutation{plot_grammar_m}'
                 ]
                 title_count = 0
                 for interaction_type in interaction_types_chosen:
