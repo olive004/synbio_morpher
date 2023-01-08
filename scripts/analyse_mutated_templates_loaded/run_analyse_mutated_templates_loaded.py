@@ -102,24 +102,18 @@ def main(config=None, data_writer=None):
             titles = ['Maximum equilibrium constant, unmutated circuits',
                       'Minimum equilibrium constant, unmutated circuits']
             for cols_x, out_name, title in zip(cols_xs, out_names, titles):
-                protocols.append(
-                    Protocol(
-                        partial(visualise_data, data_writer=data_writer, cols_x=[cols_x],
-                                plot_type='histplot',
-                                out_name=out_name + log_text,
-                                exclude_rows_nonempty_in_cols=[
-                                    'mutation_name'],
-                                # threshold_value_max=binding_rates_threshold_upper,
-                                selection_conditions=[
-                                    ('mutation_num', operator.ne, 0)],
-                                log_axis=log_opt,
-                                use_sns=True,
-                                title=title,
-                                xlabel='Equilibrium constant (unitless)'),
-                        req_input=True,
-                        name='visualise_circuit_interactions'
-                    )
-                )
+                visualise_data(
+                    og_data=data, data_writer=data_writer, cols_x=[cols_x],
+                    plot_type='histplot',
+                    out_name=out_name + log_text,
+                    exclude_rows_nonempty_in_cols=[
+                        'mutation_name'],
+                    selection_conditions=[
+                        ('mutation_num', operator.ne, 0)],
+                    log_axis=log_opt,
+                    use_sns=True,
+                    title=title,
+                    xlabel='Equilibrium constant (unitless)')
 
             for m in num_mutations:
                 # Eqconstants max, min mutations
@@ -228,32 +222,6 @@ def main(config=None, data_writer=None):
                             title=titles[title_count],
                             xlabel=xlabel)
                         title_count += 1
-
-            # # Without mutated circuits
-            # titles = [
-            #     'Maximum ' + r'$k_d$' + ', unmutated circuits',
-            #     'Minimum ' + r'$k_d$' + ', unmutated circuits',
-            #     'Maximum equilibrium constant, unmutated circuits',
-            # ]
-            # for cols_x, title in zip(interaction_types_chosen, titles):
-            #     if 'eqconstants' in interaction_type:
-            #         xlabel = 'Equilibrium constant'
-            #     else:
-            #         xlabel = 'Dissociation rate ' + r'$k_d$' + ' (' \
-            #             f'{rate_unit})' \
-            #             f'{binding_rates_threshold_upper_text}'
-
-            #     visualise_data(
-            #         og_data=data, data_writer=data_writer, cols_x=[cols_x],
-            #         plot_type='histplot',
-            #         out_name=f'{cols_x}_unmutated' + log_text,
-            #         exclude_rows_nonempty_in_cols=[
-            #             'mutation_name'],
-            #         # threshold_value_max=binding_rates_threshold_upper,
-            #         log_axis=log_opt,
-            #         use_sns=True,
-            #         title=title,
-            #         xlabel=xlabel)
 
         # Analytics histplots
         analytics_types = get_analytics_types_all()
