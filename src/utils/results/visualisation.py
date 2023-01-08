@@ -471,7 +471,12 @@ class VisODE():
             f.savefig(out_path, bbox_inches='tight')
             plt.close()
         except KeyError as error:
-            logging.warning(error)
+
+            if all(data[x].unique() == np.inf):
+                logging.warning(f'All values infinity - could not plot {x} and {y} for plot: {title}')
+                plt.close()
+            else:
+                raise error
 
     def sns_barplot(self, out_path: str, x: str, y: str, data: pd.DataFrame,
                     title: str = None, xlabel=None, ylabel=None,
