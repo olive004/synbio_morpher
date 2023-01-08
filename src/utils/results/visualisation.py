@@ -455,20 +455,23 @@ class VisODE():
                 'Make sure a column is specified for visualising with seaborn')
         f, ax = plt.subplots(figsize=figsize)
 
-        plot_func(
-            data=data,
-            x=x,
-            y=y,
-            **plot_kwargs
-        ).set(title=title)
-        # if plot_kwargs.get('hue'):
-        #     plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.,
-        #                title=plot_kwargs['hue'])
-        #             #    title=prettify_keys_for_label(plot_kwargs.get('hue')))
-        if plot_kwargs.get('hue') and not (data[x].min() is np.nan and data[x].max() is np.nan):
-            sns.move_legend(ax, "upper left", bbox_to_anchor=(1, 1))
-        f.savefig(out_path, bbox_inches='tight')
-        plt.close()
+        try:
+            plot_func(
+                data=data,
+                x=x,
+                y=y,
+                **plot_kwargs
+            ).set(title=title)
+            # if plot_kwargs.get('hue'):
+            #     plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.,
+            #                title=plot_kwargs['hue'])
+            #             #    title=prettify_keys_for_label(plot_kwargs.get('hue')))
+            if plot_kwargs.get('hue') and not (data[x].min() is np.nan and data[x].max() is np.nan):
+                sns.move_legend(ax, "upper left", bbox_to_anchor=(1, 1))
+            f.savefig(out_path, bbox_inches='tight')
+            plt.close()
+        except KeyError as error:
+            logging.warning(error)
 
     def sns_barplot(self, out_path: str, x: str, y: str, data: pd.DataFrame,
                     title: str = None, xlabel=None, ylabel=None,
