@@ -10,7 +10,7 @@ from src.srv.io.manage.script_manager import script_preamble
 from src.utils.misc.io import get_pathnames_from_mult_dirs
 from src.utils.misc.scripts_io import get_search_dir, load_experiment_config_original
 from src.utils.misc.string_handling import prettify_keys_for_label
-from src.utils.results.analytics.naming import get_analytics_types, get_signal_dependent_analytics
+from src.utils.results.analytics.naming import get_true_names_analytics, get_signal_dependent_analytics
 
 from src.utils.results.experiments import Experiment, Protocol
 from src.utils.results.result_writer import ResultWriter
@@ -150,82 +150,52 @@ def main(config=None, data_writer=None):
         name='visualise_mutated_interactions'
     ))
 
-    # Analytics visualisation
-    analytics_types = get_analytics_types()
+    def vis_analytics(data: pd.DataFrame):
+        # Analytics visualisation
+        analytics_types = get_true_names_analytics(data)
 
-    # Log histplots with mutation number hue
-    # Difference
-    for filltype in ['dodge', 'fill']:
-        for analytics_type, cols_x, title, xlabel in [
+        # Log histplots with mutation number hue
+        diff_iters = [
+                    [
+                        f'{analytics_type}_diff_to_base_circuit',
+                        f'{prettify_keys_for_label(analytics_type)} difference between circuit\nand mutated counterparts',
+                        f'{prettify_keys_for_label(analytics_type)} difference'
+                    ] for analytics_type in analytics_types]
+        ratio_iters = [
                 [
-                    analytics_type,
-                    f'{analytics_type}_diff_to_base_circuit',
-                    f'{prettify_keys_for_label(analytics_type)} difference between circuit\nand mutated counterparts',
-                    f'{prettify_keys_for_label(analytics_type)} difference'
-                ] for analytics_type in analytics_types]:
-
-            complete_colx_by_str = analytics_type + \
-                '_wrt' if analytics_type in get_signal_dependent_analytics() else None
-            protocols.append(Protocol(
-                partial(
-                    visualise_data,
-                    data_writer=data_writer, cols_x=[cols_x],
-                    plot_type='histplot',
-                    hue='mutation_num',
-                    out_name=f'{cols_x}_log_{filltype}',
-                    complete_colx_by_str=complete_colx_by_str,
-                    exclude_rows_zero_in_cols=['mutation_num'],
-                    misc_histplot_kwargs={
-                        "multiple": filltype,
-                        "hue": 'mutation_num',
-                        "element": "step"
-                    },
-                    log_axis=(True, False),
-                    use_sns=True,
-                    title=title,
-                    xlabel=xlabel
-                ),
-                req_input=True,
-                name='visualise_interactions_difference',
-                skip=config_file.get('only_visualise_circuits', False)
-            ))
-
-    # Log histplots with mutation number hue
-    # Ratios
-    for filltype in ['dodge', 'fill']:
-        for analytics_type, cols_x, title, xlabel in [
-                [
-                    analytics_type,
                     f'{analytics_type}_ratio_from_mutation_to_base',
                     f'{prettify_keys_for_label(analytics_type)} ratio from mutated\nto original circuit',
                     f'{prettify_keys_for_label(analytics_type)} ratio'
-                ] for analytics_type in analytics_types]:
+                ] for analytics_type in analytics_types]
+        for filltype in ['dodge', 'fill']:
+            for iters in diff_iters, ratio_iters:
+                for cols_x, title, xlabel in iters:
 
-            complete_colx_by_str = analytics_type + \
-                '_wrt' if analytics_type in get_signal_dependent_analytics() else None
-            protocols.append(Protocol(
-                partial(
-                    visualise_data,
-                    data_writer=data_writer, cols_x=[cols_x],
-                    plot_type='histplot',
-                    hue='mutation_num',
-                    out_name=f'{cols_x}_log_{filltype}',
-                    complete_colx_by_str=complete_colx_by_str,
-                    exclude_rows_zero_in_cols=['mutation_num'],
-                    misc_histplot_kwargs={
-                        "multiple": filltype,
-                        "hue": 'mutation_num',
-                        "element": "step"
-                    },
-                    log_axis=(True, False),
-                    use_sns=True,
-                    title=title,
-                    xlabel=xlabel
-                ),
-                req_input=True,
-                name='visualise_interactions_difference',
-                skip=config_file.get('only_visualise_circuits', False)
-            ))
+                    visualise_data(
+                        og_data=data,
+                        data_writer=data_writer, cols_x=[cols_x],
+                        plot_type='histplot',
+                        hue='mutation_num',
+                        out_name=f'{cols_x}_log_{filltype}',
+                        exclude_rows_zero_in_cols=['mutation_num'],
+                        misc_histplot_kwargs={
+                            "multiple": filltype,
+                            "hue": 'mutation_num',
+                            "element": "step"
+                        },
+                        log_axis=(True, False),
+                        use_sns=True,
+                        title=title,
+                        xlabel=xlabel
+                    )
+    
+    protocols.append(
+        Protocol(
+            vis_analytics,
+            req_input=True,
+            name='visualise_analytics'
+        )
+    )
 
     experiment = Experiment(config=config, config_file=config_file, protocols=protocols,
                             data_writer=data_writer)

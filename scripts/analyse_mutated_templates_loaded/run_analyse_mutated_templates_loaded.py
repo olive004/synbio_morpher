@@ -9,7 +9,7 @@ from fire import Fire
 from src.srv.io.manage.script_manager import script_preamble
 from src.utils.misc.scripts_io import get_search_dir, load_experiment_config_original
 from src.utils.misc.string_handling import prettify_keys_for_label
-from src.utils.results.analytics.naming import get_analytics_types_all, get_signal_dependent_analytics_all, DIFF_KEY, RATIO_KEY
+from src.utils.results.analytics.naming import get_true_names_analytics, get_signal_dependent_analytics_all, DIFF_KEY, RATIO_KEY
 
 from src.utils.results.experiments import Experiment, Protocol
 from src.utils.results.result_writer import ResultWriter
@@ -224,7 +224,7 @@ def main(config=None, data_writer=None):
                         title_count += 1
 
         # Analytics histplots
-        analytics_types = get_analytics_types_all()
+        analytics_types = get_true_names_analytics(data)
         for log_opt in [(False, False)]:
             log_text = '_log' if any(log_opt) else ''
             for m in num_mutations:
@@ -245,14 +245,11 @@ def main(config=None, data_writer=None):
                             f'{prettify_keys_for_label(analytics_type)}'
                         ] for analytics_type in analytics_types]:
 
-                    complete_colx_by_str = analytics_type.replace(DIFF_KEY, '').replace(RATIO_KEY, '') + '_wrt' if \
-                        analytics_type in get_signal_dependent_analytics_all() else None
                     visualise_data(
                         og_data=data,
                         data_writer=data_writer, cols_x=[cols_x],
                         plot_type='histplot',
                         out_name=f'{cols_x}{log_text}_m{m}',
-                        complete_colx_by_str=complete_colx_by_str,
                         exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
                         selection_conditions=selection_conditions,
                         log_axis=log_opt,

@@ -100,8 +100,9 @@ def expand_data_by_col(data: pd.DataFrame, columns: Union[str, list], column_for
     return expanded_data
 
 
-def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
+def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
                    cols_x: list = None, cols_y: list = None,
+                   groupby: str = None,
                    normalise_data_x: bool = False,
                    normalise_data_y: bool = False,
                    plot_type: str = None, out_name='test_plot',
@@ -116,8 +117,6 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                    selection_conditions: List[tuple] = None,
                    remove_outliers_y: bool = False,
                    outlier_std_threshold_y=3,
-                   complete_colx_by_str=None,
-                   complete_coly_by_str=None,
                    exclude_rows_nonempty_in_cols: list = None,
                    exclude_rows_zero_in_cols: list = None,
                    expand_xcoldata_using_col: bool = False,
@@ -134,30 +133,16 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
     Args:
     cols_x and cols_y: list of columns. If a column is a tuple, the other columns in the tuple
     will be treated as increasingly nested subcolumns """
-    data = deepcopy(og_data)
 
     hue = hue if hue is not None else column_name_for_expanding_xcoldata
 
-    def process_cols(cols, complete_col_by_str):
+    def process_cols(cols):
         if cols is None:
             return [None]
-        if complete_col_by_str is not None:
-            for i, col in enumerate(cols):
-                end = col.split(complete_col_by_str.split('_wrt')[0])[-1]
-                rex = np.asarray(
-                    [re.search(f"^{complete_col_by_str}.*{end}", c) for c in data.columns])
-                if not list(data.columns[np.where(rex != None)[0]]):
-                    logging.warning(
-                        f'Could not find complete column name for {col} with str {complete_col_by_str}')
-                potential_cols = list(data.columns[np.where(rex != None)[0]])
-                if not end:
-                    cols[i] = min(potential_cols)
-                else:
-                    cols[i] = potential_cols
-            cols = flatten_listlike(cols, safe=True)
         return cols
-    cols_x = process_cols(cols_x, complete_colx_by_str)
-    cols_y = process_cols(cols_y, complete_coly_by_str)
+
+    cols_x = process_cols(cols_x)
+    cols_y = process_cols(cols_y)
 
     def process_log_sns(data: pd.DataFrame, column_x: str, column_y: str,
                         plot_kwrgs: dict, log_axis: list, plot_type: str = None):
@@ -181,8 +166,10 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                     new_col = col_label
 
                 if type(col) == tuple:
-                    assert type(new_col) == tuple, 'If using multi-indexing, make sure new column names are also input as tuples'
-                    data = data.rename(columns={c: n for c, n in zip(col, new_col)})
+                    assert type(
+                        new_col) == tuple, 'If using multi-indexing, make sure new column names are also input as tuples'
+                    data = data.rename(
+                        columns={c: n for c, n in zip(col, new_col)})
                 else:
                     data = data.rename(columns={col: new_col})
             return data, new_col
@@ -473,7 +460,8 @@ class VisODE():
         except KeyError as error:
 
             if all(data[x].unique() == np.inf):
-                logging.warning(f'All values infinity - could not plot {x} and {y} for plot: {title}')
+                logging.warning(
+                    f'All values infinity - could not plot {x} and {y} for plot: {title}')
                 plt.close()
             else:
                 raise error
