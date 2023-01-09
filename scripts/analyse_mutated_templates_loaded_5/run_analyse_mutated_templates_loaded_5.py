@@ -1,5 +1,6 @@
 import operator
 import os
+from copy import deepcopy
 import pandas as pd
 from fire import Fire
 
@@ -21,7 +22,7 @@ def main(config=None, data_writer=None):
 
     # Visualisations
     def get_true_interaction_cols(data, interaction_attr):
-        num_species = len(data['sample_names'].unique())
+        num_species = len(data['sample_name'].unique())
         names = []
         for i in range(num_species):
             for ii in range(num_species):
@@ -29,7 +30,7 @@ def main(config=None, data_writer=None):
                              str(i) + '-' + str(ii))
         assert all([n in data.columns for n in names]
                    ), f'Interaction info column names were not isolated correctly: {names}'
-        return names
+        return [n for n in names if n in data.columns]
 
     def vis_interactions(data: pd.DataFrame):
 
@@ -51,14 +52,14 @@ def main(config=None, data_writer=None):
                     visualise_data(
                         og_data=data,
                         data_writer=data_writer,
-                        cols_x=cols,
-                        plot_type='bar_plot',
+                        cols_x=deepcopy(cols),
+                        plot_type='histplot',
                         out_name=f'{interaction_type}{log_text}_all',
                         log_axis=log_opt,
                         use_sns=True,
                         selection_conditions=selection_conditions,
                         hue=hue,
-                        title=f'{interaction_type} for {m} mutation{plot_grammar_m}',
+                        title=f'{prettify_keys_for_label(interaction_type)} for {m} mutation{plot_grammar_m}',
                         xlabel=prettify_keys_for_label(interaction_type),
                     )
 

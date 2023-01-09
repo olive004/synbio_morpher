@@ -123,3 +123,7 @@ def replace_value(d: dict, key, new_val) -> dict:
     if key in d:
         d[key] = new_val
     return d
+
+
+def rm_nones(list_like: list) -> list:
+    return list(filter(lambda item: item is not None, list_like))
