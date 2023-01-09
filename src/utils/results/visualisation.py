@@ -100,7 +100,17 @@ def expand_data_by_col(data: pd.DataFrame, columns: Union[str, list], column_for
     return expanded_data
 
 
-def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
+# def visualise_data(data: pd.DataFrame,
+#                    data_writer: DataWriter = None,
+#                    cols_x: list = None, cols_y: list = None,):
+    
+#     # 1. Process data
+#     #   a. Select Columns
+#     #   b. Select Rows (outliers)
+#     #   c. Process (log, normalisations)
+
+
+def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
                    cols_x: list = None, cols_y: list = None,
                    groupby: str = None,
                    normalise_data_x: bool = False,
@@ -138,7 +148,7 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
     if groupby is not None and type(groupby) == str:
         import operator
         selection_conditions = [
-            (groupby, operator.eq, og_data[groupby].unique()[0])]
+            (groupby, operator.eq, data[groupby].unique()[0])]
 
     def process_cols(cols):
         if cols is None:
@@ -298,7 +308,7 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
     if plot_type == 'plot':
         for col_x in cols_x:
             for col_y in cols_y:
-                x, y = og_data[col_x], og_data[col_y]
+                x, y = data[col_x], data[col_y]
                 if preprocessor_func_x:
                     x = preprocessor_func_x(x.values)
                     # y = preprocessor_func_x(y.values)
@@ -310,8 +320,8 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
     for ix, col_x in enumerate(cols_x):
         for iy, col_y in enumerate(cols_y):
             if use_sns:
-                og_data, col_x, col_y = preprocess_data(
-                    og_data, preprocessor_func_x, threshold_value_max,
+                data, col_x, col_y = preprocess_data(
+                    data, preprocessor_func_x, threshold_value_max,
                     expand_xcoldata_using_col, expand_ycoldata_using_col,
                     col_x, col_y,
                     normalise_data_x, normalise_data_y,
@@ -323,8 +333,8 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                     selection_conditions=selection_conditions,
                     postprocessor_func_x=postprocessor_func_x,
                     postprocessor_func_y=postprocessor_func_y)
-                xlabel = extract_label(plot_kwargs.get('xlabel', col_x), ix)
-                ylabel = extract_label(plot_kwargs.get('ylabel', col_y), ix)
+                # xlabel = extract_label(plot_kwargs.get('xlabel', col_x), ix)
+                # ylabel = extract_label(plot_kwargs.get('ylabel', col_y), ix)
                 if plot_type == 'scatter_plot':
                     write_func = visualiser.sns_scatterplot
                 elif plot_type == 'bar_plot':
@@ -334,10 +344,10 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                 elif plot_type == 'line_plot':
                     write_func = visualiser.sns_lineplot
                 elif plot_type == 'histplot':
-                    if xlabel and type(plot_kwargs.get('xlabel', col_x)) == str:
-                        xlabel = col_x
-                    if ylabel and type(plot_kwargs.get('ylabel', col_y)) == str:
-                        ylabel = col_y
+                    # if xlabel and type(plot_kwargs.get('xlabel', col_x)) == str:
+                    #     xlabel = col_x
+                    # if ylabel and type(plot_kwargs.get('ylabel', col_y)) == str:
+                    #     ylabel = col_y
                     write_func = visualiser.sns_histplot
                     plot_kwargs.update({'log_axis': log_axis,
                                         'bin_count': bin_count,
@@ -346,24 +356,25 @@ def visualise_data(og_data: pd.DataFrame, data_writer: DataWriter = None,
                 else:
                     logging.warning(f'Unknown plot type given "{plot_type}"')
 
-                og_data, col_x, col_y = process_log_sns(
-                    og_data, col_x, col_y, xlabel, ylabel, log_axis, plot_type)
-                cols_x[ix] = col_x
-                cols_y[iy] = col_y
+                data, col_x, col_y = process_log_sns(
+                    data, col_x, col_y, plot_kwargs.get('xlabel', col_x), plot_kwargs.get('ylabel', col_y), log_axis, plot_type)
+                # cols_x[ix] = col_x
+                # cols_y[iy] = col_y
 
-                if not is_data_plotable(og_data, col_x, col_y):
-                    # logging.warning(
-                    #     f'Could not visualise columns {cols_x} and {cols_y}')
-                    raise ValueError(
-                        f'Cannot plot columns {col_x} and {col_y}')
+                if is_data_plotable(data, col_x, col_y):
+                    # raise ValueError(
+                    #     f'Cannot plot columns {col_x} and {col_y}')
 
-    cols_x = cols_x if rm_nones(cols_x) else None
-    cols_y = cols_y if rm_nones(cols_y) else None
-    data_writer.output(out_type='svg', out_name=out_name,
-                       write_func=write_func,
-                       **merge_dicts({'x': cols_x, 'y': cols_y, 'data': og_data,
-                                      'hue': hue},
-                                     plot_kwargs))
+                    # cols_x = cols_x if rm_nones(cols_x) else None
+                    # cols_y = cols_y if rm_nones(cols_y) else None
+                    data_writer.output(out_type='svg', out_name=out_name,
+                                       write_func=write_func,
+                                       **merge_dicts({'x': cols_x, 'y': cols_y, 'data': data,
+                                                      'hue': hue},
+                                                     plot_kwargs))
+                else:
+                    logging.warning(
+                        f'Could not visualise columns {cols_x} and {cols_y}')
 
 
 def visualise_graph_pyvis(graph: nx.DiGraph,

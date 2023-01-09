@@ -166,7 +166,7 @@ def main(config=None, data_writer=None):
                 for cols_x, title, xlabel in iters:
 
                     visualise_data(
-                        og_data=data,
+                        data=data,
                         data_writer=data_writer, cols_x=[cols_x],
                         plot_type='histplot',
                         hue='mutation_num',

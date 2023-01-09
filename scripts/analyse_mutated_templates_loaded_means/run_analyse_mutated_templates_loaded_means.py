@@ -93,7 +93,7 @@ def main(config=None, data_writer=None):
                 for c in get_true_names_analytics([c[0] for c in data.columns]):
                     for s in ['mean', 'std']:
                         visualise_data(
-                            og_data=data,
+                            data=data,
                             data_writer=data_writer,
                             cols_x=[(c, s)],
                             plot_type='histplot',

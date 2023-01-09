@@ -91,7 +91,7 @@ def main(config=None, data_writer=None):
                             ] for analytics_type in analytics_types]:
 
                         visualise_data(
-                            og_data=data,
+                            data=data,
                             data_writer=data_writer,
                             cols_x=[cols_x], cols_y=[cols_y],
                             plot_type='line_plot',

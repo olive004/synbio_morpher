@@ -98,7 +98,7 @@ def main(config=None, data_writer=None):
                       'Minimum equilibrium constant, unmutated circuits']
             for cols_x, out_name, title in zip(cols_xs, out_names, titles):
                 visualise_data(
-                    og_data=data, data_writer=data_writer, cols_x=[cols_x],
+                    data=data, data_writer=data_writer, cols_x=[cols_x],
                     plot_type='histplot',
                     out_name=out_name + log_text,
                     exclude_rows_nonempty_in_cols=[
@@ -134,7 +134,7 @@ def main(config=None, data_writer=None):
                              f'eqconstants_min_freqs_diffs_m{m}']
                 for cols_x, title, out_name in zip(all_cols_x, titles, out_names):
                     visualise_data(
-                        og_data=data, data_writer=data_writer, cols_x=[cols_x],
+                        data=data, data_writer=data_writer, cols_x=[cols_x],
                         plot_type='histplot',
                         out_name=out_name + log_text,
                         exclude_rows_nonempty_in_cols=exclude_rows_via_cols,
@@ -204,7 +204,7 @@ def main(config=None, data_writer=None):
                             continue
                         out_name = f'{cols_x}{log_text}_m{m}'
                         visualise_data(
-                            og_data=data, data_writer=data_writer, cols_x=[
+                            data=data, data_writer=data_writer, cols_x=[
                                 cols_x],
                             plot_type='histplot',
                             out_name=out_name,
@@ -241,7 +241,7 @@ def main(config=None, data_writer=None):
                         ] for analytics_type in analytics_types]:
 
                     visualise_data(
-                        og_data=data,
+                        data=data,
                         data_writer=data_writer, cols_x=[cols_x],
                         plot_type='histplot',
                         out_name=f'{cols_x}{log_text}_m{m}',

@@ -37,7 +37,8 @@ def main(config=None, data_writer=None):
         for interaction_type in INTERACTION_TYPES:
             cols = get_true_interaction_cols(data, interaction_type)
             for log_opt in [(False, False), (True, False)]:
-                log_text = '' if all(log_opt) else '_log'
+                log_text = '' if any(log_opt) else '_log'
+                log_label = '' if any(log_opt) else 'Log of '
                 for m in list(data['mutation_num'].unique()) + ['all']:
                     if m == 'all':
                         plot_grammar_m = 's'
@@ -50,17 +51,17 @@ def main(config=None, data_writer=None):
                             ('mutation_num', operator.eq, m)]
 
                     visualise_data(
-                        og_data=data,
+                        data=data,
                         data_writer=data_writer,
                         cols_x=deepcopy(cols),
                         plot_type='histplot',
-                        out_name=f'{interaction_type}{log_text}_all',
+                        out_name=f'{interaction_type}{log_text}_m{m}',
                         log_axis=log_opt,
                         use_sns=True,
                         selection_conditions=selection_conditions,
                         hue=hue,
                         title=f'{prettify_keys_for_label(interaction_type)} for {m} mutation{plot_grammar_m}',
-                        xlabel=prettify_keys_for_label(interaction_type),
+                        xlabel=prettify_keys_for_label(log_label + interaction_type),
                     )
 
     # Protocols

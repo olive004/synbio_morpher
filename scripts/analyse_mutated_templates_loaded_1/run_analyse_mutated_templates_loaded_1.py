@@ -109,7 +109,7 @@ def main(config=None, data_writer=None):
                             ('mutation_num', operator.eq, m)]
 
                     visualise_data(
-                        og_data=df,
+                        data=df,
                         cols_x=[interaction_type],
                         plot_type='histplot',
                         data_writer=data_writer,
