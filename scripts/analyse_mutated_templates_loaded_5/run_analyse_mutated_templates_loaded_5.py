@@ -1,7 +1,7 @@
-from functools import partial
 import operator
 import os
 import pandas as pd
+from fire import Fire
 
 
 from src.srv.io.manage.script_manager import script_preamble, visualisation_script_protocol_preamble

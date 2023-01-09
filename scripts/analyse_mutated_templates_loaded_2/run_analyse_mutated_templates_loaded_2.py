@@ -1,8 +1,6 @@
 from functools import partial
 import logging
 import os
-
-import numpy as np
 import pandas as pd
 
 from fire import Fire
@@ -10,10 +8,9 @@ from src.srv.io.manage.script_manager import script_preamble
 from src.utils.misc.io import get_pathnames_from_mult_dirs
 from src.utils.misc.scripts_io import get_search_dir, load_experiment_config_original
 from src.utils.misc.string_handling import prettify_keys_for_label
-from src.utils.results.analytics.naming import get_true_names_analytics, get_signal_dependent_analytics
+from src.utils.results.analytics.naming import get_true_names_analytics
 
 from src.utils.results.experiments import Experiment, Protocol
-from src.utils.results.result_writer import ResultWriter
 from src.utils.results.visualisation import visualise_data
 from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
 from src.utils.data.data_format_tools.common import load_json_as_dict, load_csv_mult
