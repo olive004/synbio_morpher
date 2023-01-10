@@ -7,7 +7,7 @@ docker build -t genetic_glitch:latest docker_unix
 
 
 docker create -it \
---env NVIDIA_VISIBLE_DEVICES=all
+--env NVIDIA_VISIBLE_DEVICES=all \
 --rm \
 --name gcg_test \
 --mount type=bind,source="$(pwd)",target=/workdir \
