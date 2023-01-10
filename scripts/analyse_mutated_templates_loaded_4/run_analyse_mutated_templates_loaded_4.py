@@ -1,22 +1,20 @@
 from functools import partial
-import logging
+from typing import List
 import operator
 import os
 
-import numpy as np
 import pandas as pd
 
 from fire import Fire
 from src.srv.io.manage.script_manager import script_preamble
 from src.utils.misc.io import get_pathnames_from_mult_dirs
-from src.utils.misc.numerical import cast_astype
-from src.utils.misc.scripts_io import get_search_dir, load_experiment_config_original
+from src.utils.misc.scripts_io import get_search_dir
 from src.utils.misc.string_handling import prettify_keys_for_label
-from src.utils.results.analytics.naming import get_analytics_types, get_signal_dependent_analytics
+from src.utils.results.analytics.naming import get_true_names_analytics
 
 from src.utils.results.experiments import Experiment, Protocol
 from src.utils.results.result_writer import ResultWriter
-from src.utils.results.visualisation import visualise_data
+from src.utils.results.visualisation import visualise_data, expand_df_cols_lists
 from src.utils.data.data_format_tools.common import load_json_as_dict, load_csv_mult
 
 
@@ -33,13 +31,6 @@ def main(config=None, data_writer=None):
         config_searchdir_key='source_dirs', config_file=config_file)
     if type(source_dirs) != list:
         source_dirs = [source_dirs]
-    source_dir = source_dirs[0]
-    source_config = load_experiment_config_original(
-        source_dir, 'mutation_effect_on_interactions_signal')
-
-    # binding_rates_threshold_upper = np.power(10, 6)
-    binding_rates_threshold_upper = None
-    binding_rates_threshold_upper_text = f', with cutoff at {binding_rates_threshold_upper}' if binding_rates_threshold_upper else ''
 
     protocols = [
         Protocol(
@@ -71,70 +62,53 @@ def main(config=None, data_writer=None):
         )
     ]
 
-    # Visualisations
 
-    # Analytics visualisation
-    analytics_types = get_analytics_types()
-
-    # Bar plots
-
-    def plot_mutation_attr(mutation_attr: str, remove_outliers: bool, log_axis: tuple, plot_type):
+    def plot_mutation_attr(data: pd.DataFrame, mutation_attr: str, remove_outliers: bool, log_axis: tuple, plot_type: str, analytics_types: List[str]):
         outlier_std_threshold = 3
         outlier_text = f', outliers removed (>{outlier_std_threshold} standard deviations)' if remove_outliers else ''
 
         log_text = '_log' if any(log_axis) else ''
         outlier_save_text = '_nooutliers' if remove_outliers else ''
-        for diff_type in ['', '_diff_to_base_circuit', '_ratio_from_mutation_to_base']:
-            # Difference
-            for analytics_type, cols_x, cols_y in [
-                    [
-                        analytics_type,
-                        mutation_attr,
-                        f'{analytics_type}{diff_type}'
-                    ] for analytics_type in analytics_types]:
-                complete_coly_by_str = analytics_type + \
-                    '_wrt' if analytics_type in get_signal_dependent_analytics() else None
-                protocols.append(Protocol(
-                    partial(
-                        visualise_data,
-                        data_writer=data_writer,
-                        cols_x=[cols_x], cols_y=[cols_y],
-                        plot_type=plot_type,
-                        out_name=f'{cols_x}_{cols_y}{log_text}{outlier_save_text}',
-                        exclude_rows_zero_in_cols=['mutation_num'],
-                        complete_coly_by_str=complete_coly_by_str,
-                        postprocessor_func_x=partial(cast_astype,
-                                                     dtypes=[int, float]),
-                        selection_conditions=[(
-                            mutation_attr, operator.ne, ''
-                        )],
-                        log_axis=log_axis,
-                        use_sns=True,
-                        hue='mutation_num',
-                        expand_xcoldata_using_col=True,
-                        # expand_ycoldata_using_col=True,
-                        column_name_for_expanding_xcoldata=None,
-                        # column_name_for_expanding_ycoldata='sample_names',
-                        idx_for_expanding_xcoldata=1,
-                        # idx_for_expanding_ycoldata=0,
-                        remove_outliers_y=remove_outliers,
-                        outlier_std_threshold_y=outlier_std_threshold,
-                        title=f'{prettify_keys_for_label(cols_x)} vs. {prettify_keys_for_label(cols_y)}',
-                        xlabel=f'{prettify_keys_for_label(mutation_attr)}',
-                        ylabel=f'{prettify_keys_for_label(cols_x)}{outlier_text}'
-                    ),
-                    req_input=True,
-                    name='visualise_interactions_difference',
-                    skip=config_file.get('only_visualise_circuits', False)
-                )
+        for cols_x in analytics_types:
+            
+            df = data[data['sample_name'] == data['sample_name'].unique()[0]]
+            df = expand_df_cols_lists(df, col_of_lists=cols_x, col_list_len='mutation_num', include_cols=[mutation_attr])
+
+            visualise_data(data=data,
+                    data_writer=data_writer,
+                    cols_x=[cols_x], mutation_attr=[mutation_attr],
+                    plot_type=plot_type,
+                    out_name=f'{cols_x}_{mutation_attr}{log_text}{outlier_save_text}',
+                    exclude_rows_zero_in_cols=['mutation_num'],
+                    selection_conditions=[(
+                        mutation_attr, operator.ne, ''
+                    )],
+                    log_axis=log_axis,
+                    use_sns=True,
+                    hue='mutation_num',
+                    remove_outliers_y=remove_outliers,
+                    outlier_std_threshold_y=outlier_std_threshold,
+                    title=f'{prettify_keys_for_label(cols_x)} vs. {prettify_keys_for_label(mutation_attr)}',
+                    xlabel=f'{prettify_keys_for_label(mutation_attr)}',
+                    ylabel=f'{prettify_keys_for_label(cols_x)}{outlier_text}'
                 )
 
-    for remove_outliers in [False, True]:
-        for log_axis in [(False, False), (False, True)]:
-            plot_mutation_attr('mutation_type', remove_outliers=remove_outliers, log_axis=log_axis,
-                               plot_type='bar_plot')
-            plot_mutation_attr('mutation_positions', remove_outliers=remove_outliers, log_axis=log_axis,
-                               plot_type='line_plot')
+    def vis_data(data):
+        analytics_types = get_true_names_analytics()
+        for remove_outliers in [False, True]:
+            for log_axis in [(False, False), (False, True)]:
+                plot_mutation_attr(data, 'mutation_type', remove_outliers=remove_outliers, log_axis=log_axis,
+                                plot_type='bar_plot', analytics_types=analytics_types)
+                plot_mutation_attr(data, 'mutation_positions', remove_outliers=remove_outliers, log_axis=log_axis,
+                                plot_type='line_plot', analytics_types=analytics_types)
+                                
+    protocols.append(
+        Protocol(
+            vis_data, 
+            req_input=True,
+            name = 'visualise'
+        )
+    )
 
     experiment = Experiment(config=config, config_file=config_file, protocols=protocols,
                             data_writer=data_writer)

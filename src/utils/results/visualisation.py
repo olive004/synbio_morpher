@@ -9,6 +9,7 @@ import logging
 from src.utils.misc.type_handling import get_unique
 from src.utils.results.writer import DataWriter
 from src.utils.misc.string_handling import add_outtype, get_all_similar, make_time_str, prettify_keys_for_label
+from src.utils.misc.numerical import cast_astype
 from src.utils.misc.type_handling import flatten_listlike, merge_dicts
 import seaborn as sns
 # import matplotlib
@@ -100,10 +101,31 @@ def expand_data_by_col(data: pd.DataFrame, columns: Union[str, list], column_for
     return expanded_data
 
 
+def expand_df_cols_lists(df: pd.DataFrame, col_of_lists: str, col_list_len: str, include_cols: List[str]) -> pd.DataFrame:
+
+    if type(df[col_of_lists].iloc[0]) == str:
+        # df[col_of_lists] = df[[col_of_lists]].apply(str)
+        df = df[df[col_of_lists] != '[]']
+        df[col_of_lists] = df[[col_of_lists]].apply(
+            partial(cast_astype, dtypes=int))
+
+    # Expand the lists within columnns
+    df2 = pd.DataFrame()
+    for m in df[col_list_len].unique():
+        df_mut = df[df[col_list_len] == m]
+        df_lists = pd.DataFrame(
+            df_mut[col_of_lists].tolist(), index=df_mut.index)
+        df_mut = pd.concat([df_mut, df_lists], axis=1)
+        df_mut = df_mut.melt(id_vars=[col_list_len] + include_cols, value_vars=df_lists.columns).drop(
+            columns='variable').rename(columns={'value': col_of_lists})
+        df2 = pd.concat([df2, df_mut])
+    return df2
+
+
 # def visualise_data(data: pd.DataFrame,
 #                    data_writer: DataWriter = None,
 #                    cols_x: list = None, cols_y: list = None,):
-    
+
 #     # 1. Process data
 #     #   a. Select Columns
 #     #   b. Select Rows (outliers)
