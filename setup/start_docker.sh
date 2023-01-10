@@ -12,7 +12,8 @@ docker build -t genetic_glitch:latest docker_unix
 #     cuda-11.6.2-base-ubuntu20.04 nvidia-smi
 sudo ctr create -it \
 --rm \
---gpus all \
+--runc-binary=/usr/bin/nvidia-container-runtime \
+--env NVIDIA_VISIBLE_DEVICES=all \
 --name gcg_test \
 --mount type=bind,source="$(pwd)",target=/workdir \
 genetic_glitch:latest
