@@ -17,7 +17,7 @@ from src.utils.misc.scripts_io import get_path_from_output_summary, get_root_exp
     load_experiment_config, load_experiment_output_summary, load_result_report
 from src.utils.misc.type_handling import flatten_nested_listlike
 from src.utils.results.analytics.naming import get_analytics_types_all, DIFF_KEY, RATIO_KEY
-from src.utils.results.visualisation import expand_data_by_col
+from src.utils.misc.database_handling import expand_data_by_col
 from src.utils.results.writer import DataWriter
 from src.srv.parameter_prediction.interactions import InteractionMatrix, INTERACTION_TYPES, b_get_stats
 

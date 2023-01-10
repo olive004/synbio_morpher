@@ -1,16 +1,13 @@
-from copy import deepcopy
 from functools import partial
 from typing import List, Union
 import networkx as nx
 import numpy as np
 import pandas as pd
-import re
 import logging
-from src.utils.misc.type_handling import get_unique
+from src.utils.misc.type_handling import merge_dicts
 from src.utils.results.writer import DataWriter
-from src.utils.misc.string_handling import add_outtype, get_all_similar, make_time_str, prettify_keys_for_label
-from src.utils.misc.numerical import cast_astype
-from src.utils.misc.type_handling import flatten_listlike, merge_dicts
+from src.utils.misc.string_handling import add_outtype, make_time_str, prettify_keys_for_label
+from src.utils.misc.database_handling import expand_df_cols_lists
 import seaborn as sns
 # import matplotlib
 # matplotlib.use('TkAgg',force=True)
@@ -20,37 +17,6 @@ plt.ioff()
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-
-
-def expand_df_cols_lists(df: pd.DataFrame, col_of_lists: str, col_list_len: str, include_cols: List[str]) -> pd.DataFrame:
-
-    if type(df[col_of_lists].iloc[0]) == str:
-        # df[col_of_lists] = df[[col_of_lists]].apply(str)
-        df = df[df[col_of_lists] != '[]']
-        df[col_of_lists] = df[[col_of_lists]].apply(
-            partial(cast_astype, dtypes=int))
-
-    # Expand the lists within columnns
-    df2 = pd.DataFrame()
-    for m in df[col_list_len].unique():
-        df_mut = df[df[col_list_len] == m]
-        df_lists = pd.DataFrame(
-            df_mut[col_of_lists].tolist(), index=df_mut.index)
-        df_mut = pd.concat([df_mut, df_lists], axis=1)
-        df_mut = df_mut.melt(id_vars=[col_list_len] + include_cols, value_vars=df_lists.columns).drop(
-            columns='variable').rename(columns={'value': col_of_lists})
-        df2 = pd.concat([df2, df_mut])
-    return df2
-
-
-# def visualise_data(data: pd.DataFrame,
-#                    data_writer: DataWriter = None,
-#                    cols_x: list = None, cols_y: list = None,):
-
-#     # 1. Process data
-#     #   a. Select Columns
-#     #   b. Select Rows (outliers)
-#     #   c. Process (log, normalisations)
 
 
 def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
@@ -359,10 +325,10 @@ class VisODE():
         if title is None:
             title = plot_kwargs.get('title')
         if plot_kwargs.get('hue'):
+            new_hue = prettify_keys_for_label(plot_kwargs.get('hue'))
             data = data.rename(
-                columns={plot_kwargs.get('hue'): prettify_keys_for_label(plot_kwargs.get('hue'))})
-            plot_kwargs['hue'] = prettify_keys_for_label(
-                plot_kwargs.get('hue'))
+                columns={plot_kwargs.get('hue'): new_hue})
+            plot_kwargs['hue'] = new_hue
             plot_kwargs.update({
                 # 'palette': sns.color_palette("husl", len(data[plot_kwargs.get('hue')].unique()))
                 # 'palette': sns.color_palette("plasma", len(data[plot_kwargs.get('hue')].unique()))
