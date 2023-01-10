@@ -9,7 +9,7 @@ import logging
 from src.utils.misc.type_handling import get_unique
 from src.utils.results.writer import DataWriter
 from src.utils.misc.string_handling import add_outtype, get_all_similar, make_time_str, prettify_keys_for_label
-from src.utils.misc.type_handling import flatten_listlike, merge_dicts, rm_nones
+from src.utils.misc.type_handling import flatten_listlike, merge_dicts
 import seaborn as sns
 # import matplotlib
 # matplotlib.use('TkAgg',force=True)
@@ -159,8 +159,7 @@ def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
     cols_y = process_cols(cols_y)
 
     def process_log_sns(data: pd.DataFrame, column_x: str, column_y: str,
-                        xlabel: str, ylabel: str,
-                        log_axis: list, plot_type: str = None):
+                        plot_kwrgs: dict, log_axis: list, plot_type: str = None):
         exempt_from_log = ['histplot']
 
         def process_log(data, col, log_option, col_label):
@@ -191,10 +190,10 @@ def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
 
         if column_x is not None:
             data, column_x = process_log(
-                data, column_x, log_axis[0], xlabel)
+                data, column_x, log_axis[0], plot_kwrgs.get('xlabel', column_x))
         if column_y is not None:
             data, column_y = process_log(
-                data, column_y, log_axis[1], ylabel)
+                data, column_y, log_axis[1], plot_kwrgs.get('ylabel', column_y))
         if column_x is None and column_y is None:
             logging.warning('No columns given as input to histplot.')
         data.reset_index(drop=True, inplace=True)
@@ -289,12 +288,6 @@ def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
         data.reset_index(drop=True, inplace=True)
         return data
 
-    def extract_label(label: Union[list, str], i: int):
-        if type(label) == list:
-            return label[i]
-        else:
-            return label
-
     def is_data_plotable(data: pd.DataFrame, col_x: str, col_y: str):
         if data.empty:
             return False
@@ -317,8 +310,8 @@ def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
                                    **merge_dicts({'data': x, 'y': y}, plot_kwargs))
         return
 
-    for ix, col_x in enumerate(cols_x):
-        for iy, col_y in enumerate(cols_y):
+    for col_x in cols_x:
+        for col_y in cols_y:
             if use_sns:
                 data, col_x, col_y = preprocess_data(
                     data, preprocessor_func_x, threshold_value_max,
@@ -333,8 +326,8 @@ def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
                     selection_conditions=selection_conditions,
                     postprocessor_func_x=postprocessor_func_x,
                     postprocessor_func_y=postprocessor_func_y)
-                # xlabel = extract_label(plot_kwargs.get('xlabel', col_x), ix)
-                # ylabel = extract_label(plot_kwargs.get('ylabel', col_y), ix)
+                data, col_x, col_y = process_log_sns(
+                    data, col_x, col_y, plot_kwargs, log_axis, plot_type)
                 if plot_type == 'scatter_plot':
                     write_func = visualiser.sns_scatterplot
                 elif plot_type == 'bar_plot':
@@ -344,10 +337,6 @@ def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
                 elif plot_type == 'line_plot':
                     write_func = visualiser.sns_lineplot
                 elif plot_type == 'histplot':
-                    # if xlabel and type(plot_kwargs.get('xlabel', col_x)) == str:
-                    #     xlabel = col_x
-                    # if ylabel and type(plot_kwargs.get('ylabel', col_y)) == str:
-                    #     ylabel = col_y
                     write_func = visualiser.sns_histplot
                     plot_kwargs.update({'log_axis': log_axis,
                                         'bin_count': bin_count,
@@ -356,25 +345,15 @@ def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
                 else:
                     logging.warning(f'Unknown plot type given "{plot_type}"')
 
-                data, col_x, col_y = process_log_sns(
-                    data, col_x, col_y, plot_kwargs.get('xlabel', col_x), plot_kwargs.get('ylabel', col_y), log_axis, plot_type)
-                # cols_x[ix] = col_x
-                # cols_y[iy] = col_y
-
                 if is_data_plotable(data, col_x, col_y):
-                    # raise ValueError(
-                    #     f'Cannot plot columns {col_x} and {col_y}')
-
-                    # cols_x = cols_x if rm_nones(cols_x) else None
-                    # cols_y = cols_y if rm_nones(cols_y) else None
                     data_writer.output(out_type='svg', out_name=out_name,
                                        write_func=write_func,
-                                       **merge_dicts({'x': cols_x, 'y': cols_y, 'data': data,
+                                       **merge_dicts({'x': col_x, 'y': col_y, 'data': data,
                                                       'hue': hue},
                                                      plot_kwargs))
                 else:
                     logging.warning(
-                        f'Could not visualise columns {cols_x} and {cols_y}')
+                        f'Could not visualise columns {col_x} and {col_y}')
 
 
 def visualise_graph_pyvis(graph: nx.DiGraph,
@@ -501,7 +480,7 @@ class VisODE():
             else:
                 raise error
 
-    def sns_barplot(self, out_path: str, x: Union[str, list], y: Union[str, list], data: pd.DataFrame,
+    def sns_barplot(self, out_path: str, x: str, y: str, data: pd.DataFrame,
                     title: str = None, xlabel=None, ylabel=None,
                     **plot_kwargs):
         plot_kwargs.update({'errwidth': 1})
@@ -584,21 +563,6 @@ class VisODE():
             "hue": plot_kwargs.get('hue')
         }
         default_kwargs.update(histplot_kwargs)
-
-        if type(x) == list and any(data[x]):
-            if plot_kwargs.get('hue'):
-                remainder_cols = y + \
-                    [plot_kwargs.get('hue')] if type(y) == list else [
-                        y, plot_kwargs.get('hue')]
-                remainder_cols = y + \
-                    ['mutation_num'] if type(y) == list else [
-                        y, plot_kwargs.get('hue')]
-            else:
-                remainder_cols = y if type(y) == list else [y]
-            remainder_cols = rm_nones(remainder_cols)
-            data = data.melt(id_vars=remainder_cols,
-                             value_vars=x, value_name=plot_kwargs.get('xlabel', x[0]))
-            x = plot_kwargs.get('xlabel', x[0])
         self.sns_generic_plot(sns.histplot, out_path,
                               x, y, data, **default_kwargs)
 

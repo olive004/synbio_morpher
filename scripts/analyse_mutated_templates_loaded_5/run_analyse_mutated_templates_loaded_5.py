@@ -36,33 +36,43 @@ def main(config=None, data_writer=None):
 
         for interaction_type in INTERACTION_TYPES:
             cols = get_true_interaction_cols(data, interaction_type)
-            for log_opt in [(False, False), (True, False)]:
-                log_text = '' if any(log_opt) else '_log'
-                log_label = '' if any(log_opt) else 'Log of '
-                for m in list(data['mutation_num'].unique()) + ['all']:
-                    if m == 'all':
-                        plot_grammar_m = 's'
-                        hue = 'mutation_num'
-                        selection_conditions = None
-                    else:
-                        plot_grammar_m = 's' if m > 1 else ''
-                        hue = None
-                        selection_conditions = [
-                            ('mutation_num', operator.eq, m)]
-
-                    visualise_data(
-                        data=data,
-                        data_writer=data_writer,
-                        cols_x=deepcopy(cols),
-                        plot_type='histplot',
-                        out_name=f'{interaction_type}{log_text}_m{m}',
-                        log_axis=log_opt,
-                        use_sns=True,
-                        selection_conditions=selection_conditions,
-                        hue=hue,
-                        title=f'{prettify_keys_for_label(interaction_type)} for {m} mutation{plot_grammar_m}',
-                        xlabel=prettify_keys_for_label(log_label + interaction_type),
-                    )
+            df = data.melt(id_vars='mutation_num',
+                           value_vars=cols, value_name=interaction_type)
+            for m in list(df['mutation_num'].unique()) + ['all']:
+                for log_opt in [(False, False), (True, False)]:
+                    log_text = '' if any(log_opt) else '_log'
+                    for thresh in [True, False]:
+                        if m == 'all':
+                            plot_grammar_m = 's'
+                            hue = 'mutation_num'
+                            selection_conditions = None
+                        else:
+                            plot_grammar_m = 's' if m > 1 else ''
+                            hue = None
+                            selection_conditions = [
+                                ('mutation_num', operator.eq, m)]
+                        thresh_text = ''
+                        if thresh:
+                            thresh_text = f', {round(df[interaction_type].mode().iloc[0], 4)} excluded'
+                            if selection_conditions is not None:
+                                selection_conditions.append(
+                                    (interaction_type, operator.ne, df[interaction_type].mode().iloc[0]))
+                            else:
+                                selection_conditions = [
+                                    (interaction_type, operator.ne, df[interaction_type].mode().iloc[0])]
+                        visualise_data(
+                            data=df,
+                            data_writer=data_writer,
+                            cols_x=[interaction_type],
+                            plot_type='histplot',
+                            out_name=f'{interaction_type}{log_text}_thresh-{thresh}_m{m}',
+                            log_axis=log_opt,
+                            use_sns=True,
+                            selection_conditions=selection_conditions,
+                            hue=hue,
+                            title=f'{prettify_keys_for_label(interaction_type)} for {m} mutation{plot_grammar_m}{thresh_text}',
+                            xlabel=prettify_keys_for_label(interaction_type),
+                        )
 
     # Protocols
     config_file, source_dirs = get_search_dir(

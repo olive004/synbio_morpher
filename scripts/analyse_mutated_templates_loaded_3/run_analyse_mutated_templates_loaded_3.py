@@ -12,7 +12,7 @@ from src.utils.misc.string_handling import prettify_keys_for_label
 
 from src.utils.results.analytics.naming import get_true_names_analytics, get_signal_dependent_analytics
 from src.utils.results.experiments import Experiment, Protocol
-from src.utils.results.result_writer import ResultWriter
+from src.utils.misc.numerical import cast_astype
 from src.utils.results.visualisation import visualise_data
 from src.utils.data.data_format_tools.common import load_json_as_dict, load_csv_mult
 
@@ -90,14 +90,20 @@ def main(config=None, data_writer=None):
                                 f'{prettify_keys_for_label(analytics_type)} difference{outlier_text}'
                             ] for analytics_type in analytics_types]:
 
+                        data = data[data['sample_name'] == data['sample_name'].unique()[0]]
+                        df = data.melt(id_vars=['mutation_num', cols_y], value_vars=[cols_x]).drop(columns=['variable']).rename(columns={'value': cols_x})
+                        if type(df[cols_x].iloc[0]) == list:
+                            df[cols_x] = df[[cols_x]].apply(str)
+                        df = df[df[cols_x] != '[]']
+                        df[cols_x] = df[[cols_x]].apply(partial(cast_astype, dtypes=int))
                         visualise_data(
-                            data=data,
+                            data=df,
                             data_writer=data_writer,
                             cols_x=[cols_x], cols_y=[cols_y],
                             plot_type='line_plot',
                             out_name=f'{cols_x}_{cols_y}{outlier_name}',
                             exclude_rows_zero_in_cols=['mutation_num'],
-                            expand_xcoldata_using_col=True,
+                            # expand_xcoldata_using_col=True,
                             log_axis=(False, True),
                             use_sns=True,
                             hue='mutation_num',
