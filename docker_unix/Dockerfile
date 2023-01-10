@@ -8,6 +8,7 @@ FROM nvidia/cuda:11.6.2-base-ubuntu20.04
 ################################################################################
 #  Install python dependencies
 ################################################################################
+RUN nvidia-smi
 WORKDIR /usr/lib
 COPY ./requirements.txt /usr/lib/install_requirements/requirements.txt
 RUN apt-get update && \
@@ -38,10 +39,10 @@ WORKDIR /workdir
 ################################################################################
 #  Install Conda & IntaRNA dependencies
 ################################################################################
-RUN yes | apt-get install wget && \
-    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+# x RUN yes | apt-get install wget && \
+#     wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
 # RUN curl https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-RUN (sleep 1; echo yes; sleep 1; echo /root/miniconda3; sleep 1; echo yes) | bash Miniconda3-latest-Linux-x86_64.sh 
+# x RUN (sleep 1; echo yes; sleep 1; echo /root/miniconda3; sleep 1; echo yes) | bash Miniconda3-latest-Linux-x86_64.sh 
     # export LD_LIBRARY_PATH=/root/miniconda3/lib/ && \
     # mkdir -p $CONDA_PREFIX/etc/conda/activate.d && \
     # mkdir -p $CONDA_PREFIX/etc/conda/activate.d && \
@@ -54,8 +55,8 @@ RUN (sleep 1; echo yes; sleep 1; echo /root/miniconda3; sleep 1; echo yes) | bas
 # RUN mkdir -p $CONDA_PREFIX/etc/conda/activate.d
 # RUN echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_PREFIX/lib/' > $CONDA_PREFIX/etc/conda/activate.d/env_vars.sh
 # RUN /root/miniconda3/bin/activate && yes | conda install -c conda-forge cudatoolkit=11.2 cudnn=8.1.0 && conda install -c conda-forge -c bioconda intarna
-RUN . /root/miniconda3/bin/activate && \
-    yes | conda install -c conda-forge -c bioconda intarna
+# x RUN . /root/miniconda3/bin/activate && \
+#     yes | conda install -c conda-forge -c bioconda intarna
 
 # RUN source /root/miniconda3/bin/activate && yes | conda install -c conda-forge cudatoolkit=11.2 cudnn=8.1.0 && conda install -c conda-forge -c bioconda intarna
 # RUN yes | conda install -c conda-forge -c bioconda intarna
@@ -72,4 +73,4 @@ RUN . /root/miniconda3/bin/activate && \
 #  Misc patches
 ################################################################################
 # For NVIDIA: find this path via ```find /usr/ -name libcudart.so.11.0```
-RUN export LD_LIBRARY_PATH=/usr/local/cuda-11.3/targets/x86_64-linux/lib/:/usr/local/cuda-11.3/compat/
+# RUN export LD_LIBRARY_PATH=/usr/local/cuda-11.3/targets/x86_64-linux/lib/:/usr/local/cuda-11.3/compat/
