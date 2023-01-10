@@ -8,7 +8,7 @@ docker build -t genetic_glitch:latest docker_unix
 
 docker create -it \
 --rm \
---gpus all
+--gpus all \
 --name gcg_test \
 --mount type=bind,source="$(pwd)",target=/workdir \
 genetic_glitch:latest
