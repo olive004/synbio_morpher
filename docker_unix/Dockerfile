@@ -49,9 +49,9 @@ RUN (sleep 1; echo yes; sleep 1; echo /root/miniconda3; sleep 1; echo yes) | bas
     # # yes | conda install -c conda-forge cudatoolkit=11.2 cudnn=8.1.0 && \
     # yes | conda install -c conda-forge -c bioconda intarna
 # RUN export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_PREFIX/lib/
-RUN export LD_LIBRARY_PATH=/root/miniconda3/lib/
-RUN mkdir -p $CONDA_PREFIX/etc/conda/activate.d
-RUN echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_PREFIX/lib/' > $CONDA_PREFIX/etc/conda/activate.d/env_vars.sh
+# RUN export LD_LIBRARY_PATH=/root/miniconda3/lib/
+# RUN mkdir -p $CONDA_PREFIX/etc/conda/activate.d
+# RUN echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_PREFIX/lib/' > $CONDA_PREFIX/etc/conda/activate.d/env_vars.sh
 # RUN /root/miniconda3/bin/activate && yes | conda install -c conda-forge cudatoolkit=11.2 cudnn=8.1.0 && conda install -c conda-forge -c bioconda intarna
 RUN . /root/miniconda3/bin/activate && \
     yes | conda install -c conda-forge -c bioconda intarna
