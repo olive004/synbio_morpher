@@ -8,7 +8,7 @@ FROM nvidia/cuda:11.6.2-base-ubuntu20.04
 ################################################################################
 #  Install python dependencies
 ################################################################################
-RUN nvidia-smi
+# RUN nvidia-smi
 WORKDIR /usr/lib
 COPY ./requirements.txt /usr/lib/install_requirements/requirements.txt
 RUN apt-get update && \
