@@ -20,6 +20,7 @@ RUN pip install --upgrade "jax[cuda]" -f https://storage.googleapis.com/jax-rele
 ################################################################################
 ENV ROOT_DIR=/workdir
 ENV PYTHONPATH=/workdir
+ENV NVIDIA_VISIBLE_DEVICES=all
 ENV MNT ./..
 WORKDIR /workdir
 # ENTRYPOINT ["/bin/bash"]
