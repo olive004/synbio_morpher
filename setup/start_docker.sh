@@ -5,15 +5,19 @@ docker pull nvidia/cuda:11.6.2-base-ubuntu20.04
 # If image not built yet
 docker build -t genetic_glitch:latest docker_unix
 
-
-docker create -it \
+# sudo ctr run --rm -t \
+#     --runc-binary=/usr/bin/nvidia-container-runtime \
+#     --env NVIDIA_VISIBLE_DEVICES=all \
+#     docker.io/nvidia/cuda:11.6.2-base-ubuntu20.04 \
+#     cuda-11.6.2-base-ubuntu20.04 nvidia-smi
+sudo ctr create -it \
 --rm \
 --gpus all \
 --name gcg_test \
 --mount type=bind,source="$(pwd)",target=/workdir \
 genetic_glitch:latest
-docker container start gcg_test
-docker exec -it gcg_test /bin/bash 
+sudo ctr container start gcg_test
+sudo ctr exec -it gcg_test /bin/bash 
 # docker container stop gcg
 
 
