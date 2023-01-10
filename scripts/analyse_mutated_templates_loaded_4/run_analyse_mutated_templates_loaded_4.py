@@ -76,7 +76,7 @@ def main(config=None, data_writer=None):
 
             visualise_data(data=data,
                     data_writer=data_writer,
-                    cols_x=[cols_x], mutation_attr=[mutation_attr],
+                    cols_x=[cols_x], cols_y=[mutation_attr],
                     plot_type=plot_type,
                     out_name=f'{cols_x}_{mutation_attr}{log_text}{outlier_save_text}',
                     exclude_rows_zero_in_cols=['mutation_num'],
@@ -94,7 +94,7 @@ def main(config=None, data_writer=None):
                 )
 
     def vis_data(data):
-        analytics_types = get_true_names_analytics()
+        analytics_types = get_true_names_analytics(data.columns)
         for remove_outliers in [False, True]:
             for log_axis in [(False, False), (False, True)]:
                 plot_mutation_attr(data, 'mutation_type', remove_outliers=remove_outliers, log_axis=log_axis,

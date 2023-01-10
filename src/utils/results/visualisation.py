@@ -22,85 +22,6 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-def expand_data_by_col(data: pd.DataFrame, columns: Union[str, list], column_for_expanding_coldata: str, idx_for_expanding_coldata: int,
-                       find_all_similar_columns=False):
-    """ Expand horizontally or vertically based on if a second column name 
-    is given for expanding the column data """
-
-    def make_expansion_df(df_lists, col_names: list) -> pd.DataFrame:
-        expanded_data = pd.DataFrame(columns=data.columns, dtype=object)
-        for c in col_names:
-            temp_data = deepcopy(data)
-            temp_data.drop(columns, axis=1, inplace=True)
-            expanded_df_col = pd.DataFrame.from_dict(
-                dict(zip(columns + [column_for_expanding_coldata],
-                     [df_lists.loc[column][c] for column in columns] + [c])),
-                dtype=object
-            )
-            # {column: df_lists[c], column_for_expanding_coldata: c})
-            # temp_data = temp_data.assign(
-            #     **dict(zip(
-            #         columns + [column_for_expanding_coldata],
-            #         [pd.Series(expanded_df_col[column].values) for column in columns] + [pd.Series(
-            #             expanded_df_col[column_for_expanding_coldata].values)]))
-            #     # column: pd.Series(expanded_df_col[column].values),
-            #     # column_for_expanding_coldata: pd.Series(
-            #     #     expanded_df_col[column_for_expanding_coldata].values)
-            # )
-            temp_data = pd.concat([temp_data, expanded_df_col], axis=1)
-            expanded_data = pd.concat(
-                [expanded_data, temp_data], axis=0, ignore_index=True)
-        return expanded_data
-
-    if type(columns) == str or (type(columns) == list and len(columns) == 1):
-        columns = [columns]
-
-    if find_all_similar_columns:
-        all_similar_columns = []
-        for column in columns:
-            similar_cols = get_all_similar(column, data.columns)
-            all_similar_columns += similar_cols
-        columns = get_unique(all_similar_columns)
-
-    if column_for_expanding_coldata is None:
-        # I haven't added the handling here for expanding multiple columns with lists in them simulatenously
-        column = columns[0]
-        expand_vertically = True
-        s = data.apply(lambda x: pd.Series(
-            x[column]), axis=1).stack().reset_index(level=1, drop=True)
-        s.name = column
-        expanded_data = data.drop(column, axis=1).join(s)
-    elif any([type(data[c].iloc[0]) == list for c in columns]):
-        # Retain the expanding column
-        new_expanding_column_name = 'all_' + column_for_expanding_coldata
-        if new_expanding_column_name not in list(data.columns):
-            data = data.rename(
-                columns={column_for_expanding_coldata: new_expanding_column_name})
-        # for c in columns:
-        #     for r in data[c]:
-        #         print(pd.Series(r))
-        df_lists = data[columns].unstack().apply(
-            partial(flatten_listlike, safe=True)).apply(pd.Series)
-        # df_lists = data[columns].unstack().apply(pd.Series)
-        col_names = data[new_expanding_column_name].iloc[idx_for_expanding_coldata]
-        if type(col_names) != list:
-            logging.warning(
-                f'The column {column_for_expanding_coldata} chosen for unstacking other columns has one value')
-        if len(df_lists.columns) == 1:
-            logging.warning(
-                f'The current column {columns} may not be expandable with {col_names}')
-        df_lists = df_lists.rename(columns=dict(
-            zip(df_lists.columns.values, col_names)))
-
-        # Make dataframe with expanded lists in one column labelled in expansion column
-        expanded_data = make_expansion_df(df_lists, col_names)
-    else:
-        expanded_data = data
-
-    expanded_data.reset_index(drop=True, inplace=True)
-    return expanded_data
-
-
 def expand_df_cols_lists(df: pd.DataFrame, col_of_lists: str, col_list_len: str, include_cols: List[str]) -> pd.DataFrame:
 
     if type(df[col_of_lists].iloc[0]) == str:
@@ -151,12 +72,6 @@ def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
                    outlier_std_threshold_y=3,
                    exclude_rows_nonempty_in_cols: list = None,
                    exclude_rows_zero_in_cols: list = None,
-                   expand_xcoldata_using_col: bool = False,
-                   expand_ycoldata_using_col: bool = False,
-                   column_name_for_expanding_xcoldata: str = None,
-                   column_name_for_expanding_ycoldata: str = None,
-                   idx_for_expanding_xcoldata: int = 0,
-                   idx_for_expanding_ycoldata: int = 0,
                    plot_cols_on_same_graph=False,
                    misc_histplot_kwargs=None,
                    **plot_kwargs):
@@ -166,7 +81,6 @@ def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
     cols_x and cols_y: list of columns. If a column is a tuple, the other columns in the tuple
     will be treated as increasingly nested subcolumns """
 
-    hue = hue if hue is not None else column_name_for_expanding_xcoldata
     if groupby is not None and type(groupby) == str:
         import operator
         selection_conditions = [
@@ -223,28 +137,17 @@ def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
 
     def preprocess_data(data: pd.DataFrame, preprocessor_func_x,
                         threshold_value_max,
-                        expand_xcoldata_using_col, expand_ycoldata_using_col,
                         column_x: str, column_y: str,
                         normalise_data_x: bool, normalise_data_y: bool,
-                        column_name_for_expanding_xcoldata,
-                        column_name_for_expanding_ycoldata,
                         exclude_rows_nonempty_in_cols, exclude_rows_zero_in_cols,
-                        idx_for_expanding_xcoldata,
-                        idx_for_expanding_ycoldata,
                         preprocessor_func_y=None,
                         postprocessor_func_x=None,
                         postprocessor_func_y=None,
                         selection_conditions=None):
-        def preprocess(data, column, expand_coldata_using_col, normalise_data,
-                       preprocessor_func, column_name_for_expanding_coldata,
-                       idx_for_expanding_coldata, remove_outliers=False,
+        def preprocess(data, column, normalise_data,
+                       preprocessor_func, remove_outliers=False,
                        outlier_std_threshold=3):
             if column is not None:
-                if expand_coldata_using_col:
-                    data = expand_data_by_col(
-                        data=data, columns=column,
-                        column_for_expanding_coldata=column_name_for_expanding_coldata,
-                        idx_for_expanding_coldata=idx_for_expanding_coldata)
                 if preprocessor_func:
                     data = data.drop(column, axis=1).join(
                         preprocessor_func(data[column]))
@@ -272,13 +175,11 @@ def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
             return data
 
         data, column_x = preprocess(
-            data, column_x, expand_xcoldata_using_col, normalise_data_x,
-            preprocessor_func_x, column_name_for_expanding_xcoldata,
-            idx_for_expanding_xcoldata)
+            data, column_x, normalise_data_x,
+            preprocessor_func_x)
         data, column_y = preprocess(
-            data, column_y, expand_ycoldata_using_col, normalise_data_y,
-            None, column_name_for_expanding_ycoldata,
-            idx_for_expanding_ycoldata, remove_outliers_y, outlier_std_threshold_y)
+            data, column_y, normalise_data_y,
+            preprocessor_func_y, remove_outliers_y, outlier_std_threshold_y)
         data.reset_index(drop=True, inplace=True)
 
         for exc_cols, condition in zip(
@@ -337,14 +238,9 @@ def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
             if use_sns:
                 data, col_x, col_y = preprocess_data(
                     data, preprocessor_func_x, threshold_value_max,
-                    expand_xcoldata_using_col, expand_ycoldata_using_col,
                     col_x, col_y,
                     normalise_data_x, normalise_data_y,
-                    column_name_for_expanding_xcoldata,
-                    column_name_for_expanding_ycoldata,
                     exclude_rows_nonempty_in_cols, exclude_rows_zero_in_cols,
-                    idx_for_expanding_xcoldata,
-                    idx_for_expanding_ycoldata,
                     selection_conditions=selection_conditions,
                     postprocessor_func_x=postprocessor_func_x,
                     postprocessor_func_y=postprocessor_func_y)
