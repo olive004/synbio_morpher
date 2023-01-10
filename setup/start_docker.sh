@@ -3,7 +3,7 @@ docker pull docker/dockerfile:1
 docker pull nvidia/cuda:11.6.2-base-ubuntu20.04
 
 # If image not built yet
-docker build -t genetic_glitch:latest docker_unix
+sudo ctr build -t genetic_glitch:latest docker_unix
 
 # sudo ctr run --rm -t \
 #     --runc-binary=/usr/bin/nvidia-container-runtime \
