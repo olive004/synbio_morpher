@@ -24,7 +24,8 @@ def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
                    groupby: str = None,
                    normalise_data_x: bool = False,
                    normalise_data_y: bool = False,
-                   plot_type: str = None, out_name='test_plot',
+                   plot_type: str = None, 
+                   out_name='test_plot', out_type='svg',
                    hue: str = None,
                    preprocessor_func_x=None,
                    postprocessor_func_x=None,
@@ -230,7 +231,7 @@ def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
                     logging.warning(f'Unknown plot type given "{plot_type}"')
 
                 if is_data_plotable(data, col_x, col_y):
-                    data_writer.output(out_type='svg', out_name=out_name,
+                    data_writer.output(out_type=out_type, out_name=out_name,
                                        write_func=write_func,
                                        **merge_dicts({'x': col_x, 'y': col_y, 'data': data,
                                                       'hue': hue},
@@ -347,10 +348,6 @@ class VisODE():
                 y=y,
                 **plot_kwargs
             ).set(title=title)
-            # if plot_kwargs.get('hue'):
-            #     plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.,
-            #                title=plot_kwargs['hue'])
-            #             #    title=prettify_keys_for_label(plot_kwargs.get('hue')))
             if plot_kwargs.get('hue') and not (data[x].min() is np.nan and data[x].max() is np.nan):
                 sns.move_legend(ax, "upper left", bbox_to_anchor=(1, 1))
             f.savefig(out_path, bbox_inches='tight')
@@ -367,7 +364,7 @@ class VisODE():
     def sns_barplot(self, out_path: str, x: str, y: str, data: pd.DataFrame,
                     title: str = None, xlabel=None, ylabel=None,
                     **plot_kwargs):
-        plot_kwargs.update({'errwidth': 1})
+        # plot_kwargs.update({'errwidth': 1})
 
         # if plot_kwargs.get('hue'):
         #     plot_kwargs.update({

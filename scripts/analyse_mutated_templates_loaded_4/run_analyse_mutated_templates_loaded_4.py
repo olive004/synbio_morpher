@@ -69,26 +69,30 @@ def main(config=None, data_writer=None):
         log_text = '_log' if any(log_axis) else ''
         outlier_save_text = '_nooutliers' if remove_outliers else ''
         df = data[data['sample_name'] == data['sample_name'].unique()[0]]
-        for cols_x in analytics_types:
+        df = expand_df_cols_lists(
+            df, col_of_lists=mutation_attr, col_list_len='mutation_num', include_cols=analytics_types)
+        # extra_kwargs = {
+        #     'errorbar': None,
+        #     'n_boot':0} if len(df[mutation_attr]) > 1e5 else {}
 
-            df2 = expand_df_cols_lists(
-                df, col_of_lists=mutation_attr, col_list_len='mutation_num', include_cols=[cols_x])
+        for cols_y in analytics_types:
 
+            df2 = df[['mutation_num', mutation_attr, cols_y]]
             visualise_data(
                 data=df2,
                 data_writer=data_writer,
-                cols_x=[cols_x], cols_y=[mutation_attr],
+                cols_x=[mutation_attr], cols_y=[cols_y],
                 plot_type=plot_type,
-                out_name=f'{cols_x}_{mutation_attr}{log_text}{outlier_save_text}',
+                out_name=f'{cols_y}_{mutation_attr}{log_text}{outlier_save_text}',
                 exclude_rows_zero_in_cols=['mutation_num'],
                 log_axis=log_axis,
                 use_sns=True,
                 hue='mutation_num',
                 remove_outliers_y=remove_outliers,
                 outlier_std_threshold_y=outlier_std_threshold,
-                title=f'{prettify_keys_for_label(cols_x)} vs. {prettify_keys_for_label(mutation_attr)}',
+                title=f'{prettify_keys_for_label(mutation_attr)} vs. {prettify_keys_for_label(cols_y)}',
                 xlabel=f'{prettify_keys_for_label(mutation_attr)}',
-                ylabel=f'{prettify_keys_for_label(cols_x)}{outlier_text}'
+                ylabel=f'{prettify_keys_for_label(cols_y)}{outlier_text}'
             )
 
     def vis_data(data: pd.DataFrame):
