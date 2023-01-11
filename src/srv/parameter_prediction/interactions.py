@@ -225,7 +225,7 @@ def b_get_stats(interactions_mxs: List[InteractionMatrix]):
     )][:, batch_dim+1:] for i in range(len(interactions_mxs))]
 
     stats = {
-        # "name": [i.name for i in interactions],
+        "name": [i.name for i in interactions_mxs],
         "interacting": idxs_other_interacting,
         "self_interacting": idxs_self_interacting,
         "sample_names": [i.sample_names for i in interactions_mxs],
