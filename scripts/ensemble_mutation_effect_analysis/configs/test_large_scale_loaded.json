@@ -16,7 +16,7 @@
             "system_type": "RNA",
             "source_of_interactions": {
                 "is_source_dir_incomplete": false,
-                "source_dir": "./data/ensemble_mutation_effect_analysis/2023_01_11_140019/generate_species_templates",
+                "source_dir": "./data/ensemble_mutation_effect_analysis/2022_12_21_235045/generate_species_templates",
                 "purpose_to_get_source_dir_from": null,
                 "source_dir_actually_used_POSTERITY": null
             }

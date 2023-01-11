@@ -3,6 +3,7 @@ import os
 from typing import Union
 import numpy as np
 import pandas as pd
+import jaxlib
 
 from src.utils.misc.type_handling import inverse_dict
 
@@ -94,14 +95,13 @@ def make_iterable_like(dict_like):
 
 
 def process_dict_for_json(dict_like) -> Union[list, dict]:
-    import jaxlib
     iterable_like = make_iterable_like(dict_like)
     for k, v in iterable_like:
         if type(v) == dict or type(v) == list:
             dict_like[k] = process_dict_for_json(v)
         elif type(v) == np.bool_:
             dict_like[k] = bool(v)
-        elif type(v) == np.ndarray or type(v) == jaxlib.xla_extension.DeviceArray:
+        elif type(v) == np.ndarray or type(v) in jaxlib.xla_extension.__dict__.values():
             dict_like[k] = v.tolist()
         elif type(v) == np.float32 or type(v) == np.int64:
             dict_like[k] = str(v)

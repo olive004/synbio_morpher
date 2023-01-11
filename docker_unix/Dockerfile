@@ -43,23 +43,12 @@ WORKDIR /workdir
 RUN yes | apt-get install wget && \
     wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
 RUN (sleep 1; echo yes; sleep 1; echo /root/miniconda3; sleep 1; echo yes) | bash Miniconda3-latest-Linux-x86_64.sh 
-# RUN export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_PREFIX/lib/
-# RUN export LD_LIBRARY_PATH=/root/miniconda3/lib/
-# RUN mkdir -p $CONDA_PREFIX/etc/conda/activate.d
-# RUN echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_PREFIX/lib/' > $CONDA_PREFIX/etc/conda/activate.d/env_vars.sh
 RUN . /root/miniconda3/bin/activate && \
     yes | conda install -c conda-forge -c bioconda intarna
-ENTRYPOINT ["/bin/bash", "setup/entry.sh"]
+RUN ln -s /root/miniconda3/bin/IntaRNA /usr/local/bin/IntaRNA
 
 # Go
 # RUN wget https://go.dev/dl/go1.19.4.linux-amd64.tar.gz
 # RUN tar -C /usr/local -xzf go1.19.4.linux-amd64.tar.gz
 # RUN export PATH=$PATH:/usr/local/go/bin
 # RUN export GOPATH="/mnt/c/Users/${user}/directory/to/your/golang/workspace"
-
-
-################################################################################
-#  Misc patches
-################################################################################
-# For NVIDIA: find this path via ```find /usr/ -name libcudart.so.11.0```
-# RUN export LD_LIBRARY_PATH=/usr/local/cuda-11.3/targets/x86_64-linux/lib/:/usr/local/cuda-11.3/compat/
