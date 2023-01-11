@@ -41,7 +41,7 @@ def main(config=None, data_writer=None):
             for m in list(df['mutation_num'].unique()) + ['all']:
                 for log_opt in [(False, False), (True, False)]:
                     log_text = '' if any(log_opt) else '_log'
-                    for thresh in ['thres1', 'thresh2', False]:
+                    for thresh in ['thres1', 'exclude', 'less', 'more', False]:
                         if m == 'all':
                             plot_grammar_m = 's'
                             hue = 'mutation_num'
@@ -57,7 +57,13 @@ def main(config=None, data_writer=None):
                             remove_outliers_y = True
                             if thresh == 'thres1':
                                 thresh_text = f', outliers >{outlier_std_threshold_y} std removed'
-                            else:
+                            elif thresh in ['exclude', 'less', 'more']:
+                                if thresh == 'exclude':
+                                    op = operator.ne
+                                elif thresh == 'less':
+                                    op = operator.lt
+                                else:
+                                    op = operator.gt
                                 thresh_text = f', {round(df[interaction_type].mode().iloc[0], 4)} excluded'
                                 if selection_conditions is not None:
                                     selection_conditions.append(
