@@ -21,21 +21,24 @@ def main(config=None, data_writer=None):
     config_file = load_json_as_dict(config)
 
     # Visualisations
-    def get_true_interaction_cols(data, interaction_attr):
+    def get_true_interaction_cols(data, interaction_attr, remove_symmetrical=False):
         num_species = len(data['sample_name'].unique())
         names = []
         for i in range(num_species):
             for ii in range(num_species):
-                names.append(interaction_attr + '_' +
-                             str(i) + '-' + str(ii))
+                idxs = [i, ii]
+                if remove_symmetrical:
+                    idxs = sorted(idxs)
+                num_ending = '_' + str(idxs[0]) + '-' + str(idxs[1])
+                names.append(interaction_attr + num_ending)
         assert all([n in data.columns for n in names]
                    ), f'Interaction info column names were not isolated correctly: {names}'
-        return [n for n in names if n in data.columns]
+        return sorted(set([n for n in names if n in data.columns]))
 
     def vis_interactions(data: pd.DataFrame):
         outlier_std_threshold_y = 3
         for interaction_type in INTERACTION_TYPES:
-            cols = get_true_interaction_cols(data, interaction_type)
+            cols = get_true_interaction_cols(data, interaction_type, remove_symmetrical=True)
             df = data.melt(id_vars='mutation_num',
                            value_vars=cols, value_name=interaction_type)
             for m in list(df['mutation_num'].unique()) + ['all']:
