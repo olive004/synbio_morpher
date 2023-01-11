@@ -41,7 +41,7 @@ def main(config=None, data_writer=None):
             for m in list(df['mutation_num'].unique()) + ['all']:
                 for log_opt in [(False, False), (True, False)]:
                     log_text = '' if any(log_opt) else '_log'
-                    for thresh in ['thres1', 'exclude', 'less', 'more', False]:
+                    for thresh in ['outlier', 'exclude', 'less', 'more', False]:
                         if m == 'all':
                             plot_grammar_m = 's'
                             hue = 'mutation_num'
@@ -55,16 +55,18 @@ def main(config=None, data_writer=None):
                         remove_outliers_y = False
                         if thresh:
                             remove_outliers_y = True
-                            if thresh == 'thres1':
+                            if thresh == 'outlier':
                                 thresh_text = f', outliers >{outlier_std_threshold_y} std removed'
                             elif thresh in ['exclude', 'less', 'more']:
                                 if thresh == 'exclude':
+                                    thresh_text = f', {round(df[interaction_type].mode().iloc[0], 4)} excluded'
                                     op = operator.ne
                                 elif thresh == 'less':
+                                    thresh_text = f', less than {round(df[interaction_type].mode().iloc[0], 4)}'
                                     op = operator.lt
                                 else:
+                                    thresh_text = f', greater than {round(df[interaction_type].mode().iloc[0], 4)}'
                                     op = operator.gt
-                                thresh_text = f', {round(df[interaction_type].mode().iloc[0], 4)} excluded'
                                 if selection_conditions is not None:
                                     selection_conditions.append(
                                         (interaction_type, operator.ne, df[interaction_type].mode().iloc[0]))
