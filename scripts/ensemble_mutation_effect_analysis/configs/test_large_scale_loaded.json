@@ -1,0 +1,188 @@
+{
+    "experiment": {
+        "purpose": "ensemble_mutation_effect_analysis"
+    },
+    "base_configs_ensemble": {
+        "gather_interaction_stats": {
+            "interaction_simulator": {
+                "name": "IntaRNA",
+                "postprocess": true
+            },
+            "interaction_file_keyword": ["eqconstants", "binding_rates_dissociation"],
+            "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
+            "experiment": {
+                "purpose": "gather_interaction_stats"
+            },    
+            "system_type": "RNA",
+            "source_of_interactions": {
+                "is_source_dir_incomplete": false,
+                "source_dir": "./data/ensemble_mutation_effect_analysis/2023_01_11_140019/generate_species_templates",
+                "purpose_to_get_source_dir_from": null,
+                "source_dir_actually_used_POSTERITY": null
+            }
+        },
+        "mutation_effect_on_interactions_signal": {
+            "system_type": "RNA",
+            "data_path": null,
+            "experiment": {
+                "purpose": "mutation_effect_on_interactions_signal",
+                "no_visualisations": true,
+                "no_numerical": true,
+                "test_mode": false
+            },
+            "interaction_simulator": {
+                "name": "IntaRNA",
+                "postprocess": true
+            },
+            "filters": {
+                "min_num_interacting": null,
+                "max_self_interacting": null,
+                "max_total": null
+            },
+            "mutations": {
+                "algorithm": "random",
+                "mutation_counts": 10,
+                "mutation_nums_within_sequence": [1, 2, 3, 5, 7, 10, 15],
+                "mutation_nums_per_position": 1,
+                "concurrent_species_to_mutate": "single_species_at_a_time"
+            },
+            "signal": {
+                "inputs": ["RNA_0"],
+                "outputs": ["RNA_1"],
+                "function_name": "step_function",
+                "function_kwargs": {
+                    "impulse_center": 400, 
+                    "impulse_halfwidth": 5, 
+                    "target": 10
+                }
+            },
+            "simulation": {
+                "dt": 0.1,
+                "t0": 0,
+                "t1": 1200,
+                "solver": "diffrax",
+                "use_batch_mutations": true,
+                "batch_size": 1000,
+                "max_circuits": 1000,
+                "device": "cpu"
+            },
+            "source_of_interaction_stats": {
+                "is_source_dir_incomplete": true,
+                "source_dir": "./data/ensemble_mutation_effect_analysis",
+                "purpose_to_get_source_dir_from": "gather_interaction_stats",
+                "source_dir_actually_used_POSTERITY": null
+            },
+            "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json"
+        },
+        "summarise_simulation": {
+            "experiment": {
+                "purpose": "summarise_simulation"
+            },
+            "source_dirs": {
+                "is_source_dir_incomplete": true,
+                "source_dir": "./data/ensemble_mutation_effect_analysis",
+                "purpose_to_get_source_dir_from": "mutation_effect_on_interactions_signal",
+                "source_dir_actually_used_POSTERITY": null
+            },
+            "preprocessing_func": null,
+            "only_visualise_circuits": false
+        },
+        "analyse_mutated_templates_loaded": {
+            "experiment": {
+                "purpose": "analyse_mutated_templates_loaded"
+            },
+            "source_dirs": {
+                "is_source_dir_incomplete": true,
+                "source_dir": "./data/ensemble_mutation_effect_analysis",
+                "purpose_to_get_source_dir_from": "summarise_simulation",
+                "source_dir_actually_used_POSTERITY": null
+            },
+            "tabulated_info_differentiator": "mutation_num",
+            "preprocessing_func": null,
+            "only_visualise_circuits": false
+        },
+        "analyse_mutated_templates_loaded_1": {
+            "experiment": {
+                "purpose": "analyse_mutated_templates_loaded_1"
+            },
+            "source_dirs": {
+                "is_source_dir_incomplete": true,
+                "source_dir": "./data/ensemble_mutation_effect_analysis",
+                "purpose_to_get_source_dir_from": "summarise_simulation",
+                "source_dir_actually_used_POSTERITY": null
+            },
+            "tabulated_info_differentiator": "mutation_num",
+            "preprocessing_func": null,
+            "only_visualise_circuits": false
+        },
+        "analyse_mutated_templates_loaded_2": {
+            "experiment": {
+                "purpose": "analyse_mutated_templates_loaded_2"
+            },
+            "source_dirs": {
+                "is_source_dir_incomplete": true,
+                "source_dir": "./data/ensemble_mutation_effect_analysis",
+                "purpose_to_get_source_dir_from": "summarise_simulation",
+                "source_dir_actually_used_POSTERITY": null
+            },
+            "tabulated_info_differentiator": "mutation_num",
+            "preprocessing_func": null,
+            "only_visualise_circuits": false
+        },
+        "analyse_mutated_templates_loaded_3": {
+            "experiment": {
+                "purpose": "analyse_mutated_templates_loaded_3"
+            },
+            "source_dirs": {
+                "is_source_dir_incomplete": true,
+                "source_dir": "./data/ensemble_mutation_effect_analysis",
+                "purpose_to_get_source_dir_from": "summarise_simulation",
+                "source_dir_actually_used_POSTERITY": null
+            },
+            "tabulated_info_differentiator": "mutation_num",
+            "preprocessing_func": null,
+            "only_visualise_circuits": false
+        },
+        "analyse_mutated_templates_loaded_4": {
+            "experiment": {
+                "purpose": "analyse_mutated_templates_loaded_4"
+            },
+            "source_dirs": {
+                "is_source_dir_incomplete": true,
+                "source_dir": "./data/ensemble_mutation_effect_analysis",
+                "purpose_to_get_source_dir_from": "summarise_simulation",
+                "source_dir_actually_used_POSTERITY": null
+            },
+            "tabulated_info_differentiator": "mutation_num",
+            "preprocessing_func": null,
+            "only_visualise_circuits": false
+        },
+        "analyse_mutated_templates_loaded_5": {
+            "experiment": {
+                "purpose": "analyse_mutated_templates_loaded_4"
+            },
+            "source_dirs": {
+                "is_source_dir_incomplete": true,
+                "source_dir": "./data/ensemble_mutation_effect_analysis",
+                "purpose_to_get_source_dir_from": "summarise_simulation",
+                "source_dir_actually_used_POSTERITY": null
+            },
+            "tabulated_info_differentiator": "mutation_num",
+            "preprocessing_func": null,
+            "only_visualise_circuits": false
+        },
+        "analyse_mutated_templates_loaded_means": {
+            "experiment": {
+                "purpose": "analyse_mutated_templates_loaded_means"
+            },
+            "source_dirs": {
+                "is_source_dir_incomplete": true,
+                "source_dir": "./data/ensemble_mutation_effect_analysis",
+                "purpose_to_get_source_dir_from": "summarise_simulation",
+                "source_dir_actually_used_POSTERITY": null
+            },
+            "preprocessing_func": null,
+            "only_visualise_circuits": false
+        }
+    }
+}
