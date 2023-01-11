@@ -69,10 +69,10 @@ def main(config=None, data_writer=None):
                                     op = operator.gt
                                 if selection_conditions is not None:
                                     selection_conditions.append(
-                                        (interaction_type, operator.ne, df[interaction_type].mode().iloc[0]))
+                                        (interaction_type, op, df[interaction_type].mode().iloc[0]))
                                 else:
                                     selection_conditions = [
-                                        (interaction_type, operator.ne, df[interaction_type].mode().iloc[0])]
+                                        (interaction_type, op, df[interaction_type].mode().iloc[0])]
                         visualise_data(
                             data=df,
                             data_writer=data_writer,
