@@ -54,14 +54,14 @@
                 "postprocess": true
             },
             "filters": {
-                "min_num_interacting": 2,
+                "min_num_interacting": null,
                 "max_self_interacting": null,
                 "max_total": null
             },
             "mutations": {
                 "algorithm": "random",
                 "mutation_counts": 10,
-                "mutation_nums_within_sequence": [1, 2, 3, 5, 7, 10, 15, 20],
+                "mutation_nums_within_sequence": [1, 2, 3, 5, 7, 10, 15],
                 "mutation_nums_per_position": 1,
                 "concurrent_species_to_mutate": "single_species_at_a_time"
             },
@@ -163,6 +163,20 @@
             "only_visualise_circuits": false
         },
         "analyse_mutated_templates_loaded_4": {
+            "experiment": {
+                "purpose": "analyse_mutated_templates_loaded_4"
+            },
+            "source_dirs": {
+                "is_source_dir_incomplete": true,
+                "source_dir": "./data/ensemble_mutation_effect_analysis",
+                "purpose_to_get_source_dir_from": "summarise_simulation",
+                "source_dir_actually_used_POSTERITY": null
+            },
+            "tabulated_info_differentiator": "mutation_num",
+            "preprocessing_func": null,
+            "only_visualise_circuits": false
+        },
+        "analyse_mutated_templates_loaded_5": {
             "experiment": {
                 "purpose": "analyse_mutated_templates_loaded_4"
             },

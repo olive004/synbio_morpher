@@ -31,7 +31,7 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "xanalyse_mutated_templates_loaded_2": {
+        "analyse_mutated_templates_loaded_2": {
             "experiment": {
                 "purpose": "analyse_mutated_templates_loaded_2"
             },
@@ -59,7 +59,7 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "analyse_mutated_templates_loaded_4": {
+        "xanalyse_mutated_templates_loaded_4": {
             "experiment": {
                 "purpose": "analyse_mutated_templates_loaded_4"
             },
@@ -73,7 +73,7 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "analyse_mutated_templates_loaded_5": {
+        "xanalyse_mutated_templates_loaded_5": {
             "experiment": {
                 "purpose": "analyse_mutated_templates_loaded_5"
             },
@@ -87,7 +87,7 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "analyse_mutated_templates_loaded_means": {
+        "xanalyse_mutated_templates_loaded_means": {
             "experiment": {
                 "purpose": "analyse_mutated_templates_loaded_means"
             },

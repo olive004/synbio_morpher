@@ -1,6 +1,6 @@
 from functools import partial
 from typing import List
-import operator
+import logging
 import os
 
 import pandas as pd
@@ -71,6 +71,8 @@ def main(config=None, data_writer=None):
         df = data[data['sample_name'] == data['sample_name'].unique()[0]]
         df = expand_df_cols_lists(
             df, col_of_lists=mutation_attr, col_list_len='mutation_num', include_cols=analytics_types)
+        if len(df[mutation_attr].unique()) > 1e4:
+            logging.warning(f'Plot type {plot_type} may not be able to handle this many data points')
         # extra_kwargs = {
         #     'errorbar': None,
         #     'n_boot':0} if len(df[mutation_attr]) > 1e5 else {}
