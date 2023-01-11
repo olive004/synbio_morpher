@@ -1,11 +1,12 @@
 
 import logging
-from typing import Tuple
+from subprocess import PIPE, run
 import numpy as np
 from functools import partial
 from src.utils.misc.helper import vanilla_return, processor
 from src.utils.misc.numerical import SCIENTIFIC
 from src.utils.misc.units import per_mol_to_per_molecule
+from src.srv.parameter_prediction.IntaRNA.bin.copomus.IntaRNA import IntaRNA
 
 
 SIMULATOR_UNITS = {
@@ -98,11 +99,11 @@ class RawSimulationHandling():
             from src.srv.parameter_prediction.simulator import simulate_vanilla
             return simulate_vanilla
 
-    def calculate_full_coupling_of_rates(self, k_d, eqconstants):
-        # k_a = per_mol_to_per_molecules(self.fixed_rate_k_a)
-        k_a = self.fixed_rate_k_a
-        full_interactions = np.divide(k_a, (k_d + eqconstants))  # .flatten()))
-        return full_interactions
+    # def calculate_full_coupling_of_rates(self, k_d, eqconstants):
+    #     # k_a = per_mol_to_per_molecules(self.fixed_rate_k_a)
+    #     k_a = self.fixed_rate_k_a
+    #     full_interactions = np.divide(k_a, (k_d + eqconstants))  # .flatten()))
+    #     return full_interactions
 
     # def calculate_full_coupling_of_rates(self, k_d, degradation_rates):
     #     k_a = per_mol_to_per_molecules(self.fixed_rate_k_a)
@@ -115,9 +116,22 @@ def simulate_vanilla(batch):
     return None
 
 
+def check_IntaRNA_path():
+
+    p = run('which IntaRNA', shell=True, stdout=PIPE, stderr=PIPE, universal_newlines=True)
+    p2 = run('IntaRNA --version', shell=True, stdout=PIPE, stderr=PIPE, universal_newlines=True)
+    if p.returncode == 0:
+        if p2.returncode == 1:
+            return p.stdout
+    else:
+        logging.warning(f'Could not detect IntaRNA on system: {p}')
+
+
 def simulate_intaRNA_data(batch: dict, allow_self_interaction: bool, sim_kwargs: dict):
-    from src.srv.parameter_prediction.IntaRNA.bin.copomus.IntaRNA import IntaRNA
     simulator = IntaRNA()
+    if check_IntaRNA_path():
+        import sys
+        sys.path.append(check_IntaRNA_path())
     if batch is not None:
         data = {}
         for i, (label_i, sample_i) in enumerate(batch.items()):

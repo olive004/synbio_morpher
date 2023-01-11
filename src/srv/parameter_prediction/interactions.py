@@ -191,17 +191,16 @@ class InteractionData():
 
 
 class InteractionSimulator():
-    def __init__(self, sim_args: dict = None):
+    def __init__(self, sim_args: dict = None, allow_self_interaction=True):
 
         self.simulation_handler = RawSimulationHandling(sim_args)
+        self.simulator = self.simulation_handler.get_simulator(
+            allow_self_interaction)
 
-    def run(self, batch: dict = None, allow_self_interaction=True):
+    def run(self, batch: dict = None):
         """ Makes nested dictionary for querying interactions as 
         {sample1: {sample2: interaction}} """
-
-        simulator = self.simulation_handler.get_simulator(
-            allow_self_interaction)
-        data = simulator(batch)
+        data = self.simulator(batch)
         data = InteractionData(
             data, simulation_handler=self.simulation_handler)
         return data

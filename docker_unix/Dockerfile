@@ -49,6 +49,7 @@ RUN (sleep 1; echo yes; sleep 1; echo /root/miniconda3; sleep 1; echo yes) | bas
 # RUN echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_PREFIX/lib/' > $CONDA_PREFIX/etc/conda/activate.d/env_vars.sh
 RUN . /root/miniconda3/bin/activate && \
     yes | conda install -c conda-forge -c bioconda intarna
+ENTRYPOINT ["/bin/bash", "setup/entry.sh"]
 
 # Go
 # RUN wget https://go.dev/dl/go1.19.4.linux-amd64.tar.gz
