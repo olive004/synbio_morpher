@@ -73,21 +73,23 @@ def main(config=None, data_writer=None):
                                 else:
                                     selection_conditions = [
                                         (interaction_type, op, df[interaction_type].mode().iloc[0])]
-                        visualise_data(
-                            data=df,
-                            data_writer=data_writer,
-                            cols_x=[interaction_type],
-                            plot_type='histplot',
-                            out_name=f'{interaction_type}{log_text}_thresh-{thresh}_m{m}',
-                            log_axis=log_opt,
-                            use_sns=True,
-                            selection_conditions=selection_conditions,
-                            remove_outliers_y=remove_outliers_y,
-                            outlier_std_threshold_y=outlier_std_threshold_y,
-                            hue=hue,
-                            title=f'{prettify_keys_for_label(interaction_type)} for {m} mutation{plot_grammar_m}{thresh_text}',
-                            xlabel=prettify_keys_for_label(interaction_type),
-                        )
+                        for normalise in [True, False]:
+                            visualise_data(
+                                data=df,
+                                data_writer=data_writer,
+                                cols_x=[interaction_type],
+                                plot_type='histplot',
+                                out_name=f'{interaction_type}_norm-{normalise}_{log_text}_thresh-{thresh}_m{m}',
+                                log_axis=log_opt,
+                                use_sns=True,
+                                selection_conditions=selection_conditions,
+                                remove_outliers_y=remove_outliers_y,
+                                outlier_std_threshold_y=outlier_std_threshold_y,
+                                normalise_data_y=normalise,
+                                hue=hue,
+                                title=f'{prettify_keys_for_label(interaction_type)} for {m} mutation{plot_grammar_m}{thresh_text}',
+                                xlabel=prettify_keys_for_label(interaction_type),
+                            )
 
     # Protocols
     config_file, source_dirs = get_search_dir(
