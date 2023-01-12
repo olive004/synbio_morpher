@@ -7,11 +7,11 @@ import numpy as np
 import pandas as pd
 
 from fire import Fire
-from src.srv.io.manage.script_manager import script_preamble
+from src.srv.io.manage.script_manager import script_preamble, visualisation_script_protocol_preamble
 from src.utils.misc.io import get_pathnames_from_mult_dirs
 from src.utils.misc.scripts_io import get_search_dir, load_experiment_config_original
 from src.utils.misc.string_handling import prettify_keys_for_label
-from src.utils.results.analytics.naming import get_analytics_types, get_signal_dependent_analytics, DIFF_KEY, RATIO_KEY
+from src.utils.results.analytics.naming import get_true_interaction_cols
 
 from src.utils.results.experiments import Experiment, Protocol
 from src.utils.results.result_writer import ResultWriter
@@ -35,58 +35,20 @@ def main(config=None, data_writer=None):
         config_searchdir_key='source_dirs', config_file=config_file)
     if type(source_dirs) != list:
         source_dirs = [source_dirs]
-    source_dir = source_dirs[0]
-    source_config = load_experiment_config_original(
-        source_dir, 'mutation_effect_on_interactions_signal')
 
-    # binding_rates_threshold_upper = np.power(10, 6)
-    binding_rates_threshold_upper = None
-    binding_rates_threshold_upper_text = f', with cutoff at {binding_rates_threshold_upper}' if binding_rates_threshold_upper else ''
-
-    def readout(v):
-        logging.info(v)
-        return v
-
-    protocols = [
-        Protocol(
-            partial(
-                get_pathnames_from_mult_dirs,
-                search_dirs=source_dirs,
-                file_key='tabulated_mutation_info.csv',
-                first_only=True),
-            req_output=True,
-            name='get_pathnames_from_mult_dirs'
-        ),
-        Protocol(
-            partial(
-                load_csv_mult
-                # as_type=pd.DataFrame
-            ),
-            req_input=True,
-            req_output=True,
-            name='load_json'
-        ),
-        Protocol(
-            partial(
-                pd.concat,
-                axis=0,
-                ignore_index=True),
-            req_input=True,
-            req_output=True,
-            name='concatenate_dfs'
-        )
-    ]
+    protocols = visualisation_script_protocol_preamble(source_dirs)
 
     # Visualisations
-    def visualise_interactions_raw(data: pd.DataFrame, interaction_types, data_writer):
+    def visualise_interactions_raw(data: pd.DataFrame, data_writer):
         log_opts = [(False, False), (True, False)]
         num_mutations = list(data['mutation_num'].unique())
-        for interaction_type in interaction_types:
-            interaction_cols = [
-                c for c in data.columns if interaction_type in c and DIFF_KEY not in c and RATIO_KEY not in c and 'max' not in c and 'min' not in c]
+        for interaction_type in INTERACTION_TYPES:
+            interaction_cols = get_true_interaction_cols(
+                data, interaction_type, remove_symmetrical=True)
             if not interaction_cols:
                 continue
-            units_text = f'({SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]}) ' if 'rate' in interaction_type else ''
+            units_text = '(' + r'$s^{-1}$' + \
+                ') ' if 'rate' in interaction_type else ''
             for log_opt in log_opts:
                 log_text = '_log' if any(log_opt) else ''
                 for m in num_mutations+['all'] + ['all-pooled']:
@@ -125,7 +87,6 @@ def main(config=None, data_writer=None):
         Protocol(
             partial(
                 visualise_interactions_raw,
-                interaction_types=INTERACTION_TYPES,
                 data_writer=data_writer
             ),
             req_input=True,

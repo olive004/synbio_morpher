@@ -4,16 +4,14 @@ import os
 import pandas as pd
 
 from fire import Fire
-from src.srv.io.manage.script_manager import script_preamble
-from src.utils.misc.io import get_pathnames_from_mult_dirs
-from src.utils.misc.scripts_io import get_search_dir, load_experiment_config_original
+from src.srv.io.manage.script_manager import script_preamble, visualisation_script_protocol_preamble
+from src.utils.misc.scripts_io import get_search_dir
 from src.utils.misc.string_handling import prettify_keys_for_label
 from src.utils.results.analytics.naming import get_true_names_analytics
 
 from src.utils.results.experiments import Experiment, Protocol
 from src.utils.results.visualisation import visualise_data
-from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
-from src.utils.data.data_format_tools.common import load_json_as_dict, load_csv_mult
+from src.utils.data.data_format_tools.common import load_json_as_dict
 
 
 def main(config=None, data_writer=None):
@@ -30,46 +28,12 @@ def main(config=None, data_writer=None):
         config_searchdir_key='source_dirs', config_file=config_file)
     if type(source_dirs) != list:
         source_dirs = [source_dirs]
-    source_dir = source_dirs[0]
-    source_config = load_experiment_config_original(
-        source_dir, 'mutation_effect_on_interactions_signal')
 
-    # binding_rates_threshold_upper = np.power(10, 6)
     binding_rates_threshold_upper = None
     binding_rates_threshold_upper_text = f', with cutoff at {binding_rates_threshold_upper}' if binding_rates_threshold_upper else ''
 
-    def readout(v):
-        logging.info(v)
-        return v
-
-    protocols = [
-        Protocol(
-            partial(
-                get_pathnames_from_mult_dirs,
-                search_dirs=source_dirs,
-                file_key='tabulated_mutation_info.csv',
-                first_only=True),
-            req_output=True,
-            name='get_pathnames_from_mult_dirs'
-        ),
-        Protocol(
-            partial(
-                load_csv_mult
-                # as_type=pd.DataFrame
-            ),
-            req_input=True,
-            req_output=True,
-            name='load_json'
-        ),
-        Protocol(
-            partial(
-                pd.concat,
-                axis=0,
-                ignore_index=True),
-            req_input=True,
-            req_output=True,
-            name='concatenate_dfs'
-        ),
+    protocols = visualisation_script_protocol_preamble(source_dirs)
+    protocols.append(
         # Binding rates min interactions mutations
         Protocol(
             partial(
@@ -87,19 +51,16 @@ def main(config=None, data_writer=None):
                 log_axis=(True, False),
                 use_sns=True,
                 title=f'Minimum ' + r'$k_d$' + ' strength',
-                xlabel='Dissociation rate ' + r'$k_d$' + ' (' +
-                fr'{SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"]})' +
+                xlabel='Dissociation rate ' + r'$k_d$' + ' (' + r'$s^{-1}$' + ')' +
                 f'{binding_rates_threshold_upper_text}'),
             req_input=True,
             name='visualise_mutated_interactions'
         ),
-    ]
+    )
 
     # Visualisations
 
     # Binding rates
-    rate_unit = r'{}'.format(
-        SIMULATOR_UNITS[source_config["interaction_simulator"]["name"]]["rate"])
     protocols.append(Protocol(
         partial(
             visualise_data,
@@ -118,7 +79,7 @@ def main(config=None, data_writer=None):
             hue='mutation_num',
             title=f'Minimum ' + r'$k_d$' + ' strength',
             xlabel='Dissociation rate ' + r'$k_d$' + ' (' +
-            f'{rate_unit})' +
+            r'$s^{-1}$' + ')' +
             f'{binding_rates_threshold_upper_text}'),
         req_input=True,
         name='visualise_mutated_interactions'
