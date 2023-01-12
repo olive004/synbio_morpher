@@ -24,7 +24,6 @@ def main(config=None, data_writer=None):
 
     # Visualisations
 
-
     def vis_interactions(data: pd.DataFrame):
         outlier_std_threshold_y = 3
         for interaction_type in INTERACTION_TYPES:
@@ -66,8 +65,9 @@ def main(config=None, data_writer=None):
                                 title=f'{prettify_keys_for_label(interaction_type)} for {m} mutation{plot_grammar_m}{thresh_text}',
                                 xlabel=prettify_keys_for_label(
                                     interaction_type),
-                                misc_histplot_kwargs={'stat': 'probability' if normalise else 'count', 'hue_norm': [
-                                    0, 1] if normalise else None}
+                                misc_histplot_kwargs={'stat': 'probability' if normalise else 'count'
+                                                      # , 'hue_norm': [0, 1] if normalise else None}
+                                                      }
                             )
 
     # Protocols
