@@ -1,4 +1,5 @@
 from typing import List
+import pandas as pd
 
 
 DIFF_KEY = '_diff_to_base_circuit'
@@ -75,3 +76,18 @@ def get_true_names_analytics(candidate_cols: List[str]) -> List[str]:
             if b == c:
                 true_names.append(c)
     return true_names
+
+
+def get_true_interaction_cols(data: pd.DataFrame, interaction_attr, remove_symmetrical=False) -> list:
+    num_species = len(data['sample_name'].unique())
+    names = []
+    for i in range(num_species):
+        for ii in range(num_species):
+            idxs = [i, ii]
+            if remove_symmetrical:
+                idxs = sorted(idxs)
+            num_ending = '_' + str(idxs[0]) + '-' + str(idxs[1])
+            names.append(interaction_attr + num_ending)
+    assert all([n in data.columns for n in names]
+                ), f'Interaction info column names were not isolated correctly: {names}'
+    return sorted(set([n for n in names if n in data.columns]))

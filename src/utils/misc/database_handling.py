@@ -4,10 +4,39 @@ import logging
 from src.utils.misc.type_handling import get_unique
 import pandas as pd
 from typing import List, Union
+import operator
 from copy import deepcopy
 from src.utils.misc.type_handling import flatten_listlike, merge_dicts
 from src.utils.misc.numerical import cast_astype
 from src.utils.misc.string_handling import get_all_similar
+
+
+def thresh_func(thresh: bool, range_df, mode, outlier_std_threshold_y, sel_col: str):
+    thresh_text = ''
+    remove_outliers_y = False
+    if thresh:
+        remove_outliers_y = True
+        if thresh == 'outlier':
+            thresh_text = f', outliers >{outlier_std_threshold_y} std removed'
+        elif thresh in ['exclude', 'less', 'more']:
+            if thresh == 'exclude':
+                thresh_text = f', {mode} excluded'
+                op = operator.ne
+            elif thresh == 'less':
+                thresh_text = f', less than {mode - range_df*0.05}'
+
+                op = operator.lt
+            else:
+                thresh_text = f', greater than {mode + range_df*0.05}'
+                op = operator.gt
+            if selection_conditions is not None:
+                selection_conditions.append(
+                    (sel_col, op, mode))
+            else:
+                selection_conditions = [
+                    (sel_col, op, mode)]
+
+    return thresh_text, remove_outliers_y, selection_conditions
 
 
 def expand_data_by_col(data: pd.DataFrame, columns: Union[str, list], column_for_expanding_coldata: str, idx_for_expanding_coldata: int,
