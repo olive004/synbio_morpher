@@ -56,7 +56,7 @@ def main(config=None, data_writer=None):
 
         for c in cols:
             range_df = round(data[c].max() -
-                                data[c].min(), 4)
+                             data[c].min(), 4)
             mode = round(data[c].mode().iloc[0], 4)
             for m in list(data['mutation_num'].unique()) + ['all']:
                 if m == 'all':
@@ -67,12 +67,12 @@ def main(config=None, data_writer=None):
                     selection_conditions = [(
                         'mutation_num', operator.eq, m
                     )]
-                for log_opt in log_opts:
-                    log_text = '_log' if any(log_opt) else ''
-                    for s in ['mean', 'std']:
-                        for thresh in ['outlier', 'exclude', 'less', 'more', False]:
-                            thresh_text, remove_outliers_y, selection_conditions = thresh_func(
-                                thresh, range_df, mode, outlier_std_threshold_y, sel_col=c)
+                for s in ['mean', 'std']:
+                    for thresh in ['outlier', 'exclude', 'lt', 'gt', 'lt_strict', 'gt_strict', False]:
+                        thresh_text, remove_outliers_y, selection_conditions = thresh_func(
+                            thresh, range_df, mode, outlier_std_threshold_y, selection_conditions, sel_col=(c, s))
+                        for log_opt in log_opts:
+                            log_text = '_log' if any(log_opt) else ''
                             for normalise in [True, False]:
                                 visualise_data(
                                     data=d,
@@ -86,10 +86,12 @@ def main(config=None, data_writer=None):
                                     selection_conditions=selection_conditions,
                                     remove_outliers_y=remove_outliers_y,
                                     outlier_std_threshold_y=outlier_std_threshold_y,
-                                    xlabel=(f'{prettify_keys_for_label(c)}', f'{s}'),
+                                    xlabel=(
+                                        f'{prettify_keys_for_label(c)}', f'{s}'),
                                     title=f'{prettify_keys_for_label(s)} of {prettify_keys_for_label(c)}\n for {m} mutations{thresh_text}',
-                                    misc_histplot_kwargs={'stat': 'probability' if normalise else 'count', 'hue_norm': [
-                                        0, 1] if normalise else None}
+                                    misc_histplot_kwargs={'stat': 'probability' if normalise else 'count'
+                                                          # 'hue_norm': [0, 1] if normalise else None
+                                                          }
                                 )
 
     protocols.append(

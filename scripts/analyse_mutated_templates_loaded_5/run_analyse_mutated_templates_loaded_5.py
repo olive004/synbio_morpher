@@ -38,7 +38,7 @@ def main(config=None, data_writer=None):
             for m in list(df['mutation_num'].unique()) + ['all']:
                 for log_opt in [(False, False), (True, False)]:
                     log_text = '_log' if any(log_opt) else ''
-                    for thresh in ['outlier', 'exclude', 'less', 'more', False]:
+                    for thresh in ['outlier', 'exclude', 'lt', 'gt', 'lt_strict', 'gt_strict', False]:
                         if m == 'all':
                             plot_grammar_m = 's'
                             hue = 'mutation_num'
@@ -49,7 +49,7 @@ def main(config=None, data_writer=None):
                             selection_conditions = [
                                 ('mutation_num', operator.eq, m)]
                         thresh_text, remove_outliers_y, selection_conditions = thresh_func(
-                            thresh, range_df, mode, outlier_std_threshold_y, sel_col=interaction_type)
+                            thresh, range_df, mode, outlier_std_threshold_y, selection_conditions, sel_col=interaction_type)
                         for normalise in [True, False]:
                             visualise_data(
                                 data=df,

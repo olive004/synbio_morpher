@@ -11,24 +11,39 @@ from src.utils.misc.numerical import cast_astype
 from src.utils.misc.string_handling import get_all_similar
 
 
-def thresh_func(thresh: bool, range_df, mode, outlier_std_threshold_y, sel_col: str):
+def thresh_func(thresh: bool, range_df, mode, 
+outlier_std_threshold_y, selection_conditions, 
+sel_col: str, mode_slide_perc=0.05):
     thresh_text = ''
     remove_outliers_y = False
     if thresh:
         remove_outliers_y = True
         if thresh == 'outlier':
             thresh_text = f', outliers >{outlier_std_threshold_y} std removed'
-        elif thresh in ['exclude', 'less', 'more']:
+        elif thresh in ['exclude', 'lt', 'gt', 'lt_strict', 'gt_strict']:
             if thresh == 'exclude':
-                thresh_text = f', {mode} excluded'
+                v = mode
+                thresh_text = f', {v} excluded'
                 op = operator.ne
-            elif thresh == 'less':
-                thresh_text = f', less than {mode - range_df*0.05}'
-
+            elif thresh == 'lt':
+                v = mode
+                thresh_text = f', less than {v}'
                 op = operator.lt
-            else:
-                thresh_text = f', greater than {mode + range_df*0.05}'
+            elif thresh == 'gt':
+                v = mode
+                thresh_text = f', greater than {v}'
                 op = operator.gt
+            elif thresh == 'lt_strict':
+                v = mode - range_df*mode_slide_perc
+                thresh_text = f', less than {v}'
+                op = operator.lt
+            elif thresh == 'gt_strict':
+                v = mode + range_df*mode_slide_perc
+                thresh_text = f', greater than {v}'
+                op = operator.gt
+            else:
+                raise ValueError(f'Threshold type {thresh} not found.')
+
             if selection_conditions is not None:
                 selection_conditions.append(
                     (sel_col, op, mode))
