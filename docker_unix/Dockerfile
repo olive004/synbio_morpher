@@ -1,14 +1,13 @@
 # syntax=docker/dockerfile:1
 
-# FROM intarna_docker
 # https://quay.io/repository/biocontainers/intarna
-# FROM nvidia/cuda:11.3.0-base-ubuntu20.04
-FROM nvidia/cuda:11.6.2-base-ubuntu20.04
+FROM quay.io/biocontainers/intarna:3.3.2--pl5321h7ff8a90_0 AS IntaRNA_build
+
+FROM nvidia/cuda:11.6.2-base-ubuntu20.04 AS workdir_build
 
 ################################################################################
 #  Install python dependencies
 ################################################################################
-# RUN nvidia-smi
 WORKDIR /usr/lib
 COPY ./requirements.txt /usr/lib/install_requirements/requirements.txt
 RUN apt-get update && \
@@ -28,27 +27,24 @@ ENV MNT ./..
 WORKDIR /workdir
 # ENTRYPOINT ["/bin/bash"]
 
-## A few missing files for dependencies:
-# For conda: these 2 locations were determined by running the command 
-# find /usr -name libz.so.1 
-# on the container and on an Ubuntu machine. The first location is the one from 
-# the container and the second location is where conda will look for libz.so.1
-# RUN cp /usr/local/lib/libz.so.1 /usr/lib/x86_64-linux-gnu
-# For jax: similar story
-# RUN cp /usr/local/lib/libstdc++.so.6 /usr/local/lib/python3.10/site-packages/jax/_src/lib/
+################################################################################
+#  Copy IntaRNA dependencies
+################################################################################
+COPY --from=IntaRNA_build /usr/local/bin/IntaRNA /usr/local/bin/
+COPY --from=IntaRNA_build /usr/local/include/IntaRNA /usr/local/include/
+# COPY --from=IntaRNA_build /usr/lib/x86_64-linux-gnu/* /usr/lib/x86_64-linux-gnu/
+
 
 ################################################################################
-#  Install Conda & IntaRNA dependencies
+#  Install conda and IntaRNA dependencies
 ################################################################################
 RUN yes | apt-get install wget && \
     wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-RUN (sleep 1; echo yes; sleep 1; echo /root/miniconda3; sleep 1; echo yes) | bash Miniconda3-latest-Linux-x86_64.sh 
+RUN (sleep 1; echo yes; sleep 1; echo /root/miniconda3; sleep 1; echo yes) | bash Miniconda3-latest-Linux-x86_64.sh
 RUN . /root/miniconda3/bin/activate && \
     yes | conda install -c conda-forge -c bioconda intarna
-RUN ln -s /root/miniconda3/bin/IntaRNA /usr/local/bin/IntaRNA
 
-# Go
-# RUN wget https://go.dev/dl/go1.19.4.linux-amd64.tar.gz
-# RUN tar -C /usr/local -xzf go1.19.4.linux-amd64.tar.gz
-# RUN export PATH=$PATH:/usr/local/go/bin
-# RUN export GOPATH="/mnt/c/Users/${user}/directory/to/your/golang/workspace"
+# Switch up the IntaRNAs
+RUN mv /root/miniconda3/bin/IntaRNA /root/miniconda3/bin/IntaRNA2
+RUN mv /usr/local/bin/IntaRNA /root/miniconda3/bin/IntaRNA
+RUN ln -s /root/miniconda3/bin/IntaRNA /usr/local/bin/IntaRNA
