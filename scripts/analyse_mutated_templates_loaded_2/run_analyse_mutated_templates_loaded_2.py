@@ -18,9 +18,6 @@ def main(config=None, data_writer=None):
     # Set configs
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
         # "scripts", "num_interacting", "configs", "base_config_test_2.json"))
-        # "scripts", "analyse_mutated_templates_loaded", "configs", "base_config.json"))
-        # "scripts", "analyse_mutated_templates_loaded", "configs", "analyse_large.json"))
-        # "scripts", "analyse_mutated_templates_loaded", "configs", "analyse_large_highmag.json"))
         "scripts", "analyse_mutated_templates_loaded_2", "configs", "base_config.json"))
     config_file = load_json_as_dict(config)
 

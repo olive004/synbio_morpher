@@ -1,33 +1,24 @@
 from functools import partial
-import logging
 import os
 import operator
 
-import numpy as np
 import pandas as pd
 
 from fire import Fire
 from src.srv.io.manage.script_manager import script_preamble, visualisation_script_protocol_preamble
-from src.utils.misc.io import get_pathnames_from_mult_dirs
-from src.utils.misc.scripts_io import get_search_dir, load_experiment_config_original
+from src.utils.misc.scripts_io import get_search_dir
 from src.utils.misc.string_handling import prettify_keys_for_label
 from src.utils.results.analytics.naming import get_true_interaction_cols
 
 from src.utils.results.experiments import Experiment, Protocol
-from src.utils.results.result_writer import ResultWriter
 from src.utils.results.visualisation import visualise_data
 from src.srv.parameter_prediction.interactions import INTERACTION_TYPES
-from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
-from src.utils.data.data_format_tools.common import load_json_as_dict, load_csv_mult
+from src.utils.data.data_format_tools.common import load_json_as_dict
 
 
 def main(config=None, data_writer=None):
     # Set configs
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
-        # "scripts", "analyse_mutated_templates_loaded", "configs", "base_config_test_2.json"))
-        # "scripts", "analyse_mutated_templates_loaded", "configs", "base_config.json"))
-        # "scripts", "analyse_mutated_templates_loaded", "configs", "analyse_large.json"))
-        # "scripts", "analyse_mutated_templates_loaded", "configs", "analyse_large_highmag.json"))
         "scripts", "analyse_mutated_templates_loaded_1", "configs", "base_config.json"))
     config_file = load_json_as_dict(config)
 
@@ -36,10 +27,11 @@ def main(config=None, data_writer=None):
     if type(source_dirs) != list:
         source_dirs = [source_dirs]
 
+    # Visualisations
     protocols = visualisation_script_protocol_preamble(source_dirs)
 
-    # Visualisations
     def visualise_interactions_raw(data: pd.DataFrame, data_writer):
+        data = data[data['sample_name'] == data['sample_name'].iloc()[0]]
         log_opts = [(False, False), (True, False)]
         num_mutations = list(data['mutation_num'].unique())
         for interaction_type in INTERACTION_TYPES:

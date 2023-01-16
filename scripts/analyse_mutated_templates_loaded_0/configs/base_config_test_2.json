@@ -1,6 +1,6 @@
 {
     "experiment": {
-        "purpose": "analyse_mutated_templates_loaded"
+        "purpose": "analyse_mutated_templates_loaded_0"
     },
     "source_dirs": {
         "is_source_dir_incomplete": false,

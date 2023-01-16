@@ -7,13 +7,11 @@ import pandas as pd
 
 from fire import Fire
 from src.srv.io.manage.script_manager import script_preamble
-from src.utils.misc.scripts_io import get_search_dir, load_experiment_config_original
+from src.utils.misc.scripts_io import get_search_dir
 from src.utils.misc.string_handling import prettify_keys_for_label
 from src.utils.results.analytics.naming import get_true_names_analytics, get_signal_dependent_analytics_all, DIFF_KEY, RATIO_KEY
 
 from src.utils.results.experiments import Experiment, Protocol
-from src.utils.results.result_writer import ResultWriter
-from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.misc.io import get_pathnames_from_mult_dirs
 
 from src.utils.results.visualisation import visualise_data
@@ -23,7 +21,7 @@ from src.utils.data.data_format_tools.common import load_json_as_dict, load_csv_
 def main(config=None, data_writer=None):
     # Set configs
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
-        "scripts", "analyse_mutated_templates_loaded", "configs", "base_config.json"))
+        "scripts", "analyse_mutated_templates_loaded_0", "configs", "base_config.json"))
     config_file = load_json_as_dict(config)
 
     config_file, source_dirs = get_search_dir(
