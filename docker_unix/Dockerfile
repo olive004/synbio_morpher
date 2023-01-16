@@ -1,32 +1,50 @@
 # syntax=docker/dockerfile:1
 
-# FROM ubuntu
-# RUN apt-get install libstdc++6
-
-# FROM intarna_docker
 # https://quay.io/repository/biocontainers/intarna
-FROM quay.io/biocontainers/intarna:3.3.2--pl5321h7ff8a90_0
+FROM quay.io/biocontainers/intarna:3.3.2--pl5321h7ff8a90_0 AS IntaRNA_build
 
-# COPY --from=0 /usr /
+FROM nvidia/cuda:11.6.2-base-ubuntu20.04 AS workdir_build
 
 ################################################################################
 #  Install python dependencies
 ################################################################################
-ENV DEBIAN_FRONTEND=noninteractive
-# RUN apt update && apt install -y libstdc++6
 WORKDIR /usr/lib
 COPY ./requirements.txt /usr/lib/install_requirements/requirements.txt
+RUN apt-get update && \
+    yes | apt-get install python3-pip
 RUN cd /usr/lib/install_requirements && \
     pip install -r ./requirements.txt 
-# RUN apt-get install libstdc++6
-# RUN ubuntu bash -c "apt install libstdc"
+RUN pip install --upgrade "jax[cuda]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 
 ################################################################################
 #  setup environment
 ################################################################################
 ENV ROOT_DIR=/workdir
 ENV PYTHONPATH=/workdir
+ENV NVIDIA_VISIBLE_DEVICES all
+ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
 ENV MNT ./..
 WORKDIR /workdir
-COPY /usr/local/lib/libstdc++.so.6 /usr/local/lib/python3.10/site-packages/jax/_src/lib/
 # ENTRYPOINT ["/bin/bash"]
+
+################################################################################
+#  Copy IntaRNA dependencies
+################################################################################
+COPY --from=IntaRNA_build /usr/local/bin/IntaRNA /usr/local/bin/
+COPY --from=IntaRNA_build /usr/local/include/IntaRNA /usr/local/include/
+# COPY --from=IntaRNA_build /usr/lib/x86_64-linux-gnu/* /usr/lib/x86_64-linux-gnu/
+
+
+################################################################################
+#  Install conda and IntaRNA dependencies
+################################################################################
+RUN yes | apt-get install wget && \
+    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+RUN (sleep 1; echo yes; sleep 1; echo /root/miniconda3; sleep 1; echo yes) | bash Miniconda3-latest-Linux-x86_64.sh
+RUN . /root/miniconda3/bin/activate && \
+    yes | conda install -c conda-forge -c bioconda intarna
+
+# Switch up the IntaRNAs
+RUN mv /root/miniconda3/bin/IntaRNA /root/miniconda3/bin/IntaRNA2
+RUN mv /usr/local/bin/IntaRNA /root/miniconda3/bin/IntaRNA
+RUN ln -s /root/miniconda3/bin/IntaRNA /usr/local/bin/IntaRNA

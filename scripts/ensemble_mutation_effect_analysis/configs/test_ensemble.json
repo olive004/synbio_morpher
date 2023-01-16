@@ -9,11 +9,12 @@
                 "postprocess": true
             },
             "experiment": {
-                "purpose": "generate_species_templates"
+                "purpose": "generate_species_templates",
+                "test_mode": true
             },
             "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
             "circuit_generation": {
-                "repetitions": 1,
+                "repetitions": 10,
                 "species_count": 3,
                 "sequence_length": 20,
                 "generator_protocol": "template_mutate",
@@ -26,7 +27,7 @@
                 "name": "IntaRNA",
                 "postprocess": true
             },
-            "interaction_file_keyword": ["eqconstants", "coupled_binding_rates", "binding_rates_dissociation"],
+            "interaction_file_keyword": ["eqconstants", "binding_rates_dissociation"],
             "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
             "experiment": {
                 "purpose": "gather_interaction_stats"
@@ -44,14 +45,16 @@
             "data_path": null,
             "experiment": {
                 "purpose": "mutation_effect_on_interactions_signal",
-                "no_visualisations": true
+                "no_visualisations": true,
+                "no_numerical": true,
+                "test_mode": true
             },
             "interaction_simulator": {
                 "name": "IntaRNA",
                 "postprocess": true
             },
             "filters": {
-                "min_num_interacting": 0,
+                "min_num_interacting": 2,
                 "max_self_interacting": null,
                 "max_total": 50
             },
@@ -80,7 +83,9 @@
                 "t1": 1000,
                 "solver": "diffrax",
                 "use_batch_mutations": true,
-                "batch_size": 100
+                "batch_size": 100,
+                "device": "cpu",
+                "max_circuits": 2000
             },
             "source_of_interaction_stats": {
                 "is_source_dir_incomplete": true,
@@ -103,9 +108,9 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "analyse_mutated_templates_loaded": {
+        "xanalyse_mutated_templates_loaded_0": {
             "experiment": {
-                "purpose": "analyse_mutated_templates_loaded"
+                "purpose": "analyse_mutated_templates_loaded_0"
             },
             "source_dirs": {
                 "is_source_dir_incomplete": true,
@@ -117,7 +122,7 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "xanalyse_mutated_templates_loaded_1": {
+        "analyse_mutated_templates_loaded_1": {
             "experiment": {
                 "purpose": "analyse_mutated_templates_loaded_1"
             },
@@ -131,7 +136,7 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "xanalyse_mutated_templates_loaded_2": {
+        "analyse_mutated_templates_loaded_2": {
             "experiment": {
                 "purpose": "analyse_mutated_templates_loaded_2"
             },
@@ -145,7 +150,7 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "xanalyse_mutated_templates_loaded_3": {
+        "analyse_mutated_templates_loaded_3": {
             "experiment": {
                 "purpose": "analyse_mutated_templates_loaded_3"
             },
@@ -159,7 +164,7 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "xanalyse_mutated_templates_loaded_4": {
+        "analyse_mutated_templates_loaded_4": {
             "experiment": {
                 "purpose": "analyse_mutated_templates_loaded_4"
             },

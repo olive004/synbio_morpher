@@ -12,3 +12,6 @@ class MotifVisualiser():
     def more(self):
         """ Everything from Fig. 1 in this paper https://www.biorxiv.org/content/10.1101/2021.09.01.458561v1.full"""
         pass
+
+
+# class 

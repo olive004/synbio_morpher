@@ -20,15 +20,7 @@ from src.utils.circuit.agnostic_circuits.circuit_manager_new import CircuitModel
 def main(config=None, data_writer=None):
     # Set configs
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
-        # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_test.json")
-        # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_1.json")
-        # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_2.json")
-        # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_10.json")
-        # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_20.json")
-        # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_1_highmag.json")
-        # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_2_highmag.json")
-        # "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_10_highmag.json")
-        "scripts", "mutation_effect_on_interactions_signal", "configs", "base_mutation_config_20_highmag.json"))
+        "scripts", "mutation_effect_on_interactions_signal", "configs", "base_config.json"))
     config_file = load_json_as_dict(config)
 
     # Start_experiment
@@ -97,7 +89,7 @@ def main(config=None, data_writer=None):
                              write_to_subsystem=True,
                              methods={
                 "init_circuit": {},
-                "simulate_signal": {'save_numerical_vis_data': True, 'ref_circuit': None,
+                "simulate_signal": {'ref_circuit': None,
                                     'solver': config_file['signal'].get('solver', 'naive')},
                 "write_results": {'no_visualisations': config_file['experiment'].get('no_visualisations', False),
                                   'no_numerical': config_file['experiment'].get('no_numerical', False)}
@@ -110,10 +102,10 @@ def main(config=None, data_writer=None):
         protocols.append(
             # Simulate signal and write results
             Protocol(partial(CircuitModeller(result_writer=data_writer, config=config_file).batch_circuits,
-                             write_to_subsystem=True, batch_size=config['simulation'].get('batch_size', 100),
+                             write_to_subsystem=True, batch_size=config_file['simulation'].get('batch_size', 100),
                              methods={
                 "init_circuit": {},
-                "simulate_signal_batch": {'save_numerical_vis_data': True, 'ref_circuit': None,
+                "simulate_signal_batch": {'ref_circuit': None,
                                           'batch': True},
                 "write_results": {'no_visualisations': config_file['experiment'].get('no_visualisations', True),
                                   'no_numerical': config_file['experiment'].get('no_numerical', False)}

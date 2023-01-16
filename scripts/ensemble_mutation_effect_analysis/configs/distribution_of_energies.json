@@ -9,7 +9,8 @@
                 "postprocess": true
             },
             "experiment": {
-                "purpose": "generate_species_templates"
+                "purpose": "generate_species_templates",
+                "test_mode": false
             },
             "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
             "circuit_generation": {
@@ -26,7 +27,7 @@
                 "name": "IntaRNA",
                 "postprocess": true
             },
-            "interaction_file_keyword": ["eqconstants", "coupled_binding_rates", "binding_rates_dissociation"],
+            "interaction_file_keyword": ["eqconstants", "binding_rates_dissociation"],
             "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
             "experiment": {
                 "purpose": "gather_interaction_stats"
@@ -45,7 +46,8 @@
             "experiment": {
                 "purpose": "mutation_effect_on_interactions_signal",
                 "no_visualisations": true,
-                "no_numerical": true
+                "no_numerical": true,
+                "test_mode": false
             },
             "interaction_simulator": {
                 "name": "IntaRNA",
@@ -79,7 +81,9 @@
                 "t1": 1200,
                 "solver": "diffrax",
                 "use_batch_mutations": true,
-                "batch_size": 200
+                "batch_size": 1000,
+                "max_circuits": 1000,
+                "device": "cpu"
             },
             "source_of_interaction_stats": {
                 "is_source_dir_incomplete": true,
@@ -102,9 +106,9 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "analyse_mutated_templates_loaded": {
+        "analyse_mutated_templates_loaded_0": {
             "experiment": {
-                "purpose": "analyse_mutated_templates_loaded"
+                "purpose": "analyse_mutated_templates_loaded_0"
             },
             "source_dirs": {
                 "is_source_dir_incomplete": true,
@@ -169,6 +173,19 @@
                 "source_dir_actually_used_POSTERITY": null
             },
             "tabulated_info_differentiator": "mutation_num",
+            "preprocessing_func": null,
+            "only_visualise_circuits": false
+        },
+        "analyse_mutated_templates_loaded_means": {
+            "experiment": {
+                "purpose": "analyse_mutated_templates_loaded_means"
+            },
+            "source_dirs": {
+                "is_source_dir_incomplete": true,
+                "source_dir": "./data/ensemble_mutation_effect_analysis",
+                "purpose_to_get_source_dir_from": "summarise_simulation",
+                "source_dir_actually_used_POSTERITY": null
+            },
             "preprocessing_func": null,
             "only_visualise_circuits": false
         }

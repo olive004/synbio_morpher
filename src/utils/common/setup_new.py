@@ -6,7 +6,7 @@ from src.utils.data.common import Data
 from src.srv.io.manage.sys_interface import make_filename_safely
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.srv.io.manage.data_manager import DataManager
-from src.utils.misc.units import per_mol_to_per_molecules
+from src.utils.misc.units import per_mol_to_per_molecule
 from src.utils.misc.io import isolate_filename
 from src.utils.misc.type_handling import cast_all_values_as_list
 from src.utils.signal.configs import get_signal_type, parse_sig_args
@@ -30,7 +30,7 @@ def expand_model_config(in_config: dict, out_config: dict, sample_names: List[st
         for s in sample_names:
             out_config['starting_concentration'][s] = in_config['molecular_params'].get(
                 'starting_copynumbers', 1)
-    if in_config.get('interactions', {}):
+    if in_config.get('interactions') is not None or in_config.get('interactions_loaded'):
         out_config['interactions_state'] = 'loaded'
     else:
         out_config['interactions_state'] = 'uninitialised'
@@ -38,9 +38,11 @@ def expand_model_config(in_config: dict, out_config: dict, sample_names: List[st
 
 
 def process_molecular_params(params: dict) -> dict:
+    new_params = {}
     for k, v in params.items():
-        if 'rate' in k:
-            params[k] = per_mol_to_per_molecules(v)
+        if 'rate' in k and '_per_molecule' not in k:
+            new_params[k + '_per_molecule'] = per_mol_to_per_molecule(v)
+    params.update(new_params)
     return params
 
 
@@ -62,6 +64,7 @@ def compose_kwargs(prev_configs: dict = None, config: dict = None) -> dict:
         "data_path": data_manager.source,
         # For pre-loading interactions
         "interactions": config["interactions"],
+        "interactions_loaded": config["interactions_loaded"],
         "interaction_simulator": config["interaction_simulator"],
         "molecular_params": config["molecular_params"],
         "mutations": cast_all_values_as_list(config["mutations"]),
@@ -76,7 +79,8 @@ def compose_kwargs(prev_configs: dict = None, config: dict = None) -> dict:
 
 
 def expand_config(config: dict) -> dict:
-    config["interactions"] = config.get("interactions", {})
+    config["interactions"] = config.get("interactions")
+    config["interactions_loaded"] = config.get("interactions_loaded")
     config["interaction_simulator"] = config.get("interaction_simulator", {"name": "IntaRNA"})
     config["molecular_params"] = process_molecular_params(deepcopy(load_json_as_dict(config.get("molecular_params"))))
     config["mutations"] = config.get("mutations", {})

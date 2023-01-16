@@ -114,3 +114,16 @@ def merge_dicts(*dict_objs):
 def nest_list_dict(dict_of_lists: dict) -> list:
     vs = list(dict_of_lists.values())
     return [{k: vs[i][j] for i, k in enumerate(dict_of_lists.keys())} for j in range(len(vs[0]))]
+
+
+def replace_value(d: dict, key, new_val) -> dict:
+    for k, v in d.items():
+        if type(v) == dict:
+            d[k] = replace_value(v, key, new_val)
+    if key in d:
+        d[key] = new_val
+    return d
+
+
+def rm_nones(list_like: list) -> list:
+    return list(filter(lambda item: item is not None, list_like))

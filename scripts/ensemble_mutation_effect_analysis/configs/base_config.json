@@ -97,9 +97,9 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "analyse_mutated_templates_loaded": {
+        "analyse_mutated_templates_loaded_0": {
             "experiment": {
-                "purpose": "analyse_mutated_templates_loaded"
+                "purpose": "analyse_mutated_templates_loaded_0"
             },
             "source_dirs": {
                 "is_source_dir_incomplete": true,

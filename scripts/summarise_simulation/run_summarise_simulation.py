@@ -9,7 +9,7 @@ from src.utils.misc.scripts_io import get_search_dir
 
 from src.utils.results.experiments import Experiment, Protocol
 from src.utils.results.result_writer import ResultWriter
-from src.srv.sequence_exploration.sequence_analysis import tabulate_mutation_info
+from src.srv.sequence_exploration.sequence_analysis import b_tabulate_mutation_info
 from src.utils.data.data_format_tools.common import load_json_as_dict, load_multiple_as_list
 
 
@@ -30,10 +30,10 @@ def main(config=None, data_writer=None):
         source_dirs = [source_dirs]
     protocols = [
         Protocol(
-            partial(load_multiple_as_list, inputs_list=source_dirs, load_func=tabulate_mutation_info, 
+            partial(load_multiple_as_list, inputs_list=source_dirs, load_func=b_tabulate_mutation_info, 
             data_writer=data_writer),
             req_output=True,
-            name='tabulate_mutation_info'
+            name='b_tabulate_mutation_info'
         ),
         Protocol(
             partial(

@@ -1,7 +1,6 @@
 from functools import partial
 import logging
 import os
-import random
 from typing import Tuple, List
 import numpy as np
 from bioreaction.model.data_containers import Species
@@ -17,7 +16,11 @@ from src.utils.circuit.agnostic_circuits.circuit_new import Circuit
 
 class Evolver():
 
-    def __init__(self, data_writer: DataWriter, mutation_type: str = 'random', sequence_type: str = None) -> None:
+    def __init__(self,
+                 data_writer: DataWriter,
+                 mutation_type: str = 'random',
+                 sequence_type: str = None,
+                 seed: int = None) -> None:
         self.data_writer = data_writer
         self.mutation_type = mutation_type  # Not implemented
         self.out_name = 'mutations'
@@ -25,20 +28,23 @@ class Evolver():
         self.sequence_type = sequence_type
         self.mutation_type_mapping = get_mutation_type_mapping(sequence_type)
 
-    def is_mutation_possible(self, circuit: Circuit):
+        if seed is not None:
+            np.random.seed(seed)
+
+    def is_mutation_possible(self, circuit: Circuit) -> bool:
         if circuit.mutations_args['mutation_counts'] is None or circuit.mutations_args['mutation_nums_within_sequence'] is None:
             return False
         return True
 
-    def batch_mutate(self, circuits: List[Circuit], algorithm: str, write_to_subsystem=True, batch=True):
-        c_idx = 0
-        if not all([self.is_mutation_possible(c) for c in circuits]):
-            raise ValueError(
-                'Could not mutate: mutation settings not found for some circuits')
-        mutator = self.get_mutator(algorithm)
-        mutations_args = circuits[c_idx].mutations_args
-        assert all([mutations_args == c.mutations_args for c in circuits]
-                   ), 'Cannot batch with varying mutation args.'
+    # def batch_mutate(self, circuits: List[Circuit], algorithm: str, write_to_subsystem=True, batch=True):
+    #     c_idx = 0
+    #     if not all([self.is_mutation_possible(c) for c in circuits]):
+    #         raise ValueError(
+    #             'Could not mutate: mutation settings not found for some circuits')
+    #     mutator = self.get_mutator(algorithm)
+    #     mutations_args = circuits[c_idx].mutations_args
+    #     assert all([mutations_args == c.mutations_args for c in circuits]
+    #                ), 'Cannot batch with varying mutation args.'
 
     def get_batch_mutator(self, algorithm):
 
@@ -153,12 +159,14 @@ class Evolver():
                 sequence_l = len(sequence)
                 if sequence_l == 0:
                     continue
-                
+
                 for mutation_nums_within_sequence in circuit.mutations_args['mutation_nums_within_sequence']:
-                    total_mutations = np.power(sequence_l, mutation_nums_within_sequence)
+                    total_mutations = np.power(
+                        sequence_l, mutation_nums_within_sequence)
 
                     for r in range(total_mutations):
-                        positions = get_position_idxs(r, sequence_l, mutation_nums_within_sequence)
+                        positions = get_position_idxs(
+                            r, sequence_l, mutation_nums_within_sequence)
                         mutation_types, positions = self.sample_mutations(
                             sequence, positions, mutation_nums_per_position)
                         for i, (mt, p) in enumerate(zip(mutation_types, positions)):
