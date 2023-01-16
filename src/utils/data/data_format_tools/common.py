@@ -1,11 +1,9 @@
-import ast
 import json
-import logging
 import os
 from typing import Union
 import numpy as np
-import jaxlib
 import pandas as pd
+import jaxlib
 
 from src.utils.misc.type_handling import inverse_dict
 
@@ -103,7 +101,7 @@ def process_dict_for_json(dict_like) -> Union[list, dict]:
             dict_like[k] = process_dict_for_json(v)
         elif type(v) == np.bool_:
             dict_like[k] = bool(v)
-        elif type(v) == np.ndarray or type(v) == jaxlib.xla_extension.DeviceArray:
+        elif type(v) == np.ndarray or type(v) in jaxlib.xla_extension.__dict__.values():
             dict_like[k] = v.tolist()
         elif type(v) == np.float32 or type(v) == np.int64:
             dict_like[k] = str(v)
@@ -118,6 +116,7 @@ def process_json(json_dict):
 
 
 def write_csv(data: pd.DataFrame, out_path: str, overwrite=False):
+    import jaxlib
     if type(data) == dict:
         data = {k: [v] for k, v in data.items()}
         data = pd.DataFrame.from_dict(data, dtype=object)

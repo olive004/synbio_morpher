@@ -1,5 +1,6 @@
 from datetime import datetime
 from copy import deepcopy
+from typing import Union
 from difflib import SequenceMatcher
 from functools import partial
 import logging
@@ -56,8 +57,23 @@ def prettify_keys_for_label(key: str):
     key = key.replace('_', ' ')
     key = key.replace('wrt', 'with respect to')
     key = key.replace('number', 'num').replace('num', 'number')
+    key = key.replace('diff', 'difference')
+    key = key.replace('std', 'standard deviation')
+    key = key.replace('eqconstants', 'Equilibrium constant')
+    key = key.replace('binding_rates_dissociation', 'Dissociation rate ' + r'$k_d$' + ' (' r'$s^{-1}$' + ')')
     key = key.capitalize()
     return key
+
+
+def prettify_keys_for_label_list(list_like: Union[str, list]):
+    if type(list_like) == str:
+        list_like = prettify_keys_for_label(list_like)
+    elif type(list_like) == list:
+        for i, v in enumerate(list_like):
+            list_like[i] = prettify_keys_for_label_list(v)
+        if len(list_like) == 1:
+            list_like = list_like[0]
+    return list_like
 
 
 def prettify_logging_info(loggin):

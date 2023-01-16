@@ -2,8 +2,9 @@ from typing import List, Union
 import glob
 import os
 from src.utils.misc.string_handling import remove_file_extension
-from src.utils.misc.type_handling import nest_list_dict, flatten_nested_listlike
+from src.utils.misc.type_handling import nest_list_dict
 from src.utils.misc.helper import vanilla_return
+from src.utils.misc.errors import ExperimentError
 from src.utils.data.data_format_tools.common import load_multiple_as_list
 
 
@@ -71,17 +72,17 @@ def get_pathnames(search_dir: str, file_key: Union[List, str] = '', first_only: 
         path_names = get_pathnames(os.path.join(search_dir, subdir), file_key=file_key,
                                    first_only=first_only, allow_empty=allow_empty, conditional=conditional)
     if not path_names and not allow_empty:
-        raise ValueError(
+        raise ExperimentError(
             f'Could not find file matching "{file_key}" in {search_dir}.')
     return path_names
 
 
-def get_subdirectories(parent_dir, only_basedir=False, min_condition: int = 0):
+def get_subdirectories(parent_dir, only_basedir=False, min_condition: int = 0) -> list:
     subdirectories = [f.path for f in os.scandir(
         parent_dir) if f.is_dir() and len(os.listdir(f.path)) > min_condition]
     if only_basedir:
-        return [os.path.basename(s) for s in subdirectories]
-    return subdirectories
+        return sorted([os.path.basename(s) for s in subdirectories])
+    return sorted(subdirectories)
 
 
 def convert_pathname_to_module(filepath: str):

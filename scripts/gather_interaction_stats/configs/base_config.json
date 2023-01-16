@@ -3,7 +3,7 @@
         "name": "IntaRNA",
         "postprocess": true
     },
-    "interaction_file_keyword": "eqconstants",
+    "interaction_file_keyword": ["eqconstants", "binding_rates_dissociation"],
     "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
     "experiment": {
         "purpose": "gather_interaction_stats"
@@ -11,8 +11,8 @@
     "system_type": "RNA",
     "source_of_interactions": {
         "is_source_dir_incomplete": false,
-        "source_dir": "./data/gather_interaction_stats",
-        "purpose_to_get_source_dir_from": "gather_interaction_stats",
+        "source_dir": "./data/generate_species_templates/2023_01_06_141658",
+        "purpose_to_get_source_dir_from": null,
         "source_dir_actually_used_POSTERITY": null
     }
 }

@@ -3,13 +3,17 @@
         "name": "IntaRNA",
         "postprocess": true
     },
+    "experiment": {
+        "purpose": "generate_species_templates",
+        "test_mode": false
+    },
     "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
     "circuit_generation": {
-        "repetitions": 10000,
+        "repetitions": 20,
         "species_count": 3,
         "sequence_length": 20,
         "generator_protocol": "template_mutate",
         "proportion_to_mutate": 0.5
-    }, 
+    },
     "system_type": "RNA"
 }

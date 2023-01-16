@@ -3,7 +3,7 @@
 import numpy as np
 
 
-def per_mol_to_per_molecules(per_mol):
+def per_mol_to_per_molecule(per_mol):
     """ Translate a value from the unit of per moles to per molecules.
     The number of M of mRNA in a cell was calculated using the average 
     number of mRNA in an E. coli cell (100 molecules) and the average volume of an E.

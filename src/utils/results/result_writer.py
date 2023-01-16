@@ -4,12 +4,12 @@ import logging
 import os
 
 import numpy as np
-from src.utils.results.analytics.timeseries import get_analytics_types_all
+from src.utils.results.analytics.naming import get_analytics_types_all
 from src.utils.results.results import Result
 from src.utils.results.writer import DataWriter
-from src.utils.results.visualisation import Graph
 from src.utils.misc.numerical import transpose_arraylike
 from src.utils.misc.string_handling import make_time_str
+from src.utils.misc.type_handling import flatten_listlike
 from src.utils.circuit.agnostic_circuits.circuit_new import Circuit
 
 
@@ -59,7 +59,7 @@ class ResultWriter(DataWriter):
 
         if new_report:
             out_name = out_name + '_' + make_time_str()
-        self.output(out_type, out_name, overwrite=not(
+        self.output(out_type, out_name, overwrite=not (
             new_report), data=report)
 
     def write_numerical(self, data, out_name: str):
@@ -76,8 +76,9 @@ class ResultWriter(DataWriter):
                       only_numerical=False, no_analytics=False, no_numerical=False):
 
         for _name, result in results.items():
-            result.vis_kwargs.update(
-                {'new_vis': new_report, 'data': result.data})
+            if not no_visualisations:
+                result.vis_kwargs.update(
+                    {'new_vis': new_report, 'data': result.data})
 
             if not no_numerical:
                 self.write_numerical(
@@ -105,8 +106,16 @@ class ResultWriter(DataWriter):
         self.output(out_name=out_name, write_func=writer, **vis_kwargs)
 
     def visualise_graph(self, circuit: Circuit, mode="pyvis", new_vis=False):
-        graph = Graph(source_matrix=circuit.interactions.eqconstants, labels=[
-                           s.name for s in circuit.model.species])
+        from src.utils.results.graph import Graph
+        # input_species = sorted(set(flatten_listlike(
+        #     [r.input for r in circuit.model.reactions if r.output and r.input])))
+        # idxs = [circuit.model.species.index(i) for i in input_species]
+        # input_eqconstants = np.asarray([
+        #     [circuit.interactions.eqconstants[i, ii] for ii in idxs] for i in idxs])
+        input_eqconstants = circuit.interactions.eqconstants
+        input_species = sorted(set(flatten_listlike([
+            r.input for r in circuit.model.reactions if r.input])))
+        graph = Graph(source_matrix=input_eqconstants, labels=sorted([s.name for s in input_species]))
 
         out_path = os.path.join(self.write_dir, 'graph')
         if mode == 'pyvis':
