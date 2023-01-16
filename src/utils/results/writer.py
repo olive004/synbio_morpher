@@ -20,6 +20,7 @@ class DataWriter():
         self.root_output_dir = os.path.join('data')
         self.exception_dirs = [os.path.join('example'), 'tests']
 
+        # Top dir is the directory immediately below the script directory
         if out_location is None:
             self.top_write_dir = self.make_location_from_purpose(purpose)
         else:
@@ -108,9 +109,14 @@ class DataWriter():
     def generate_location_instance(self):
         return make_time_str()
 
+    def get_write_dir_aslist(self):
+        return self.write_dir.split(os.sep)
+
     def subdivide_writing(self, name: str, safe_dir_change=True):
         """ Update the working write_dir to write to a new subdirectory. 
-        If safe_dir_change is specified, recursive subdividing can be avoided. """
+        If safe_dir_change is True, recursive subdividing can be avoided, 
+        as the new subdirectory is added onto the top writer directory
+        (ensemble_write_dir). """
         base_dir = self.ensemble_write_dir if safe_dir_change else self.write_dir
         location = os.path.join(base_dir, name)
         create_location(location)

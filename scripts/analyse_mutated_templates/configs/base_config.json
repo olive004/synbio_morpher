@@ -1,8 +1,0 @@
-{
-    "experiment": {
-        "purpose": "analyse_mutated_templates"
-    },
-    "source_dir": "data/summarise_simulation/2022_12_05_110056",
-    "preprocessing_func": null,
-    "only_visualise_circuits": false
-}
