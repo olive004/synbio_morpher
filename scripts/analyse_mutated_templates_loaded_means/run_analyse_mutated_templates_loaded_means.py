@@ -35,14 +35,20 @@ def main(config=None, data_writer=None):
 
     protocols = visualisation_script_protocol_preamble(source_dirs)
 
-    def visualise_all(data: pd.DataFrame, data_writer):
-
+    def visualise_all(data: pd.DataFrame, data_writer, remove_noninteracting: bool = True):
         cols_analytics = get_true_names_analytics(data)
         for interaction_type in INTERACTION_TYPES:
+            interaction_type = 'eqconstants'
             cols = get_true_interaction_cols(
                 data, interaction_type, remove_symmetrical=True)
-            df = data.melt(id_vars=['circuit_name', 'mutation_num'],
-                           value_vars=cols, value_name=interaction_type)
+
+            # Remove duplicates
+            df = data[data['sample_name'] == data['sample_name'].iloc[0]]
+            df = df.melt(id_vars=['circuit_name', 'mutation_num'],
+                         value_vars=cols, value_name=interaction_type)
+            if remove_noninteracting:
+                noninteracting_val = 1 if interaction_type == 'eqconstants' else 0.0015095809699999998
+                df = df[df[interaction_type] != noninteracting_val]
             visualise_means_std(df, [interaction_type], data_writer)
         visualise_means_std(data, cols_analytics, data_writer)
 
