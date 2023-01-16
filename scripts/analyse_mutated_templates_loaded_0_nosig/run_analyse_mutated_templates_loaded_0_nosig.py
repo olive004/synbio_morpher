@@ -41,16 +41,16 @@ def main(config=None, data_writer=None):
 
         for log_opt in log_opts:
             log_text = '_log' if any(log_opt) else ''
-            for m in num_mutations:
-                if m == 'all':
-                    plot_grammar_m = 's'
-                    hue = 'mutation_num'
-                    selection_conditions = None
-                else:
-                    plot_grammar_m = 's' if m > 1 else ''
-                    hue = None
-                    selection_conditions = [('mutation_num', operator.eq, m)]
-                for analytics_type in analytics_types:
+            for analytics_type in analytics_types:
+                for m in num_mutations:
+                    if m == 'all':
+                        plot_grammar_m = 's'
+                        hue = 'mutation_num'
+                        selection_conditions = None
+                    else:
+                        plot_grammar_m = 's' if m > 1 else ''
+                        hue = None
+                        selection_conditions = [('mutation_num', operator.eq, m)]
 
                     visualise_data(
                         data=data,
@@ -61,14 +61,16 @@ def main(config=None, data_writer=None):
                         log_axis=log_opt,
                         use_sns=True,
                         hue=hue,
-                        title=f'{prettify_keys_for_label(analytics_type)}: circuit\nand mutated counterparts, {m} mutation{plot_grammar_m}',
-                        xlabel={prettify_keys_for_label(analytics_type)}
+                        title=f'{prettify_keys_for_label(analytics_type)}: circuit\nand mutated counterparts, {m} mutation{plot_grammar_m}' + \
+                            f', signal {inputs[0]} excluded',
+                        xlabel=prettify_keys_for_label(analytics_type)
                     )
 
     protocols.append(
         Protocol(
             partial(
                 interaction_vis,
+                inputs=config['signal']['inputs'],
                 data_writer=data_writer
             ),
             req_input=True,

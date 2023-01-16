@@ -335,6 +335,9 @@ class VisODE():
                 # 'palette': sns.color_palette("plasma", len(data[plot_kwargs.get('hue')].unique()))
                 'palette': sns.color_palette("viridis", len(data[plot_kwargs.get('hue')].unique()))
             })
+        else:
+            if 'palette' in plot_kwargs:
+                plot_kwargs.pop('palette')
 
         if x is None:
             logging.warn(
