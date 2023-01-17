@@ -34,14 +34,18 @@ def main(config=None, data_writer=None):
             range_df = round(df[interaction_type].max() -
                              df[interaction_type].min(), 4)
             mode = round(df[interaction_type].mode().iloc[0], 4)
-            
+
             for use_sample_name in [False, True]:
-                
+
                 for m in list(df['mutation_num'].unique()) + ['all']:
+
                     for log_opt in [(False, False), (True, False)]:
                         log_text = '_log' if any(log_opt) else ''
+
                         for thresh in ['outlier', 'exclude', 'lt', 'gt', 'lt_strict', 'gt_strict', False]:
                             if m == 'all':
+                                if use_sample_name:
+                                    continue
                                 plot_grammar_m = 's'
                                 hue = 'mutation_num'
                                 selection_conditions = None
@@ -52,7 +56,9 @@ def main(config=None, data_writer=None):
                                     ('mutation_num', operator.eq, m)]
                             thresh_text, remove_outliers_y, selection_conditions = thresh_func(
                                 thresh, range_df, mode, outlier_std_threshold_y, selection_conditions, sel_col=interaction_type)
+
                             for normalise in [True, False]:
+
                                 visualise_data(
                                     data=df,
                                     data_writer=data_writer,
@@ -68,9 +74,7 @@ def main(config=None, data_writer=None):
                                     title=f'{prettify_keys_for_label(interaction_type)} for {m} mutation{plot_grammar_m}{thresh_text}',
                                     xlabel=prettify_keys_for_label(
                                         interaction_type),
-                                    misc_histplot_kwargs={'stat': 'probability' if normalise else 'count'
-                                                        # , 'hue_norm': [0, 1] if normalise else None}
-                                                        }
+                                    misc_histplot_kwargs={'stat': 'probability' if normalise else 'count'}
                                 )
 
     # Protocols
