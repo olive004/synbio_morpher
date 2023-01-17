@@ -61,18 +61,6 @@ class CircuitModeller():
         circuit = self.find_steady_states(circuit)
         return circuit
 
-    # def make_modelling_func(self, modelling_func, circuit: Circuit,
-    #                         fixed_value=None,
-    #                         fixed_value_idx: int = None):
-
-    #     return partial(modelling_func, full_interactions=circuit.interactions.coupled_binding_rates,
-    #                    creation_rates=circuit.qreactions.reactions.forward_rates.flatten(),
-    #                    degradation_rates=circuit.qreactions.reactions.reverse_rates.flatten(),
-    #                    signal=fixed_value,
-    #                    signal_idx=fixed_value_idx,
-    #                    identity_matrix=np.identity(circuit.circuit_size)
-    #                    )
-
     # @time_it
     def compute_interaction_strengths(self, circuit: Circuit):
         if circuit.interactions_state == 'uninitialised' and not self.test_mode:
@@ -119,7 +107,8 @@ class CircuitModeller():
                         modeller_steady_state.time_interval,
                         'legend': [s.name for s in circuit.model.species],
                         'out_type': 'svg'},
-            analytics_kwargs={'labels': [s.name for s in circuit.model.species]})
+            analytics_kwargs={'labels': [s.name for s in circuit.model.species]},
+            no_write=True)
         return circuit
 
     def compute_steady_states(self, modeller: Modeller, circuit: Circuit,
@@ -523,8 +512,8 @@ class CircuitModeller():
         self.result_writer.visualise_graph(circuit, mode, new_vis)
 
     def write_results(self, circuit: Circuit, new_report: bool = False, no_visualisations: bool = False,
-                      only_numerical: bool = False, no_numerical: bool = False):
+                      only_numerical: bool = False, no_numerical: bool = False, no_analytics: bool = False):
         self.result_writer.write_all(
             circuit, new_report, no_visualisations=no_visualisations, only_numerical=only_numerical,
-            no_numerical=no_numerical)
+            no_numerical=no_numerical, no_analytics=no_analytics)
         return circuit

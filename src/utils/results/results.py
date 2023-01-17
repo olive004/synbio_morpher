@@ -9,7 +9,8 @@ from src.utils.misc.type_handling import assert_uniform_type
 
 class Result():
     def __init__(self, name: str, result_data: np.ndarray, category: str, vis_func,
-                 time: np.ndarray = None, vis_kwargs: dict = None, analytics_kwargs: dict = None, analytics: dict = None) -> None:
+                 time: np.ndarray = None, vis_kwargs: dict = None, analytics_kwargs: dict = None, 
+                 analytics: dict = None, no_write: bool = False) -> None:
         self.name = name
         self.data = result_data
         self.category = category
@@ -17,6 +18,7 @@ class Result():
         self.vis_kwargs = vis_kwargs
         self.analytics_kwargs = analytics_kwargs
         self.analytics = analytics
+        self.no_write = no_write
         if category == 'time_series' and analytics is None:
             from src.utils.results.analytics.timeseries import generate_analytics
             analytics_kwargs = analytics_kwargs if analytics_kwargs is not None else {}
@@ -39,11 +41,13 @@ class ResultCollector():
 
     def add_result(self, data, category: str, vis_func, name: str,
                    time: np.ndarray = None, vis_kwargs: dict = None,
-                   analytics_kwargs: dict = None, analytics=None) -> None:
+                   analytics_kwargs: dict = None, analytics=None,
+                   no_write: bool = False) -> None:
         """ category: 'time_series', 'graph' """
         name = f'Result_{len(self.results.keys())}' if not name else name
         result_entry = Result(name, data, category, vis_func, time,
-                              vis_kwargs, analytics_kwargs, analytics)
+                              vis_kwargs, analytics_kwargs, analytics,
+                              no_write)
         self.results[name] = result_entry
 
     def delete_result(self, key, just_data=True):
