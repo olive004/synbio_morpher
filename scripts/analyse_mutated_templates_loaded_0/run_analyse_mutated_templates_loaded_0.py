@@ -38,19 +38,12 @@ def main(config=None, data_writer: ResultWriter = None):
 
         for exclude_signal in [False, True]:
             df = data
-            data_writer.unsubdivide()
-            data_writer.subdivide_writing('all_sample')
             if exclude_signal:
                 for o in inputs:
                     df = df[df['sample_name'] != o]
-                data_writer.unsubdivide()
-                data_writer.subdivide_writing('exclude_signal')
-                
             for log_opt in log_opts:
                 log_text = ''
-                data_writer.subdivide_writing('no_log')
                 if any(log_opt):
-                    data_writer.subdivide_writing('log')
                     log_text = '_log'
                 for analytics_type in analytics_types:
                     for m in num_mutations:
