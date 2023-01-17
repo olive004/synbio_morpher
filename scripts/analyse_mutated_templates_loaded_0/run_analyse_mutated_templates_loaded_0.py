@@ -38,7 +38,9 @@ def main(config=None, data_writer: ResultWriter = None):
 
         for exclude_signal in [False, True]:
             df = data
-            if exclude_signal:
+            signal_text = ''
+            if exclude_signal and inputs is not None:
+                signal_text = f', signal {inputs[0]} excluded'
                 for o in inputs:
                     df = df[df['sample_name'] != o]
             for log_opt in log_opts:
@@ -67,7 +69,7 @@ def main(config=None, data_writer: ResultWriter = None):
                             use_sns=True,
                             hue=hue,
                             title=f'{prettify_keys_for_label(analytics_type)}: circuit\nand mutated counterparts, {m} mutation{plot_grammar_m}' +
-                            f', signal {inputs[0]} excluded',
+                            signal_text,
                             xlabel=prettify_keys_for_label(analytics_type)
                         )
 

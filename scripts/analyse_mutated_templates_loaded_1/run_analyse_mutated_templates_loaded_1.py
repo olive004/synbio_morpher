@@ -31,7 +31,7 @@ def main(config=None, data_writer=None):
     protocols = visualisation_script_protocol_preamble(source_dirs)
 
     def visualise_interactions_raw(data: pd.DataFrame, data_writer):
-        data = data[data['sample_name'] == data['sample_name'].iloc()[0]]
+        # data = data[data['sample_name'] == data['sample_name'].iloc()[0]]
         log_opts = [(False, False), (True, False)]
         num_mutations = list(data['mutation_num'].unique())
         for interaction_type in INTERACTION_TYPES:
@@ -41,9 +41,11 @@ def main(config=None, data_writer=None):
                 continue
             units_text = '(' + r'$s^{-1}$' + \
                 ') ' if 'rate' in interaction_type else ''
+
             for log_opt in log_opts:
                 log_text = '_log' if any(log_opt) else ''
-                for m in num_mutations+['all'] + ['all-pooled']:
+
+                for m in num_mutations + ['all'] + ['all-pooled']:
                     df = pd.concat(objs=[
                         pd.DataFrame.from_dict(
                             {interaction_type: data[interaction_col],

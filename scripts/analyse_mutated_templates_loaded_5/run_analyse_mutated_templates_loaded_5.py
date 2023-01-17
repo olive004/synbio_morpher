@@ -29,46 +29,49 @@ def main(config=None, data_writer=None):
         for interaction_type in INTERACTION_TYPES:
             cols = get_true_interaction_cols(
                 data, interaction_type, remove_symmetrical=True)
-            df = data.melt(id_vars='mutation_num',
+            df = data.melt(id_vars=['mutation_num', 'sample_name'],
                            value_vars=cols, value_name=interaction_type)
             range_df = round(df[interaction_type].max() -
                              df[interaction_type].min(), 4)
             mode = round(df[interaction_type].mode().iloc[0], 4)
-            for m in list(df['mutation_num'].unique()) + ['all']:
-                for log_opt in [(False, False), (True, False)]:
-                    log_text = '_log' if any(log_opt) else ''
-                    for thresh in ['outlier', 'exclude', 'lt', 'gt', 'lt_strict', 'gt_strict', False]:
-                        if m == 'all':
-                            plot_grammar_m = 's'
-                            hue = 'mutation_num'
-                            selection_conditions = None
-                        else:
-                            plot_grammar_m = 's' if m > 1 else ''
-                            hue = None
-                            selection_conditions = [
-                                ('mutation_num', operator.eq, m)]
-                        thresh_text, remove_outliers_y, selection_conditions = thresh_func(
-                            thresh, range_df, mode, outlier_std_threshold_y, selection_conditions, sel_col=interaction_type)
-                        for normalise in [True, False]:
-                            visualise_data(
-                                data=df,
-                                data_writer=data_writer,
-                                cols_x=[interaction_type],
-                                plot_type='histplot',
-                                out_name=f'{interaction_type}_norm-{normalise}{log_text}_thresh-{thresh}_m{m}',
-                                log_axis=log_opt,
-                                use_sns=True,
-                                selection_conditions=selection_conditions,
-                                remove_outliers_y=remove_outliers_y,
-                                outlier_std_threshold_y=outlier_std_threshold_y,
-                                hue=hue,
-                                title=f'{prettify_keys_for_label(interaction_type)} for {m} mutation{plot_grammar_m}{thresh_text}',
-                                xlabel=prettify_keys_for_label(
-                                    interaction_type),
-                                misc_histplot_kwargs={'stat': 'probability' if normalise else 'count'
-                                                      # , 'hue_norm': [0, 1] if normalise else None}
-                                                      }
-                            )
+            
+            for use_sample_name in [False, True]:
+                
+                for m in list(df['mutation_num'].unique()) + ['all']:
+                    for log_opt in [(False, False), (True, False)]:
+                        log_text = '_log' if any(log_opt) else ''
+                        for thresh in ['outlier', 'exclude', 'lt', 'gt', 'lt_strict', 'gt_strict', False]:
+                            if m == 'all':
+                                plot_grammar_m = 's'
+                                hue = 'mutation_num'
+                                selection_conditions = None
+                            else:
+                                plot_grammar_m = 's' if m > 1 else ''
+                                hue = 'sample_name' if use_sample_name else None
+                                selection_conditions = [
+                                    ('mutation_num', operator.eq, m)]
+                            thresh_text, remove_outliers_y, selection_conditions = thresh_func(
+                                thresh, range_df, mode, outlier_std_threshold_y, selection_conditions, sel_col=interaction_type)
+                            for normalise in [True, False]:
+                                visualise_data(
+                                    data=df,
+                                    data_writer=data_writer,
+                                    cols_x=[interaction_type],
+                                    plot_type='histplot',
+                                    out_name=f'{interaction_type}{log_text}_thresh-{thresh}_norm-{normalise}_bysample-{use_sample_name}_m{m}',
+                                    log_axis=log_opt,
+                                    use_sns=True,
+                                    selection_conditions=selection_conditions,
+                                    remove_outliers_y=remove_outliers_y,
+                                    outlier_std_threshold_y=outlier_std_threshold_y,
+                                    hue=hue,
+                                    title=f'{prettify_keys_for_label(interaction_type)} for {m} mutation{plot_grammar_m}{thresh_text}',
+                                    xlabel=prettify_keys_for_label(
+                                        interaction_type),
+                                    misc_histplot_kwargs={'stat': 'probability' if normalise else 'count'
+                                                        # , 'hue_norm': [0, 1] if normalise else None}
+                                                        }
+                                )
 
     # Protocols
     config_file, source_dirs = get_search_dir(
