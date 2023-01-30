@@ -7,29 +7,28 @@ import os
 # import sys
 import logging
 import numpy as np
+import diffrax as dfx
 
 import jax
-import jaxlib
 from scipy import integrate
 from bioreaction.model.data_containers import Species
 from bioreaction.simulation.simfuncs.basic_de import bioreaction_sim
 
-from src.utils.results.result_writer import ResultWriter
-from src.utils.circuit.agnostic_circuits.circuit_new import interactions_to_df
+from src.srv.io.loaders.experiment_loading import INTERACTION_FILE_ADDONS
 from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
 from src.srv.parameter_prediction.interactions import InteractionData, InteractionSimulator
-from src.utils.misc.numerical import invert_onehot, zero_out_negs
-from src.utils.misc.type_handling import flatten_nested_dict, flatten_listlike, get_unique
-from src.utils.misc.runtime import clear_caches
-from src.srv.io.loaders.experiment_loading import INTERACTION_FILE_ADDONS
+from src.utils.circuit.agnostic_circuits.circuit_new import Circuit, update_species_simulated_rates, interactions_to_df
 from src.utils.misc.helper import vanilla_return
+from src.utils.misc.numerical import invert_onehot, zero_out_negs
+from src.utils.misc.runtime import clear_caches
+from src.utils.misc.type_handling import flatten_nested_dict, flatten_listlike, get_unique
 from src.utils.results.visualisation import VisODE
-from src.utils.signal.signals_new import Signal
-from src.utils.circuit.agnostic_circuits.circuit_new import Circuit, update_species_simulated_rates
-from src.utils.results.analytics.timeseries import generate_analytics
+from src.utils.modelling.base import Modeller
 from src.utils.modelling.deterministic import Deterministic, bioreaction_sim_wrapper, bioreaction_sim_dfx_expanded
 from src.utils.evolution.mutation import implement_mutation
-from src.utils.modelling.base import Modeller
+from src.utils.results.analytics.timeseries import generate_analytics
+from src.utils.results.result_writer import ResultWriter
+from src.utils.signal.signals_new import Signal
 
 
 class CircuitModeller():
@@ -56,7 +55,7 @@ class CircuitModeller():
             'simulation', {}).get('device', 'cpu'))
         # logging.warning(f'Using device {config.get("simulation", {}).get("device", "cpu")}')
 
-    def init_circuit(self, circuit: Circuit):
+    def init_circuit(self, circuit: Circuit) -> Circuit:
         circuit = self.compute_interaction_strengths(circuit)
         circuit = self.find_steady_states(circuit)
         return circuit
@@ -107,7 +106,8 @@ class CircuitModeller():
                         modeller_steady_state.time_interval,
                         'legend': [s.name for s in circuit.model.species],
                         'out_type': 'svg'},
-            analytics_kwargs={'labels': [s.name for s in circuit.model.species]},
+            analytics_kwargs={'labels': [
+                s.name for s in circuit.model.species]},
             no_write=True)
         return circuit
 
@@ -385,7 +385,8 @@ class CircuitModeller():
                     t0=self.t0, t1=self.t1, dt0=self.dt,
                     signal=signal.func, signal_onehot=signal.onehot,
                     inputs=ref_circuit.qreactions.reactions.inputs,
-                    outputs=ref_circuit.qreactions.reactions.outputs))
+                    outputs=ref_circuit.qreactions.reactions.outputs
+                    ))
 
     def batch_circuits(self,
                        circuits: List[Circuit],

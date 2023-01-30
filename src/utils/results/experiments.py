@@ -42,6 +42,7 @@ class Experiment():
         self.debug_inputs = debug_inputs
 
     def run_experiment(self):
+        self.write_experiment()
         out = None
         self.iterate_protocols(self.protocols, out)
 
@@ -75,7 +76,8 @@ class Experiment():
     def write_experiment(self):
         experiment_data = self.collect_experiment()
         self.data_writer.output(
-            out_type='json', out_name=self.name, data=experiment_data, write_master=False)
+            out_type='json', out_name=self.name, data=experiment_data, 
+            write_master=False, overwrite=True)
 
     def collect_experiment(self):
         return {
