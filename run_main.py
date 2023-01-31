@@ -1,6 +1,6 @@
 import logging
 from fire import Fire
-# from tests.test_circuits import main
+from tests.test_analytics import main
 # from scripts.agnostic_simulation.run_agnostic_simulation import main
 # from scripts.RNA_circuit_simulation.run_RNA_circuit import main
 # from src.utils.data.fake_data_generation.nc_sequences import main

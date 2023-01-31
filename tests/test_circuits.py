@@ -4,21 +4,10 @@ import pandas as pd
 import logging
 
 
-from tests.shared import five_circuits, mutate, simulate, CONFIG, TEST_CONFIG
+from tests.shared import create_test_inputs, CONFIG, TEST_CONFIG
 # from tests.shared import TEST_CONFIG as CONFIG
-from src.srv.sequence_exploration.sequence_analysis import load_tabulated_info, b_tabulate_mutation_info
+from src.srv.sequence_exploration.sequence_analysis import load_tabulated_info
 from src.utils.results.analytics.naming import get_true_names_analytics, DIFF_KEY, RATIO_KEY
-
-
-def create_test_inputs(config: dict):
-    circuits, config, data_writer = five_circuits(CONFIG, data_writer=None)
-    circuits, config, data_writer = mutate(circuits, config, data_writer)
-    circuits, config, data_writer = simulate(circuits, config, data_writer)
-
-    info = b_tabulate_mutation_info(data_writer.ensemble_write_dir,
-                                    data_writer=data_writer, experiment_config=config)
-
-    return circuits, config, data_writer, info
 
 
 class TestCircuit(unittest.TestCase):

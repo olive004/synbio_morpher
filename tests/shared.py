@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import os
 from src.srv.io.manage.script_manager import script_preamble
+from src.srv.sequence_exploration.sequence_analysis import b_tabulate_mutation_info
 from src.utils.circuit.agnostic_circuits.circuit_manager_new import CircuitModeller
 from src.utils.common.setup_new import construct_circuit_from_cfg, prepare_config
 from src.utils.evolution.evolver import Evolver
@@ -175,3 +176,14 @@ def simulate(circuits, config, data_writer):
         })
 
     return circuits, config, data_writer
+
+
+def create_test_inputs(config: dict):
+    circuits, config, data_writer = five_circuits(CONFIG, data_writer=None)
+    circuits, config, data_writer = mutate(circuits, config, data_writer)
+    circuits, config, data_writer = simulate(circuits, config, data_writer)
+
+    info = b_tabulate_mutation_info(data_writer.ensemble_write_dir,
+                                    data_writer=data_writer, experiment_config=config)
+
+    return circuits, config, data_writer, info

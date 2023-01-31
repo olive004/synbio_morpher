@@ -252,10 +252,6 @@ class CircuitModeller():
         #             outputs=ref_circuit.qreactions.reactions.outputs))
         solution = self.sim_func(
             y0=b_steady_states, forward_rates=b_forward_rates, reverse_rates=b_reverse_rates)
-        # except jaxlib.xla_extension.XlaRuntimeError:
-        #     clear_caches()
-        #     solution = sim_func(
-        #         y0=b_steady_states, forward_rates=b_forward_rates, reverse_rates=b_reverse_rates)
 
         tf = np.argmax(solution.ts == np.inf)
         b_new_copynumbers = solution.ys[:, :tf, :]
