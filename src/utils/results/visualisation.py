@@ -262,7 +262,7 @@ def visualise_graph_pyvis(graph: nx.DiGraph,
         interactive_graph.save_graph(out_path)
     except PermissionError:
         logging.warning(
-            f'The graph at {out_path} may not have saved properly.')
+            f'PermissionError: The graph at {out_path} may not have saved properly.')
 
     # web_filename = 'file:///' + os.getcwd() + '/' + out_path
     # # webbrowser.open(web_filename, new=1, autoraise=True)

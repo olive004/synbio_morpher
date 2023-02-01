@@ -89,34 +89,43 @@ def get_rmse(data, ref_circuit_data):
     return jnp.expand_dims(rmse, axis=1)
 
 
-def get_step_response_times(data, t, steady_states, deriv1, signal_idx: jnp.ndarray):
-    time = t * jnp.ones_like(steady_states)
+def get_step_response_times(data, t, steady_states, deriv, signal_idx: jnp.ndarray):
+    """ Assumes that data starts pre-perturbation, but after an initial steady state 
+    has been reached. """
+
+    t_expanded = t * jnp.ones_like(steady_states)
     margin = 0.05
-    cond_out = (data > (steady_states + steady_states * margin)
-                ) | (data < (steady_states - steady_states * margin))
+    is_data_outside_stst = (data > (steady_states + steady_states * margin)
+                            ) | (data < (steady_states - steady_states * margin))
 
     # Get zero derivative within margin
     fmargin = 0.001
-    fm = jnp.expand_dims(jnp.max(deriv1, axis=1) * fmargin, axis=1)
-    zd = (deriv1 < fm) & (deriv1 > -fm)  # This is just dx/dt == 0
+    fm = jnp.expand_dims(jnp.max(deriv, axis=1) * fmargin, axis=1)
+    zd = (deriv < fm) & (deriv > -fm)  # This is just dx/dt == 0
 
-    # Start time of signal change
+    # Find start time of signal change
     t0 = jnp.max(t * (zd[signal_idx] == False).astype(int))
 
-    # The time all species start to change where the derivative is not zero
-    tstart = jnp.max(t * ((zd == False) & (time > t0)).astype(int), axis=1)
+    # Get the time all species first start to change where the derivative is not zero
+    #    If tstart is equal to 0, it means the species did not change after the signal
+    tstart = jnp.max(
+        t * ((zd == False) & (t_expanded >= t0)).astype(int), axis=1)
 
     # Stop measuring response time where the species is within the
     # steady state margin and has a zero derivative after its start time
     idxs_first_zd_after_signal = jnp.argmax(
-        (time * zd > jnp.expand_dims(tstart, axis=1)) & (cond_out == False), axis=1)
+        (t_expanded * zd >= jnp.expand_dims(tstart, axis=1)) & (is_data_outside_stst == False), axis=1)
 
     argmax_workaround = jnp.ones_like(
         steady_states) * jnp.arange(len(t)) == jnp.expand_dims(idxs_first_zd_after_signal, axis=1)
-    tstop = jnp.where(jnp.max(time * argmax_workaround, axis=1) != 0,
-                      jnp.max(time * argmax_workaround, axis=1), tstart)
+    tstop = jnp.where(jnp.max(t_expanded * argmax_workaround, axis=1) != 0,
+                      jnp.max(t_expanded * argmax_workaround, axis=1), tstart)
 
-    response_times = tstop - t0
+    response_times = jnp.where(
+        tstart != 0,
+        tstop - tstart,
+        np.inf
+    )
 
     if response_times.ndim == 1:
         return jnp.expand_dims(response_times, axis=1)

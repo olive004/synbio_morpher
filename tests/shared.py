@@ -13,8 +13,8 @@ ENSEMBLE_CONFIG = {
     "experiment": {
         "purpose": "tests",
         "test_mode": False,
-        "no_visualisations": True,
-        "no_numerical": True
+        "no_visualisations": False,
+        "no_numerical": False
     },
     "base_configs_ensemble": {
         "generate_species_templates": {
@@ -179,7 +179,7 @@ def simulate(circuits, config, data_writer):
 
 
 def create_test_inputs(config: dict):
-    circuits, config, data_writer = five_circuits(CONFIG, data_writer=None)
+    circuits, config, data_writer = five_circuits(config, data_writer=None)
     circuits, config, data_writer = mutate(circuits, config, data_writer)
     circuits, config, data_writer = simulate(circuits, config, data_writer)
 

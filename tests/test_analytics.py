@@ -2,6 +2,7 @@ import unittest
 import numpy as np
 import pandas as pd
 from functools import partial
+from copy import deepcopy
 
 
 from tests.shared import create_test_inputs, CONFIG, TEST_CONFIG
@@ -46,11 +47,44 @@ class TestAnalytics(unittest.TestCase):
         # Choice analytics
         [self.assertEqual(analytics['fold_change'].astype(np.float16)[i], (target + baseline + i)/baseline) for i in range(num_species)]
 
-        for c in [TEST_CONFIG, CONFIG]:
-            circuits, config, data_writer, info = create_test_inputs(c)
+        for n, c in zip(['t', 'c'], [TEST_CONFIG, CONFIG]):
+            circuits, config, data_writer, info = create_test_inputs(deepcopy(c))
 
             analytics_cols = get_true_names_analytics(
                 candidate_cols=info.columns)
+
+            if n == 't':
+                self.assertEqual(info['steady_states'].iloc[0], 1.0689573287963867)
+                self.assertEqual(info['steady_states'].iloc[4], 0.6167439222335815)
+
+            info_ref = info[info['mutation_name'] == 'ref_circuit']
+
+            for s in info['sample_name'].unique():
+                info_ref[info_ref['sample_name'] == s]
+
+            # Test that signal ratio is always 1
+            # Test that if the max_amount ratio was 1, that steady states did not change
+            # Test that columns that should be positive are positive: 
+            #   fold_change	overshoot	max_amount	min_amount	RMSE	steady_states	
+            #   response_time_wrt_species-6	precision_wrt_species-6	sensitivity_wrt_species-6
+            positive_cols = [
+                'fold_change',
+                'overshoot',
+                'max_amount',
+                'min_amount',
+                'RMSE', 
+                'steady_states',
+                'response_time_wrt_species-6', 
+                'precision_wrt_species-6',
+                'sensitivity_wrt_species-6'
+            ]
+
+            # Plot response time
+            import matplotlib.pyplot as plt
+            import seaborn as sns
+            sns.barplot(info, x='response_time_wrt_species-6', hue='circuit_name')
+            # plt.plot(info['response_time_wrt_species-6'])
+            plt.savefig('test.svg')
 
 
 def main():
