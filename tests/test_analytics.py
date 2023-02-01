@@ -17,22 +17,34 @@ class TestAnalytics(unittest.TestCase):
         num_species = 9
         fake_species = [str(i) for i in np.arange(num_species)]
         signal_idx = 0
-        signal_onehot = 1 * (fake_species == fake_species[signal_idx])
+        signal_onehot = 1 * np.array([f == fake_species[signal_idx] for f in fake_species])
 
         t0 = 0
-        t1 = 1000
+        t1 = 100
         dt = 1
         t = np.arange(t0, t1)
+        target = 100
+        baseline = 10
 
-        data = [SignalFuncs.step_function_integrated(
-            t, t1/2 + i, target=100 + i) for i in range(num_species)]
-        ref_circuit_data = [SignalFuncs.step_function_integrated(
-            t, t1/2 + i * 2, target=100 + i * 2) for i in range(num_species)]
+        data = np.asarray([SignalFuncs.step_function_integrated(
+            t, t1/2 + i, dt=dt, target=target + i) for i in range(num_species)]) + baseline
+        ref_circuit_data = np.asarray([SignalFuncs.step_function_integrated(
+            t, t1/2 + i * 2, dt=dt, target=target + i * 2) for i in range(num_species)]) + baseline
 
-        analytics = partial(generate_analytics, time=t, labels=fake_species,
-                            signal_onehot=signal_onehot, ref_circuit_data=ref_circuit_data)(data)
+        analytics = {k: np.array(v) for k, v in 
+            partial(generate_analytics, time=t, labels=fake_species,
+                    signal_onehot=signal_onehot, ref_circuit_data=ref_circuit_data)(data).items()
+        }
 
-        
+        # Signal in analytics
+        self.assertEqual(analytics[f'precision_wrt_species-{signal_idx}'][0], 1)
+        self.assertEqual(analytics[f'sensitivity_wrt_species-{signal_idx}'][0], 1)
+        for k in analytics.keys():
+            if RATIO_KEY in k and 'deriv' not in k:
+                self.assertTrue((analytics[k][0].astype(np.float16)[0] == 1) | (analytics[k][0].astype(np.float16)[0] == np.inf))
+
+        # Choice analytics
+        [self.assertEqual(analytics['fold_change'].astype(np.float16)[i], (target + baseline + i)/baseline) for i in range(num_species)]
 
         for c in [TEST_CONFIG, CONFIG]:
             circuits, config, data_writer, info = create_test_inputs(c)

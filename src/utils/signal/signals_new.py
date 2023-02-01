@@ -22,7 +22,7 @@ class SignalFuncs():
             target/(2*impulse_halfwidth*dt), 0)
 
     def step_function_integrated(t, impulse_center, dt, target):
-        return 1* jnp.where(impulse_center > t, target/dt, 0)
+        return 1* jnp.where(impulse_center < t, target/dt, 0)
 
     def adapt_pulse(self, time_points, height, pulse_type, dt):
         ''' Adaptation response curves

@@ -116,7 +116,7 @@ def get_step_response_times(data, t, steady_states, deriv1, signal_idx: jnp.ndar
     tstop = jnp.where(jnp.max(time * argmax_workaround, axis=1) != 0,
                       jnp.max(time * argmax_workaround, axis=1), tstart)
 
-    response_times = tstop - tstart
+    response_times = tstop - t0
 
     if response_times.ndim == 1:
         return jnp.expand_dims(response_times, axis=1)
@@ -150,14 +150,14 @@ def generate_base_analytics(data: jnp.ndarray, time: jnp.ndarray, labels: List[s
         for s, s_idx in zip(signal_labels, signal_idxs):
             analytics[f'precision_wrt_species-{s_idx}'] = get_precision(
                 data, analytics['steady_states'], s_idx)
-            analytics[f'precision_estimate_wrt_species-{s_idx}'] = get_precision(
-                data, analytics['steady_states'], s_idx)
+            # analytics[f'precision_estimate_wrt_species-{s_idx}'] = get_precision(
+            #     data, analytics['steady_states'], s_idx)
             analytics[f'response_time_wrt_species-{s_idx}'] = get_step_response_times(
                 data, time, analytics['steady_states'], analytics['first_derivative'], signal_idx=s_idx)
             analytics[f'sensitivity_wrt_species-{s_idx}'] = get_sensitivity(
                 data, s_idx)
-            analytics[f'sensitivity_estimate_wrt_species-{s_idx}'] = get_sensitivity(
-                data, s_idx)
+            # analytics[f'sensitivity_estimate_wrt_species-{s_idx}'] = get_sensitivity(
+            #     data, s_idx)
     return analytics
 
 

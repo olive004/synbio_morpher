@@ -18,9 +18,9 @@ def get_analytics_types_base() -> List[str]:
 def get_signal_dependent_analytics() -> List[str]:
     return ['response_time',
             'precision',
-            'precision_estimate',
-            'sensitivity',
-            'sensitivity_estimate']
+            # 'precision_estimate',
+            'sensitivity']#,
+            # 'sensitivity_estimate']
 
 
 def get_analytics_types_all() -> List[str]:
