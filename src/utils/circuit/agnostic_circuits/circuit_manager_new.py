@@ -35,7 +35,7 @@ class CircuitModeller():
 
     def __init__(self, result_writer=None, config: dict = {}) -> None:
         self.result_writer = ResultWriter() if result_writer is None else result_writer
-        self.steady_state_solver = config.get("steady_state_solver", 'ivp')
+        self.steady_state_args = config['simulation_steady_state']
         self.simulator_args = config['interaction_simulator']
         self.discard_numerical_mutations = config['experiment'].get(
             'no_numerical', False)
@@ -91,11 +91,12 @@ class CircuitModeller():
 
     def find_steady_states(self, circuit: Circuit):
         modeller_steady_state = Deterministic(
-            max_time=10, time_interval=0.1)
+            max_time=self.steady_state_args['max_time'], 
+            time_interval=self.steady_state_args['time_interval'])
 
         steady_states = self.compute_steady_states(modeller_steady_state,
                                                    circuit=circuit,
-                                                   solver_type=self.steady_state_solver)
+                                                   solver_type=self.steady_state_args['steady_state_solver'])
 
         circuit.result_collector.add_result(
             data=steady_states,

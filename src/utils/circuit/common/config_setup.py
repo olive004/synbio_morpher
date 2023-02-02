@@ -47,16 +47,18 @@ def handle_simulator_cfgs(simulator, simulator_cfg_path):
 def parse_cfg_args(config: dict = None, default_args: Dict = None) -> Dict:
 
     if default_args is None:
-        default_args = retrieve_default_arg_filenames()
+        default_args = retrieve_default_args()
     simulator_kwargs = load_simulator_kwargs(default_args, config)
     config['interaction_simulator']['simulator_kwargs'] = simulator_kwargs
     config['interaction_simulator']['molecular_params'] = config['molecular_params']
+    config['simulation_steady_state'] = default_args['simulation_steady_state']
 
     return config
 
 
 def load_simulator_kwargs(default_args: dict, config_args: str = None) -> Dict:
-    target_simulator_name = config_args.get('interaction_simulator', {}).get('name')
+    target_simulator_name = config_args.get(
+        'interaction_simulator', {}).get('name')
     simulator_kwargs = None
     for simulator_name in get_simulator_names():
         kwarg_condition = simulator_name in default_args
@@ -69,7 +71,7 @@ def load_simulator_kwargs(default_args: dict, config_args: str = None) -> Dict:
     return simulator_kwargs
 
 
-def retrieve_default_arg_filenames() -> Dict:
+def retrieve_default_args() -> Dict:
     fn = get_pathnames(file_key='default_args', search_dir=os.path.join(
         'src', 'utils', 'common', 'configs', 'simulators'), first_only=True)
     default_args = load_json_as_dict(fn)

@@ -1,3 +1,8 @@
 {
-    "IntaRNA": "./src/utils/common/configs/simulators/intaRNA_args.json"
+    "IntaRNA": "./src/utils/common/configs/simulators/intaRNA_args.json",
+    "simulation_steady_state": {
+        "steady_state_solver": "ivp",
+        "max_time": 20,
+        "time_interval": 0.1
+    }
 }
