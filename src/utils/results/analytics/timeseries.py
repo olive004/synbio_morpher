@@ -23,7 +23,7 @@ def get_steady_state(data):
     return steady_states, final_deriv
 
 
-def fold_change(data):
+def get_fold_change(data):
     denom = jnp.where(data[:, 0] != 0,
                       data[:, 0], -1)
     fold_change = jnp.where(denom != -1,
@@ -98,20 +98,20 @@ def get_step_response_times(data, t, steady_states, deriv, signal_idx: jnp.ndarr
     is_data_outside_stst = (data > (steady_states + steady_states * margin)
                             ) | (data < (steady_states - steady_states * margin))
 
-    # Get zero derivative within margin
+    # 1. Get zero derivative within margin
     fmargin = 0.001
     fm = jnp.expand_dims(jnp.max(deriv, axis=1) * fmargin, axis=1)
     zd = (deriv < fm) & (deriv > -fm)  # This is just dx/dt == 0
 
-    # Find start time of signal change
+    # 2. Find start time of signal change
     t0 = jnp.max(t * (zd[signal_idx] == False).astype(int))
 
-    # Get the time all species first start to change where the derivative is not zero
+    # 3. Get the time all species first start to change where the derivative is not zero
     #    If tstart is equal to 0, it means the species did not change after the signal
     tstart = jnp.max(
         t * ((zd == False) & (t_expanded >= t0)).astype(int), axis=1)
 
-    # Stop measuring response time where the species is within the
+    # 4. Stop measuring response time where the species is within the
     # steady state margin and has a zero derivative after its start time
     idxs_first_zd_after_signal = jnp.argmax(
         (t_expanded * zd >= jnp.expand_dims(tstart, axis=1)) & (is_data_outside_stst == False), axis=1)
@@ -144,7 +144,7 @@ def generate_base_analytics(data: jnp.ndarray, time: jnp.ndarray, labels: List[s
         return {}
     analytics = {
         'first_derivative': get_derivative(data),
-        'fold_change': fold_change(data),
+        'fold_change': get_fold_change(data),
         'RMSE': get_rmse(data, ref_circuit_data),
         'max_amount': jnp.expand_dims(jnp.max(data, axis=1), axis=1),
         'min_amount': jnp.expand_dims(jnp.min(data, axis=1), axis=1)
@@ -159,14 +159,10 @@ def generate_base_analytics(data: jnp.ndarray, time: jnp.ndarray, labels: List[s
         for s, s_idx in zip(signal_labels, signal_idxs):
             analytics[f'precision_wrt_species-{s_idx}'] = get_precision(
                 data, analytics['steady_states'], s_idx)
-            # analytics[f'precision_estimate_wrt_species-{s_idx}'] = get_precision(
-            #     data, analytics['steady_states'], s_idx)
             analytics[f'response_time_wrt_species-{s_idx}'] = get_step_response_times(
                 data, time, analytics['steady_states'], analytics['first_derivative'], signal_idx=s_idx)
             analytics[f'sensitivity_wrt_species-{s_idx}'] = get_sensitivity(
                 data, s_idx)
-            # analytics[f'sensitivity_estimate_wrt_species-{s_idx}'] = get_sensitivity(
-            #     data, s_idx)
     return analytics
 
 
@@ -179,9 +175,6 @@ def generate_differences_ratios(analytics: dict, ref_analytics) -> Tuple[dict]:
         ratios[k + RATIO_KEY] = jnp.where(ref_analytics[k] !=
                                           0, jnp.divide(analytics[k], ref_analytics[k]), np.inf)
     return differences, ratios
-
-
-# def generate_means(analytics: dict):
 
 
 def generate_analytics(data, time, labels: List[str], ref_circuit_data=None, signal_onehot=None):

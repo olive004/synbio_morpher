@@ -109,7 +109,7 @@ class CircuitModeller():
                         'out_type': 'svg'},
             analytics_kwargs={'labels': [
                 s.name for s in circuit.model.species]},
-            no_write=True)
+            no_write=False)
         return circuit
 
     def compute_steady_states(self, modeller: Modeller, circuit: Circuit,
@@ -124,16 +124,13 @@ class CircuitModeller():
                 partial(bioreaction_sim, args=None, reactions=circuit.qreactions.reactions, signal=vanilla_return,
                         signal_onehot=np.zeros_like(circuit.signal.onehot)),
                 (0, modeller.max_time),
-                y0=circuit.qreactions.quantities)
+                y0=circuit.qreactions.quantities,
+                method=self.steady_state_args.get('method', 'DOP853'))
             if not steady_state_result.success:
                 raise ValueError(
                     'Steady state could not be found through solve_ivp - possibly because units '
                     f'are in {circuit.interactions.units}. {SIMULATOR_UNITS}')
             copynumbers = steady_state_result.y
-        # elif solver_type == 'jax':
-        #     partial(bioreaction_sim, args=None, reactions=circuit.qreactions.reactions, signal=vanilla_return,
-        #                 signal_onehot=np.zeros_like(circuit.signal.onehot)),
-        #         (0, modeller.max_time)
         return copynumbers
 
     def model_circuit(self, y0: np.ndarray, circuit: Circuit):
