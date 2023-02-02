@@ -303,6 +303,11 @@ class VisODE():
              **plot_kwrgs) -> None:
         data = data.T if len(plot_kwrgs.get('legend', [])
                              ) == np.shape(data)[0] else data
+
+        if type(data) != np.ndarray or type(t) != np.ndarray:
+            t = np.array(t)
+            data = np.array(data)
+
         plt.figure()
         if y is not None:
             plt.plot(data, y)

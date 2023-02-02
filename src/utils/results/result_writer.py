@@ -1,9 +1,10 @@
 
 
 import logging
+from typing import Dict
 import os
-
 import numpy as np
+
 from src.utils.results.analytics.naming import get_analytics_types_all
 from src.utils.results.results import Result
 from src.utils.results.writer import DataWriter
@@ -72,7 +73,7 @@ class ResultWriter(DataWriter):
         self.write_report(writeables, analytics, new_report,
                           out_name=f'report_{result.name}')
 
-    def write_results(self, results: dict, new_report=False, no_visualisations=False,
+    def write_results(self, results: Dict[str, Result], new_report=False, no_visualisations=False,
                       only_numerical=False, no_analytics=False, no_numerical=False):
 
         for _name, result in results.items():
