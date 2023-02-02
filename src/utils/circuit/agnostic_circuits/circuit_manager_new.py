@@ -56,12 +56,12 @@ class CircuitModeller():
         # logging.warning(f'Using device {config.get("simulation", {}).get("device", "cpu")}')
 
     def init_circuit(self, circuit: Circuit) -> Circuit:
-        circuit = self.compute_interaction_strengths(circuit)
+        circuit = self.compute_interactions(circuit)
         circuit = self.find_steady_states(circuit)
         return circuit
 
     # @time_it
-    def compute_interaction_strengths(self, circuit: Circuit):
+    def compute_interactions(self, circuit: Circuit):
         if circuit.interactions_state == 'uninitialised' and not self.test_mode:
             interactions = self.run_interaction_simulator(
                 sorted(get_unique(flatten_listlike([r.input for r in circuit.model.reactions]))))

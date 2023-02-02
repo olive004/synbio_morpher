@@ -30,7 +30,7 @@ def main(config=None, data_writer=None):
     simulation = CircuitModeller(result_writer=data_writer).run_interaction_simulator(circuit,
                                                                                       circuit.species.data.data)
     circuit = CircuitModeller(
-        result_writer=data_writer).compute_interaction_strengths(circuit)
+        result_writer=data_writer).compute_interactions(circuit)
     logging.info(simulation.interactions)
     logging.info(circuit.species.interactions)
 
