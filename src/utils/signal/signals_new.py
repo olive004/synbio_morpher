@@ -11,18 +11,20 @@ class SignalFuncs():
 
     @staticmethod
     def sine_step_function(t, impulse_center, impulse_halfwidth, dt, target):
-        return (jnp.sin(t) + 1)* jnp.where(
-            (impulse_center-impulse_halfwidth < t) & (t < impulse_center+impulse_halfwidth), 
+        return (jnp.sin(t) + 1) * jnp.where(
+            (impulse_center-impulse_halfwidth <
+             t) & (t < impulse_center+impulse_halfwidth),
             target/(2*impulse_halfwidth*dt), 0)
 
     @staticmethod
     def step_function(t, impulse_center, impulse_halfwidth, dt, target):
-        return 1* jnp.where(
-            (impulse_center-impulse_halfwidth < t) & (t < impulse_center+impulse_halfwidth), 
+        return 1 * jnp.where(
+            (impulse_center-impulse_halfwidth <
+             t) & (t < impulse_center+impulse_halfwidth),
             target/(2*impulse_halfwidth*dt), 0)
 
     def step_function_integrated(t, impulse_center, dt, target):
-        return 1* jnp.where(impulse_center < t, target/dt, 0)
+        return 1 * jnp.where(impulse_center < t, target/dt, 0)
 
     def adapt_pulse(self, time_points, height, pulse_type, dt):
         ''' Adaptation response curves
@@ -65,15 +67,15 @@ class SignalFuncs():
         position_next = np.concatenate(
             [positions[1:], time_points+np.ones(1)], axis=0)  # [num_peaks]
         mask = np.float32((xs >= np.expand_dims(positions, 1)) *
-                            (xs < np.expand_dims(position_next, 1)) *
-                            (xs < np.expand_dims(positions+durations, 1)))
+                          (xs < np.expand_dims(position_next, 1)) *
+                          (xs < np.expand_dims(positions+durations, 1)))
         y1 = y0_*mask  # [num_peaks, time_points]
         y = np.float32(np.sum(y1, axis=0))
         return y
 
 
 class Signal():
-    def __init__(self, 
+    def __init__(self,
                  onehot: np.ndarray,
                  function_name: str,
                  function_kwargs: dict,
@@ -83,7 +85,7 @@ class Signal():
         self.func = self.make_func(function_name, function_kwargs)
 
     def make_func(self, function_name: str, function_kwargs: dict):
-        
+
         return partial(
             SignalFuncs().__getattribute__(function_name),
             dt=self.time_interval,
@@ -103,5 +105,5 @@ class Signal():
 
     def show(self, total_time, out_path='input_signal_plot'):
         from src.utils.results.visualisation import VisODE
-        VisODE().plot(data=np.arange(0, total_time, self.time_interval), 
-            y=self.real_signal, out_path=out_path)
+        VisODE().plot(data=np.arange(0, total_time, self.time_interval),
+                      y=self.real_signal, out_path=out_path)

@@ -35,13 +35,13 @@ class RawSimulationHandling():
 
     def get_sim_interpretation_protocol(self):
 
-        def intaRNA_calculator(sample: dict):
+        def process_IntaRNA_sample(sample: dict):
             """ There are a variety of parameters that IntaRNA spits out. E is hybridisation energy"""
             raw_sample = sample.get('E', 0)
             return raw_sample
 
         if self.simulator_name == "IntaRNA":
-            return intaRNA_calculator
+            return process_IntaRNA_sample
 
     def get_postprocessing(self):
 
@@ -63,7 +63,6 @@ class RawSimulationHandling():
             k_a: binding rate per Ms 
             eqconstants: unitless but in terms of mol
             k_d: unbinding rate per s"""
-            # k_a = per_mol_to_per_molecules(self.fixed_rate_k_a)
             k_a = self.fixed_rate_k_a
             k_d = np.divide(k_a, eqconstants)
             return k_a*np.ones_like(k_d), k_d
@@ -91,29 +90,15 @@ class RawSimulationHandling():
 
         if self.simulator_name == "CopomuS":
             # from src.utils.parameter_prediction.IntaRNA.bin.CopomuS import CopomuS
-            # simulator = CopomuS(self.sim_config_args)
-            # simulator.main()
             raise NotImplementedError
 
         else:
             from src.srv.parameter_prediction.simulator import simulate_vanilla
             return simulate_vanilla
 
-    # def calculate_full_coupling_of_rates(self, k_d, eqconstants):
-    #     # k_a = per_mol_to_per_molecules(self.fixed_rate_k_a)
-    #     k_a = self.fixed_rate_k_a
-    #     full_interactions = np.divide(k_a, (k_d + eqconstants))  # .flatten()))
-    #     return full_interactions
-
-    # def calculate_full_coupling_of_rates(self, k_d, degradation_rates):
-    #     k_a = per_mol_to_per_molecules(self.fixed_rate_k_a)
-    #     full_interactions = np.divide(k_a, (k_d + degradation_rates.flatten()))
-    #     return full_interactions
-
 
 def simulate_vanilla(batch):
     raise NotImplementedError
-    return None
 
 
 def check_IntaRNA_path():

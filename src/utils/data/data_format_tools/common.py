@@ -103,7 +103,7 @@ def process_dict_for_json(dict_like) -> Union[list, dict]:
             dict_like[k] = bool(v)
         elif type(v) == np.ndarray or type(v) in jaxlib.xla_extension.__dict__.values():
             dict_like[k] = v.tolist()
-        elif type(v) == np.float32 or type(v) == np.int64:
+        elif type(v) == np.float32 or type(v) == np.int64 or type(v) == np.float16:
             dict_like[k] = str(v)
     return dict_like
 

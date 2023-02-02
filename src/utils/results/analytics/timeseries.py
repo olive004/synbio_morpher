@@ -6,9 +6,6 @@ from src.utils.misc.type_handling import merge_dicts
 from src.utils.results.analytics.naming import DIFF_KEY, RATIO_KEY
 
 
-NUM_DTYPE = np.float32
-
-
 def get_derivative(data):
     deriv = jnp.gradient(data)[1]
     return deriv  # get column derivative
@@ -198,4 +195,3 @@ class Timeseries():
         else:
             self.time = np.arange(np.shape(self.data)[
                                   1]) if time is None else time
-        self.num_dtype = np.float32

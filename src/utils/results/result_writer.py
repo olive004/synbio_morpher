@@ -17,7 +17,6 @@ from src.utils.circuit.agnostic_circuits.circuit_new import Circuit
 class ResultWriter(DataWriter):
     def __init__(self, purpose, out_location=None) -> None:
         super().__init__(purpose, out_location)
-        self.report = {}
 
     def make_metric_visualisation(self, result, keys, source: dict, new_report: bool):
         for plottable in keys:
@@ -30,11 +29,13 @@ class ResultWriter(DataWriter):
                 self.output(out_name=out_name,
                             write_func=result.vis_func, **result.vis_kwargs)
 
-    def make_report(self, keys: list, source: dict):
+    @staticmethod
+    def make_report(keys: list, source: dict):
 
         def prettify_writeable(writeable):
-            if type(writeable) == np.ndarray or type(writeable) == list:
-                writeable = np.array(writeable)
+            if type(writeable) != str:
+            # if type(writeable) == np.ndarray or (type(writeable) == list and type(writeable[0]) != str):
+                writeable = np.array(writeable).astype(np.float16)
                 if writeable.ndim == 2 and np.shape(writeable)[1] == 1:
                     writeable = np.squeeze(writeable)
                 writeable = list(writeable)
@@ -51,7 +52,6 @@ class ResultWriter(DataWriter):
                 writeable = [writeable]
             for w in writeable:
                 report[w] = prettify_writeable(source.get(w, ''))
-        self.report = report
 
         return report
 
