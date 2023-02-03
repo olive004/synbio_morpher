@@ -16,11 +16,11 @@ docker build -t genetic_glitch:latest docker_unix
 docker create -it \
 --rm \
 --gpus all \
---name gcg \
+--name gcg2 \
 --mount type=bind,source="$(pwd)",target=/workdir \
 genetic_glitch:latest
-docker container start gcg
-docker exec -it gcg /bin/bash 
+docker container start gcg2
+docker exec -it gcg2 /bin/bash 
 # docker container stop gcg
 
 

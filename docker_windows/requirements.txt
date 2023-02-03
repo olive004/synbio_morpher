@@ -12,3 +12,4 @@ numpy
 pandas
 pyvis
 seaborn
+tensorflow

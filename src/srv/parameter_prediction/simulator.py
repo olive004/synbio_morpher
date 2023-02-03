@@ -119,6 +119,9 @@ def simulate_intaRNA_data(batch: dict, allow_self_interaction: bool, sim_kwargs:
         sys.path.append(check_IntaRNA_path())
     if batch is not None:
         data = {}
+        sim_kwargs["query"] = 'tests/configs/circuits/2_medium.fasta'
+        sim_kwargs["target"] = 'tests/configs/circuits/2_medium.fasta'
+        simulator.run(**sim_kwargs)
         for i, (label_i, sample_i) in enumerate(batch.items()):
             current_pair = {}
             for j, (label_j, sample_j) in enumerate(batch.items()):

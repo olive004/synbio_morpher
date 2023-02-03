@@ -78,10 +78,13 @@ class Graph():
         source_matrix = np.zeros(
             (len(labels), len(labels))) if source_matrix is None else source_matrix
         self._node_labels = labels
-        self.graph = self.build_graph(source_matrix)
+        self.graph = self.build_graph(source_matrix) 
 
     def build_graph(self, source_matrix: np.ndarray) -> nx.DiGraph:
-        graph = nx.from_numpy_matrix(source_matrix, create_using=nx.DiGraph)
+        try:
+            graph = nx.from_numpy_matrix(source_matrix, create_using=nx.DiGraph)
+        except AttributeError:
+            graph = nx.from_numpy_array(source_matrix, create_using=nx.DiGraph)
         if self.node_labels is not None:
             graph = nx.relabel_nodes(graph, self.node_labels)
         return graph

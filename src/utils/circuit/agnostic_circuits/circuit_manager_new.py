@@ -7,7 +7,6 @@ import os
 # import sys
 import logging
 import numpy as np
-import diffrax as dfx
 
 import jax
 from scipy import integrate
@@ -64,7 +63,7 @@ class CircuitModeller():
     def compute_interactions(self, circuit: Circuit):
         if circuit.interactions_state == 'uninitialised' and not self.test_mode:
             interactions = self.run_interaction_simulator(
-                sorted(get_unique(flatten_listlike([r.input for r in circuit.model.reactions]))))
+                species=sorted(get_unique(flatten_listlike([r.input for r in circuit.model.reactions]))))
             circuit = update_species_simulated_rates(
                 circuit, interactions.interactions)
             circuit.interactions = interactions.interactions
@@ -84,7 +83,7 @@ class CircuitModeller():
                 filename_addon=filename_addon, subfolder=filename_addon)
         return circuit
 
-    def run_interaction_simulator(self, species: List[Species]) -> InteractionData:
+    def run_interaction_simulator(self, species: List[Species]=None, file_name=None) -> InteractionData:
         data = {s: s.physical_data for s in species}
         simulator = InteractionSimulator(self.simulator_args)
         return simulator.run(data)
