@@ -30,6 +30,7 @@ MUTATION_INFO_COLUMN_NAMES = [
     'mutation_num',
     'mutation_type',
     'mutation_positions',
+    'binding_locations',
     'path_to_template_circuit'
 ]
 
@@ -96,7 +97,7 @@ def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path
         return []
 
     interaction_path_keys = {
-        k: f'path_{k}' for k in INTERACTION_FIELDS_TO_WRITE}
+        k: f'path_{k}' for k in INTERACTION_TYPES}
     some_pathname = filt_stats[list(interaction_path_keys.values())[
         0]].to_list()[0]
     experiment_folder = get_root_experiment_folder(some_pathname)
@@ -154,11 +155,16 @@ def b_tabulate_mutation_info(source_dir: str, data_writer: DataWriter, experimen
     def make_interaction_stats_and_sample_names(source_interaction_dirs: List[str], experiment_config: dict = None):
         interaction_matrices = [None] * len(source_interaction_dirs)
         for i, source_interaction_dir in enumerate(source_interaction_dirs):
-            interaction_matrices[i] = InteractionMatrix(
-                matrix_paths=get_pathnames(file_key=INTERACTION_TYPES,
+            matrix_paths = get_pathnames(file_key=INTERACTION_TYPES,
                                            search_dir=source_interaction_dir,
                                            subdirs=INTERACTION_TYPES,
-                                           as_dict=True, first_only=True),
+                                           as_dict=True, first_only=True)
+            matrix_paths = get_pathnames(file_key='binding_sites',
+                                           search_dir=source_interaction_dir,
+                                           subdirs=INTERACTION_TYPES,
+                                           as_dict=True, first_only=True)
+            interaction_matrices[i] = InteractionMatrix(
+                matrix_paths=matrix_paths,
                 experiment_config=experiment_config
             )
         return b_get_stats(interaction_matrices), interaction_matrices[0].sample_names
@@ -234,17 +240,11 @@ def b_tabulate_mutation_info(source_dir: str, data_writer: DataWriter, experimen
                                         column_for_expanding_coldata='sample_names', idx_for_expanding_coldata=0)
         data_writer.output(
             out_type='csv', out_name='tabulated_mutation_info', **{'data': info_table})
-        # json_info_table = remove_invalid_json_values(info_table)
-        # data_writer.output(
-        #     out_type='json', out_name='tabulated_mutation_info', **{'data': json_info_table})
 
     info_table = init_info_table()
     circuit_dirs = get_subdirectories(source_dir, min_condition=3)
     for circ_idx, circuit_dir in enumerate(circuit_dirs):
         circuit_name = os.path.basename(circuit_dir)
-        if circuit_name == '2_medium':
-            # TESTING
-            print(1)
         mutations_pathname = get_pathnames(
             first_only=True, file_key='mutations', search_dir=circuit_dir)
         mutations = GeneCircuitLoader().load_data(mutations_pathname).data
