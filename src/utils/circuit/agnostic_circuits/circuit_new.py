@@ -20,18 +20,16 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-def interactions_to_dict(interactions: np.ndarray, labels: list):
-    interactions_dict = {}
-    for i, sample in enumerate(labels):
-        interactions_dict[sample] = {s: interactions[i, j]
-                                     for j, s in enumerate(labels)}
-    return interactions_dict
+# def interactions_to_dict(interactions: np.ndarray, labels: list):
+#     interactions_dict = {}
+#     for i, sample in enumerate(labels):
+#         interactions_dict[sample] = {s: interactions[i][j]
+#                                      for j, s in enumerate(labels)}
+#     return interactions_dict
 
 
-def interactions_to_df(interactions: np.ndarray, labels: list):
-    interactions_df = pd.DataFrame.from_dict(
-        interactions_to_dict(interactions, labels), dtype=object)
-    return interactions_df
+def interactions_to_df(interactions: Union[np.ndarray, list], labels: list):
+    return pd.DataFrame(data=interactions, columns=labels, index=labels)
 
 
 class Circuit():
@@ -89,6 +87,12 @@ class Circuit():
 
     def reset_to_initial_state(self):
         self.result_collector.reset()
+        self.interactions_state = 'uninitialised'
+
+    def strip_to_core(self):
+        del self.data
+        del self.mutations
+        del self.mutations_args
 
     @property
     def signal(self):

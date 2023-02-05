@@ -13,9 +13,8 @@ from scipy import integrate
 from bioreaction.model.data_containers import Species
 from bioreaction.simulation.simfuncs.basic_de import bioreaction_sim
 
-from src.srv.io.loaders.experiment_loading import INTERACTION_FILE_ADDONS
 from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
-from src.srv.parameter_prediction.interactions import InteractionData, InteractionSimulator
+from src.srv.parameter_prediction.interactions import InteractionDataHandler, InteractionSimulator, INTERACTION_FIELDS_TO_WRITE
 from src.utils.circuit.agnostic_circuits.circuit_new import Circuit, update_species_simulated_rates, interactions_to_df
 from src.utils.misc.helper import vanilla_return
 from src.utils.misc.numerical import invert_onehot, zero_out_negs
@@ -36,6 +35,8 @@ class CircuitModeller():
         self.result_writer = ResultWriter() if result_writer is None else result_writer
         self.steady_state_args = config['simulation_steady_state']
         self.simulator_args = config['interaction_simulator']
+        self.interaction_simulator = InteractionSimulator(
+            sim_args=self.simulator_args)
         self.discard_numerical_mutations = config['experiment'].get(
             'no_numerical', False)
         self.dt = config.get('simulation', {}).get('dt', 1)
@@ -62,17 +63,22 @@ class CircuitModeller():
     # @time_it
     def compute_interactions(self, circuit: Circuit):
         if circuit.interactions_state == 'uninitialised' and not self.test_mode:
+            if self.simulator_args['compute_by_filename'] and circuit.subname == "ref_circuit" and os.path.exists(circuit.data.source):
+                filename = circuit.data.source
+            else:
+                filename = None
             interactions = self.run_interaction_simulator(
-                species=sorted(get_unique(flatten_listlike([r.input for r in circuit.model.reactions]))))
+                species=sorted(get_unique(flatten_listlike(
+                    [r.input for r in circuit.model.reactions]))),
+                filename=filename)
             circuit = update_species_simulated_rates(
-                circuit, interactions.interactions)
-            circuit.interactions = interactions.interactions
+                circuit, interactions)
+            circuit.interactions = interactions
 
-        filename_addons = sorted(INTERACTION_FILE_ADDONS.keys())
         for interaction_matrix, filename_addon in zip(
             [circuit.interactions.binding_rates_dissociation,
-             #  circuit.interactions.coupled_binding_rates,
-             circuit.interactions.eqconstants], filename_addons
+             circuit.interactions.binding_sites,
+             circuit.interactions.eqconstants], sorted(INTERACTION_FIELDS_TO_WRITE)
         ):
             self.result_writer.output(
                 data=interactions_to_df(
@@ -83,14 +89,16 @@ class CircuitModeller():
                 filename_addon=filename_addon, subfolder=filename_addon)
         return circuit
 
-    def run_interaction_simulator(self, species: List[Species]=None, file_name=None) -> InteractionData:
+    def run_interaction_simulator(self, species: List[Species], filename=None) -> InteractionDataHandler:
         data = {s: s.physical_data for s in species}
-        simulator = InteractionSimulator(self.simulator_args)
-        return simulator.run(data)
+        if filename is not None:
+            return self.interaction_simulator.run((filename, data), compute_by_filename=True)
+        else:
+            return self.interaction_simulator.run(data, compute_by_filename=False)
 
     def find_steady_states(self, circuit: Circuit):
         modeller_steady_state = Deterministic(
-            max_time=self.steady_state_args['max_time'], 
+            max_time=self.steady_state_args['max_time'],
             time_interval=self.steady_state_args['time_interval'])
 
         steady_states = self.compute_steady_states(modeller_steady_state,
@@ -326,7 +334,7 @@ class CircuitModeller():
 
         subcircuit = deepcopy(circuit)
         subcircuit.reset_to_initial_state()
-        subcircuit.interactions_state = 'uninitialised'
+        subcircuit.strip_to_core()
         if mutation is None:
             mutation = circuit.mutations.get(mutation_name)
         subcircuit.subname = mutation_name

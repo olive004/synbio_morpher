@@ -124,8 +124,8 @@ def write_csv(data: pd.DataFrame, out_path: str, overwrite=False):
         if overwrite or not os.path.exists(out_path):
             data.to_csv(out_path, index=None)
         else:
-            data.to_csv(out_path, mode='a', header=None, index=None)
-    elif type(data) == np.ndarray or type(data) == jaxlib.xla_extension.DeviceArray:
+            data.to_csv(out_path, mode='a', header=None, index=None) 
+    elif type(data) == np.ndarray or type(data) == jaxlib.xla_extension.DeviceArray or type(data) == jaxlib.xla_extension.ArrayImpl:
         pd.DataFrame(data).to_csv(out_path, mode='a', header=None, index=None)
     else:
         raise TypeError(

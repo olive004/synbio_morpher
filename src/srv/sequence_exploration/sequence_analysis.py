@@ -3,7 +3,6 @@
 from typing import List, Dict
 import logging
 import os
-from typing import Union
 import numpy as np
 import pandas as pd
 from bioreaction.model.data_tools import construct_model_fromnames
@@ -19,7 +18,7 @@ from src.utils.misc.type_handling import flatten_nested_listlike
 from src.utils.results.analytics.naming import get_analytics_types_all, DIFF_KEY, RATIO_KEY
 from src.utils.misc.database_handling import expand_data_by_col
 from src.utils.results.writer import DataWriter
-from src.srv.parameter_prediction.interactions import InteractionMatrix, INTERACTION_TYPES, b_get_stats
+from src.srv.parameter_prediction.interactions import InteractionMatrix, b_get_stats, INTERACTION_TYPES, INTERACTION_FIELDS_TO_WRITE
 
 
 INTERACTION_STATS = ['max_interaction',
@@ -27,13 +26,10 @@ INTERACTION_STATS = ['max_interaction',
 MUTATION_INFO_COLUMN_NAMES = [
     'circuit_name',
     'mutation_name',
-    # 'source_species',
     'sample_names',
     'mutation_num',
     'mutation_type',
     'mutation_positions',
-    # 'path_to_steady_state_data',
-    # 'path_to_signal_data',
     'path_to_template_circuit'
 ]
 
@@ -100,10 +96,10 @@ def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path
         return []
 
     interaction_path_keys = {
-        k: f'path_{k}' for k in INTERACTION_TYPES}
-    a_pathname = filt_stats[list(interaction_path_keys.values())[
+        k: f'path_{k}' for k in INTERACTION_FIELDS_TO_WRITE}
+    some_pathname = filt_stats[list(interaction_path_keys.values())[
         0]].to_list()[0]
-    experiment_folder = get_root_experiment_folder(a_pathname)
+    experiment_folder = get_root_experiment_folder(some_pathname)
     experiment_summary = load_experiment_output_summary(experiment_folder)
 
     extra_configs = []

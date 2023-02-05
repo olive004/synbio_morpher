@@ -72,7 +72,7 @@ ENSEMBLE_CONFIG = {
                 "function_kwargs": {
                     "impulse_center": 100,
                     "impulse_halfwidth": 5,
-                    "target": 50
+                    "target": 30
                 }
             },
             "simulation": {
