@@ -74,6 +74,7 @@ class CircuitModeller():
             circuit = update_species_simulated_rates(
                 circuit, interactions)
             circuit.interactions = interactions
+            circuit.interactions_state = 'computed'
 
         for interaction_matrix, filename_addon in zip(
             [circuit.interactions.binding_rates_dissociation,
@@ -266,8 +267,8 @@ class CircuitModeller():
             b_new_copynumbers = np.swapaxes(b_new_copynumbers, 1, 2)
 
         # Get analytics batched too
-        def append_nest_dicts(l: list, i0: int, i1: int, d: dict) -> list:
-            for i in range(i0, i1):
+        def append_nest_dicts(l: list, i1: int, d: dict) -> list:
+            for i in range(i1):
                 b_analytics_k = {}
                 for k, v in d.items():
                     b_analytics_k[k] = v[i]
@@ -306,7 +307,7 @@ class CircuitModeller():
             b_analytics = analytics_func(
                 data=b_new_copynumbers[ref_idx:ref_idx2])
             b_analytics_l = append_nest_dicts(
-                b_analytics_l, ref_idx, ref_idx2, b_analytics)
+                b_analytics_l, ref_idx2 - ref_idx, b_analytics)
         assert len(b_analytics_l) == len(
             circuits), f'There was a mismatch in length of analytics ({len(b_analytics_l)}) and circuits ({len(circuits)})'
 

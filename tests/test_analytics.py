@@ -94,11 +94,13 @@ class TestAnalytics(unittest.TestCase):
             for s in info['sample_name'].unique():
                 curr = info[info['sample_name'] == s]
 
-                # Test that signal ratio is always 1 or inf
-                for k in [a for a in analytics_cols if RATIO_KEY in a]:
-                    if s in c['signal']['inputs']:
-                        self.assertTrue(all(curr[k].astype(np.float16) == 1) | all(
-                            curr[k].astype(np.float16) == np.inf))
+                # Test that signal ratio is always 1 or inf given a ref circuit
+                if s in c['signal']['inputs']:
+                    curr_ref = curr[curr['circuit_name'] == 'ref_circuit']
+
+                    for k in [a for a in analytics_cols if RATIO_KEY in a]:
+                        self.assertTrue(all(curr_ref[k].astype(np.float16) == 1) | all(
+                            curr_ref[k].astype(np.float16) == np.inf))
 
                 # Test that if the max_amount ratio was 1, that steady states did not change
 
