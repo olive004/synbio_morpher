@@ -92,10 +92,10 @@ class CircuitModeller():
 
     def run_interaction_simulator(self, species: List[Species], filename=None) -> InteractionDataHandler:
         data = {s: s.physical_data for s in species}
-        if filename is not None:
-            return self.interaction_simulator.run((filename, data), compute_by_filename=True)
-        else:
-            return self.interaction_simulator.run(data, compute_by_filename=False)
+        # if filename is not None:
+        #     return self.interaction_simulator.run((filename, data), compute_by_filename=True)
+        # else:
+        return self.interaction_simulator.run(data, compute_by_filename=False)
 
     def find_steady_states(self, circuit: Circuit):
         modeller_steady_state = Deterministic(
@@ -181,55 +181,55 @@ class CircuitModeller():
                         1] = zero_out_negs(current_copynumbers)
         return copynumbers
 
-    def simulate_signal(self, circuit: Circuit, signal: Signal = None,
-                        solver: str = 'naive', ref_circuit: Circuit = None):
-        signal = signal if signal is not None else circuit.signal
+    # def simulate_signal(self, circuit: Circuit, signal: Signal = None,
+    #                     solver: str = 'naive', ref_circuit: Circuit = None):
+    #     signal = signal if signal is not None else circuit.signal
 
-        if circuit.result_collector.get_result('steady_states'):
-            steady_states = deepcopy(
-                circuit.result_collector.get_result('steady_states').analytics['steady_states'])
-        else:
-            steady_states = self.compute_steady_states(Deterministic(
-                max_time=self.t1, time_interval=self.dt),
-                circuit=circuit,
-                solver_type=self.steady_state_solver)[:, -1]
+    #     if circuit.result_collector.get_result('steady_states'):
+    #         steady_states = deepcopy(
+    #             circuit.result_collector.get_result('steady_states').analytics['steady_states'])
+    #     else:
+    #         steady_states = self.compute_steady_states(Deterministic(
+    #             max_time=self.t1, time_interval=self.dt),
+    #             circuit=circuit,
+    #             solver_type=self.steady_state_args['steady_state_solver'])[:, -1]
 
-        if solver == 'naive':
-            new_copynumbers = self.model_circuit(steady_states,
-                                                 circuit=circuit)
-            t = np.arange(0, np.shape(new_copynumbers)[
-                1]) * self.t1 / np.shape(new_copynumbers)[1]
+    #     if solver == 'naive':
+    #         new_copynumbers = self.model_circuit(steady_states,
+    #                                              circuit=circuit)
+    #         t = np.arange(0, np.shape(new_copynumbers)[
+    #             1]) * self.t1 / np.shape(new_copynumbers)[1]
 
-        elif solver == 'diffrax':
-            solution = bioreaction_sim_wrapper(
-                y0=steady_states.flatten() * invert_onehot(signal.onehot),
-                qreactions=circuit.qreactions, t0=0, t1=self.t1, dt0=self.dt,
-                signal=signal.func, signal_onehot=signal.onehot)
-            new_copynumbers = solution.ys[solution.ts < np.inf]
-            t = solution.ts[solution.ts < np.inf]
-            if np.shape(new_copynumbers)[0] != circuit.circuit_size:
-                new_copynumbers = np.rollaxis(new_copynumbers, axis=1)
+    #     elif solver == 'diffrax':
+    #         solution = bioreaction_sim_wrapper(
+    #             y0=steady_states.flatten() * invert_onehot(signal.onehot),
+    #             qreactions=circuit.qreactions, t0=0, t1=self.t1, dt0=self.dt,
+    #             signal=signal.func, signal_onehot=signal.onehot)
+    #         new_copynumbers = solution.ys[solution.ts < np.inf]
+    #         t = solution.ts[solution.ts < np.inf]
+    #         if np.shape(new_copynumbers)[0] != circuit.circuit_size:
+    #             new_copynumbers = np.rollaxis(new_copynumbers, axis=1)
 
-        if ref_circuit is None or ref_circuit == circuit:
-            ref_circuit_data = None
-        else:
-            ref_circuit_result = ref_circuit.result_collector.get_result(
-                'signal')
-            ref_circuit_data = None if ref_circuit_result is None else ref_circuit_result.data
+    #     if ref_circuit is None or ref_circuit == circuit:
+    #         ref_circuit_data = None
+    #     else:
+    #         ref_circuit_result = ref_circuit.result_collector.get_result(
+    #             'signal')
+    #         ref_circuit_data = None if ref_circuit_result is None else ref_circuit_result.data
 
-        circuit.result_collector.add_result(
-            data=new_copynumbers,
-            name='signal',
-            category='time_series',
-            time=t,
-            vis_func=VisODE().plot,
-            vis_kwargs={'t': t,
-                        'legend': [s.name for s in circuit.model.species],
-                        'out_type': 'svg'},
-            analytics_kwargs={'labels': [s.name for s in circuit.model.species],
-                              'signal_onehot': signal.onehot,
-                              'ref_circuit_data': ref_circuit_data})
-        return circuit
+    #     circuit.result_collector.add_result(
+    #         data=new_copynumbers,
+    #         name='signal',
+    #         category='time_series',
+    #         time=t,
+    #         vis_func=VisODE().plot,
+    #         vis_kwargs={'t': t,
+    #                     'legend': [s.name for s in circuit.model.species],
+    #                     'out_type': 'svg'},
+    #         analytics_kwargs={'labels': [s.name for s in circuit.model.species],
+    #                           'signal_onehot': signal.onehot,
+    #                           'ref_circuit_data': ref_circuit_data})
+    #     return circuit
 
     def simulate_signal_batch(self, circuits: List[Circuit],
                               ref_circuit: Circuit,
@@ -250,12 +250,6 @@ class CircuitModeller():
         b_forward_rates = np.asarray(b_forward_rates)
         b_reverse_rates = np.asarray(b_reverse_rates)
 
-        # sim_func = jax.vmap(
-        #     partial(bioreaction_sim_dfx_expanded,
-        #             t0=self.t0, t1=self.t1, dt0=self.dt,
-        #             signal=signal.func, signal_onehot=signal.onehot,
-        #             inputs=ref_circuit.qreactions.reactions.inputs,
-        #             outputs=ref_circuit.qreactions.reactions.outputs))
         solution = self.sim_func(
             y0=b_steady_states, forward_rates=b_forward_rates, reverse_rates=b_reverse_rates)
 
@@ -263,8 +257,29 @@ class CircuitModeller():
         b_new_copynumbers = solution.ys[:, :tf, :]
         t = solution.ts[0, :tf]
 
-        if np.shape(b_new_copynumbers)[1] != ref_circuit.circuit_size and np.shape(b_new_copynumbers)[-1] == ref_circuit.circuit_size:
+         if np.shape(b_new_copynumbers)[1] != ref_circuit.circuit_size and np.shape(b_new_copynumbers)[-1] == ref_circuit.circuit_size:
             b_new_copynumbers = np.swapaxes(b_new_copynumbers, 1, 2)
+
+# Array([[12.07331  ,  3.9920647,  3.9920647],
+#        [12.07331  ,  3.9920647,  3.9920647],
+#        [12.07331  ,  3.9920647,  3.9920647],
+#        [12.07331  ,  3.9920647,  3.9920647],
+#        [11.697765 ,  3.8024483,  5.9964204],
+#        [11.697765 ,  3.8024483,  5.9964204],
+#        [11.697765 ,  3.8024483,  5.9964204],
+#        [11.829144 ,  3.8679194,  5.287092 ],
+#        x[12.07331  ,  3.9920647,  3.9920647], [12.088015 ,  3.986119 ,  4.027165 ],
+#        [11.980079 ,  3.944313 ,  4.483062 ],
+#        [11.995694 ,  3.937096 ,  4.52844  ],
+#        [12.07331  ,  3.9920647,  3.9920647],
+#        y[12.626498 ,  5.212412 ,  3.7863622], zz[12.07331  ,  3.9920647,  3.9920647]
+#        [12.036889 ,  3.9733715,  4.1833887],
+#        [13.042465 ,  4.9623127,  5.0957313],
+#        [12.920244 ,  5.0771947,  4.480962 ],
+#        z[12.07331  ,  3.9920647,  3.9920647], [79.20334  ,  1.1929632,  1.1929629],
+#        [10.811435 ,  7.6061335,  6.759918 ],
+#        [96.60638  , 18.908197 , 11.615977 ],
+#        [99.99197  , 13.317869 , 12.357142 ]
 
         # Get analytics batched too
         def append_nest_dicts(l: list, i1: int, d: dict) -> list:
