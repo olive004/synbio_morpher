@@ -67,7 +67,7 @@ class TestAnalytics(unittest.TestCase):
             analytics_cols = get_true_names_analytics(
                 candidate_cols=info.columns)
 
-            if n == 't':
+            if n == 'c':
                 # Assert that steady states are correct
                 info_ref = info[info['mutation_name'] == 'ref_circuit']
                 true_steady_states = [
@@ -104,9 +104,7 @@ class TestAnalytics(unittest.TestCase):
 
                 # Test that if the max_amount ratio was 1, that steady states did not change
 
-            # Test that columns that should be positive are positive:
-            #   fold_change	overshoot	max_amount	min_amount	RMSE	steady_states
-            #   response_time_wrt_species-6	precision_wrt_species-6	sensitivity_wrt_species-6
+            # Test that columns that should be positive are positive
             positive_cols = [
                 'fold_change',
                 'overshoot',
@@ -118,14 +116,7 @@ class TestAnalytics(unittest.TestCase):
                 'precision_wrt_species-6',
                 'sensitivity_wrt_species-6'
             ]
-
-            # Plot response time
-            # import matplotlib.pyplot as plt
-            # import seaborn as sns
-            # sns.barplot(info, x='response_time_wrt_species-6',
-            #             hue='circuit_name')
-            # # plt.plot(info['response_time_wrt_species-6'])
-            # plt.savefig('test.svg')
+            self.assertTrue(all(info[positive_cols] > 0))
 
 
 def main():
