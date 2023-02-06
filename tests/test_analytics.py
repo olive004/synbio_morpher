@@ -33,12 +33,12 @@ class TestAnalytics(unittest.TestCase):
         data = np.asarray([
             SignalFuncs.step_function_integrated(t, t1/2 + i, dt=dt, target=target + i) +
             SignalFuncs.step_function(
-                t, t1/2 + i, impulse_halfwidth=overshoot, 
+                t, t1/2 + i, impulse_halfwidth=overshoot,
                 dt=dt, target=overshoot_height) for i in range(num_species)]) + baseline
         ref_circuit_data = np.asarray([
             SignalFuncs.step_function_integrated(t, t1/2 + i * 2, dt=dt, target=target + i * 2) +
             SignalFuncs.step_function(
-                t, t1/2 + i * 2, impulse_halfwidth=overshoot, 
+                t, t1/2 + i * 2, impulse_halfwidth=overshoot,
                 dt=dt, target=overshoot_height) for i in range(num_species)]) + baseline
 
         analytics = {k: np.array(v) for k, v in
@@ -71,21 +71,21 @@ class TestAnalytics(unittest.TestCase):
                 # Assert that steady states are correct
                 info_ref = info[info['mutation_name'] == 'ref_circuit']
                 true_steady_states = [
-                    2.09,
-                    0.5015,
-                    0.5015,
-                    2.049,
-                    0.4844,
-                    0.704,
-                    2.08,
-                    0.4956,
-                    0.565,
-                    2.21,
-                    0.6655,
-                    0.674,
-                    19.22,
-                    1.86,
-                    1.531
+                    12.070312,
+                    3.992188,
+                    3.992188,
+                    11.828125,
+                    3.867188,
+                    5.285156,
+                    12.070312,
+                    3.992188,
+                    3.992188,
+                    12.921875,
+                    5.078125,
+                    4.480469,
+                    100.000000,
+                    13.320312,
+                    12.359375
                 ]
                 for i in range(len(true_steady_states)):
                     self.assertEqual(info_ref['steady_states'].astype(

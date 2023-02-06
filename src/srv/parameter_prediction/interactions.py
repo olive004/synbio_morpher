@@ -99,7 +99,7 @@ class InteractionMatrix():
 
     def isolate_circuit_name(self, circuit_filepath, filetype):
         circuit_name = None
-        for faddon in INTERACTION_FILE_ADDONS.keys():
+        for faddon in INTERACTION_FIELDS_TO_WRITE:
             if faddon in circuit_filepath:
                 base_name = os.path.basename(circuit_filepath).replace('.'+filetype, '').replace(
                     faddon+'_', '').replace('_'+faddon, '')

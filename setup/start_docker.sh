@@ -2,8 +2,8 @@
 # A pre-req for using gpus here is the NVIDIA Docker Container Toolkit
 
 docker pull docker/dockerfile:1
-# docker pull quay.io/biocontainers/intarna:3.3.1--pl5321h7ff8a90_1
-docker pull nvidia/cuda:11.6.2-base-ubuntu20.04
+docker pull quay.io/biocontainers/intarna:3.3.2--pl5321h7ff8a90_0
+docker pull nvidia/cuda:12.0.1-base-ubuntu22.04
 
 # If image not built yet
 docker build -t genetic_glitch:latest docker_unix
@@ -16,11 +16,11 @@ docker build -t genetic_glitch:latest docker_unix
 docker create -it \
 --rm \
 --gpus all \
---name gcg2 \
+--name gcg \
 --mount type=bind,source="$(pwd)",target=/workdir \
 genetic_glitch:latest
-docker container start gcg2
-docker exec -it gcg2 /bin/bash 
+docker container start gcg
+docker exec -it gcg /bin/bash 
 # docker container stop gcg
 
 

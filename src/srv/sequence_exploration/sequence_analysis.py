@@ -30,7 +30,7 @@ MUTATION_INFO_COLUMN_NAMES = [
     'mutation_num',
     'mutation_type',
     'mutation_positions',
-    'binding_locations',
+    'binding_sites',
     'path_to_template_circuit'
 ]
 
@@ -156,13 +156,13 @@ def b_tabulate_mutation_info(source_dir: str, data_writer: DataWriter, experimen
         interaction_matrices = [None] * len(source_interaction_dirs)
         for i, source_interaction_dir in enumerate(source_interaction_dirs):
             matrix_paths = get_pathnames(file_key=INTERACTION_TYPES,
-                                           search_dir=source_interaction_dir,
-                                           subdirs=INTERACTION_TYPES,
-                                           as_dict=True, first_only=True)
-            matrix_paths = get_pathnames(file_key='binding_sites',
-                                           search_dir=source_interaction_dir,
-                                           subdirs=INTERACTION_TYPES,
-                                           as_dict=True, first_only=True)
+                                         search_dir=source_interaction_dir,
+                                         subdirs=INTERACTION_TYPES,
+                                         as_dict=True, first_only=True)
+            matrix_paths.update(get_pathnames(file_key=[INTERACTION_FIELDS_TO_WRITE[0]],
+                                         search_dir=source_interaction_dir,
+                                         subdirs=[INTERACTION_FIELDS_TO_WRITE[0]],
+                                         as_dict=True, first_only=True, allow_empty=True))
             interaction_matrices[i] = InteractionMatrix(
                 matrix_paths=matrix_paths,
                 experiment_config=experiment_config
