@@ -13,8 +13,8 @@ ENSEMBLE_CONFIG = {
     "experiment": {
         "purpose": "tests",
         "test_mode": False,
-        "no_visualisations": True,
-        "no_numerical": True
+        "no_visualisations": False,
+        "no_numerical": False
     },
     "base_configs_ensemble": {
         "generate_species_templates": {
@@ -165,7 +165,7 @@ def mutate(circuits, config, data_writer):
 
 def simulate(circuits, config, data_writer):
 
-    CircuitModeller(result_writer=data_writer, config=config).batch_circuits(
+    circuits = CircuitModeller(result_writer=data_writer, config=config).batch_circuits(
         circuits=circuits,
         write_to_subsystem=True,
         batch_size=config['simulation'].get('batch_size', 100),

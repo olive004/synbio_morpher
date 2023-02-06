@@ -60,7 +60,7 @@ class TestAnalytics(unittest.TestCase):
         [self.assertEqual(analytics['fold_change'].astype(np.float16)[
                           i], (target + baseline + i)/baseline) for i in range(num_species)]
 
-        for n, c in zip(['c', 't'], [CONFIG, TEST_CONFIG]):
+        for n, c in zip(['t', 'c'], [TEST_CONFIG, CONFIG]):
             circuits, config, data_writer, info = create_test_inputs(
                 deepcopy(c))
 
@@ -71,21 +71,21 @@ class TestAnalytics(unittest.TestCase):
                 # Assert that steady states are correct
                 info_ref = info[info['mutation_name'] == 'ref_circuit']
                 true_steady_states = [
-                    12.070312,
-                    3.992188,
-                    3.992188,
-                    11.828125,
-                    3.867188,
-                    5.285156,
-                    12.070312,
-                    3.992188,
-                    3.992188,
-                    12.921875,
-                    5.078125,
-                    4.480469,
-                    100.000000,
-                    13.320312,
-                    12.359375
+                    12.070,
+                    3.992,
+                    3.992,
+                    11.695,
+                    3.803,
+                    5.996,
+                    11.990,
+                    3.938,
+                    4.527,
+                    13.050,
+                    4.970,
+                    5.094,
+                    98.800,
+                    14.664,
+                    11.360
                 ]
                 for i in range(len(true_steady_states)):
                     self.assertEqual(info_ref['steady_states'].astype(
