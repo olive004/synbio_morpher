@@ -250,12 +250,15 @@ class CircuitModeller():
         b_forward_rates = np.asarray(b_forward_rates)
         b_reverse_rates = np.asarray(b_reverse_rates)
 
+        s_time = datetime.now() - s_time
         solution = self.sim_func(
             y0=b_steady_states, forward_rates=b_forward_rates, reverse_rates=b_reverse_rates)
 
         tf = np.argmax(solution.ts == np.inf)
         b_new_copynumbers = solution.ys[:, :tf, :]
         t = solution.ts[0, :tf]
+
+        s_time = datetime.now() - s_time
 
         if np.shape(b_new_copynumbers)[1] != ref_circuit.circuit_size and np.shape(b_new_copynumbers)[-1] == ref_circuit.circuit_size:
             b_new_copynumbers = np.swapaxes(b_new_copynumbers, 1, 2)
@@ -337,8 +340,24 @@ class CircuitModeller():
         subcircuit = implement_mutation(circuit=subcircuit, mutation=mutation)
         return subcircuit
 
-    def load_mutations(self):
-        pass
+    def load_mutations(self, circuit: Circuit):
+        subcircuits = [Circuit(config=None, as_mutation=True)
+                       for m in flatten_nested_dict(circuit.mutations)]
+        for i, (m_name, m) in enumerate(flatten_nested_dict(circuit.mutations).items()):
+            if not m:
+                continue
+            subcircuits[i].subname = m_name
+
+            # Can be by reference
+            subcircuits[i].name = circuit.name
+            subcircuits[i].circuit_size = circuit.circuit_size
+            subcircuits[i].signal: Signal = circuit.signal
+
+            # Cannot be by ref
+            subcircuits[i].model = deepcopy(circuit.model)
+            subcircuits[i].qreactions = deepcopy(circuit.qreactions)
+            subcircuits[i] = implement_mutation(subcircuits[i], m)
+        return subcircuits
 
     # @time_it
     def wrap_mutations(self, circuit: Circuit, methods: dict, include_normal_run=True,
@@ -418,14 +437,14 @@ class CircuitModeller():
             subcircuits_time = datetime.now()
             subcircuits = [None] * (viable_circuit_num * (1+num_subcircuits))
             c_idx = 0
-            for circuit in circuits[vi: vf]:
-                subcircuits[c_idx] = deepcopy(circuit)
-                c_idx += 1
-                for subname, mutation in flatten_nested_dict(circuit.mutations).items():
-                    subcircuits[c_idx] = self.make_subcircuit(
-                        circuit, subname, mutation)
-                    c_idx += 1
-            if c_idx != len(subcircuits):
+            for i, circuit in enumerate(circuits[vi: vf]):
+                curr_subcircuits = self.load_mutations(circuit)
+                subcircuits[c_idx] = circuit
+                subcircuits[c_idx+1:c_idx+1 +
+                            len(curr_subcircuits)] = curr_subcircuits
+                c_idx = c_idx + 1+len(curr_subcircuits)
+
+            if None in subcircuits:
                 subcircuits = list(
                     filter(lambda item: item is not None, subcircuits))
             subcircuits_time = datetime.now() - subcircuits_time
@@ -464,6 +483,8 @@ class CircuitModeller():
         for method, kwargs in methods.items():
             method_time = datetime.now()
             ref_circuit = leading_ref_circuit
+            if 'ref_circuit' in kwargs:
+                kwargs.update({'ref_circuit': ref_circuit})
             logging.warning(
                 f'\t\tRunning {len(subcircuits)} Subcircuits - {subcircuits[0].name}: {method}')
 
@@ -485,19 +506,21 @@ class CircuitModeller():
                         dir_name, safe_dir_change=True)
 
                     if subcircuit.subname == 'ref_circuit' and subcircuit.name != ref_circuit.name:
-                        ref_circuit.result_collector.delete_result('signal')
+                        # ref_circuit.result_collector.delete_result('signal')
                         ref_circuit = subcircuit
+                        if 'ref_circuit' in kwargs:
+                            kwargs.update({'ref_circuit': ref_circuit})
                         if not include_normal_run:
                             continue
 
                     subcircuit = self.apply_to_circuit(
-                        subcircuit, {method: kwargs}, ref_circuit=ref_circuit)
+                        subcircuit, {method: kwargs})
                     subcircuits[i] = subcircuit
                 self.result_writer.unsubdivide()
 
-                method_time = datetime.now() - method_time
-                logging.warning(
-                    f'\t\tMethod {method} took {method_time.total_seconds()}s')
+            method_time = datetime.now() - method_time
+            logging.warning(
+                f'\t\tMethod {method} took {method_time.total_seconds()}s')
         # Update the leading reference circuit to be the last ref circuti from this batch
         ref_circuits = [c for c in subcircuits if c.subname == 'ref_circuit']
         if ref_circuits:
@@ -505,12 +528,9 @@ class CircuitModeller():
         del subcircuits
         return ref_circuit
 
-    def apply_to_circuit(self, circuit: Circuit, _methods: dict, ref_circuit: Circuit):
-        methods = deepcopy(_methods)
+    def apply_to_circuit(self, circuit: Circuit, methods: dict):
         for method, kwargs in methods.items():
             if hasattr(self, method):
-                if 'ref_circuit' in kwargs.keys():
-                    kwargs.update({'ref_circuit': ref_circuit})
                 circuit = getattr(self, method)(circuit, **kwargs)
             else:
                 logging.warning(

@@ -1,6 +1,5 @@
-from typing import List, Union
+from typing import Union
 import pandas as pd
-import networkx as nx
 import numpy as np
 import logging
 
@@ -37,8 +36,14 @@ class Circuit():
     species_axis = 0
     time_axis = 1
 
-    def __init__(self, config: dict):
+    def __init__(self, config: dict, as_mutation=False):
 
+        if as_mutation:
+            self.init_mutation()
+        else:
+            self.init_refcircuit(config)
+
+    def init_refcircuit(self, config: dict):
         self.name = config.get("name")
         self.subname = 'ref_circuit'
 
@@ -56,6 +61,17 @@ class Circuit():
         self.mutations_args: dict = config.get('mutations', {})
 
         self = update_species_simulated_rates(self, self.interactions)
+
+    def init_mutation(self):
+        self.name : str = None
+        self.subname = None
+        self.result_collector = ResultCollector()
+        self.model = None
+        self.circuit_size = None
+        self.qreactions = None
+        self.interactions_state: str = 'uninitialised'
+        self.interactions = None
+        self.signal: Signal = None
 
     def init_reactions(self, model: BasicModel, config: dict) -> QuantifiedReactions:
         qreactions = QuantifiedReactions()
