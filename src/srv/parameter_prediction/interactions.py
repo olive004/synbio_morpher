@@ -147,6 +147,7 @@ class InteractionDataHandler():
                 binding_rates_dissociation=np.random.rand(
                     len(data), len(data)),
                 eqconstants=np.random.rand(len(data), len(data)),
+                binding_sites=np.random.zeros(len(data), len(data))
             )
         interactions.units = self.units
         return interactions

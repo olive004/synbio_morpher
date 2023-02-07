@@ -1,6 +1,4 @@
 from functools import partial
-import logging
-from typing import List
 import numpy as np
 import jax
 import jax.numpy as jnp

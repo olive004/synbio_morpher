@@ -337,6 +337,9 @@ class CircuitModeller():
         subcircuit = implement_mutation(circuit=subcircuit, mutation=mutation)
         return subcircuit
 
+    def load_mutations(self):
+        pass
+
     # @time_it
     def wrap_mutations(self, circuit: Circuit, methods: dict, include_normal_run=True,
                        write_to_subsystem=False):
@@ -412,6 +415,7 @@ class CircuitModeller():
                 f'\t\tStarting new round of viable circuits ({vi} - {vf} / {len(circuits)})')
 
             # Preallocate then create subcircuits - otherwise memory leak
+            subcircuits_time = datetime.now()
             subcircuits = [None] * (viable_circuit_num * (1+num_subcircuits))
             c_idx = 0
             for circuit in circuits[vi: vf]:
@@ -424,12 +428,15 @@ class CircuitModeller():
             if c_idx != len(subcircuits):
                 subcircuits = list(
                     filter(lambda item: item is not None, subcircuits))
+            subcircuits_time = datetime.now() - subcircuits_time
+            logging.warning(
+                f'\t\tMaking subcircuits {int(vi/viable_circuit_num*len(subcircuits))} - {int(vf/viable_circuit_num*len(subcircuits))} took {subcircuits_time.total_seconds()}s')
 
             # Batch
             ref_circuit = subcircuits[0]
             for b in range(0, len(subcircuits), batch_size):
                 logging.warning(
-                    f'\tBatching {b} - {b+batch_size} circuits (out of {vi/viable_circuit_num*len(subcircuits)} - {vf/viable_circuit_num*len(subcircuits)} (total: {expected_tot_subcircuits})) (Circuits: {vi} - {vf} of {len(circuits)})')
+                    f'\tBatching {b} - {b+batch_size} circuits (out of {int(vi/viable_circuit_num*len(subcircuits))} - {int(vf/viable_circuit_num*len(subcircuits))} (total: {expected_tot_subcircuits})) (Circuits: {vi} - {vf} of {len(circuits)})')
                 bf = b+batch_size if b + \
                     batch_size < len(subcircuits) else len(subcircuits)
 
@@ -443,7 +450,7 @@ class CircuitModeller():
 
             single_batch_time = datetime.now() - single_batch_time
             logging.warning(
-                f'Single batch: {single_batch_time} \nProjected time: {single_batch_time.total_seconds() * len(circuits)/viable_circuit_num} \nTotal time: {str(datetime.now() - start_time)}')
+                f'Single batch: {single_batch_time} \nProjected time: {single_batch_time.total_seconds() * len(circuits)/viable_circuit_num}s \nTotal time: {str(datetime.now() - start_time)}')
             del subcircuits
         return circuits
 
@@ -455,6 +462,7 @@ class CircuitModeller():
                   write_to_subsystem: bool = True) -> List[Circuit]:
 
         for method, kwargs in methods.items():
+            method_time = datetime.now()
             ref_circuit = leading_ref_circuit
             logging.warning(
                 f'\t\tRunning {len(subcircuits)} Subcircuits - {subcircuits[0].name}: {method}')
@@ -486,6 +494,10 @@ class CircuitModeller():
                         subcircuit, {method: kwargs}, ref_circuit=ref_circuit)
                     subcircuits[i] = subcircuit
                 self.result_writer.unsubdivide()
+
+                method_time = datetime.now() - method_time
+                logging.warning(
+                    f'\t\tMethod {method} took {method_time.total_seconds()}s')
         # Update the leading reference circuit to be the last ref circuti from this batch
         ref_circuits = [c for c in subcircuits if c.subname == 'ref_circuit']
         if ref_circuits:

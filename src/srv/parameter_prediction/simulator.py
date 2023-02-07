@@ -39,7 +39,7 @@ class RawSimulationHandling():
             """ There are a variety of parameters that IntaRNA spits out. E is hybridisation energy"""
             return {
                 'matrix': sample.get('E', 0),
-                'binding': sample.get('bplist', '')
+                'binding': sample.get('bpList', '')
             }
         
         def process_interaction(sample):

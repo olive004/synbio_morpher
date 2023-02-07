@@ -35,7 +35,7 @@ class ResultWriter(DataWriter):
         def prettify_writeable(writeable):
             if type(writeable) != str:
             # if type(writeable) == np.ndarray or (type(writeable) == list and type(writeable[0]) != str):
-                writeable = np.array(writeable).astype(np.float16)
+                writeable = np.array(writeable)
                 if writeable.ndim == 2 and np.shape(writeable)[1] == 1:
                     writeable = np.squeeze(writeable)
                 writeable = list(writeable)
