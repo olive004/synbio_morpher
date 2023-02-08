@@ -7,7 +7,7 @@ import logging
 from src.utils.misc.type_handling import merge_dicts
 from src.utils.results.writer import DataWriter
 from src.utils.misc.string_handling import add_outtype, make_time_str, prettify_keys_for_label
-from src.utils.misc.database_handling import expand_df_cols_lists
+from src.utils.misc.database_handling import select_rows_by_conditional_cols
 import seaborn as sns
 # import matplotlib
 # matplotlib.use('TkAgg',force=True)
@@ -164,17 +164,6 @@ def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
         if cols is not None:
             for exc_col in cols:
                 data = data[data[exc_col] != condition]
-        data.reset_index(drop=True, inplace=True)
-        return data
-
-    def select_rows_by_conditional_cols(data: pd.DataFrame, conditions: List[tuple]):
-        """ Selection condition should be a tuple of (the column to be used for the selection,
-        a condition such as == or !=, and the value for the condition """
-        if conditions is None:
-            return data
-        for column, condition_op, value in conditions:
-            selection = condition_op(data[column], value)
-            data = data[selection]
         data.reset_index(drop=True, inplace=True)
         return data
 

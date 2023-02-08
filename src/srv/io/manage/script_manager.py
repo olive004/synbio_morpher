@@ -112,7 +112,7 @@ class Ensembler():
     def write(self):
         self.data_writer.output(
             out_type='json', out_name='ensemble_config', data=self.config, write_master=False,
-            write_to_top_dir=True)
+            write_to_top_dir=True, overwrite=True)
 
 
 

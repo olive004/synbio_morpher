@@ -6,15 +6,14 @@ import pandas as pd
 
 from src.srv.io.manage.script_manager import script_preamble, visualisation_script_protocol_preamble
 from src.srv.parameter_prediction.interactions import INTERACTION_TYPES
-from src.utils.misc.database_handling import thresh_func
+from src.utils.data.data_format_tools.common import load_json_as_dict
+from src.utils.misc.database_handling import thresh_func, select_rows_by_conditional_cols
 from src.utils.misc.string_handling import prettify_keys_for_label
 from src.utils.misc.scripts_io import get_search_dir
 from src.utils.results.analytics.naming import get_true_names_analytics, get_true_interaction_cols
-
 from src.utils.results.experiments import Experiment, Protocol
 from src.utils.results.result_writer import ResultWriter
 from src.utils.results.visualisation import visualise_data
-from src.utils.data.data_format_tools.common import load_json_as_dict
 
 
 def main(config=None, data_writer=None):
@@ -56,9 +55,6 @@ def main(config=None, data_writer=None):
         log_opts = [(False, False), (True, False)]
         outlier_std_threshold_y = 3
 
-        d = data.groupby(['circuit_name', 'mutation_num'], as_index=False).agg(
-            {c: ('mean', 'std') for c in cols})
-
         for c in cols:
             range_df = round(data[c].max() -
                              data[c].min(), 4)
@@ -73,9 +69,17 @@ def main(config=None, data_writer=None):
                         selection_conditions = [(
                             'mutation_num', operator.eq, m
                         )]
-                    for thresh in ['outlier', 'exclude', 'lt', 'gt', 'lt_strict', 'gt_strict', False]:
+                    for thresh in [False, 'outlier', 'lt', 'gt', 'lt_strict', 'gt_strict', 'exclude']:
                         thresh_text, remove_outliers_y, selection_conditions = thresh_func(
-                            thresh, range_df, mode, outlier_std_threshold_y, selection_conditions, sel_col=(c, s))
+                            thresh, range_df, mode, outlier_std_threshold_y, selection_conditions, sel_col=c)
+
+                        if selection_conditions:
+                            data_selected = select_rows_by_conditional_cols(
+                                data, selection_conditions)
+                        else:
+                            data_selected = data
+                        d = data_selected.groupby(['circuit_name', 'mutation_num'], as_index=False).agg(
+                            {c: ('mean', 'std') for c in cols})
                         for log_opt in log_opts:
                             log_text = '_log' if any(log_opt) else ''
                             for normalise in [True, False]:
@@ -88,7 +92,7 @@ def main(config=None, data_writer=None):
                                     hue=hue,
                                     use_sns=True,
                                     log_axis=log_opt,
-                                    selection_conditions=selection_conditions,
+                                    # selection_conditions=selection_conditions,
                                     remove_outliers_y=remove_outliers_y,
                                     outlier_std_threshold_y=outlier_std_threshold_y,
                                     xlabel=(
