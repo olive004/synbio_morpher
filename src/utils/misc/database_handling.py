@@ -11,9 +11,9 @@ from src.utils.misc.numerical import cast_astype
 from src.utils.misc.string_handling import get_all_similar
 
 
-def thresh_func(thresh: bool, range_df, mode, 
-outlier_std_threshold_y, selection_conditions, 
-sel_col: str, mode_slide_perc=0.05):
+def thresh_func(thresh: bool, range_df, mode,
+                outlier_std_threshold_y, selection_conditions,
+                sel_col: str, mode_slide_perc=0.05):
     thresh_text = ''
     remove_outliers_y = False
     if thresh:

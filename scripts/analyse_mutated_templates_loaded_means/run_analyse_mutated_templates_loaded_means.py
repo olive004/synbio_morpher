@@ -38,7 +38,6 @@ def main(config=None, data_writer=None):
     def visualise_all(data: pd.DataFrame, data_writer, remove_noninteracting: bool = True):
         cols_analytics = get_true_names_analytics(data)
         for interaction_type in INTERACTION_TYPES:
-            interaction_type = 'eqconstants'
             cols = get_true_interaction_cols(
                 data, interaction_type, remove_symmetrical=True)
 
@@ -65,15 +64,15 @@ def main(config=None, data_writer=None):
                              data[c].min(), 4)
             mode = round(data[c].mode().iloc[0], 4)
             for m in list(data['mutation_num'].unique()) + ['all']:
-                if m == 'all':
-                    hue = 'mutation_num'
-                    selection_conditions = None
-                else:
-                    hue = None
-                    selection_conditions = [(
-                        'mutation_num', operator.eq, m
-                    )]
                 for s in ['mean', 'std']:
+                    if m == 'all':
+                        hue = 'mutation_num'
+                        selection_conditions = None
+                    else:
+                        hue = None
+                        selection_conditions = [(
+                            'mutation_num', operator.eq, m
+                        )]
                     for thresh in ['outlier', 'exclude', 'lt', 'gt', 'lt_strict', 'gt_strict', False]:
                         thresh_text, remove_outliers_y, selection_conditions = thresh_func(
                             thresh, range_df, mode, outlier_std_threshold_y, selection_conditions, sel_col=(c, s))

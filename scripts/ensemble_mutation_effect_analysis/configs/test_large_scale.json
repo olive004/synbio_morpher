@@ -10,7 +10,7 @@
             },
             "experiment": {
                 "purpose": "generate_species_templates",
-                "test_mode": true
+                "test_mode": false
             },
             "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
             "circuit_generation": {
@@ -54,7 +54,7 @@
                 "postprocess": true
             },
             "filters": {
-                "min_num_interacting": 2,
+                "min_num_interacting": 1,
                 "max_self_interacting": null,
                 "max_total": 500
             },
@@ -81,7 +81,7 @@
                 "t1": 1200,
                 "solver": "diffrax",
                 "use_batch_mutations": true,
-                "batch_size": 5000,
+                "batch_size": 8000,
                 "max_circuits": 10000,
                 "device": "cpu"
             },

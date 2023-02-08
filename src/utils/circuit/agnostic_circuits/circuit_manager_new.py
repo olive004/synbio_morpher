@@ -250,7 +250,7 @@ class CircuitModeller():
         b_forward_rates = np.asarray(b_forward_rates)
         b_reverse_rates = np.asarray(b_reverse_rates)
 
-        s_time = datetime.now() - s_time
+        s_time = datetime.now()
         solution = self.sim_func(
             y0=b_steady_states, forward_rates=b_forward_rates, reverse_rates=b_reverse_rates)
 
@@ -259,6 +259,7 @@ class CircuitModeller():
         t = solution.ts[0, :tf]
 
         s_time = datetime.now() - s_time
+        logging.warning(f'\t\tSimulating signal took {s_time.total_seconds()}s')
 
         if np.shape(b_new_copynumbers)[1] != ref_circuit.circuit_size and np.shape(b_new_copynumbers)[-1] == ref_circuit.circuit_size:
             b_new_copynumbers = np.swapaxes(b_new_copynumbers, 1, 2)
@@ -282,6 +283,8 @@ class CircuitModeller():
         else:
             assert circuits.index(
                 ref_circuit) == 0 or circuits[0].name == ref_circuit.name, f'The reference circuit should be leading or at idx 0, but is at idx {circuits.index(ref_circuit)}'
+
+        a_time = datetime.now()
 
         ref_idxs2 = [len(circuits)] if len(
             ref_idxs) < 2 else ref_idxs[1:] + [len(circuits)]
@@ -307,6 +310,9 @@ class CircuitModeller():
                 b_analytics_l, ref_idx2 - ref_idx, b_analytics)
         assert len(b_analytics_l) == len(
             circuits), f'There was a mismatch in length of analytics ({len(b_analytics_l)}) and circuits ({len(circuits)})'
+
+        a_time = datetime.now() - a_time
+        logging.warning(f'\t\tCalculating analytics took {a_time.total_seconds()}s')
 
         # Save for all circuits
         for i, (circuit, analytics) in enumerate(zip(circuits, b_analytics_l)):
@@ -513,8 +519,10 @@ class CircuitModeller():
                         if not include_normal_run:
                             continue
 
+                    a_time = datetime.now()
                     subcircuit = self.apply_to_circuit(
                         subcircuit, {method: kwargs})
+                    a_time = datetime.now() - a_time
                     subcircuits[i] = subcircuit
                 self.result_writer.unsubdivide()
 

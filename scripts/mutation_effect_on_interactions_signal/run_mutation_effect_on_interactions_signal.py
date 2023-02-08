@@ -24,11 +24,6 @@ def main(config=None, data_writer=None):
     config_file = load_json_as_dict(config)
 
     # Start_experiment
-    if data_writer is None:
-        data_writer_kwargs = {'purpose': config_file.get(
-            'purpose', 'mutation_effect_on_interactions_signal')}
-        data_writer = ResultWriter(**data_writer_kwargs)
-
     config_file, source_experiment_dir = get_search_dir(
         config_searchdir_key='source_of_interaction_stats', config_file=config_file)
     config_file = expand_config(config=config_file)

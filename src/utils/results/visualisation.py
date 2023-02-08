@@ -24,7 +24,7 @@ def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
                    groupby: str = None,
                    normalise_data_x: bool = False,
                    normalise_data_y: bool = False,
-                   plot_type: str = None, 
+                   plot_type: str = None,
                    out_name='test_plot', out_type='svg',
                    hue: str = None,
                    preprocessor_func_x=None,
@@ -366,8 +366,13 @@ class VisODE():
                 logging.warning(
                     f'All values infinity - could not plot {x} and {y} for plot: {title}')
                 plt.close()
+            elif plot_kwargs.get('hue'):
+                logging.warning(f'Failed - attempting to plot {x} without {plot_kwargs.get("hue")}')
+                plot_kwargs.pop('hue')
+                self.sns_generic_plot(
+                    plot_func, out_path, x, y, data, title, figsize, style, **plot_kwargs)
             else:
-                raise error
+                logging.warning(error)
 
     def sns_barplot(self, out_path: str, x: str, y: str, data: pd.DataFrame,
                     title: str = None, xlabel=None, ylabel=None,
