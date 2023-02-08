@@ -83,6 +83,8 @@ class Ensembler():
         self.start_time = datetime.now()
 
     def run(self):
+        self.config['script_state'] = 'incomplete'
+        self.write()
         for script_name in self.subscripts:
             script = import_script_func(script_name)
             if not script:
@@ -95,17 +97,16 @@ class Ensembler():
                     f'config purpose {config["experiment"]["purpose"]}')
             self.data_writer.update_ensemble(
                 config["experiment"]["purpose"])
-            # self.data_writer.update_ensemble(script_name)
-            # current_data_writer = deepcopy(self.data_writer)
-            # current_data_writer.top_write_dir = self.data_writer.ensemble_write_dir
             output = script(config, self.data_writer)
             if output:
                 config, self.data_writer = output
                 self.ensemble_configs[script_name] = config
-        self.config["base_configs_ensemble"] = self.ensemble_configs
+            self.config["base_configs_ensemble"] = self.ensemble_configs
+            self.write()
 
         self.data_writer.reset_ensemble()
         self.config['total_time'] = str(datetime.now() - self.start_time)
+        self.config['script_state'] = 'completed'
         self.write()
 
     def write(self):
