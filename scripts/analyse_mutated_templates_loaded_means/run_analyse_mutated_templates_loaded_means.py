@@ -92,7 +92,6 @@ def main(config=None, data_writer=None):
                                     hue=hue,
                                     use_sns=True,
                                     log_axis=log_opt,
-                                    # selection_conditions=selection_conditions,
                                     remove_outliers_y=remove_outliers_y,
                                     outlier_std_threshold_y=outlier_std_threshold_y,
                                     xlabel=(

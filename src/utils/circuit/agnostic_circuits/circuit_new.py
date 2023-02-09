@@ -55,7 +55,10 @@ class Circuit():
         self.qreactions = self.init_reactions(self.model, config)
         self.interactions_state: str = config.get(
             'interactions_state', 'uninitialised')
-        self.interactions = self.init_interactions(config.get('interactions'), config.get('interactions_loaded'))
+        self.init_interactions(config.get('interactions'),
+                               config.get('interactions_loaded'))
+        if config.get('interactions_loaded') is not None or config.get('interactions') is not None:
+            assert self.interactions_state != 'uninitialised', f'The interactions should have been initialised from {config.get("interactions")}'
         self.signal: Signal = None
         self.mutations = {}
         self.mutations_args: dict = config.get('mutations', {})
@@ -63,7 +66,7 @@ class Circuit():
         self = update_species_simulated_rates(self, self.interactions)
 
     def init_mutation(self):
-        self.name : str = None
+        self.name: str = None
         self.subname = None
         self.result_collector = ResultCollector()
         self.model = None
@@ -78,28 +81,23 @@ class Circuit():
         qreactions.init_properties(model, config)
         return qreactions
 
-    def init_interactions(self, interaction_cfg: dict, interactions_loaded: dict) -> MolecularInteractions:
+    def init_interactions(self, interaction_cfg: dict = None, interactions_loaded: dict = None) -> MolecularInteractions:
         if interaction_cfg is None and interactions_loaded is None:
-            # matrix = np.zeros(
-            #     (len(self.model.species), len(self.model.species)))
-            # for r in self.model.reactions:
-            #     if len(r.input) == 2:
-            #         si = r.input[0]
-            #         sj = r.input[1]
-            #         matrix[self.model.species.index(si), self.model.species.index(
-            #             sj)] = r.reverse_rate
-            # return MolecularInteractions(binding_rates_dissociation=matrix)
-            num_in_species = len(get_unique(flatten_listlike([r.input for r in self.model.reactions])))
+            num_in_species = len(get_unique(flatten_listlike(
+                [r.input for r in self.model.reactions])))
             random_matrices = np.random.rand(
                 num_in_species, num_in_species, 4) * 0.0001
-            return MolecularInteractions(
+            self.interactions = MolecularInteractions(
                 # coupled_binding_rates=random_matrices[:, :, 0],
                 binding_rates_association=random_matrices[:, :, 1],
                 binding_rates_dissociation=random_matrices[:, :, 2],
-                eqconstants=random_matrices[:, :, 3], units='test'
+                eqconstants=random_matrices[:, :, 3],
+                binding_sites=random_matrices[:, :, 3],
+                units='test'
             )
-        assert self.interactions_state != 'uninitialised', f'The interactions should have been initialised from {interaction_cfg}'
-        return InteractionMatrix(matrix_paths=interaction_cfg, interactions_kwargs=interactions_loaded).interactions
+        else:
+            self.interactions = InteractionMatrix(
+                matrix_paths=interaction_cfg, interactions_kwargs=interactions_loaded).interactions
 
     def reset_to_initial_state(self):
         self.result_collector.reset()
@@ -128,7 +126,8 @@ class Circuit():
 
 def update_species_simulated_rates(circuit: Circuit,
                                    interactions: MolecularInteractions) -> Circuit:
-    ordered_species = sorted(get_unique(flatten_listlike([r.input for r in circuit.model.reactions])))
+    ordered_species = sorted(get_unique(flatten_listlike(
+        [r.input for r in circuit.model.reactions])))
     for i, r in enumerate(circuit.model.reactions):
         if len(r.input) == 2:
             si = r.input[0]

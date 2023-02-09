@@ -1,12 +1,12 @@
 import unittest
 import numpy as np
-import pandas as pd
+import jax
 from functools import partial
 from copy import deepcopy
 
 
 from tests.shared import create_test_inputs, CONFIG, TEST_CONFIG
-from src.utils.results.analytics.naming import get_true_names_analytics, DIFF_KEY, RATIO_KEY
+from src.utils.results.analytics.naming import get_true_names_analytics, RATIO_KEY
 from src.utils.results.analytics.timeseries import generate_analytics
 from src.utils.signal.signals_new import SignalFuncs
 
@@ -29,6 +29,8 @@ class TestAnalytics(unittest.TestCase):
         baseline = 10
         overshoot = 10
         overshoot_height = target + 10
+
+        jax.config.update('jax_platform_name', 'cpu')
 
         data = np.asarray([
             SignalFuncs.step_function_integrated(t, t1/2 + i, dt=dt, target=target + i) +

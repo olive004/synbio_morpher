@@ -63,7 +63,9 @@ class InteractionMatrix():
             # coupled_binding_rates=random_matrices[:, :, 0],
             binding_rates_association=random_matrices[:, :, 1],
             binding_rates_dissociation=random_matrices[:, :, 2],
-            eqconstants=random_matrices[:, :, 3], units='test'
+            eqconstants=random_matrices[:, :, 3], 
+            binding_sites=random_matrices[:, :, 3],
+            units='test'
         )
 
         if interactions_kwargs is not None:

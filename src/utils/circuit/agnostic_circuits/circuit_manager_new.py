@@ -75,6 +75,8 @@ class CircuitModeller():
                 circuit, interactions)
             circuit.interactions = interactions
             circuit.interactions_state = 'computed'
+        else:
+            circuit.init_interactions()
 
         for interaction_matrix, filename_addon in zip(
             [circuit.interactions.binding_rates_dissociation,
