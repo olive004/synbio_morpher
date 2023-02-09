@@ -59,48 +59,52 @@ def main(config=None, data_writer=None):
             range_df = round(data[c].max() -
                              data[c].min(), 4)
             mode = round(data[c].mode().iloc[0], 4)
-            for m in list(data['mutation_num'].unique()) + ['all']:
-                for s in ['mean', 'std']:
-                    if m == 'all':
-                        hue = 'mutation_num'
-                        selection_conditions = None
-                    else:
-                        hue = None
-                        selection_conditions = [(
-                            'mutation_num', operator.eq, m
-                        )]
-                    for thresh in [False, 'outlier', 'lt', 'gt', 'lt_strict', 'gt_strict', 'exclude']:
-                        thresh_text, remove_outliers_y, selection_conditions = thresh_func(
-                            thresh, range_df, mode, outlier_std_threshold_y, selection_conditions, sel_col=c)
+            for m in ['all']:# list(data['mutation_num'].unique()) + ['all']:
+                for thresh in [False, 'outlier', 'exclude', 'lt', 'gt', 'lt_strict', 'gt_strict']:
+                    for s in ['mean', 'std']:
+                        for sp in data['sample_name'].unique():
+                            if m == 'all':
+                                hue = 'mutation_num'
+                                selection_conditions = None
+                            else:
+                                hue = None
+                                selection_conditions = [(
+                                    'mutation_num', operator.eq, m
+                                )]
+                            selection_conditions.append(
+                                ('sample_name', operator.eq, sp)
+                            )
+                            thresh_text, remove_outliers_y, selection_conditions = thresh_func(
+                                thresh, range_df, mode, outlier_std_threshold_y, selection_conditions, sel_col=c)
 
-                        if selection_conditions:
-                            data_selected = select_rows_by_conditional_cols(
-                                data, selection_conditions)
-                        else:
-                            data_selected = data
-                        d = data_selected.groupby(['circuit_name', 'mutation_num'], as_index=False).agg(
-                            {c: ('mean', 'std') for c in cols})
-                        for log_opt in log_opts:
-                            log_text = '_log' if any(log_opt) else ''
-                            for normalise in [True, False]:
-                                visualise_data(
-                                    data=d,
-                                    data_writer=data_writer,
-                                    cols_x=[(c, s)],
-                                    plot_type='histplot',
-                                    out_name=f'{c}_norm-{normalise}_thresh-{thresh}{log_text}_m{m}_{s}',
-                                    hue=hue,
-                                    use_sns=True,
-                                    log_axis=log_opt,
-                                    remove_outliers_y=remove_outliers_y,
-                                    outlier_std_threshold_y=outlier_std_threshold_y,
-                                    xlabel=(
-                                        f'{prettify_keys_for_label(c)}', f'{s}'),
-                                    title=f'{prettify_keys_for_label(s)} of {prettify_keys_for_label(c)}\n for {m} mutations{thresh_text}',
-                                    misc_histplot_kwargs={'stat': 'probability' if normalise else 'count'
-                                                          # 'hue_norm': [0, 1] if normalise else None
-                                                          }
-                                )
+                            if selection_conditions:
+                                data_selected = select_rows_by_conditional_cols(
+                                    data, selection_conditions)
+                            else:
+                                data_selected = data
+                            d = data_selected.groupby(['circuit_name', 'mutation_num'], as_index=False).agg(
+                                {c: ('mean', 'std') for c in cols})
+                            for log_opt in log_opts:
+                                log_text = '_log' if any(log_opt) else ''
+                                for normalise in [True, False]:
+                                    visualise_data(
+                                        data=d,
+                                        data_writer=data_writer,
+                                        cols_x=[(c, s)],
+                                        plot_type='histplot',
+                                        out_name=f'{c}_norm-{normalise}_thresh-{thresh}{log_text}_m{m}_{s}',
+                                        hue=hue,
+                                        use_sns=True,
+                                        log_axis=log_opt,
+                                        remove_outliers_y=remove_outliers_y,
+                                        outlier_std_threshold_y=outlier_std_threshold_y,
+                                        xlabel=(
+                                            f'{prettify_keys_for_label(c)}', f'{s}'),
+                                        title=f'{prettify_keys_for_label(s)} of {prettify_keys_for_label(c)}\n for {m} mutations{thresh_text}',
+                                        misc_histplot_kwargs={'stat': 'probability' if normalise else 'count'
+                                                            # 'hue_norm': [0, 1] if normalise else None
+                                                            }
+                                    )
 
     protocols.append(
         Protocol(
