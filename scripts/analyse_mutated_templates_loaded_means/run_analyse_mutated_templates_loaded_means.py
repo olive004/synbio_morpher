@@ -36,32 +36,38 @@ def main(config=None, data_writer=None):
 
     def visualise_all(data: pd.DataFrame, data_writer, remove_noninteracting: bool = True):
         cols_analytics = get_true_names_analytics(data)
-        for interaction_type in INTERACTION_TYPES:
-            cols = get_true_interaction_cols(
-                data, interaction_type, remove_symmetrical=True)
+        # for interaction_type in INTERACTION_TYPES:
+        #     cols = get_true_interaction_cols(
+        #         data, interaction_type, remove_symmetrical=True)
 
-            # Remove duplicates
-            df = data[data['sample_name'] == data['sample_name'].iloc[0]]
-            df = df.melt(id_vars=['circuit_name', 'mutation_num', 'mutation_name'],
-                         value_vars=cols, value_name=interaction_type)
-            if remove_noninteracting:
-                noninteracting_val = 1 if interaction_type == 'eqconstants' else 0.0015095809699999998
-                df = df[df[interaction_type] != noninteracting_val]
-            visualise_means_std(df, [interaction_type], data_writer)
+        #     # Remove duplicates
+        #     df = data[data['sample_name'] == data['sample_name'].iloc[0]]
+        #     df = df.melt(id_vars=['circuit_name', 'mutation_num', 'mutation_name'],
+        #                  value_vars=cols, value_name=interaction_type)
+        #     if remove_noninteracting:
+        #         noninteracting_val = 1 if interaction_type == 'eqconstants' else 0.0015095809699999998
+        #         df = df[df[interaction_type] != noninteracting_val]
+        #     visualise_means_std(df, [interaction_type], data_writer)
         for sp in data['sample_name'].unique():
             visualise_means_std(data[data['sample_name'] == sp],
                                 cols_analytics, data_writer, extra_naming='_' + sp)
+
+            visualise_means_std(data[data['sample_name'] != sp],
+                                cols_analytics, data_writer, extra_naming='_not-' + sp)
 
     def visualise_means_std(data: pd.DataFrame, cols: list, data_writer, extra_naming: str = ''):
         """ Data from is multi index """
         log_opts = [(False, False), (True, False)]
         outlier_std_threshold_y = 3
+        extra_text = ''
+        if extra_naming:
+            extra_text = f' ({prettify_keys_for_label(extra_naming)})'
 
         for c in cols:
             range_df = round(data[c].max() -
                              data[c].min(), 4)
             mode = round(data[c].mode().iloc[0], 4)
-            for m in ['all']:# list(data['mutation_num'].unique()) + ['all']:
+            for m in ['all']:  # list(data['mutation_num'].unique()) + ['all']:
                 for thresh in [False, 'outlier', 'exclude', 'lt', 'gt', 'lt_strict', 'gt_strict']:
                     for s in ['mean', 'std']:
                         if m == 'all':
@@ -85,7 +91,7 @@ def main(config=None, data_writer=None):
                             {c: ('mean', 'std')})
                         for log_opt in log_opts:
                             log_text = '_log' if any(log_opt) else ''
-                            for normalise in [False]: #, True]:
+                            for normalise in [False]:  # , True]:
                                 visualise_data(
                                     data=d,
                                     data_writer=data_writer,
@@ -99,10 +105,10 @@ def main(config=None, data_writer=None):
                                     outlier_std_threshold_y=outlier_std_threshold_y,
                                     xlabel=(
                                         f'{prettify_keys_for_label(c)}', f'{s}'),
-                                    title=f'{prettify_keys_for_label(s)} of {prettify_keys_for_label(c)}\n for {m} mutations{thresh_text}',
+                                    title=f'{prettify_keys_for_label(s)} of {prettify_keys_for_label(c)}\n for {m} mutations{thresh_text}{extra_text}',
                                     misc_histplot_kwargs={'stat': 'probability' if normalise else 'count'
-                                                        # 'hue_norm': [0, 1] if normalise else None
-                                                        }
+                                                          # 'hue_norm': [0, 1] if normalise else None
+                                                          }
                                 )
 
     protocols.append(
