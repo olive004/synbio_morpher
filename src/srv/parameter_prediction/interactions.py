@@ -213,7 +213,7 @@ def b_get_stats(interactions_mxs: List[InteractionMatrix]):
         "name": [i.name for i in interactions_mxs],
         "interacting": idxs_other_interacting,
         "self_interacting": idxs_self_interacting,
-        "sample_names": [i.sample_names for i in interactions_mxs],
+        # "sample_names": [i.sample_names for i in interactions_mxs],
         "num_interacting": [len(i) for i in idxs_other_interacting],
         "num_self_interacting": [len(i) for i in idxs_self_interacting]
     }

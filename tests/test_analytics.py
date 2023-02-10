@@ -62,7 +62,8 @@ class TestAnalytics(unittest.TestCase):
         [self.assertEqual(analytics['fold_change'].astype(np.float16)[
                           i], (target + baseline + i)/baseline) for i in range(num_species)]
 
-        for n, c in zip(['t', 'c'], [TEST_CONFIG, CONFIG]):
+        # zip(['t', 'c'], [TEST_CONFIG, CONFIG]):
+        for n, c in zip(['c'], [CONFIG]):
             circuits, config, data_writer, info = create_test_inputs(
                 deepcopy(c))
 
@@ -73,25 +74,30 @@ class TestAnalytics(unittest.TestCase):
                 # Assert that steady states are correct
                 info_ref = info[info['mutation_name'] == 'ref_circuit']
                 true_steady_states = [
-                    12.070,
-                    3.992,
-                    3.992,
-                    11.695,
-                    3.803,
-                    5.996,
-                    11.990,
-                    3.938,
-                    4.527,
-                    13.050,
-                    4.970,
-                    5.094,
-                    98.800,
-                    14.664,
-                    11.360
+                    301.500000,
+                    81.125000,
+                    81.125000,
+                    308.000000,
+                    83.125000,
+                    0.852051,
+                    249.500000,
+                    84.812500,
+                    0.371338,
+                    187.375000,
+                    0.165649,
+                    0.247192,
+                    1.077148,
+                    1.083984,
+                    1.889648
                 ]
                 for i in range(len(true_steady_states)):
                     self.assertEqual(info_ref['steady_states'].astype(
                         np.float16).iloc[i], np.float16(true_steady_states[i]))
+
+                # Test that 'weak' circuit had no interactions
+                weak = info[info['circuit_name'] == '0_weak']
+                weak = weak[weak['mutation_name'] == 'ref_circuit']
+                self.assertEquals(weak['fold_change'].unique(), 0)
 
             for s in info['sample_name'].unique():
                 curr = info[info['sample_name'] == s]

@@ -8,9 +8,10 @@ RATIO_KEY = '_ratio_from_mutation_to_base'
 
 def get_analytics_types_base() -> List[str]:
     return ['fold_change',
-            'overshoot',
+            'initial_steady_states',
             'max_amount',
             'min_amount',
+            'overshoot',
             'RMSE',
             'steady_states']
 
@@ -19,8 +20,8 @@ def get_signal_dependent_analytics() -> List[str]:
     return ['response_time',
             'precision',
             # 'precision_estimate',
-            'sensitivity']#,
-            # 'sensitivity_estimate']
+            'sensitivity']  # ,
+    # 'sensitivity_estimate']
 
 
 def get_analytics_types_all() -> List[str]:
@@ -89,5 +90,5 @@ def get_true_interaction_cols(data: pd.DataFrame, interaction_attr, remove_symme
             num_ending = '_' + str(idxs[0]) + '-' + str(idxs[1])
             names.append(interaction_attr + num_ending)
     assert all([n in data.columns for n in names]
-                ), f'Interaction info column names were not isolated correctly: {names}'
+               ), f'Interaction info column names were not isolated correctly: {names}'
     return sorted(set([n for n in names if n in data.columns]))

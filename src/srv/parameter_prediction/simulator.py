@@ -20,7 +20,8 @@ SIMULATOR_UNITS = {
         'coupled_rates': r'$s^{-1}$'
     },
 }
-MIN_INTERACTION_EQCONSTANT = 0.000000001
+NO_INTERACTION_EQCONSTANT = 0
+G_BASELINE = -10  # kJ/mol
 
 
 class RawSimulationHandling():
@@ -38,10 +39,10 @@ class RawSimulationHandling():
         def process_IntaRNA_sample(sample: dict):
             """ There are a variety of parameters that IntaRNA spits out. E is hybridisation energy"""
             return {
-                'matrix': sample.get('E', 100),
+                'matrix': sample.get('E', NO_INTERACTION_EQCONSTANT),
                 'binding': sample.get('bpList', '')
             }
-        
+
         def process_interaction(sample):
             if sample == False:  # No interactions
                 sample = {}
@@ -59,7 +60,7 @@ class RawSimulationHandling():
             AG = - RT ln(kb/kd)
             K = e^(- G / RT)
             """
-            energies = energies * 1000  # convert kJ/mol to J/mol
+            energies = (energies - G_BASELINE) * 1000  # convert kJ/mol to J/mol
             K = np.exp(np.divide(- energies, SCIENTIFIC['RT']))
             return K
 

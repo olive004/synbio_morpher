@@ -11,15 +11,6 @@ def get_derivative(data):
     return deriv  # get column derivative
 
 
-def get_steady_state(data):
-    """ Last 5% of data considered steady state """
-    final_deriv = jnp.average(
-        get_derivative(data)[:, -3:], axis=1)
-    steady_states = jnp.expand_dims(
-        data[:, -1], axis=1).astype(jnp.float32)
-    return steady_states, final_deriv
-
-
 def get_fold_change(data):
     denom = jnp.where(data[:, 0] != 0,
                       data[:, 0], -1)
@@ -142,12 +133,13 @@ def generate_base_analytics(data: jnp.ndarray, time: jnp.ndarray, labels: List[s
     analytics = {
         'first_derivative': get_derivative(data),
         'fold_change': get_fold_change(data),
-        'RMSE': get_rmse(data, ref_circuit_data),
+        'initial_steady_states': jnp.expand_dims(data[:, 0], axis=1),
         'max_amount': jnp.expand_dims(jnp.max(data, axis=1), axis=1),
-        'min_amount': jnp.expand_dims(jnp.min(data, axis=1), axis=1)
+        'min_amount': jnp.expand_dims(jnp.min(data, axis=1), axis=1),
+        'RMSE': get_rmse(data, ref_circuit_data),
+        'steady_states': jnp.expand_dims(data[:, -1], axis=1)
     }
-    analytics['steady_states'], \
-        analytics['final_deriv'] = get_steady_state(data)
+    analytics['final_deriv'] = analytics['first_derivative'][:, -1]
     analytics['overshoot'] = get_overshoot(data,
                                            analytics['steady_states'])
 
