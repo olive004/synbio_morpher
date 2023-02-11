@@ -106,7 +106,8 @@ class CircuitModeller():
 
         steady_states = self.compute_steady_states(modeller_steady_state,
                                                    circuit=circuit,
-                                                   solver_type=self.steady_state_args['steady_state_solver'])
+                                                   solver_type=self.steady_state_args['steady_state_solver'],
+                                                   use_zero_rates_ivp=self.steady_state_args['use_zero_rates_ivp'])
 
         circuit.result_collector.add_result(
             data=steady_states,
@@ -123,15 +124,22 @@ class CircuitModeller():
         return circuit
 
     def compute_steady_states(self, modeller: Modeller, circuit: Circuit,
-                              solver_type: str = 'naive'):
+                              solver_type: str = 'naive', use_zero_rates_ivp: bool = False):
         if solver_type == 'naive':
             copynumbers = self.model_circuit(
                 modeller, y0=circuit.qreactions.quantities, circuit=circuit)
             # TODO: reshape to copynumbers[1] or copynumbers[0][1]
             copynumbers = copynumbers
         elif solver_type == 'ivp':
+            r = circuit.qreactions.reactions
+            if any((circuit.qreactions.reactions.reverse_rates - circuit.qreactions.reactions.forward_rates) > 1e2) and use_zero_rates_ivp:
+                r = deepcopy(circuit.qreactions.reactions)
+                r.forward_rates = r.forward_rates * \
+                    ((circuit.qreactions.reactions.reverse_rates -
+                     circuit.qreactions.reactions.forward_rates) < 1e2) * 1
+
             steady_state_result = integrate.solve_ivp(
-                partial(bioreaction_sim, args=None, reactions=circuit.qreactions.reactions, signal=vanilla_return,
+                partial(bioreaction_sim, args=None, reactions=r, signal=vanilla_return,
                         signal_onehot=np.zeros_like(circuit.signal.onehot)),
                 (0, modeller.max_time),
                 y0=circuit.qreactions.quantities,
@@ -261,7 +269,8 @@ class CircuitModeller():
         t = solution.ts[0, :tf]
 
         s_time = datetime.now() - s_time
-        logging.warning(f'\t\tSimulating signal took {s_time.total_seconds()}s')
+        logging.warning(
+            f'\t\tSimulating signal took {s_time.total_seconds()}s')
 
         if np.shape(b_new_copynumbers)[1] != ref_circuit.circuit_size and np.shape(b_new_copynumbers)[-1] == ref_circuit.circuit_size:
             b_new_copynumbers = np.swapaxes(b_new_copynumbers, 1, 2)
@@ -314,7 +323,8 @@ class CircuitModeller():
             circuits), f'There was a mismatch in length of analytics ({len(b_analytics_l)}) and circuits ({len(circuits)})'
 
         a_time = datetime.now() - a_time
-        logging.warning(f'\t\tCalculating analytics took {a_time.total_seconds()}s')
+        logging.warning(
+            f'\t\tCalculating analytics took {a_time.total_seconds()}s')
 
         # Save for all circuits
         for i, (circuit, analytics) in enumerate(zip(circuits, b_analytics_l)):

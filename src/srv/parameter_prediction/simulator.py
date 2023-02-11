@@ -20,8 +20,8 @@ SIMULATOR_UNITS = {
         'coupled_rates': r'$s^{-1}$'
     },
 }
-NO_INTERACTION_EQCONSTANT = 0
-G_BASELINE = -10  # kJ/mol
+NO_INTERACTION_EQCONSTANT = 30
+G_BASELINE = 0  # kJ/mol
 
 
 class RawSimulationHandling():

@@ -23,7 +23,6 @@ class TestAnalytics(unittest.TestCase):
 
         t0 = 0
         t1 = 100
-        dt = 1
         t = np.arange(t0, t1)
         target = 100
         baseline = 10
@@ -33,15 +32,15 @@ class TestAnalytics(unittest.TestCase):
         jax.config.update('jax_platform_name', 'cpu')
 
         data = np.asarray([
-            SignalFuncs.step_function_integrated(t, t1/2 + i, dt=dt, target=target + i) +
+            SignalFuncs.step_function_integrated(t, t1/2 + i, target=target + i) +
             SignalFuncs.step_function(
                 t, t1/2 + i, impulse_halfwidth=overshoot,
-                dt=dt, target=overshoot_height) for i in range(num_species)]) + baseline
+                target=overshoot_height) for i in range(num_species)]) + baseline
         ref_circuit_data = np.asarray([
-            SignalFuncs.step_function_integrated(t, t1/2 + i * 2, dt=dt, target=target + i * 2) +
+            SignalFuncs.step_function_integrated(t, t1/2 + i * 2, target=target + i * 2) +
             SignalFuncs.step_function(
-                t, t1/2 + i * 2, impulse_halfwidth=overshoot,
-                dt=dt, target=overshoot_height) for i in range(num_species)]) + baseline
+                t, t1/2 + i * 2, impulse_halfwidth=overshoot, 
+                target=overshoot_height) for i in range(num_species)]) + baseline
 
         analytics = {k: np.array(v) for k, v in
                      partial(generate_analytics, time=t, labels=fake_species,
@@ -66,6 +65,7 @@ class TestAnalytics(unittest.TestCase):
         for n, c in zip(['c'], [CONFIG]):
             circuits, config, data_writer, info = create_test_inputs(
                 deepcopy(c))
+            circuits[0].reset_to_initial_state
 
             analytics_cols = get_true_names_analytics(
                 candidate_cols=info.columns)

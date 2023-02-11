@@ -70,15 +70,15 @@ ENSEMBLE_CONFIG = {
                 "outputs": ["RNA_1"],
                 "function_name": "step_function",
                 "function_kwargs": {
-                    "impulse_center": 100,
-                    "impulse_halfwidth": 5,
-                    "target": 30
+                    "impulse_center": 10,
+                    "impulse_halfwidth": 2,
+                    "target": 1
                 }
             },
             "simulation": {
-                "dt": 0.1,
+                "dt": 0.001,
                 "t0": 0,
-                "t1": 1200,
+                "t1": 100,
                 "solver": "diffrax",
                 "use_batch_mutations": True,
                 "batch_size": 100,

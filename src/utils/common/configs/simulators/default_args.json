@@ -4,6 +4,7 @@
         "max_time": 70,
         "method": "DOP853",
         "steady_state_solver": "ivp",
-        "time_interval": 0.1
+        "time_interval": 0.1,
+        "use_zero_rates_ivp": true
     }
 }

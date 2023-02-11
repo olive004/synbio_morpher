@@ -8,22 +8,22 @@ import jax.numpy as jnp
 class SignalFuncs():
 
     @staticmethod
-    def sine_step_function(t, impulse_center, impulse_halfwidth, dt, target):
+    def sine_step_function(t, impulse_center, impulse_halfwidth, target):
         return (jnp.sin(t) + 1) * jnp.where(
             (impulse_center-impulse_halfwidth <
              t) & (t < impulse_center+impulse_halfwidth),
-            target/(2*impulse_halfwidth*dt), 0)
+            target/(2*impulse_halfwidth), 0)
 
     @staticmethod
-    def step_function(t, impulse_center, impulse_halfwidth, dt, target):
+    def step_function(t, impulse_center, impulse_halfwidth, target):
         return 1 * jnp.where(
             (impulse_center-impulse_halfwidth <
              t) & (t < impulse_center+impulse_halfwidth),
-            target/(2*impulse_halfwidth*dt), 0)
+            target/(2*impulse_halfwidth), 0)
 
     @staticmethod
-    def step_function_integrated(t, impulse_center, dt, target):
-        return 1 * jnp.where(impulse_center < t, target/dt, 0)
+    def step_function_integrated(t, impulse_center, target):
+        return 1 * jnp.where(impulse_center < t, target, 0)
 
     def adapt_pulse(self, time_points, height, pulse_type, dt):
         ''' Adaptation response curves
