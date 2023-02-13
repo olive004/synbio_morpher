@@ -87,7 +87,6 @@ class Signal():
 
         return partial(
             SignalFuncs().__getattribute__(function_name),
-            dt=self.time_interval,
             **function_kwargs
         )
 

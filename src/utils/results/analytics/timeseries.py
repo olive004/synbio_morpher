@@ -39,7 +39,6 @@ def get_precision(data, steady_states, signal_idx: int):
     signal_start = data[signal_idx, 0]
     signal_end = data[signal_idx, -1]
 
-    """ IF YOU IGNORE THE DENOMINATOR THE DIVIDE BY ZERO GOES AWAY AND YOU GET UNSCALED PRECISION """
     signal_diff = signal_end - signal_start
     output_diff = steady_states - starting_states
 
@@ -58,11 +57,12 @@ def get_sensitivity(data, signal_idx: int):
     if signal_idx is None:
         return None
     starting_states = data[:, 0]
-    peaks = jnp.max(data, axis=1)
-    signal_low = jnp.min(data[signal_idx, :])
-    signal_high = jnp.max(data[signal_idx, :])
+    maxs = jnp.max(data, axis=1)
+    mins = jnp.min(data, axis=1)
+    peaks = jnp.where(starting_states != maxs, maxs, mins)
+    signal_high = maxs[signal_idx]
+    signal_low = mins[signal_idx]
 
-    """ IF YOU IGNORE THE DENOMINATOR THE DIVIDE BY ZERO GOES AWAY AND YOU GET UNSCALED SENSITIVITY """
     output_diff = peaks - starting_states
     signal_diff = signal_high - signal_low
 

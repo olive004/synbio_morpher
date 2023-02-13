@@ -70,9 +70,9 @@ ENSEMBLE_CONFIG = {
                 "outputs": ["RNA_1"],
                 "function_name": "step_function",
                 "function_kwargs": {
-                    "impulse_center": 10,
-                    "impulse_halfwidth": 2,
-                    "target": 1
+                    "impulse_center": 2,
+                    "impulse_halfwidth": 1,
+                    "target": 5
                 }
             },
             "simulation": {
