@@ -314,7 +314,7 @@ class CircuitModeller():
                 ref_circuit_data = b_new_copynumbers[ref_idx]
 
             analytics_func = jax.vmap(partial(generate_analytics, time=t, labels=[s.name for s in ref_circuit.model.species],
-                                              signal_onehot=signal.onehot, ref_circuit_data=ref_circuit_data))
+                                              signal_onehot=signal.onehot, signal=signal, ref_circuit_data=ref_circuit_data))
             b_analytics = analytics_func(
                 data=b_new_copynumbers[ref_idx:ref_idx2])
             b_analytics_l = append_nest_dicts(
