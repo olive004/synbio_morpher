@@ -26,7 +26,6 @@ INTERACTION_STATS = ['max_interaction',
 MUTATION_INFO_COLUMN_NAMES = [
     'circuit_name',
     'mutation_name',
-    'sample_names',
     'mutation_num',
     'mutation_type',
     'mutation_positions',

@@ -54,11 +54,15 @@ class TestAnalytics(unittest.TestCase):
 
         analytics = {k: np.array(v) for k, v in
                      partial(generate_analytics, time=t, labels=fake_species,
-                             signal_onehot=signal_onehot, ref_circuit_data=ref_circuit_data)(data).items()
+                             signal_onehot=signal_onehot, signal_target=target,
+                             signal_time=t1/2,
+                             ref_circuit_data=ref_circuit_data)(data).items()
                      }
         analytics_rev = {k: np.array(v) for k, v in
                          partial(generate_analytics, time=t, labels=fake_species,
-                                 signal_onehot=signal_onehot, ref_circuit_data=ref_circuit_data_rev)(data_rev).items()
+                                 signal_onehot=signal_onehot, signal_target=baseline,
+                                 signal_time=t1/2,
+                                 ref_circuit_data=ref_circuit_data_rev)(data_rev).items()
                          }
 
         # Signal in analytics
@@ -92,21 +96,21 @@ class TestAnalytics(unittest.TestCase):
                 # Assert that steady states are correct
                 info_ref = info[info['mutation_name'] == 'ref_circuit']
                 true_steady_states = [
-                    301.500000,
-                    81.125000,
-                    81.125000,
-                    308.000000,
-                    83.125000,
-                    0.852051,
-                    249.500000,
-                    84.812500,
-                    0.371338,
-                    187.375000,
-                    0.165649,
-                    0.247192,
-                    1.077148,
-                    1.083984,
-                    1.889648
+                    104.625000,
+                    99.625000,
+                    99.625000,
+                    104.687500,
+                    99.750000,
+                    0.879395,
+                    37.031250,
+                    99.812500,
+                    2.046875,
+                    1.230469,
+                    23.640625,
+                    5.429688,
+                    1.690430,
+                    0.974609,
+                    1.811523
                 ]
                 for i in range(len(true_steady_states)):
                     self.assertEqual(info_ref['steady_states'].astype(
