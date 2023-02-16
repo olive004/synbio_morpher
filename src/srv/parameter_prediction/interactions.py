@@ -76,6 +76,8 @@ class InteractionMatrix():
                 if isinstance(matrix_path, str):
                     loaded_matrix, self.units, self.sample_names = self.load(
                         matrix_path)
+                    if matrix_type in INTERACTION_TYPES:
+                        matrix_type = matrix_type.to_numpy()
                     self.interactions.__setattr__(matrix_type, loaded_matrix)
                     self.interactions.units = self.units
             if 'binding_rates_association' in matrix_paths:
@@ -251,7 +253,7 @@ def get_selfinteracting_species(idxs_interacting: np.ndarray):
 
 
 def get_unique_interacting_idxs(interaction_attr: np.ndarray, batch_dim: int):
-    idxs_interacting = np.argwhere(interaction_attr != 1)
+    idxs_interacting = np.argwhere(interaction_attr > 1)
     samples = idxs_interacting[:, batch_dim+1:]
     samples.sort(axis=1)  # In-place sorting of idxs_interacting
     # idxs_interacting = np.concatenate(

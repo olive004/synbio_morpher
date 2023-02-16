@@ -1,7 +1,7 @@
 import sys
 import gc
 import logging
-import psutil 
+# import psutil 
 
 
 def clear_caches():

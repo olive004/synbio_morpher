@@ -26,11 +26,9 @@ INTERACTION_STATS = ['max_interaction',
 MUTATION_INFO_COLUMN_NAMES = [
     'circuit_name',
     'mutation_name',
-    'sample_names',
     'mutation_num',
     'mutation_type',
     'mutation_positions',
-    'binding_sites',
     'path_to_template_circuit'
 ]
 
@@ -118,21 +116,22 @@ def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path
     return extra_configs
 
 
-def get_mutation_info_columns():
+def get_mutation_info_columns(use_stats=False):
+    info_column_names = MUTATION_INFO_COLUMN_NAMES
+    if use_stats:
+        # Difference
+        info_column_names_interactions_diff = [[[f'{i}_{s}',
+                                                f'{i}_{s}{DIFF_KEY}'] for s in INTERACTION_STATS] for i in INTERACTION_TYPES]
+        info_column_names_interactions_diff = flatten_nested_listlike(
+            info_column_names_interactions_diff)
 
-    # Difference
-    info_column_names_interactions_diff = [[[f'{i}_{s}',
-                                             f'{i}_{s}{DIFF_KEY}'] for s in INTERACTION_STATS] for i in INTERACTION_TYPES]
-    info_column_names_interactions_diff = flatten_nested_listlike(
-        info_column_names_interactions_diff)
-
-    # Ratio
-    info_column_names_interactions_ratio = [
-        [[f'{i}_{s}{RATIO_KEY}'] for s in INTERACTION_STATS] for i in INTERACTION_TYPES]
-    info_column_names_interactions_ratio = flatten_nested_listlike(
-        info_column_names_interactions_ratio)
-    info_column_names = MUTATION_INFO_COLUMN_NAMES + \
-        info_column_names_interactions_diff + info_column_names_interactions_ratio
+        # Ratio
+        info_column_names_interactions_ratio = [
+            [[f'{i}_{s}{RATIO_KEY}'] for s in INTERACTION_STATS] for i in INTERACTION_TYPES]
+        info_column_names_interactions_ratio = flatten_nested_listlike(
+            info_column_names_interactions_ratio)
+        info_column_names = MUTATION_INFO_COLUMN_NAMES + \
+            info_column_names_interactions_diff + info_column_names_interactions_ratio
     return info_column_names
 
 
@@ -306,9 +305,7 @@ def b_tabulate_mutation_info(source_dir: str, data_writer: DataWriter, experimen
             info_table = write_results(info_table)
             info_table = init_info_table()
 
-    info_table = prepare_for_writing(info_table)
-    info_table.drop(columns=['sample_names'])
-    write_table(info_table)
+    write_results(info_table)
     info_table_path = get_pathnames(
         search_dir=data_writer.write_dir, file_key='tabulated_mutation_info.csv', first_only=True)
     info_table = pd.read_csv(info_table_path)

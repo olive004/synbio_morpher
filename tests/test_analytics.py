@@ -87,7 +87,7 @@ class TestAnalytics(unittest.TestCase):
         for n, c in zip(['t', 'c'], [TEST_CONFIG, CONFIG]):
             circuits, config, data_writer, info = create_test_inputs(
                 deepcopy(c))
-            circuits[0].reset_to_initial_state
+            circuits[0].reset_to_initial_state()
 
             analytics_cols = get_true_names_analytics(
                 candidate_cols=info.columns)

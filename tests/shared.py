@@ -13,8 +13,8 @@ ENSEMBLE_CONFIG = {
     "experiment": {
         "purpose": "tests",
         "test_mode": False,
-        "no_visualisations": False,
-        "no_numerical": False
+        "no_visualisations": True,
+        "no_numerical": True
     },
     "base_configs_ensemble": {
         "generate_species_templates": {
@@ -76,9 +76,9 @@ ENSEMBLE_CONFIG = {
                 }
             },
             "simulation": {
-                "dt": 0.001,
+                "dt": 0.005,
                 "t0": 0,
-                "t1": 100,
+                "t1": 150,
                 "solver": "diffrax",
                 "use_batch_mutations": True,
                 "batch_size": 100,
@@ -147,7 +147,7 @@ def five_circuits(config: dict, data_writer=None):
 
     return [construct_circuit_from_cfg(
         {'data_path': p,
-         # 'interactions': i
+         'interactions': i
          }, config) for p, i in zip(paths, interactions_cfg)], config, data_writer
 
 
