@@ -63,7 +63,7 @@ class InteractionMatrix():
             # coupled_binding_rates=random_matrices[:, :, 0],
             binding_rates_association=random_matrices[:, :, 1],
             binding_rates_dissociation=random_matrices[:, :, 2],
-            eqconstants=random_matrices[:, :, 3], 
+            eqconstants=random_matrices[:, :, 3],
             binding_sites=random_matrices[:, :, 3],
             units='test'
         )
@@ -92,7 +92,7 @@ class InteractionMatrix():
         self.name = self.isolate_circuit_name(filepath, filetype)
         if filetype == 'csv':
             matrix, sample_names = load_csv(
-                filepath, load_as='numpy', return_header=True)
+                filepath, load_as='pd', return_header=True)
         else:
             raise TypeError(
                 f'Unsupported filetype {filetype} for loading {filepath}')
@@ -193,9 +193,13 @@ class InteractionSimulator():
 
 def b_get_stats(interactions_mxs: List[InteractionMatrix]):
     b_interaction_attrs = {}
-    for interaction_attr in INTERACTION_TYPES:
-        b_interaction_attrs[interaction_attr] = np.concatenate([np.expand_dims(
-            im.interactions.__getattribute__(interaction_attr), axis=0) for im in interactions_mxs], axis=0)
+    for interaction_attr in INTERACTION_FIELDS_TO_WRITE:
+        if interaction_attr in INTERACTION_TYPES:
+            b_interaction_attrs[interaction_attr] = np.concatenate([np.expand_dims(
+                im.interactions.__getattribute__(interaction_attr), axis=0) for im in interactions_mxs], axis=0)
+        else:
+            b_interaction_attrs[interaction_attr] = [
+                im.interactions.__getattribute__(interaction_attr) for im in interactions_mxs]
     # For 0-indexing
     batch_dim = b_interaction_attrs['eqconstants'].ndim - 2 - 1
     idxs_interacting = get_unique_interacting_idxs(
@@ -218,15 +222,19 @@ def b_get_stats(interactions_mxs: List[InteractionMatrix]):
         "num_self_interacting": [len(i) for i in idxs_self_interacting]
     }
 
-    for interaction_attr in INTERACTION_TYPES:
+    for interaction_attr in INTERACTION_FIELDS_TO_WRITE:
         for i, s in enumerate(interactions_mxs[0].sample_names):
             for ii, s in enumerate(interactions_mxs[0].sample_names):
-                stats[interaction_attr + '_' + str(i) + '-' + str(
-                    ii)] = b_interaction_attrs[interaction_attr][:, i, ii]
-        stats[interaction_attr + '_' + 'max_interaction'] = np.max(
-            np.max(b_interaction_attrs[interaction_attr], axis=1), axis=1)
-        stats[interaction_attr + '_' + 'min_interaction'] = np.min(
-            np.min(b_interaction_attrs[interaction_attr], axis=1), axis=1)
+                if interaction_attr in INTERACTION_TYPES:
+                    stats[interaction_attr + '_' + str(i) + '-' + str(
+                        ii)] = b_interaction_attrs[interaction_attr][:, i, ii]
+                else:
+                    stats[interaction_attr + '_' + str(i) + '-' + str(
+                        ii)] = [df.iloc[i, ii] for df in b_interaction_attrs[interaction_attr]]
+        # stats[interaction_attr + '_' + 'max_interaction'] = np.max(
+        #     np.max(b_interaction_attrs[interaction_attr], axis=1), axis=1)
+        # stats[interaction_attr + '_' + 'min_interaction'] = np.min(
+        #     np.min(b_interaction_attrs[interaction_attr], axis=1), axis=1)
     # stats = {k: [v] for k, v in stats.items()}
     stats = pd.DataFrame.from_dict(stats, dtype=object)
     return stats

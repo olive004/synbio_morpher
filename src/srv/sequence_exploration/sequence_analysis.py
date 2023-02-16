@@ -26,6 +26,7 @@ INTERACTION_STATS = ['max_interaction',
 MUTATION_INFO_COLUMN_NAMES = [
     'circuit_name',
     'mutation_name',
+    'sample_names',
     'mutation_num',
     'mutation_type',
     'mutation_positions',
@@ -232,13 +233,20 @@ def b_tabulate_mutation_info(source_dir: str, data_writer: DataWriter, experimen
             check_coherency(new_table)
         info_table = pd.concat([info_table, new_table])
         return info_table
-
-    def write_results(info_table: pd.DataFrame) -> None:
+    
+    def prepare_for_writing(info_table: pd.DataFrame) -> pd.DataFrame:
         result_report_keys = get_analytics_types_all()
         info_table = expand_data_by_col(info_table, columns=result_report_keys, find_all_similar_columns=True,
                                         column_for_expanding_coldata='sample_names', idx_for_expanding_coldata=0)
+        return info_table
+    
+    def write_table(info_table: pd.DataFrame) -> None:
         data_writer.output(
             out_type='csv', out_name='tabulated_mutation_info', **{'data': info_table})
+
+    def write_results(info_table: pd.DataFrame) -> None:
+        info_table = prepare_for_writing(info_table)
+        write_table(info_table)
 
     info_table = init_info_table()
     circuit_dirs = get_subdirectories(source_dir, min_condition=3)
@@ -298,7 +306,9 @@ def b_tabulate_mutation_info(source_dir: str, data_writer: DataWriter, experimen
             info_table = write_results(info_table)
             info_table = init_info_table()
 
-    write_results(info_table)
+    info_table = prepare_for_writing(info_table)
+    info_table.drop(columns=['sample_names'])
+    write_table(info_table)
     info_table_path = get_pathnames(
         search_dir=data_writer.write_dir, file_key='tabulated_mutation_info.csv', first_only=True)
     info_table = pd.read_csv(info_table_path)
