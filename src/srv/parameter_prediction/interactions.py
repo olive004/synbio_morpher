@@ -77,7 +77,7 @@ class InteractionMatrix():
                     loaded_matrix, self.units, self.sample_names = self.load(
                         matrix_path)
                     if matrix_type in INTERACTION_TYPES:
-                        matrix_type = matrix_type.to_numpy()
+                        loaded_matrix = loaded_matrix.to_numpy()
                     self.interactions.__setattr__(matrix_type, loaded_matrix)
                     self.interactions.units = self.units
             if 'binding_rates_association' in matrix_paths:
