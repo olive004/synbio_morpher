@@ -314,8 +314,7 @@ class CircuitModeller():
                 ref_circuit_data = b_new_copynumbers[ref_idx]
 
             analytics_func = jax.vmap(partial(generate_analytics, time=t, labels=[s.name for s in ref_circuit.model.species],
-                                              signal_onehot=signal.onehot, signal_target=signal.func.keywords[
-                                                  'target'], signal_time=signal.func.keywords[
+                                              signal_onehot=signal.onehot, signal_time=signal.func.keywords[
                                                   'impulse_center'],
                                               ref_circuit_data=ref_circuit_data))
             b_analytics = analytics_func(

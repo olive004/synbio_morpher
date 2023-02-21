@@ -15,12 +15,11 @@ def get_fold_change(starting_states, steady_states):
     denom = jnp.where(starting_states != 0,
                       starting_states, -1)
     fold_change = jnp.where(denom != -1,
-                            steady_states / denom, np.inf)
+                            steady_states / denom, np.nan)
     return fold_change
 
 
-def get_overshoot(starting_states, steady_states, mins, maxs):
-    peaks = jnp.where(starting_states != maxs, maxs, mins)
+def get_overshoot(steady_states, peaks):
     return jnp.absolute(peaks - steady_states)
 
 
@@ -33,11 +32,11 @@ def calculate_precision(output_diff, starting_states, signal_diff, signal_start)
     return jnp.divide(1, precision)
 
 
-def get_precision(signal_idx: int, signal_target, starting_states, steady_states):
+def get_precision(signal_idx: int, peaks, starting_states, steady_states):
     if signal_idx is None:
         return None
     signal_0 = starting_states[signal_idx]
-    signal_1 = starting_states[signal_idx] + signal_target
+    signal_1 = peaks[signal_idx]
 
     signal_diff = signal_1 - signal_0
     output_diff = steady_states - starting_states
@@ -53,10 +52,9 @@ def calculate_sensitivity(output_diff, starting_states, signal_diff, signal_0) -
         numer, denom))
 
 
-def get_sensitivity(signal_idx: int, starting_states, mins, maxs):
+def get_sensitivity(signal_idx: int, starting_states, peaks):
     if signal_idx is None:
         return None
-    peaks = jnp.where(starting_states != maxs, maxs, mins)
     signal_1 = peaks[signal_idx]
     signal_0 = starting_states[signal_idx]
 
@@ -126,7 +124,7 @@ def frequency(data):
 
 
 def generate_base_analytics(data: jnp.ndarray, time: jnp.ndarray, labels: List[str],
-                            signal_idxs: jnp.ndarray, signal_target, signal_time, 
+                            signal_idxs: jnp.ndarray, signal_time,
                             ref_circuit_data: jnp.ndarray) -> dict:
     if data is None:
         return {}
@@ -144,26 +142,28 @@ def generate_base_analytics(data: jnp.ndarray, time: jnp.ndarray, labels: List[s
         starting_states=analytics['initial_steady_states'],
         steady_states=analytics['steady_states']
     )
+
+    peaks = jnp.where(analytics['initial_steady_states'] !=
+                      analytics['max_amount'], analytics['max_amount'], analytics['min_amount'])
     analytics['overshoot'] = get_overshoot(
-        starting_states=analytics['initial_steady_states'],
         steady_states=analytics['steady_states'],
-        mins=analytics['min_amount'], maxs=analytics['max_amount']
+        peaks=peaks
     )
 
     if signal_idxs is not None:
         signal_labels = list(map(labels.__getitem__, signal_idxs))
         for s, s_idx in zip(signal_labels, signal_idxs):
+
             analytics[f'precision_wrt_species-{s_idx}'] = get_precision(
-                signal_idx=s_idx, signal_target=signal_target,
+                signal_idx=s_idx, peaks=peaks,
                 starting_states=analytics['initial_steady_states'],
                 steady_states=analytics['steady_states']
             )
             analytics[f'response_time_wrt_species-{s_idx}'] = get_step_response_times(
-                data=data, t=time, steady_states=analytics['steady_states'], 
+                data=data, t=time, steady_states=analytics['steady_states'],
                 deriv=analytics['first_derivative'], signal_idx=s_idx, signal_time=signal_time)
             analytics[f'sensitivity_wrt_species-{s_idx}'] = get_sensitivity(
-                signal_idx=s_idx, starting_states=analytics['initial_steady_states'],
-                mins=analytics['min_amount'], maxs=analytics['max_amount']
+                signal_idx=s_idx, peaks=peaks, starting_states=analytics['initial_steady_states']
             )
     return analytics
 
@@ -179,18 +179,18 @@ def generate_differences_ratios(analytics: dict, ref_analytics) -> Tuple[dict]:
     return differences, ratios
 
 
-def generate_analytics(data, time, labels: List[str], ref_circuit_data=None, 
+def generate_analytics(data, time, labels: List[str], ref_circuit_data=None,
                        signal_onehot=None, signal_target=None, signal_time=None):
     signal_idxs = jnp.where(signal_onehot == 1)[0]
     signal_idxs = signal_idxs if len(signal_idxs) >= 1 else None
     analytics = generate_base_analytics(data=data, time=time, labels=labels,
-                                        signal_idxs=signal_idxs, signal_target=signal_target,
-                                        signal_time=signal_time, ref_circuit_data=ref_circuit_data)
+                                        signal_idxs=signal_idxs, signal_time=signal_time, 
+                                        ref_circuit_data=ref_circuit_data)
 
     # Differences & ratios
     ref_analytics = generate_base_analytics(data=ref_circuit_data, time=time, labels=labels,
-                                            signal_idxs=signal_idxs, signal_target=signal_target,
-                                            signal_time=signal_time, ref_circuit_data=ref_circuit_data)
+                                            signal_idxs=signal_idxs, signal_time=signal_time, 
+                                            ref_circuit_data=ref_circuit_data)
     differences, ratios = generate_differences_ratios(analytics, ref_analytics)
     return merge_dicts(analytics, differences, ratios)
 
