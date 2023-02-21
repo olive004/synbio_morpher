@@ -13,8 +13,8 @@ ENSEMBLE_CONFIG = {
     "experiment": {
         "purpose": "tests",
         "test_mode": False,
-        "no_visualisations": True,
-        "no_numerical": True
+        "no_visualisations": False,
+        "no_numerical": False
     },
     "base_configs_ensemble": {
         "generate_species_templates": {
@@ -54,7 +54,7 @@ ENSEMBLE_CONFIG = {
             },
             "mutations": {
                 "algorithm": "random",
-                "mutation_counts": 1,
+                "mutation_counts": 0,
                 "mutation_nums_within_sequence": [1],
                 "mutation_nums_per_position": 1,
                 "seed": 3,

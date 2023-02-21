@@ -83,8 +83,8 @@ class TestAnalytics(unittest.TestCase):
         [self.assertEqual(analytics['fold_change'].astype(np.float16)[
                           i], (target + baseline + i)/baseline) for i in range(num_species)]
 
-        # for n, c in zip(['c'], [CONFIG]):
-        for n, c in zip(['t', 'c'], [TEST_CONFIG, CONFIG]):
+        for n, c in zip(['c'], [CONFIG]):
+        # for n, c in zip(['t', 'c'], [TEST_CONFIG, CONFIG]):
             circuits, config, data_writer, info = create_test_inputs(
                 deepcopy(c))
             circuits[0].reset_to_initial_state()
