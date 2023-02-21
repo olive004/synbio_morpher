@@ -13,23 +13,6 @@ from src.utils.signal.signals_new import SignalFuncs
 
 class TestAnalytics(unittest.TestCase):
 
-    def plott(self):
-        import matplotlib.pyplot as plt
-        
-        def binding_energy_to_fluorescence(E):
-            """ BE is in kcal/mol"""
-            F = np.where(E < -36, 0.01, 0) + np.where((E >= -36) & (E < -10), E*(1-0.01)/(-36+10), 0) + np.where(E >= -10, 1, 0)
-            return F
-
-        E = np.arange(-60, 0, 0.5)
-        F = 1/(1+np.exp(-(E/3 + 5))) + 0.01
-
-        plt.figure(figsize=(10,3))
-        plt.plot(E, F)
-        plt.yscale('log')
-        plt.savefig('test.png')
-
-
     def test_interactions(self):
 
         num_species = 9
@@ -169,8 +152,7 @@ class TestAnalytics(unittest.TestCase):
 def main():
 
     t = TestAnalytics()
-    t.plott()
-    # t.test_interactions()
+    t.test_interactions()
 
 
 if __name__ == '__main__':
