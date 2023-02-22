@@ -23,8 +23,8 @@ def get_overshoot(steady_states, peaks):
     return jnp.absolute(peaks - steady_states)
 
 
-def calculate_precision(output_diff, starting_states, signal_diff, signal_start) -> jnp.ndarray:
-    denom = jnp.where(signal_start != 0, signal_diff / signal_start, 1)
+def calculate_precision(output_diff, starting_states, signal_diff, signal_0) -> jnp.ndarray:
+    denom = jnp.where(signal_0 != 0, signal_diff / signal_0, 1)
     numer = jnp.where((starting_states != 0).astype(int),
                       output_diff / starting_states, 1)
     precision = jnp.absolute(jnp.divide(
@@ -32,11 +32,11 @@ def calculate_precision(output_diff, starting_states, signal_diff, signal_start)
     return jnp.divide(1, precision)
 
 
-def get_precision(signal_idx: int, peaks, starting_states, steady_states):
+def get_precision(signal_idx: int, starting_states, steady_states):
     if signal_idx is None:
         return None
     signal_0 = starting_states[signal_idx]
-    signal_1 = peaks[signal_idx]
+    signal_1 = steady_states[signal_idx]
 
     signal_diff = signal_1 - signal_0
     output_diff = steady_states - starting_states
@@ -155,7 +155,7 @@ def generate_base_analytics(data: jnp.ndarray, time: jnp.ndarray, labels: List[s
         for s, s_idx in zip(signal_labels, signal_idxs):
 
             analytics[f'precision_wrt_species-{s_idx}'] = get_precision(
-                signal_idx=s_idx, peaks=peaks,
+                signal_idx=s_idx,
                 starting_states=analytics['initial_steady_states'],
                 steady_states=analytics['steady_states']
             )

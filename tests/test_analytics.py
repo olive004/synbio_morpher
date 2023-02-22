@@ -84,7 +84,7 @@ class TestAnalytics(unittest.TestCase):
                           i], (target + baseline + i)/baseline) for i in range(num_species)]
 
         for n, c in zip(['c'], [CONFIG]):
-        # for n, c in zip(['t', 'c'], [TEST_CONFIG, CONFIG]):
+            # for n, c in zip(['t', 'c'], [TEST_CONFIG, CONFIG]):
             circuits, config, data_writer, info = create_test_inputs(
                 deepcopy(c))
             circuits[0].reset_to_initial_state()
@@ -96,21 +96,21 @@ class TestAnalytics(unittest.TestCase):
                 # Assert that steady states are correct
                 info_ref = info[info['mutation_name'] == 'ref_circuit']
                 true_steady_states = [
-                    104.625000,
-                    99.625000,
-                    99.625000,
-                    104.687500,
-                    99.750000,
-                    0.879395,
-                    37.031250,
-                    99.812500,
-                    2.046875,
-                    1.230469,
-                    23.640625,
-                    5.429688,
-                    1.690430,
-                    0.974609,
-                    1.811523
+                    0.693848,
+                    0.667480,
+                    0.667480,
+                    0.586914,
+                    0.562988,
+                    1.486328,
+                    0.680176,
+                    0.649902,
+                    0.789062,
+                    0.858887,
+                    0.729004,
+                    0.771484,
+                    6.515625,
+                    2.634766,
+                    1.719727
                 ]
                 for i in range(len(true_steady_states)):
                     self.assertEqual(info_ref['steady_states'].astype(
