@@ -369,10 +369,15 @@ class CircuitModeller():
 
         signal.update_time_interval(self.dt)
 
+        signal_species_idx = np.where(signal.onehot == 1)[0]
+        signal_species = [s for s in ref_circuit.model.species if ref_circuit.model.species.index(s) in signal_species_idx]
+        reaction_has_signal = [bool(b) and all(b) for b in [[ro in signal_species for ro in r.output] for r in ref_circuit.model.reactions]]
+        reactions_onehot = np.ones_like(ref_circuit.qreactions.reactions.forward_rates) * reaction_has_signal
+
         self.sim_func = jax.vmap(
             partial(bioreaction_sim_dfx_expanded,
                     t0=self.t0, t1=self.t1, dt0=self.dt,
-                    signal=signal.func, signal_onehot=signal.onehot,
+                    signal=signal.func, signal_onehot=reactions_onehot,
                     inputs=ref_circuit.qreactions.reactions.inputs,
                     outputs=ref_circuit.qreactions.reactions.outputs
                     ))
