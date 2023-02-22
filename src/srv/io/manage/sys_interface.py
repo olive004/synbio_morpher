@@ -6,8 +6,9 @@ from typing import Union
 import logging
 
 
+# Relative imports
 package_name = 'gene-circuit-glitch-prediction'
-if os.path.basename(os.getcwd()) == package_name:
+if os.path.basename(os.getcwd()) == package_name or package_name not in os.getcwd():
     PACKAGE_DIR = '.'
 elif os.getcwd().split(os.sep)[-2] == package_name:
     PACKAGE_DIR = '..'

@@ -76,10 +76,12 @@ class SignalFuncs():
 class Signal():
     def __init__(self,
                  onehot: np.ndarray,
+                 reactions_onehot: np.ndarray,
                  function_name: str,
                  function_kwargs: dict,
                  time_interval=1) -> None:
         self.onehot = onehot
+        self.reactions_onehot = reactions_onehot
         self.time_interval = time_interval
         self.func = self.make_func(function_name, function_kwargs)
 

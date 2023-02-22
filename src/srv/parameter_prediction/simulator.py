@@ -39,7 +39,7 @@ class RawSimulationHandling():
         def process_IntaRNA_sample(sample: dict):
             """ There are a variety of parameters that IntaRNA spits out. E is hybridisation energy"""
             return {
-                'energies': sample.get('E', 0),
+                'energies': sample.get('E', NO_INTERACTION_EQCONSTANT),
                 'binding': sample.get('bpList', '')
             }
 
@@ -63,6 +63,11 @@ class RawSimulationHandling():
             energies = energies * 1000  # convert kJ/mol to J/mol
             K = np.exp(np.divide(- energies, SCIENTIFIC['RT']))
             return K
+
+        def energy_to_eqconstant_approx(energies):
+            """ Parameterised from Na et. al 2013 (refer to explanations about binding
+            energies). Energy input in kJ/mol """
+            pass
 
         def eqconstant_to_rates(eqconstants):
             """ Translate the equilibrium rate of binding to

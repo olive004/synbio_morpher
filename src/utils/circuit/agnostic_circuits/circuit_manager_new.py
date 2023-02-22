@@ -11,7 +11,7 @@ import numpy as np
 import jax
 from scipy import integrate
 from bioreaction.model.data_containers import Species
-from bioreaction.simulation.simfuncs.basic_de import bioreaction_sim
+from bioreaction.simulation.simfuncs.basic_de import bioreaction_sim, bioreaction_sim_expanded
 
 from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
 from src.srv.parameter_prediction.interactions import InteractionDataHandler, InteractionSimulator, INTERACTION_FIELDS_TO_WRITE
@@ -78,11 +78,9 @@ class CircuitModeller():
         else:
             circuit.init_interactions()
 
-        for interaction_matrix, filename_addon in zip(
-            [circuit.interactions.binding_rates_dissociation,
-             circuit.interactions.binding_sites,
-             circuit.interactions.eqconstants], sorted(INTERACTION_FIELDS_TO_WRITE)
-        ):
+        for filename_addon in sorted(INTERACTION_FIELDS_TO_WRITE):
+            interaction_matrix = circuit.interactions.__getattribute__(
+                filename_addon)
             self.result_writer.output(
                 data=interactions_to_df(
                     interaction_matrix,
@@ -139,8 +137,12 @@ class CircuitModeller():
                      circuit.qreactions.reactions.forward_rates) < 1e2) * 1
 
             steady_state_result = integrate.solve_ivp(
+                # partial(bioreaction_sim_expanded, args=None, inputs=r.inputs, outputs=r.outputs,
+                #         signal=vanilla_return, signal_onehot=np.ones_like(
+                #             r.forward_rates),
+                #         forward_rates=r.forward_rates, reverse_rates=r.reverse_rates),
                 partial(bioreaction_sim, args=None, reactions=r, signal=vanilla_return,
-                        signal_onehot=np.zeros_like(circuit.signal.onehot)),
+                        signal_onehot=np.zeros_like(circuit.signal.reactions_onehot)),
                 (0, modeller.max_time),
                 y0=circuit.qreactions.quantities,
                 method=self.steady_state_args.get('method', 'DOP853'))
@@ -158,7 +160,12 @@ class CircuitModeller():
         modelling_func = partial(bioreaction_sim, args=None,
                                  reactions=circuit.qreactions.reactions,
                                  signal=circuit.signal.func,
-                                 signal_onehot=circuit.signal.onehot)
+                                 signal_onehot=circuit.signal.reactions_onehot)
+        # r = circuit.qreactions.reactions
+        # modelling_func = partial(bioreaction_sim_expanded, args=None, inputs=r.inputs, outputs=r.outputs,
+        #                          signal=vanilla_return, signal_onehot=np.ones_like(
+        #                              r.forward_rates),
+        #                          forward_rates=r.forward_rates, reverse_rates=r.reverse_rates),
 
         copynumbers = self.iterate_modelling_func(y0, modelling_func,
                                                   max_time=self.t1,
@@ -190,7 +197,6 @@ class CircuitModeller():
             copynumbers[:, i +
                         1] = zero_out_negs(current_copynumbers)
         return copynumbers
-
 
     def simulate_signal_batch(self, circuits: List[Circuit],
                               ref_circuit: Circuit,
@@ -369,15 +375,10 @@ class CircuitModeller():
 
         signal.update_time_interval(self.dt)
 
-        signal_species_idx = np.where(signal.onehot == 1)[0]
-        signal_species = [s for s in ref_circuit.model.species if ref_circuit.model.species.index(s) in signal_species_idx]
-        reaction_has_signal = [bool(b) and all(b) for b in [[ro in signal_species for ro in r.output] for r in ref_circuit.model.reactions]]
-        reactions_onehot = np.ones_like(ref_circuit.qreactions.reactions.forward_rates) * reaction_has_signal
-
         self.sim_func = jax.vmap(
             partial(bioreaction_sim_dfx_expanded,
                     t0=self.t0, t1=self.t1, dt0=self.dt,
-                    signal=signal.func, signal_onehot=reactions_onehot,
+                    signal=signal.func, signal_onehot=signal.reactions_onehot,
                     inputs=ref_circuit.qreactions.reactions.inputs,
                     outputs=ref_circuit.qreactions.reactions.outputs
                     ))

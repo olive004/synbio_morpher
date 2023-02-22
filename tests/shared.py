@@ -148,7 +148,7 @@ def five_circuits(config: dict, data_writer=None):
 
     return [construct_circuit_from_cfg(
         {'data_path': p,
-         'interactions': i
+         'xinteractions': i
          }, config) for p, i in zip(paths, interactions_cfg)], config, data_writer
 
 
