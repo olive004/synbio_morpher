@@ -8,11 +8,11 @@ from typing import Union
 package_name = 'gene-circuit-glitch-prediction'
 if os.path.basename(os.getcwd()) == package_name:
     PACKAGE_DIR = '.'
-elif os.path.splitext(os.getcwd())[-2] == package_name:
+elif os.getcwd().split(os.sep)[-2] == package_name:
     PACKAGE_DIR = '..'
 else:
-    PACKAGE_DIR = os.path.join(os.path.splitext(os.getcwd())[
-                               :os.path.splitext(os.getcwd()).index(package_name)])
+    PACKAGE_DIR = os.path.join(*os.getcwd().split(os.sep)[
+                               :os.getcwd().split(os.sep).index(package_name)+1])
 
 SCRIPT_DIR = os.path.join(PACKAGE_DIR, 'scripts')
 DATA_DIR = os.path.join(PACKAGE_DIR, 'data')
