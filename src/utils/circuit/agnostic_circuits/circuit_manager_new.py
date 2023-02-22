@@ -383,6 +383,29 @@ class CircuitModeller():
                     outputs=ref_circuit.qreactions.reactions.outputs
                     ))
 
+        # added this
+
+
+# # ODE Terms
+# def bioreaction_sim(t, y, args, reactions: Reactions, signal, signal_onehot: jnp.ndarray):
+#     reactions.forward_rates = reactions.forward_rates + signal(t) * signal_onehot
+#     return one_step_de_sim(spec_conc=y,
+#                            reactions=reactions) # + signal(t) * signal_onehot
+
+
+# # ODE Terms
+# def bioreaction_sim_expanded(t, y,
+#                              args,
+#                              inputs, outputs,
+#                              signal, signal_onehot: jnp.ndarray,
+#                              forward_rates=None, reverse_rates=None):
+#     forward_rates_sig = forward_rates + 1000000000.5 * forward_rates * (signal(t) > 0) * signal_onehot
+#     return one_step_de_sim_expanded(
+#         spec_conc=y, inputs=inputs,
+#         outputs=outputs,
+#         forward_rates=forward_rates_sig,
+#         reverse_rates=reverse_rates) #+ signal(t) * signal_onehot
+
     def batch_circuits(self,
                        circuits: List[Circuit],
                        methods: dict,
