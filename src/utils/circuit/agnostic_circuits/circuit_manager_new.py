@@ -191,55 +191,6 @@ class CircuitModeller():
                         1] = zero_out_negs(current_copynumbers)
         return copynumbers
 
-    # def simulate_signal(self, circuit: Circuit, signal: Signal = None,
-    #                     solver: str = 'naive', ref_circuit: Circuit = None):
-    #     signal = signal if signal is not None else circuit.signal
-
-    #     if circuit.result_collector.get_result('steady_states'):
-    #         steady_states = deepcopy(
-    #             circuit.result_collector.get_result('steady_states').analytics['steady_states'])
-    #     else:
-    #         steady_states = self.compute_steady_states(Deterministic(
-    #             max_time=self.t1, time_interval=self.dt),
-    #             circuit=circuit,
-    #             solver_type=self.steady_state_args['steady_state_solver'])[:, -1]
-
-    #     if solver == 'naive':
-    #         new_copynumbers = self.model_circuit(steady_states,
-    #                                              circuit=circuit)
-    #         t = np.arange(0, np.shape(new_copynumbers)[
-    #             1]) * self.t1 / np.shape(new_copynumbers)[1]
-
-    #     elif solver == 'diffrax':
-    #         solution = bioreaction_sim_wrapper(
-    #             y0=steady_states.flatten() * invert_onehot(signal.onehot),
-    #             qreactions=circuit.qreactions, t0=0, t1=self.t1, dt0=self.dt,
-    #             signal=signal.func, signal_onehot=signal.onehot)
-    #         new_copynumbers = solution.ys[solution.ts < np.inf]
-    #         t = solution.ts[solution.ts < np.inf]
-    #         if np.shape(new_copynumbers)[0] != circuit.circuit_size:
-    #             new_copynumbers = np.rollaxis(new_copynumbers, axis=1)
-
-    #     if ref_circuit is None or ref_circuit == circuit:
-    #         ref_circuit_data = None
-    #     else:
-    #         ref_circuit_result = ref_circuit.result_collector.get_result(
-    #             'signal')
-    #         ref_circuit_data = None if ref_circuit_result is None else ref_circuit_result.data
-
-    #     circuit.result_collector.add_result(
-    #         data=new_copynumbers,
-    #         name='signal',
-    #         category='time_series',
-    #         time=t,
-    #         vis_func=VisODE().plot,
-    #         vis_kwargs={'t': t,
-    #                     'legend': [s.name for s in circuit.model.species],
-    #                     'out_type': 'svg'},
-    #         analytics_kwargs={'labels': [s.name for s in circuit.model.species],
-    #                           'signal_onehot': signal.onehot,
-    #                           'ref_circuit_data': ref_circuit_data})
-    #     return circuit
 
     def simulate_signal_batch(self, circuits: List[Circuit],
                               ref_circuit: Circuit,

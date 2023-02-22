@@ -39,7 +39,7 @@ class RawSimulationHandling():
         def process_IntaRNA_sample(sample: dict):
             """ There are a variety of parameters that IntaRNA spits out. E is hybridisation energy"""
             return {
-                'matrix': sample.get('E', NO_INTERACTION_EQCONSTANT),
+                'energies': sample.get('E', 0),
                 'binding': sample.get('bpList', '')
             }
 
@@ -60,7 +60,7 @@ class RawSimulationHandling():
             AG = - RT ln(kb/kd)
             K = e^(- G / RT)
             """
-            energies = (energies - G_BASELINE) * 1000  # convert kJ/mol to J/mol
+            energies = energies * 1000  # convert kJ/mol to J/mol
             K = np.exp(np.divide(- energies, SCIENTIFIC['RT']))
             return K
 

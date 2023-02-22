@@ -86,13 +86,13 @@ class Circuit():
             num_in_species = len(get_unique(flatten_listlike(
                 [r.input for r in self.model.reactions])))
             random_matrices = np.random.rand(
-                num_in_species, num_in_species, 4) * 0.0001
+                num_in_species, num_in_species, 5) * 0.0001
             self.interactions = MolecularInteractions(
-                # coupled_binding_rates=random_matrices[:, :, 0],
-                binding_rates_association=random_matrices[:, :, 1],
-                binding_rates_dissociation=random_matrices[:, :, 2],
+                binding_rates_association=random_matrices[:, :, 0],
+                binding_rates_dissociation=random_matrices[:, :, 1],
+                energies=random_matrices[:, :, 2],
                 eqconstants=random_matrices[:, :, 3],
-                binding_sites=random_matrices[:, :, 3],
+                binding_sites=random_matrices[:, :, 4],
                 units='test'
             )
         else:

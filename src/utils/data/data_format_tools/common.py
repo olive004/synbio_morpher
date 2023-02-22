@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import jaxlib
 
+from src.srv.io.manage.sys_interface import PACKAGE_DIR
 from src.utils.misc.type_handling import inverse_dict
 
 
@@ -40,10 +41,14 @@ def load_json_as_dict(json_pathname: str, process=True) -> dict:
     elif type(json_pathname) == dict:
         jdict = json_pathname
     elif type(json_pathname) == str:
-        if os.stat(json_pathname).st_size == 0:
+        if PACKAGE_DIR not in json_pathname:
+            full_json_pathname = os.path.join(PACKAGE_DIR, json_pathname)
+        else: 
+            full_json_pathname = json_pathname
+        if os.stat(full_json_pathname).st_size == 0:
             jdict = {}
         else:
-            file = open(json_pathname)
+            file = open(full_json_pathname)
             jdict = json.load(file)
             file.close()
     else:

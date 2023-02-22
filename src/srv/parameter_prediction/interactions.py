@@ -26,9 +26,11 @@ class MolecularInteractions():
     def __init__(self,
                  binding_rates_association=None,
                  binding_rates_dissociation=None,
+                 energies=None,
                  eqconstants=None, units=None, binding_sites=None) -> None:
         self.binding_rates_association = binding_rates_association
         self.binding_rates_dissociation = binding_rates_dissociation
+        self.energies = energies
         self.eqconstants = eqconstants
         self.set_precision()
 
@@ -58,13 +60,13 @@ class InteractionMatrix():
 
         init_nodes = num_nodes if num_nodes is not None else 3
         random_matrices = np.random.rand(
-            init_nodes, init_nodes, 4) * 0.000001
+            init_nodes, init_nodes, 5) * 0.000001
         self.interactions = MolecularInteractions(
-            # coupled_binding_rates=random_matrices[:, :, 0],
-            binding_rates_association=random_matrices[:, :, 1],
-            binding_rates_dissociation=random_matrices[:, :, 2],
+            binding_rates_association=random_matrices[:, :, 0],
+            binding_rates_dissociation=random_matrices[:, :, 1],
+            energies=random_matrices[:, :, 2],
             eqconstants=random_matrices[:, :, 3],
-            binding_sites=random_matrices[:, :, 0],
+            binding_sites=random_matrices[:, :, 4],
             units='test'
         )
 
@@ -150,6 +152,7 @@ class InteractionDataHandler():
                 binding_rates_association=np.random.rand(len(data), len(data)),
                 binding_rates_dissociation=np.random.rand(
                     len(data), len(data)),
+                energies=np.random.rand(len(data), len(data)),
                 eqconstants=np.random.rand(len(data), len(data)),
                 binding_sites=np.random.zeros(len(data), len(data))
             )
@@ -157,23 +160,24 @@ class InteractionDataHandler():
         return interactions
 
     def parse(self, data: dict) -> MolecularInteractions:
-        matrix, a_rates, d_rates, binding = self.make_matrix(data)
+        matrix, energies, a_rates, d_rates, binding = self.make_matrix(data)
         return MolecularInteractions(
             binding_rates_association=a_rates,
             binding_rates_dissociation=d_rates,
+            energies=energies,
             eqconstants=matrix,
             binding_sites=binding)
 
     def make_matrix(self, data: dict) -> Tuple[np.ndarray, np.ndarray]:
-        matrix = np.zeros((len(data), len(data)))
-        binding = [list(i) for i in matrix]
+        energies = np.zeros((len(data), len(data)))
+        binding = [list(i) for i in energies]
         for i, (name_i, sample) in enumerate(data.items()):
             for j, (name_j, raw_sample) in enumerate(sample.items()):
                 fields = self.sample_processor(raw_sample)
-                matrix[i, j] = fields['matrix']
+                energies[i, j] = fields['energies']
                 binding[i][j] = fields['binding']
-        matrix, (a_rates, d_rates) = self.sample_postproc(matrix)
-        return matrix, a_rates, d_rates, binding
+        matrix, (a_rates, d_rates) = self.sample_postproc(energies)
+        return matrix, energies, a_rates, d_rates, binding
 
 
 class InteractionSimulator():

@@ -4,6 +4,7 @@ import os
 from typing import Dict, List
 
 from src.srv.parameter_prediction.simulator_loading import find_simulator_loader
+from src.srv.io.manage.sys_interface import PACKAGE_DIR
 from src.utils.misc.io import get_pathnames
 from src.utils.misc.string_handling import remove_special_py_functions
 from src.utils.data.data_format_tools.common import load_json_as_dict
@@ -31,7 +32,7 @@ def create_argparse_from_dict(dict_args: Dict):
 
 
 def get_simulator_names() -> List:
-    simulator_dir = os.path.join("src", "srv", "parameter_prediction")
+    simulator_dir = os.path.join(PACKAGE_DIR, "src", "srv", "parameter_prediction")
     simulators = remove_special_py_functions(os.listdir(simulator_dir))
     from src.srv.parameter_prediction.simulator_loading import extra_simulators
     simulators = simulators + extra_simulators
@@ -74,7 +75,7 @@ def load_simulator_kwargs(default_args: dict, config_args: str = None) -> Dict:
 
 def retrieve_default_args() -> Dict:
     fn = get_pathnames(file_key='default_args', search_dir=os.path.join(
-        'src', 'utils', 'common', 'configs', 'simulators'), first_only=True)
+        PACKAGE_DIR, 'src', 'utils', 'common', 'configs', 'simulators'), first_only=True)
     default_args = load_json_as_dict(fn)
     return default_args
 

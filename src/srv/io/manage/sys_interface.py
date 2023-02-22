@@ -3,6 +3,7 @@
 import os
 from pathlib import Path
 from typing import Union
+import logging
 
 
 package_name = 'gene-circuit-glitch-prediction'

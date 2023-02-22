@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import os
 from src.srv.io.manage.script_manager import script_preamble
+from src.srv.io.manage.sys_interface import PACKAGE_DIR
 from src.srv.sequence_exploration.sequence_analysis import b_tabulate_mutation_info
 from src.utils.circuit.agnostic_circuits.circuit_manager_new import CircuitModeller
 from src.utils.common.setup_new import construct_circuit_from_cfg, prepare_config
@@ -26,7 +27,7 @@ ENSEMBLE_CONFIG = {
                 "name": "IntaRNA",
                 "postprocess": True
             },
-            "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
+            "molecular_params": "src/utils/common/configs/RNA_circuit/molecular_params.json",
             "system_type": "RNA"
         },
         "gather_interaction_stats": {
@@ -39,10 +40,10 @@ ENSEMBLE_CONFIG = {
                 "postprocess": True
             },
             "interaction_file_keyword": ["eqconstants", "binding_rates_dissociation"],
-            "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
+            "molecular_params": "src/utils/common/configs/RNA_circuit/molecular_params.json",
             "source_of_interactions": {
                 "is_source_dir_incomplete": True,
-                "source_dir": "./data/tests",
+                "source_dir": "data/tests",
                 "purpose_to_get_source_dir_from": "generate_species_templates",
                 "source_dir_actually_used_POSTERITY": None
             }
@@ -87,7 +88,7 @@ ENSEMBLE_CONFIG = {
             },
             "source_of_interaction_stats": {
                 "is_source_dir_incomplete": True,
-                "source_dir": "./data/tests",
+                "source_dir": "data/tests",
                 "purpose_to_get_source_dir_from": "gather_interaction_stats",
                 "source_dir_actually_used_POSTERITY": None
             },
@@ -111,31 +112,31 @@ def five_circuits(config: dict, data_writer=None):
 
     paths = [
         # toy_mRNA_circuit_0
-        os.path.join('tests', 'configs', 'circuits', '0_weak.fasta'),
+        os.path.join(PACKAGE_DIR, 'tests', 'configs', 'circuits', '0_weak.fasta'),
         # toy_mRNA_circuit_940
-        os.path.join('tests', 'configs', 'circuits', '1_med_weak.fasta'),
+        os.path.join(PACKAGE_DIR, 'tests', 'configs', 'circuits', '1_med_weak.fasta'),
         # toy_mRNA_circuit_1306
-        os.path.join('tests', 'configs', 'circuits', '2_medium.fasta'),
+        os.path.join(PACKAGE_DIR, 'tests', 'configs', 'circuits', '2_medium.fasta'),
         # toy_mRNA_circuit_648
-        os.path.join('tests', 'configs', 'circuits', '3_med_strong.fasta'),
+        os.path.join(PACKAGE_DIR, 'tests', 'configs', 'circuits', '3_med_strong.fasta'),
         # toy_mRNA_circuit_999
-        os.path.join('tests', 'configs', 'circuits', '4_strong.fasta')
+        os.path.join(PACKAGE_DIR, 'tests', 'configs', 'circuits', '4_strong.fasta')
     ]
 
     interaction_paths = []
     for inter in ['binding_rates_dissociation', 'eqconstants']:
         interaction_paths.append([
             # toy_mRNA_circuit_0
-            os.path.join('tests', 'configs', inter, f'0_weak_{inter}.csv'),
+            os.path.join(PACKAGE_DIR, 'tests', 'configs', inter, f'0_weak_{inter}.csv'),
             # toy_mRNA_circuit_940
-            os.path.join('tests', 'configs', inter, f'1_med_weak_{inter}.csv'),
+            os.path.join(PACKAGE_DIR, 'tests', 'configs', inter, f'1_med_weak_{inter}.csv'),
             # toy_mRNA_circuit_1306
-            os.path.join('tests', 'configs', inter, f'2_medium_{inter}.csv'),
+            os.path.join(PACKAGE_DIR, 'tests', 'configs', inter, f'2_medium_{inter}.csv'),
             # toy_mRNA_circuit_648
-            os.path.join('tests', 'configs', inter,
+            os.path.join(PACKAGE_DIR, 'tests', 'configs', inter,
                          f'3_med_strong_{inter}.csv'),
             # toy_mRNA_circuit_999
-            os.path.join('tests', 'configs', inter, f'4_strong_{inter}.csv')
+            os.path.join(PACKAGE_DIR, 'tests', 'configs', inter, f'4_strong_{inter}.csv')
         ])
 
     # interactions = np.expand_dims(np.expand_dims(np.arange(
