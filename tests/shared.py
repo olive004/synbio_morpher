@@ -70,9 +70,10 @@ ENSEMBLE_CONFIG = {
                 "inputs": ["RNA_0"],
                 "outputs": ["RNA_1"],
                 "function_name": "step_function_integrated",
+                # "function_name": "sine_step_function",
                 "function_kwargs": {
-                    "impulse_center": 50, #2
-                    # "impulse_halfwidth": 1,
+                    "impulse_center": 5, 
+                    "impulse_halfwidth": 1,
                     "target": 5
                 }
             },

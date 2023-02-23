@@ -35,6 +35,7 @@ class CircuitModeller():
         self.result_writer = ResultWriter() if result_writer is None else result_writer
         self.steady_state_args = config['simulation_steady_state']
         self.simulator_args = config['interaction_simulator']
+        self.simulation_args = config.get('simulation', {})
         self.interaction_simulator = InteractionSimulator(
             sim_args=self.simulator_args)
         self.discard_numerical_mutations = config['experiment'].get(
@@ -217,11 +218,14 @@ class CircuitModeller():
         b_forward_rates = np.asarray(b_forward_rates)
         b_reverse_rates = np.asarray(b_reverse_rates)
 
+        # Signal into parameter
+        # b_forward_rates = b_forward_rates + b_forward_rates * 0.5 * np.expand_dims(signal.reactions_onehot, axis=0)
+
         s_time = datetime.now()
         solution = self.sim_func(
             y0=b_steady_states, forward_rates=b_forward_rates, reverse_rates=b_reverse_rates)
 
-        tf = np.argmax(solution.ts == np.inf)
+        tf = np.argmax(solution.ts >= np.inf)
         b_new_copynumbers = solution.ys[:, :tf, :]
         t = solution.ts[0, :tf]
 
@@ -364,7 +368,7 @@ class CircuitModeller():
         return circuit
 
     def prepare_internal_funcs(self, circuits: List[Circuit]):
-        """ Create simulation function. If more customisation is needed per circuit, move 
+        """ Create simulation function. If more customisation is needed per circuit, move
         variables into the relevant wrapper simulation method """
         ref_circuit = circuits[0]
         signal = ref_circuit.signal
@@ -375,36 +379,46 @@ class CircuitModeller():
 
         signal.update_time_interval(self.dt)
 
-        self.sim_func = jax.vmap(
-            partial(bioreaction_sim_dfx_expanded,
-                    t0=self.t0, t1=self.t1, dt0=self.dt,
-                    signal=signal.func, signal_onehot=signal.reactions_onehot,
-                    inputs=ref_circuit.qreactions.reactions.inputs,
-                    outputs=ref_circuit.qreactions.reactions.outputs
-                    ))
+        if self.simulation_args['solver'] == 'diffrax':
+            self.sim_func = jax.vmap(
+                partial(bioreaction_sim_dfx_expanded,
+                        t0=self.t0, t1=self.t1, dt0=self.dt,
+                        signal=signal.func, signal_onehot=signal.onehot,  # signal.reactions_onehot,
+                        inputs=ref_circuit.qreactions.reactions.inputs,
+                        outputs=ref_circuit.qreactions.reactions.outputs
+                        ))
+        elif self.simulation_args['solver'] == 'ivp':
+            # way slower
 
-        # added this
+            def b_ivp(y0: np.ndarray, forward_rates: np.ndarray, reverse_rates: np.ndarray):
 
+                forward_rates = forward_rates + signal.reactions_onehot * \
+                    signal.func.keywords['target']
+                copynumbers = [None] * y0.shape[0]
+                ts = [None] * y0.shape[0]
+                for i, (y0i, forward_rates_i, reverse_rates_i) in enumerate(zip(y0, forward_rates, reverse_rates)):
+                    signal_result = integrate.solve_ivp(
+                        fun=partial(
+                            bioreaction_sim_expanded,
+                            args=None,
+                            inputs=ref_circuit.qreactions.reactions.inputs,
+                            outputs=ref_circuit.qreactions.reactions.outputs,
+                            signal=signal.func,
+                            forward_rates=forward_rates_i, reverse_rates=reverse_rates_i,
+                            signal_onehot=np.zeros_like(signal.onehot)
+                        ),
+                        t_span=(self.t0, self.t1),
+                        y0=y0i,
+                        method=self.steady_state_args.get('method', 'DOP853')
+                    )
+                    if not signal_result.success:
+                        raise ValueError(
+                            'Signal could not be found through solve_ivp')
+                    copynumbers[i] = signal_result.y
+                    ts[i] = signal_result.t[-1]
+                return copynumbers, ts
 
-# # ODE Terms
-# def bioreaction_sim(t, y, args, reactions: Reactions, signal, signal_onehot: jnp.ndarray):
-#     reactions.forward_rates = reactions.forward_rates + signal(t) * signal_onehot
-#     return one_step_de_sim(spec_conc=y,
-#                            reactions=reactions) # + signal(t) * signal_onehot
-
-
-# # ODE Terms
-# def bioreaction_sim_expanded(t, y,
-#                              args,
-#                              inputs, outputs,
-#                              signal, signal_onehot: jnp.ndarray,
-#                              forward_rates=None, reverse_rates=None):
-#     forward_rates_sig = forward_rates + 1000000000.5 * forward_rates * (signal(t) > 0) * signal_onehot
-#     return one_step_de_sim_expanded(
-#         spec_conc=y, inputs=inputs,
-#         outputs=outputs,
-#         forward_rates=forward_rates_sig,
-#         reverse_rates=reverse_rates) #+ signal(t) * signal_onehot
+            self.sim_func = b_ivp
 
     def batch_circuits(self,
                        circuits: List[Circuit],
