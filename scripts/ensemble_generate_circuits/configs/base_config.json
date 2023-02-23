@@ -1,0 +1,25 @@
+{
+    "experiment": {
+        "purpose": "ensemble_generate_circuits"
+    },
+    "base_configs_ensemble": {
+        "gather_interaction_stats": {
+            "interaction_simulator": {
+                "name": "IntaRNA",
+                "postprocess": true
+            },
+            "interaction_file_keyword": ["eqconstants", "binding_rates_dissociation", "energies", "binding_sites"],
+            "molecular_params": "src/utils/common/configs/RNA_circuit/molecular_params.json",
+            "experiment": {
+                "purpose": "gather_interaction_stats"
+            },    
+            "system_type": "RNA",
+            "source_of_interactions": {
+                "is_source_dir_incomplete": false,
+                "source_dir": "data/ensemble_mutation_effect_analysis/2023_02_23_171650/generate_species_templates",
+                "purpose_to_get_source_dir_from": "generate_species_templates",
+                "source_dir_actually_used_POSTERITY": null
+            }
+        }
+    }
+}

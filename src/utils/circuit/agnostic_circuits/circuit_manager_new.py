@@ -219,7 +219,7 @@ class CircuitModeller():
         b_reverse_rates = np.asarray(b_reverse_rates)
 
         # Signal into parameter
-        # b_forward_rates = b_forward_rates + b_forward_rates * 0.5 * np.expand_dims(signal.reactions_onehot, axis=0)
+        b_forward_rates = b_forward_rates + b_forward_rates * signal.reactions_onehot * signal.func.keywords['target']
 
         s_time = datetime.now()
         solution = self.sim_func(

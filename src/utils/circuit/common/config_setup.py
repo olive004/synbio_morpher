@@ -42,6 +42,10 @@ def get_simulator_names() -> List:
 def handle_simulator_cfgs(simulator, simulator_cfg_path):
     simulator_cfg = load_json_as_dict(simulator_cfg_path)
     cfg_protocol = find_simulator_loader(simulator)
+    if any([os.sep in v for v in simulator_cfg.values() if type(v) == str]):
+        for k, v in simulator_cfg.items():
+            if type(v) == str:
+                simulator_cfg[k] = os.path.join(PACKAGE_DIR, v) if ('src' in v) and (os.sep in v) and (PACKAGE_DIR not in v) else v
     return cfg_protocol(simulator_cfg)
 
 

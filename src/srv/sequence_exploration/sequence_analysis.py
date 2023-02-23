@@ -95,7 +95,7 @@ def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path
         return []
 
     interaction_path_keys = {
-        k: f'path_{k}' for k in INTERACTION_TYPES}
+        k: f'path_{k}' for k in INTERACTION_FIELDS_TO_WRITE}
     some_pathname = filt_stats[list(interaction_path_keys.values())[
         0]].to_list()[0]
     experiment_folder = get_root_experiment_folder(some_pathname)

@@ -159,7 +159,9 @@ class DataWriter():
 
     def write_to_output_summary(self, name: str, **kwargs):
         output_summary = {str(k): str(v) for k, v in kwargs.items()}
-        output_summary["name"] = name
+        output_summary['name'] = name
+        output_summary['subdir'] = self.write_dir.replace(
+            self.top_write_dir + os.sep, '')
         self.output('csv', 'output_summary', write_master=False,
                     **{'data': output_summary})
 

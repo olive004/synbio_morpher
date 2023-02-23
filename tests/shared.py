@@ -73,7 +73,7 @@ ENSEMBLE_CONFIG = {
                 # "function_name": "sine_step_function",
                 "function_kwargs": {
                     "impulse_center": 5, 
-                    "impulse_halfwidth": 1,
+                    # "impulse_halfwidth": 1,
                     "target": 5
                 }
             },

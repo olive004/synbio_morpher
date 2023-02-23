@@ -4,10 +4,11 @@ import os
 
 from fire import Fire
 
-from src.utils.results.experiments import Experiment, Protocol
 from src.srv.io.manage.script_manager import script_preamble
-from src.utils.results.writer import DataWriter
+from src.srv.parameter_prediction.interactions import INTERACTION_FIELDS_TO_WRITE
 from src.srv.sequence_exploration.sequence_analysis import generate_interaction_stats
+from src.utils.results.experiments import Experiment, Protocol
+from src.utils.results.writer import DataWriter
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.misc.io import get_pathnames
 from src.utils.misc.scripts_io import get_search_dir
@@ -37,9 +38,9 @@ def main(config=None, data_writer=None):
         Protocol(
             # get list of all interaction paths
             partial(get_pathnames,
-                    file_key=config_file['interaction_file_keyword'],
+                    file_key=INTERACTION_FIELDS_TO_WRITE,
                     search_dir=search_dirs,
-                    subdirs=config_file['interaction_file_keyword'],
+                    subdirs=INTERACTION_FIELDS_TO_WRITE,
                     as_dict=True
                     ),
             req_output=True,
