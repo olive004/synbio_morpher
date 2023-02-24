@@ -10,6 +10,7 @@ from typing import Tuple, List, Union
 from src.srv.parameter_prediction.simulator import RawSimulationHandling
 from src.srv.io.loaders.experiment_loading import INTERACTION_FILE_ADDONS, load_param, load_units
 from src.srv.io.loaders.misc import load_csv
+from src.srv.io.manage.sys_interface import PACKAGE_DIR
 from src.utils.data.data_format_tools.common import determine_file_format
 
 
@@ -95,8 +96,15 @@ class InteractionMatrix():
 
         self.name = self.isolate_circuit_name(filepath, filetype)
         if filetype == 'csv':
-            matrix, sample_names = load_csv(
-                filepath, load_as='pd', return_header=True)
+            try:
+                matrix, sample_names = load_csv(
+                    filepath, load_as='pd', return_header=True)
+            except FileNotFoundError:
+                try:
+                    matrix, sample_names = load_csv(
+                        os.path.join(PACKAGE_DIR, filepath), load_as='pd', return_header=True)
+                except FileNotFoundError as e:
+                    raise FileNotFoundError(e)
         else:
             raise TypeError(
                 f'Unsupported filetype {filetype} for loading {filepath}')

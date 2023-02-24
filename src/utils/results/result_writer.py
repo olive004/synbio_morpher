@@ -34,7 +34,7 @@ class ResultWriter(DataWriter):
 
         def prettify_writeable(writeable):
             if type(writeable) != str:
-            # if type(writeable) == np.ndarray or (type(writeable) == list and type(writeable[0]) != str):
+                # if type(writeable) == np.ndarray or (type(writeable) == list and type(writeable[0]) != str):
                 writeable = np.array(writeable)
                 if writeable.ndim == 2 and np.shape(writeable)[1] == 1:
                     writeable = np.squeeze(writeable)
@@ -74,6 +74,7 @@ class ResultWriter(DataWriter):
                           out_name=f'report_{result.name}')
 
     def write_results(self, results: Dict[str, Result], new_report=False, no_visualisations=False,
+                      reduce_visualisation=True,
                       only_numerical=False, no_analytics=False, no_numerical=False):
 
         for _name, result in results.items():
@@ -81,8 +82,14 @@ class ResultWriter(DataWriter):
                 continue
 
             if not no_visualisations:
+                target_vis_size = 20000  # Max time steps to plot
+                # Subsampling
+                if reduce_visualisation and result.data.shape[-1] > target_vis_size:
+                    step_sz = int(result.data.shape[-1] / target_vis_size)
                 result.vis_kwargs.update(
-                    {'new_vis': new_report, 'data': result.data})
+                    {'new_vis': new_report, 'data': result.data[::step_sz]})
+                if 't' in result.vis_kwargs:
+                    result.vis_kwargs['t'] = result.vis_kwargs['t'][::step_sz]
 
             if not no_numerical:
                 self.write_numerical(
@@ -111,6 +118,8 @@ class ResultWriter(DataWriter):
         self.output(out_name=out_name, write_func=writer, **vis_kwargs)
 
     def visualise_graph(self, circuit: Circuit, mode="pyvis", new_vis=False):
+        """ This is broken right now - networkx has updated """
+        return
         from src.utils.results.graph import Graph
         # input_species = sorted(set(flatten_listlike(
         #     [r.input for r in circuit.model.reactions if r.output and r.input])))
@@ -120,7 +129,8 @@ class ResultWriter(DataWriter):
         input_eqconstants = circuit.interactions.eqconstants
         input_species = sorted(set(flatten_listlike([
             r.input for r in circuit.model.reactions if r.input])))
-        graph = Graph(source_matrix=input_eqconstants, labels=sorted([s.name for s in input_species]))
+        graph = Graph(source_matrix=input_eqconstants,
+                      labels=sorted([s.name for s in input_species]))
 
         out_path = os.path.join(self.write_dir, 'graph')
         if mode == 'pyvis':
