@@ -74,7 +74,6 @@ class ResultWriter(DataWriter):
                           out_name=f'report_{result.name}')
 
     def write_results(self, results: Dict[str, Result], new_report=False, no_visualisations=False,
-                      reduce_visualisation=True,
                       only_numerical=False, no_analytics=False, no_numerical=False):
 
         for _name, result in results.items():
@@ -82,14 +81,8 @@ class ResultWriter(DataWriter):
                 continue
 
             if not no_visualisations:
-                target_vis_size = 20000  # Max time steps to plot
-                # Subsampling
-                if reduce_visualisation and result.data.shape[-1] > target_vis_size:
-                    step_sz = int(result.data.shape[-1] / target_vis_size)
                 result.vis_kwargs.update(
-                    {'new_vis': new_report, 'data': result.data[::step_sz]})
-                if 't' in result.vis_kwargs:
-                    result.vis_kwargs['t'] = result.vis_kwargs['t'][::step_sz]
+                    {'new_vis': new_report, 'data': result.data})
 
             if not no_numerical:
                 self.write_numerical(

@@ -76,6 +76,8 @@ class CircuitModeller():
                 circuit, interactions)
             circuit.interactions = interactions
             circuit.interactions_state = 'computed'
+        elif circuit.interactions_state == 'loaded':
+            pass
         else:
             circuit.init_interactions()
 

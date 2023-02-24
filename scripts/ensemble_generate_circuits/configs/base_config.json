@@ -3,6 +3,25 @@
         "purpose": "ensemble_generate_circuits"
     },
     "base_configs_ensemble": {
+        "generate_species_templates": {
+            "interaction_simulator": {
+                "name": "IntaRNA",
+                "postprocess": true
+            },
+            "experiment": {
+                "purpose": "generate_species_templates",
+                "test_mode": false
+            },
+            "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
+            "circuit_generation": {
+                "repetitions": 200000,
+                "species_count": 3,
+                "sequence_length": 20,
+                "generator_protocol": "random",
+                "proportion_to_mutate": 0.5
+            },
+            "system_type": "RNA"
+        },
         "gather_interaction_stats": {
             "interaction_simulator": {
                 "name": "IntaRNA",
@@ -15,8 +34,8 @@
             },    
             "system_type": "RNA",
             "source_of_interactions": {
-                "is_source_dir_incomplete": false,
-                "source_dir": "data/ensemble_mutation_effect_analysis/2023_02_23_171650/generate_species_templates",
+                "is_source_dir_incomplete": true,
+                "source_dir": "data/ensemble_generate_circuits",
                 "purpose_to_get_source_dir_from": "generate_species_templates",
                 "source_dir_actually_used_POSTERITY": null
             }

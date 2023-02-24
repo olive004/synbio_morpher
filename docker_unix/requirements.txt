@@ -10,6 +10,7 @@ matplotlib==3.6.0
 networkx
 numpy
 pandas
+plotly.express
 pyvis
 seaborn
 tensorflow
