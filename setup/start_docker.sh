@@ -3,7 +3,7 @@
 
 docker pull docker/dockerfile:1
 docker pull quay.io/biocontainers/intarna:3.3.2--pl5321h7ff8a90_0
-docker pull nvidia/cuda:12.0.1-base-ubuntu22.04
+docker pull nvidia/cuda:11.4.0-base-ubuntu20.04
 
 # If image not built yet
 docker build -t genetic_glitch:latest docker_unix
