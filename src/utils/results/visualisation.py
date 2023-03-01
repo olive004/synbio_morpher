@@ -300,7 +300,7 @@ class VisODE():
             data = np.array(data)
 
         if subsample:
-            target_vis_size = 10000  # Max time steps to plot
+            target_vis_size = 5000  # Max time steps to plot
             if data.shape[0] > target_vis_size:
                 step_sz = int(data.shape[0] / target_vis_size)
                 if len(data.shape) > 1:

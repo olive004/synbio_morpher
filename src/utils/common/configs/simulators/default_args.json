@@ -1,10 +1,10 @@
 {
     "IntaRNA": "./src/utils/common/configs/simulators/intaRNA_args.json",
     "simulation_steady_state": {
-        "max_time": 70,
+        "max_time": 20,
         "method": "DOP853",
-        "steady_state_solver": "ivp",
-        "time_interval": 0.1,
-        "use_zero_rates_ivp": true
+        "steady_state_solver": "jax",
+        "time_interval": 0.01,
+        "use_zero_rates": true
     }
 }

@@ -58,8 +58,14 @@ class CircuitModeller():
 
     def init_circuit(self, circuit: Circuit) -> Circuit:
         circuit = self.compute_interactions(circuit)
-        circuit = self.find_steady_states(circuit)
+        circuit = self.find_steady_states([circuit])[0]
         return circuit
+    
+    def init_circuits(self, circuits: List[Circuit]) -> List[Circuit]:
+        for i in range(len(circuits)):
+            circuits[i] = self.compute_interactions(circuits[i])
+        circuits = self.find_steady_states(circuits)
+        return circuits
 
     # @time_it
     def compute_interactions(self, circuit: Circuit):
@@ -72,14 +78,14 @@ class CircuitModeller():
                 species=sorted(get_unique(flatten_listlike(
                     [r.input for r in circuit.model.reactions]))),
                 filename=filename)
-            circuit = update_species_simulated_rates(
-                circuit, interactions)
             circuit.interactions = interactions
             circuit.interactions_state = 'computed'
         elif circuit.interactions_state == 'loaded':
             pass
         else:
             circuit.init_interactions()
+        circuit = update_species_simulated_rates(
+                circuit, circuit.interactions)
 
         for filename_addon in sorted(INTERACTION_FIELDS_TO_WRITE):
             interaction_matrix = circuit.interactions.__getattribute__(
@@ -100,61 +106,84 @@ class CircuitModeller():
         # else:
         return self.interaction_simulator.run(data, compute_by_filename=False)
 
-    def find_steady_states(self, circuit: Circuit):
+    def find_steady_states(self, circuits: List[Circuit], batch=True) -> List[Circuit]:
         modeller_steady_state = Deterministic(
             max_time=self.steady_state_args['max_time'],
             time_interval=self.steady_state_args['time_interval'])
 
-        steady_states = self.compute_steady_states(modeller_steady_state,
-                                                   circuit=circuit,
+        b_steady_states = self.compute_steady_states(modeller_steady_state,
+                                                   circuits=circuits,
                                                    solver_type=self.steady_state_args['steady_state_solver'],
-                                                   use_zero_rates_ivp=self.steady_state_args['use_zero_rates_ivp'])
+                                                   use_zero_rates=self.steady_state_args['use_zero_rates'])
 
-        circuit.result_collector.add_result(
-            data=steady_states,
-            name='steady_states',
-            category='time_series',
-            vis_func=VisODE().plot,
-            vis_kwargs={'t': np.arange(0, np.shape(steady_states)[circuit.time_axis]) *
-                        modeller_steady_state.time_interval,
-                        'legend': [s.name for s in circuit.model.species],
-                        'out_type': 'svg'},
-            analytics_kwargs={'labels': [
-                s.name for s in circuit.model.species]},
-            no_write=False)
-        return circuit
+        for circuit, steady_states in zip(circuits, b_steady_states):
+            circuit.result_collector.add_result(
+                data=steady_states,
+                name='steady_states',
+                category='time_series',
+                vis_func=VisODE().plot,
+                vis_kwargs={'t': np.arange(0, np.shape(steady_states)[circuit.time_axis]) *
+                            modeller_steady_state.time_interval,
+                            'legend': [s.name for s in circuit.model.species],
+                            'out_type': 'svg'},
+                analytics_kwargs={'labels': [
+                    s.name for s in circuit.model.species]},
+                no_write=False)
+        return circuits
 
-    def compute_steady_states(self, modeller: Modeller, circuit: Circuit,
-                              solver_type: str = 'naive', use_zero_rates_ivp: bool = False):
+    def compute_steady_states(self, modeller: Modeller, circuits: List[Circuit],
+                              solver_type: str = 'naive', use_zero_rates: bool = False) -> List[Circuit]:
         if solver_type == 'naive':
-            copynumbers = self.model_circuit(
-                modeller, y0=circuit.qreactions.quantities, circuit=circuit)
-            # TODO: reshape to copynumbers[1] or copynumbers[0][1]
-            copynumbers = copynumbers
+            b_copynumbers = []
+            for circuit in circuits:
+                copynumbers = self.model_circuit(
+                    modeller, y0=circuit.qreactions.quantities, circuit=circuit)
+                # TODO: reshape to copynumbers[1] or copynumbers[0][1]
+                b_copynumbers.append(copynumbers)
         elif solver_type == 'ivp':
-            r = circuit.qreactions.reactions
-            if any((circuit.qreactions.reactions.reverse_rates - circuit.qreactions.reactions.forward_rates) > 1e2) and use_zero_rates_ivp:
-                r = deepcopy(circuit.qreactions.reactions)
-                r.forward_rates = r.forward_rates * \
-                    ((circuit.qreactions.reactions.reverse_rates -
-                     circuit.qreactions.reactions.forward_rates) < 1e2) * 1
+            b_copynumbers = []
+            for circuit in circuits:
+                r = circuit.qreactions.reactions
+                if use_zero_rates and any((circuit.qreactions.reactions.reverse_rates - circuit.qreactions.reactions.forward_rates) > 1e2):
+                    r = deepcopy(circuit.qreactions.reactions)
+                    r.forward_rates = r.forward_rates * \
+                        ((circuit.qreactions.reactions.reverse_rates -
+                        circuit.qreactions.reactions.forward_rates) < 1e2) * 1
 
-            steady_state_result = integrate.solve_ivp(
-                # partial(bioreaction_sim_expanded, args=None, inputs=r.inputs, outputs=r.outputs,
-                #         signal=vanilla_return, signal_onehot=np.ones_like(
-                #             r.forward_rates),
-                #         forward_rates=r.forward_rates, reverse_rates=r.reverse_rates),
-                partial(bioreaction_sim, args=None, reactions=r, signal=vanilla_return,
-                        signal_onehot=np.zeros_like(circuit.signal.reactions_onehot)),
-                (0, modeller.max_time),
-                y0=circuit.qreactions.quantities,
-                method=self.steady_state_args.get('method', 'DOP853'))
-            if not steady_state_result.success:
-                raise ValueError(
-                    'Steady state could not be found through solve_ivp - possibly because units '
-                    f'are in {circuit.interactions.units}. {SIMULATOR_UNITS}')
-            copynumbers = steady_state_result.y
-        return copynumbers
+                steady_state_result = integrate.solve_ivp(
+                    # partial(bioreaction_sim_expanded, args=None, inputs=r.inputs, outputs=r.outputs,
+                    #         signal=vanilla_return, signal_onehot=np.ones_like(
+                    #             r.forward_rates),
+                    #         forward_rates=r.forward_rates, reverse_rates=r.reverse_rates),
+                    partial(bioreaction_sim, args=None, reactions=r, signal=vanilla_return,
+                            signal_onehot=np.zeros_like(circuit.signal.reactions_onehot)),
+                    (0, modeller.max_time),
+                    y0=circuit.qreactions.quantities,
+                    method=self.steady_state_args.get('method', 'DOP853'))
+                if not steady_state_result.success:
+                    raise ValueError(
+                        'Steady state could not be found through solve_ivp - possibly because units '
+                        f'are in {circuit.interactions.units}. {SIMULATOR_UNITS}')
+                copynumbers = steady_state_result.y
+                b_copynumbers.append(copynumbers)
+        elif solver_type == 'jax':
+            circuit = circuits[0]
+
+            sim_func = jax.vmap(partial(bioreaction_sim_dfx_expanded,
+                        t0=self.t0, t1=self.t1, dt0=self.dt,
+                        signal=vanilla_return, signal_onehot=np.zeros_like(circuit.signal.reactions_onehot),  # signal.reactions_onehot,
+                        inputs=circuit.qreactions.reactions.inputs,
+                        outputs=circuit.qreactions.reactions.outputs
+                        ))
+            solution = sim_func(
+                y0=np.asarray([c.qreactions.quantities for c in circuits]), 
+                forward_rates=np.asarray([c.qreactions.reactions.forward_rates for c in circuits]), 
+                reverse_rates=np.asarray([c.qreactions.reactions.reverse_rates for c in circuits]))
+
+            tf = np.argmax(solution.ts >= np.inf)
+            b_copynumbers = solution.ys[:, :tf, :]
+
+        return np.asarray(b_copynumbers)
 
     def model_circuit(self, y0: np.ndarray, circuit: Circuit):
         assert np.shape(y0)[circuit.time_axis] == 1, 'Please only use 1-d ' \
