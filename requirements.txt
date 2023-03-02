@@ -2,7 +2,7 @@ argparse
 biopython
 chex
 fire
-jax
+jax==0.3.22
 jaxlib
 jupyter
 diffrax
