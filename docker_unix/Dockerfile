@@ -3,7 +3,7 @@
 # https://quay.io/repository/biocontainers/intarna
 FROM quay.io/biocontainers/intarna:3.3.2--pl5321h7ff8a90_0 AS IntaRNA_build
 
-FROM nvidia/cuda:11.4.0-base-ubuntu20.04 AS workdir_build
+FROM nvidia/cuda:12.0.0-base-ubuntu22.04 AS workdir_build
 
 ################################################################################
 #  Install python dependencies
@@ -14,7 +14,7 @@ RUN apt-get update && \
     yes | apt-get install python3-pip
 RUN cd /usr/lib/install_requirements && \
     pip install -r ./requirements.txt 
-RUN pip install --upgrade "jax[cuda]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+RUN pip install "jax[cuda11_cudnn82]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 
 ################################################################################
 #  setup environment
