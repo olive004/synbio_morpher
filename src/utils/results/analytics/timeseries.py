@@ -126,6 +126,7 @@ def frequency(data):
 def generate_base_analytics(data: jnp.ndarray, time: jnp.ndarray, labels: List[str],
                             signal_idxs: jnp.ndarray, signal_time,
                             ref_circuit_data: jnp.ndarray) -> dict:
+    """ Assuming [species, time] for data """
     if data is None:
         return {}
     analytics = {
@@ -180,9 +181,7 @@ def generate_differences_ratios(analytics: dict, ref_analytics) -> Tuple[dict]:
 
 
 def generate_analytics(data, time, labels: List[str], ref_circuit_data=None,
-                       signal_onehot=None, signal_time=None):
-    signal_idxs = jnp.where(signal_onehot == 1)[0]
-    signal_idxs = signal_idxs if len(signal_idxs) >= 1 else None
+                       signal_idxs=None, signal_time=None):
     analytics = generate_base_analytics(data=data, time=time, labels=labels,
                                         signal_idxs=signal_idxs, signal_time=signal_time, 
                                         ref_circuit_data=ref_circuit_data)
