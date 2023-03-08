@@ -132,8 +132,8 @@ def generate_base_analytics(data: jnp.ndarray, time: jnp.ndarray, labels: List[s
     analytics = {
         'first_derivative': get_derivative(data),
         'initial_steady_states': jnp.expand_dims(data[:, 0], axis=1),
-        'max_amount': jnp.expand_dims(jnp.max(data, axis=0), axis=1),
-        'min_amount': jnp.expand_dims(jnp.min(data, axis=0), axis=1),
+        'max_amount': jnp.expand_dims(jnp.max(data, axis=-1), axis=1),
+        'min_amount': jnp.expand_dims(jnp.min(data, axis=-1), axis=1),
         'RMSE': get_rmse(data, ref_circuit_data),
         'steady_states': jnp.expand_dims(data[:, -1], axis=1)
     }
