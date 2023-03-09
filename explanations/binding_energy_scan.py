@@ -120,10 +120,8 @@ def get_steady_states(starting_state, reverse_rates, sim_model, params):
     return steady_state_results
 
 
-def get_full_steady_states(starting_state, total_time, reverse_rates, sim_model, params):
+def loop_sim(steady_state_results, total_time, params, reverse_rates, sim_model):
 
-    steady_state_results = get_steady_states(
-        starting_state, reverse_rates, sim_model, params)
     for ti in range(0, total_time, int(params.total_time)):
 
         def to_vmap_basic(starting_state, reverse_rates):
@@ -132,7 +130,18 @@ def get_full_steady_states(starting_state, total_time, reverse_rates, sim_model,
 
         steady_state_results = jax.jit(jax.vmap(to_vmap_basic))(
             steady_state_results[0], reverse_rates)
+    return steady_state_results
 
+
+def get_full_steady_states(starting_state, total_time, reverse_rates, sim_model, params):
+    steady_state_results = get_steady_states(
+        starting_state, reverse_rates, sim_model, params)
+    steady_state_results = loop_sim(steady_state_results, total_time, params, reverse_rates, sim_model)
+    return np.array(steady_state_results[0])
+
+
+def get_full_final_states(steady_states, reverse_rates, total_time, new_model, params):
+    steady_state_results = loop_sim([steady_states], total_time, params, reverse_rates, new_model)
     return np.array(steady_state_results[0])
 
 
@@ -204,19 +213,20 @@ def plot_scan(final_states, t_final, bi, species_names_onlyin, num_show_species)
 
 
 def adjust_sim_params(reverse_rates, max_kd):
-    dt = np.round(reverse_rates.max() / max_kd, 1)
-    dt = 0.1 / dt
+    dt_scale = np.round(reverse_rates.max() / max_kd, 1)
+    dt = 0.1 / dt_scale
 
-    params_steady = BasicSimParams(total_time=100000.0, delta_t=dt)
+    params_steady = BasicSimParams(total_time=200000.0, delta_t=dt)
     total_t_steady = 3000000
-    params_final = BasicSimParams(total_time=400000.0, delta_t=dt)
+    params_final = BasicSimParams(total_time=200000.0, delta_t=dt)
+    total_t_final = 1000000
 
-    return params_steady, total_t_steady, params_final
+    return params_steady, total_t_steady, params_final, total_t_final
 
 
 def scan_all_params(kds, K_eqs, b_reverse_rates, model):
     max_kds = kds.max()
-    batchsize = 30
+    batchsize = 40
     target = 0.3
     a_sig = a * 1
     a_sig[input_species_idx] = a[input_species_idx] * (1 + target)
@@ -236,7 +246,7 @@ def scan_all_params(kds, K_eqs, b_reverse_rates, model):
         reverse_rates = b_reverse_rates[bi:bf]
         starting_state = BasicSimState(concentrations=s0)
 
-        params_steady, total_t_steady, params_final = adjust_sim_params(
+        params_steady, total_t_steady, params_final, total_t_final = adjust_sim_params(
             reverse_rates, max_kds)
 
         steady_states = get_full_steady_states(
@@ -244,8 +254,8 @@ def scan_all_params(kds, K_eqs, b_reverse_rates, model):
                 model_steady),
             params=params_steady)
         clear_gpu()
-        final_states, t_final = get_final_states(
-            reverse_rates, steady_states, convert_model(model_sig), params=params_final)
+        final_states, t_final = get_full_final_states(
+            steady_states, reverse_rates, total_t_final, convert_model(model_sig), params=params_final)
         plot_scan(final_states, t_final, bi, species_names, len(species_names))
         plot_scan(final_states, t_final, bi, species_names_onlyin, num_species)
 
