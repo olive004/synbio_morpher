@@ -120,44 +120,33 @@ def get_steady_states(starting_state, reverse_rates, sim_model, params):
     return steady_state_results
 
 
-def loop_sim(steady_state_results, total_time, params, reverse_rates, sim_model):
+def loop_sim(steady_state_results, params, reverse_rates, sim_model):
 
-    for ti in range(0, total_time, int(params.total_time)):
+    def to_vmap_basic(starting_state, reverse_rates):
+        sim_model.reverse_rates = reverse_rates
+        return basic_de_sim(starting_state=BasicSimState(concentrations=starting_state), model=sim_model, params=params)
 
-        def to_vmap_basic(starting_state, reverse_rates):
-            sim_model.reverse_rates = reverse_rates
-            return basic_de_sim(starting_state=BasicSimState(concentrations=starting_state), model=sim_model, params=params)
-
-        steady_state_results = jax.jit(jax.vmap(to_vmap_basic))(
-            steady_state_results[0], reverse_rates)
+    steady_state_results = jax.jit(jax.vmap(to_vmap_basic))(
+        steady_state_results[0], reverse_rates)
     return steady_state_results
 
 
 def get_full_steady_states(starting_state, total_time, reverse_rates, sim_model, params):
     steady_state_results = get_steady_states(
         starting_state, reverse_rates, sim_model, params)
-    steady_state_results = loop_sim(steady_state_results, total_time, params, reverse_rates, sim_model)
+    for ti in range(0, total_time, int(params.total_time)):
+        steady_state_results = loop_sim(steady_state_results, params, reverse_rates, sim_model)
     return np.array(steady_state_results[0])
 
 
 def get_full_final_states(steady_states, reverse_rates, total_time, new_model, params):
-    steady_state_results = loop_sim([steady_states], total_time, params, reverse_rates, new_model)
-    return np.array(steady_state_results[0])
-
-
-def get_final_states(reverse_rates, steady_states, new_model, params):
-
-    def to_vmap_basic(starting_state, reverse_rates):
-        new_model.reverse_rates = reverse_rates
-        return basic_de_sim(starting_state=BasicSimState(concentrations=starting_state), model=new_model, params=params)
-
-    final_states_results = jax.jit(jax.vmap(to_vmap_basic))(
-        steady_states, reverse_rates)
-    final_states = np.array(np.concatenate([np.expand_dims(
-        steady_states, axis=1), final_states_results[1]], axis=1))
+    final_states_results = [steady_states]
+    final_states = np.expand_dims(steady_states, axis=1)
+    for ti in range(0, total_time, int(params.total_time)):
+        final_states_results = loop_sim(final_states_results, params, reverse_rates, new_model)
+        final_states = np.array(np.concatenate([final_states, final_states_results[1]], axis=1))
     t_final = np.arange(
         final_states.shape[1]) * params.delta_t
-
     return final_states, t_final
 
 
@@ -175,17 +164,21 @@ def get_analytics(steady_states, final_states, t, K_eqs, model, species_names, s
     ))
     clear_gpu()
     resp_vmap = jax.jit(jax.vmap(partial(get_step_response_times, signal_idx=input_species_idx, t=np.expand_dims(t, 0), signal_time=0.0)))
-    response_times1 = np.array(resp_vmap(
-        data=np.swapaxes(final_states[:int(batchsize/2)], 1, 2), steady_states=np.expand_dims(steady_states[:int(batchsize/2)], axis=2), 
-        deriv=jnp.gradient(np.swapaxes(final_states[:int(batchsize/2)], 1, 2))[0]))
-    response_times2 = np.array(resp_vmap(
-        data=np.swapaxes(final_states[int(batchsize/2):], 1, 2), steady_states=np.expand_dims(steady_states[int(batchsize/2):], axis=2), 
-        deriv=jnp.gradient(np.swapaxes(final_states[int(batchsize/2):], 1, 2))[0]))
+    max_t = 100000
+    response_times = np.array(resp_vmap(
+        data=np.swapaxes(final_states[:, :max_t, :], 1, 2), steady_states=np.expand_dims(steady_states[:, :max_t, :], axis=2), 
+        deriv=jnp.gradient(np.swapaxes(final_states[:, :max_t, :], 1, 2))[0]))
+    for ti in range(max_t, int(final_states.shape[1]), max_t):
+        tf = min(ti, int(final_states.shape[1]))
+        response_times1 = np.array(resp_vmap(
+            data=np.swapaxes(final_states[:, ti:tf, :], 1, 2), steady_states=np.expand_dims(steady_states[:, ti:tf, :], axis=2), 
+            deriv=jnp.gradient(np.swapaxes(final_states[:, ti:tf, :], 1, 2))[0]))
+        response_times = np.array(np.concatenate([response_times, response_times1], axis=0))
 
     analytics = {
         'precision': precision.flatten(),
         'sensitivity': sensitivity.flatten(),
-        'response_times': np.concatenate([response_times1, response_times2], axis=0).flatten()
+        'response_times': response_times.flatten()
     }
     analytics_df = pd.DataFrame.from_dict(analytics)
     analytics_df['circuit_name'] = np.repeat(np.expand_dims(
@@ -216,9 +209,9 @@ def adjust_sim_params(reverse_rates, max_kd):
     dt_scale = np.round(reverse_rates.max() / max_kd, 1)
     dt = 0.1 / dt_scale
 
-    params_steady = BasicSimParams(total_time=200000.0, delta_t=dt)
+    params_steady = BasicSimParams(total_time=100000.0, delta_t=dt)
     total_t_steady = 3000000
-    params_final = BasicSimParams(total_time=200000.0, delta_t=dt)
+    params_final = BasicSimParams(total_time=100000.0, delta_t=dt)
     total_t_final = 1000000
 
     return params_steady, total_t_steady, params_final, total_t_final
