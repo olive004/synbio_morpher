@@ -18,7 +18,6 @@ os.environ["TF_CPP_MIN_LOG_LOVEL"] = "0"
 jax.config.update('jax_platform_name', 'gpu')
 jax.devices()
 
-
 if __package__ is None or (__package__ == ''):
 
     module_path = os.path.abspath(os.path.join('..'))
