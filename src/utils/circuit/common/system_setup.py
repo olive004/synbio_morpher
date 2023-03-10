@@ -3,13 +3,10 @@ from bioreaction.model.data_containers import BasicModel
 from src.utils.data.common import Data
 
 
-def get_system_type(sys_type, use_updated = True):
-    if sys_type == "RNA" and use_updated:
+def get_system_type(sys_type):
+    if sys_type == "RNA":
         from src.utils.circuit.agnostic_circuits.circuit_new import Circuit
         return Circuit
-    if sys_type == "RNA":
-        from src.utils.circuit.specific_circuits.RNA.RNA_circuit import RNACircuit
-        return RNACircuit
     else:
         raise NotImplementedError(
             f"Desired system type {sys_type} not supported.")

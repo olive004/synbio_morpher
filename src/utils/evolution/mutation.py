@@ -113,5 +113,5 @@ def implement_mutation(circuit: Circuit, mutation: Mutations):
         circuit.model.species[sidx].physical_data = mutation.get_sequence()
     else:
         raise KeyError(
-            f'Could not find specie {mutation.template_name} in data for mutation {mutation.mutation_name}')
+            f'Could not find specie {mutation.template_name} in model for mutation {mutation.mutation_name}')
     return circuit

@@ -1,9 +1,10 @@
 
 
 import logging
+from typing import Dict
 import os
-
 import numpy as np
+
 from src.utils.results.analytics.naming import get_analytics_types_all
 from src.utils.results.results import Result
 from src.utils.results.writer import DataWriter
@@ -16,7 +17,6 @@ from src.utils.circuit.agnostic_circuits.circuit_new import Circuit
 class ResultWriter(DataWriter):
     def __init__(self, purpose, out_location=None) -> None:
         super().__init__(purpose, out_location)
-        self.report = {}
 
     def make_metric_visualisation(self, result, keys, source: dict, new_report: bool):
         for plottable in keys:
@@ -29,10 +29,12 @@ class ResultWriter(DataWriter):
                 self.output(out_name=out_name,
                             write_func=result.vis_func, **result.vis_kwargs)
 
-    def make_report(self, keys: list, source: dict):
+    @staticmethod
+    def make_report(keys: list, source: dict):
 
         def prettify_writeable(writeable):
-            if type(writeable) == np.ndarray or type(writeable) == list:
+            if type(writeable) != str:
+                # if type(writeable) == np.ndarray or (type(writeable) == list and type(writeable[0]) != str):
                 writeable = np.array(writeable)
                 if writeable.ndim == 2 and np.shape(writeable)[1] == 1:
                     writeable = np.squeeze(writeable)
@@ -50,7 +52,6 @@ class ResultWriter(DataWriter):
                 writeable = [writeable]
             for w in writeable:
                 report[w] = prettify_writeable(source.get(w, ''))
-        self.report = report
 
         return report
 
@@ -72,10 +73,13 @@ class ResultWriter(DataWriter):
         self.write_report(writeables, analytics, new_report,
                           out_name=f'report_{result.name}')
 
-    def write_results(self, results: dict, new_report=False, no_visualisations=False,
+    def write_results(self, results: Dict[str, Result], new_report=False, no_visualisations=False,
                       only_numerical=False, no_analytics=False, no_numerical=False):
 
         for _name, result in results.items():
+            if result.no_write:
+                continue
+
             if not no_visualisations:
                 result.vis_kwargs.update(
                     {'new_vis': new_report, 'data': result.data})
@@ -95,17 +99,20 @@ class ResultWriter(DataWriter):
                     self.write_analytics(result, new_report=new_report)
 
     def write_all(self, circuit: Circuit, new_report: bool, no_visualisations: bool = False,
-                  only_numerical: bool = False, no_numerical: bool = False):
+                  only_numerical: bool = False, no_numerical: bool = False, no_analytics: bool = False):
         if not no_visualisations:
             self.visualise_graph(circuit)
         self.write_results(circuit.result_collector.results,
                            new_report=new_report, no_visualisations=no_visualisations,
-                           only_numerical=only_numerical, no_numerical=no_numerical)
+                           only_numerical=only_numerical, no_numerical=no_numerical,
+                           no_analytics=no_analytics)
 
     def visualise(self, out_name, writer, vis_kwargs):
         self.output(out_name=out_name, write_func=writer, **vis_kwargs)
 
     def visualise_graph(self, circuit: Circuit, mode="pyvis", new_vis=False):
+        """ This is broken right now - networkx has updated """
+        return
         from src.utils.results.graph import Graph
         # input_species = sorted(set(flatten_listlike(
         #     [r.input for r in circuit.model.reactions if r.output and r.input])))
@@ -115,7 +122,8 @@ class ResultWriter(DataWriter):
         input_eqconstants = circuit.interactions.eqconstants
         input_species = sorted(set(flatten_listlike([
             r.input for r in circuit.model.reactions if r.input])))
-        graph = Graph(source_matrix=input_eqconstants, labels=sorted([s.name for s in input_species]))
+        graph = Graph(source_matrix=input_eqconstants,
+                      labels=sorted([s.name for s in input_species]))
 
         out_path = os.path.join(self.write_dir, 'graph')
         if mode == 'pyvis':

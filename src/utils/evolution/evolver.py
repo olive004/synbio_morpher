@@ -6,7 +6,7 @@ import numpy as np
 from bioreaction.model.data_containers import Species
 from src.srv.io.loaders.misc import load_csv
 from src.utils.evolution.mutation import get_mutation_type_mapping, Mutations
-from src.utils.misc.type_handling import flatten_listlike
+from src.utils.misc.type_handling import flatten_listlike, flatten_nested_dict
 from src.utils.results.writer import DataWriter
 from src.utils.misc.string_handling import add_outtype
 
@@ -97,7 +97,7 @@ class Evolver():
         #                     circuit.mutations[specie.name][mutation.mutation_name] = mutation
         #     return circuit
 
-    def mutate(self, circuit: Circuit, algorithm: str, write_to_subsystem=False):
+    def mutate(self, circuit: Circuit, algorithm: str, write_to_subsystem=False, write_to_fasta=False):
         """ algorithm can be either random or all """
         if write_to_subsystem:
             self.data_writer.subdivide_writing(circuit.name)
@@ -106,6 +106,12 @@ class Evolver():
             circuit = mutator(circuit)
         else:
             logging.info('No mutation settings found, did not mutate.')
+
+        if write_to_fasta:
+            self.write_to_fasta(circuit)
+        
+        if write_to_subsystem:
+            self.data_writer.unsubdivide_last_dir()
         return circuit
 
     def get_mutator(self, algorithm):
@@ -138,7 +144,8 @@ class Evolver():
                                 mutation_idx=mutation_idx,
                                 mutation_types=mutation_types, algorithm=algorithm,
                                 template_file=circuit.data.source)
-
+                                
+                            self.write_mutations(mutation)
                             circuit.mutations[specie.name][mutation.mutation_name] = mutation
             return circuit
 
@@ -175,6 +182,8 @@ class Evolver():
                                 specie=specie, positions=[
                                     p], mutation_idx=mutation_idx, mutation_types=[
                                     mt], algorithm=algorithm, template_file=circuit.data.source)
+
+                            self.write_mutations(mutations)
                             circuit.mutations[specie.name][mutations.mutation_name] = mutations
             return circuit
 
@@ -219,12 +228,16 @@ class Evolver():
             template_file=template_file,
             algorithm=algorithm
         )
-        self.write_mutations(mutations)
         return mutations
 
     def write_mutations(self, mutations: Mutations, overwrite=False):
         self.data_writer.output(
             out_type=self.out_type, out_name=self.out_name, data=mutations.as_table(), overwrite=overwrite)
+
+    def write_to_fasta(self, circuit: Circuit):
+        for m_name, m in flatten_nested_dict(circuit.mutations):
+            pass
+        self.data_writer.output()
 
     def load_mutations(self):
         filename = os.path.join(

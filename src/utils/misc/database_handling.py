@@ -11,9 +11,9 @@ from src.utils.misc.numerical import cast_astype
 from src.utils.misc.string_handling import get_all_similar
 
 
-def thresh_func(thresh: bool, range_df, mode, 
-outlier_std_threshold_y, selection_conditions, 
-sel_col: str, mode_slide_perc=0.05):
+def thresh_func(thresh: bool, range_df, mode,
+                outlier_std_threshold_y, selection_conditions,
+                sel_col: str, mode_slide_perc=0.05):
     thresh_text = ''
     remove_outliers_y = False
     if thresh:
@@ -143,3 +143,15 @@ def expand_df_cols_lists(df: pd.DataFrame, col_of_lists: str, col_list_len: str,
             columns='variable').rename(columns={'value': col_of_lists})
         df2 = pd.concat([df2, df_mut])
     return df2
+
+
+def select_rows_by_conditional_cols(data: pd.DataFrame, conditions: List[tuple]):
+    """ Selection condition should be a tuple of (the column to be used for the selection,
+    a condition such as == or !=, and the value for the condition """
+    if conditions is None:
+        return data
+    for column, condition_op, value in conditions:
+        selection = condition_op(data[column], value)
+        data = data[selection]
+    data.reset_index(drop=True, inplace=True)
+    return data

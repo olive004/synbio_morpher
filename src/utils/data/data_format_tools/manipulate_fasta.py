@@ -20,10 +20,20 @@ def load_seq_from_FASTA(filename, as_type="list") -> Union[Dict,List]:
         raise ValueError(f"Desired type {as_type} not supported.")
 
 
-def write_fasta_file(seq_generator, out_path, stype, count, data=None):
+def write_fasta_file(seq_generator, stype: str, count: int, out_path: str, data=None, byseq=False) -> None:
+    if byseq:
+        write_fasta_file_byseq()
+    else:
+        f = open(out_path, 'w+')
+        for i in range(count):
+            seq_name = '>' + stype + '_' + str(i) + '\n'
+            f.write(seq_name)
+            f.write(seq_generator() + '\n')
+        f.close()
+
+def write_fasta_file_byseq(seqs: list, names: list, out_path: str, data=None) -> None:
     f = open(out_path, 'w+')
-    for i in range(count):
-        seq_name = '>' + stype + '_' + str(i) + '\n'
-        f.write(seq_name)
-        f.write(seq_generator() + '\n')
+    for n, s in zip(names, seqs):
+        f.write('>' + n + '\n')
+        f.write(s + '\n')
     f.close()

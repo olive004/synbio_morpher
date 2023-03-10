@@ -4,6 +4,7 @@ import os
 from typing import Dict, List
 
 from src.srv.parameter_prediction.simulator_loading import find_simulator_loader
+from src.srv.io.manage.sys_interface import PACKAGE_DIR
 from src.utils.misc.io import get_pathnames
 from src.utils.misc.string_handling import remove_special_py_functions
 from src.utils.data.data_format_tools.common import load_json_as_dict
@@ -31,7 +32,7 @@ def create_argparse_from_dict(dict_args: Dict):
 
 
 def get_simulator_names() -> List:
-    simulator_dir = os.path.join("src", "srv", "parameter_prediction")
+    simulator_dir = os.path.join(PACKAGE_DIR, "src", "srv", "parameter_prediction")
     simulators = remove_special_py_functions(os.listdir(simulator_dir))
     from src.srv.parameter_prediction.simulator_loading import extra_simulators
     simulators = simulators + extra_simulators
@@ -41,22 +42,29 @@ def get_simulator_names() -> List:
 def handle_simulator_cfgs(simulator, simulator_cfg_path):
     simulator_cfg = load_json_as_dict(simulator_cfg_path)
     cfg_protocol = find_simulator_loader(simulator)
+    if any([os.sep in v for v in simulator_cfg.values() if type(v) == str]):
+        for k, v in simulator_cfg.items():
+            if type(v) == str:
+                simulator_cfg[k] = os.path.join(PACKAGE_DIR, v) if ('src' in v) and (os.sep in v) and (PACKAGE_DIR not in v) else v
     return cfg_protocol(simulator_cfg)
 
 
 def parse_cfg_args(config: dict = None, default_args: Dict = None) -> Dict:
 
     if default_args is None:
-        default_args = retrieve_default_arg_filenames()
+        default_args = retrieve_default_args()
     simulator_kwargs = load_simulator_kwargs(default_args, config)
     config['interaction_simulator']['simulator_kwargs'] = simulator_kwargs
     config['interaction_simulator']['molecular_params'] = config['molecular_params']
+    config['interaction_simulator']['compute_by_filename'] = config['interaction_simulator'].get('compute_by_filename', True)
+    config['simulation_steady_state'] = default_args['simulation_steady_state']
 
     return config
 
 
 def load_simulator_kwargs(default_args: dict, config_args: str = None) -> Dict:
-    target_simulator_name = config_args.get('interaction_simulator', {}).get('name')
+    target_simulator_name = config_args.get(
+        'interaction_simulator', {}).get('name')
     simulator_kwargs = None
     for simulator_name in get_simulator_names():
         kwarg_condition = simulator_name in default_args
@@ -69,9 +77,9 @@ def load_simulator_kwargs(default_args: dict, config_args: str = None) -> Dict:
     return simulator_kwargs
 
 
-def retrieve_default_arg_filenames() -> Dict:
+def retrieve_default_args() -> Dict:
     fn = get_pathnames(file_key='default_args', search_dir=os.path.join(
-        'src', 'utils', 'common', 'configs', 'simulators'), first_only=True)
+        PACKAGE_DIR, 'src', 'utils', 'common', 'configs', 'simulators'), first_only=True)
     default_args = load_json_as_dict(fn)
     return default_args
 

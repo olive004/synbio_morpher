@@ -1,0 +1,17 @@
+
+
+RUN apt update && apt install python3-pip git -y 
+RUN pip install setuptools
+# install dependencies via pip
+RUN pip3 install numpy scipy six wheel jax[cuda]==0.4.1 -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html jaxlib==0.4.1 -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+RUN pip3 install tensorflow-probability==0.16.0 chex celluloid brax==0.0.12 evosax flax gym==0.21.0 notebook matplotlib optax==0.1.4 wandb torch torchvision tqdm gymnax jupyter ipython pandas
+RUN pip3 install -U dm-haiku
+ARG UID
+RUN useradd -u $UID --create-home seb   
+USER seb
+WORKDIR /home/seb/
+#RUN git clone <YOUR_REPO>
+RUN git config --global user.email "towers.towers.sebastian@gmail.com"
+RUN git config --global user.name "Seb Towers"
+#ARG GIT_TOKEN
+#RUN cd InverseMARL && git remote set-url origin https://SilviaSapora:$GIT_TOKEN@github.com/SilviaSapora/InverseMARL.git/

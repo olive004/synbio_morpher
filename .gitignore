@@ -11,9 +11,10 @@
 *.vscode
 __pycache__
 __pycache__/*
-!data/example
-!requirements.txt
 bioreaction
 data/*
+!data/example
+explanations/output
 lib/*
 Miniconda3*
+!requirements.txt
