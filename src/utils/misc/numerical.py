@@ -7,13 +7,6 @@ import re
 import pandas as pd
 
 
-SCIENTIFIC = {
-    # R = the gas constant = 8.314 J/mol·K
-    # T = 298 K
-    'RT': np.multiply(8.314, 310),  # J/mol
-    'mole': np.multiply(6.02214076, np.power(10, 23))
-}
-
 NUMERICAL = {
     'infinity': np.multiply(10, 10),
     'nan': 0

@@ -141,10 +141,12 @@ def get_full_steady_states(starting_state, total_time, reverse_rates, sim_model,
 
 def get_full_final_states(steady_states, reverse_rates, total_time, new_model, params):
     final_states_results = [steady_states]
+    t_steps = max(int(total_time/params.delta_t/1000), 1)
     final_states = np.expand_dims(steady_states, axis=1)
     for ti in range(0, total_time, int(params.total_time)):
         final_states_results = loop_sim(final_states_results, params, reverse_rates, new_model)
-        final_states = np.array(np.concatenate([final_states, final_states_results[1]], axis=1))
+        t_steps = max(int(final_states_results[1].shape[1]/1000), 1)
+        final_states = np.array(np.concatenate([final_states, final_states_results[1][:, ::t_steps, :]], axis=1))
     t_final = np.arange(
         final_states.shape[1]) * params.delta_t
     return final_states, t_final
@@ -164,16 +166,9 @@ def get_analytics(steady_states, final_states, t, K_eqs, model, species_names, s
     ))
     clear_gpu()
     resp_vmap = jax.jit(jax.vmap(partial(get_step_response_times, signal_idx=input_species_idx, t=np.expand_dims(t, 0), signal_time=0.0)))
-    max_t = 100000
     response_times = np.array(resp_vmap(
-        data=np.swapaxes(final_states[:, :max_t, :], 1, 2), steady_states=np.expand_dims(steady_states[:, :max_t, :], axis=2), 
-        deriv=jnp.gradient(np.swapaxes(final_states[:, :max_t, :], 1, 2))[0]))
-    for ti in range(max_t, int(final_states.shape[1]), max_t):
-        tf = min(ti, int(final_states.shape[1]))
-        response_times1 = np.array(resp_vmap(
-            data=np.swapaxes(final_states[:, ti:tf, :], 1, 2), steady_states=np.expand_dims(steady_states[:, ti:tf, :], axis=2), 
-            deriv=jnp.gradient(np.swapaxes(final_states[:, ti:tf, :], 1, 2))[0]))
-        response_times = np.array(np.concatenate([response_times, response_times1], axis=0))
+        data=np.swapaxes(final_states, 1, 2), steady_states=np.expand_dims(steady_states, axis=2), 
+        deriv=jnp.gradient(np.swapaxes(final_states, 1, 2))[0]))
 
     analytics = {
         'precision': precision.flatten(),
@@ -209,6 +204,10 @@ def adjust_sim_params(reverse_rates, max_kd):
     dt_scale = np.round(reverse_rates.max() / max_kd, 1)
     dt = 0.1 / dt_scale
 
+    # params_steady = BasicSimParams(total_time=10.0, delta_t=dt)
+    # total_t_steady = 300
+    # params_final = BasicSimParams(total_time=10.0, delta_t=dt)
+    # total_t_final = 100
     params_steady = BasicSimParams(total_time=100000.0, delta_t=dt)
     total_t_steady = 3000000
     params_final = BasicSimParams(total_time=100000.0, delta_t=dt)

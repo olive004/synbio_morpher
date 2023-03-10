@@ -4,14 +4,13 @@ from subprocess import PIPE, run
 import numpy as np
 from functools import partial
 from src.utils.misc.helper import vanilla_return, processor
-from src.utils.misc.numerical import SCIENTIFIC
-from src.utils.misc.units import per_mol_to_per_molecule
+from src.utils.misc.units import gibbs_K_cal, cal_to_J
 from src.srv.parameter_prediction.IntaRNA.bin.copomus.IntaRNA import IntaRNA
 
 
 SIMULATOR_UNITS = {
     'IntaRNA': {
-        'energy': 'kJ/mol',
+        'energy': 'kcal/mol',
         'postprocessing': {
             'energy': 'J/mol',
             'energy_molecular': 'J/molecule'
@@ -54,20 +53,15 @@ class RawSimulationHandling():
     def get_postprocessing(self):
 
         def energy_to_eqconstant(energies):
-            """ Translate interaction binding energy to the
-            equilibrium rate of binding. Output in mol:
+            """ Translate interaction binding energy (kcal) to the
+            equilibrium rate of binding.
             AG = - RT ln(K)
             AG = - RT ln(kb/kd)
             K = e^(- G / RT)
             """
-            energies = energies * 1000  # convert kJ/mol to J/mol
-            K = np.exp(np.divide(- energies, SCIENTIFIC['RT']))
+            energies = energies * 1000  # convert kcal/mol to cal/mol
+            K = gibbs_K_cal(energies)
             return K
-
-        def energy_to_eqconstant_approx(energies):
-            """ Parameterised from Na et. al 2013 (refer to explanations about binding
-            energies). Energy input in kJ/mol """
-            pass
 
         def eqconstant_to_rates(eqconstants):
             """ Translate the equilibrium rate of binding to
