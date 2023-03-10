@@ -69,8 +69,10 @@ def get_pathnames(search_dir: str, file_key: Union[List, str] = '', first_only: 
     if first_only and path_names:
         path_names = path_names[0]
     if not path_names and subdir:
-        path_names = get_pathnames(os.path.join(search_dir, subdir), file_key=file_key,
-                                   first_only=first_only, allow_empty=allow_empty, conditional=conditional)
+        path_names = get_pathnames(
+            search_dir=os.path.join(search_dir, subdir), file_key=file_key, as_dict=as_dict,
+            first_only=first_only, allow_empty=allow_empty, subdir=subdir, subdirs=subdirs,
+            conditional=conditional)
     if not path_names and not allow_empty:
         raise ExperimentError(
             f'Could not find file matching "{file_key}" in {search_dir}.')

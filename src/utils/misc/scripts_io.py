@@ -7,6 +7,7 @@ from typing import Tuple
 import numpy as np
 import pandas as pd
 
+from src.srv.io.manage.sys_interface import SCRIPT_DIR, DATA_DIR, PACKAGE_DIR
 from src.srv.io.loaders.misc import load_csv
 from src.utils.data.data_format_tools.common import load_json_as_dict, make_iterable_like
 from src.utils.misc.errors import ConfigError, ExperimentError
@@ -14,21 +15,17 @@ from src.utils.misc.io import get_pathnames, get_subdirectories
 from src.utils.misc.type_handling import flatten_listlike
 
 
-DATADIR = 'data'
-SCRIPTSDIR = 'scripts'
-
-
 def get_purposes(script_dir=None):
-    script_dir = SCRIPTSDIR if script_dir is None else script_dir
+    script_dir = SCRIPT_DIR if script_dir is None else script_dir
     return get_subdirectories(script_dir, only_basedir=True)
 
 
 def get_purpose_from_pathname(pathname):
     split_path = pathname.split(os.sep)
-    if DATADIR in split_path:
-        top_dir = DATADIR
-    elif SCRIPTSDIR in split_path:
-        top_dir = SCRIPTSDIR
+    if DATA_DIR in split_path:
+        top_dir = DATA_DIR
+    elif SCRIPT_DIR in split_path:
+        top_dir = SCRIPT_DIR
     else:
         logging.warning(f'The supplied pathname {pathname} most likely does not '
                         'point to a purpose.')
@@ -140,7 +137,9 @@ def get_subprocesses_dirnames(source_dir):
 
 
 def load_experiment_output_summary(experiment_folder) -> pd.DataFrame:
+    experiment_folder = os.path.join(PACKAGE_DIR, experiment_folder) if PACKAGE_DIR not in experiment_folder else experiment_folder
     summary_path = os.path.join(experiment_folder, 'output_summary.csv')
+
     return load_csv(summary_path)
 
 

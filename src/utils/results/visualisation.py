@@ -7,7 +7,7 @@ import logging
 from src.utils.misc.type_handling import merge_dicts
 from src.utils.results.writer import DataWriter
 from src.utils.misc.string_handling import add_outtype, make_time_str, prettify_keys_for_label
-from src.utils.misc.database_handling import expand_df_cols_lists
+from src.utils.misc.database_handling import select_rows_by_conditional_cols
 import seaborn as sns
 # import matplotlib
 # matplotlib.use('TkAgg',force=True)
@@ -24,7 +24,7 @@ def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
                    groupby: str = None,
                    normalise_data_x: bool = False,
                    normalise_data_y: bool = False,
-                   plot_type: str = None, 
+                   plot_type: str = None,
                    out_name='test_plot', out_type='svg',
                    hue: str = None,
                    preprocessor_func_x=None,
@@ -167,17 +167,6 @@ def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
         data.reset_index(drop=True, inplace=True)
         return data
 
-    def select_rows_by_conditional_cols(data: pd.DataFrame, conditions: List[tuple]):
-        """ Selection condition should be a tuple of (the column to be used for the selection,
-        a condition such as == or !=, and the value for the condition """
-        if conditions is None:
-            return data
-        for column, condition_op, value in conditions:
-            selection = condition_op(data[column], value)
-            data = data[selection]
-        data.reset_index(drop=True, inplace=True)
-        return data
-
     def is_data_plotable(data: pd.DataFrame, col_x: str, col_y: str):
         if data.empty:
             return False
@@ -262,7 +251,7 @@ def visualise_graph_pyvis(graph: nx.DiGraph,
         interactive_graph.save_graph(out_path)
     except PermissionError:
         logging.warning(
-            f'The graph at {out_path} may not have saved properly.')
+            f'PermissionError: The graph at {out_path} may not have saved properly.')
 
     # web_filename = 'file:///' + os.getcwd() + '/' + out_path
     # # webbrowser.open(web_filename, new=1, autoraise=True)
@@ -300,9 +289,28 @@ class VisODE():
             t.set_text(l)
 
     def plot(self, data, y=None, new_vis=False, t=None, out_path='test_plot', out_type='svg',
+             subsample=True,
              **plot_kwrgs) -> None:
+
         data = data.T if len(plot_kwrgs.get('legend', [])
                              ) == np.shape(data)[0] else data
+
+        if type(data) != np.ndarray or type(t) != np.ndarray:
+            t = np.array(t)
+            data = np.array(data)
+
+        if subsample:
+            target_vis_size = 5000  # Max time steps to plot
+            if data.shape[0] > target_vis_size:
+                step_sz = int(data.shape[0] / target_vis_size)
+                if len(data.shape) > 1:
+                    data = data[::step_sz, :]
+                else:
+                    data = data[::step_sz]
+                t = t[::step_sz]
+                if y is not None:
+                    y = y[::step_sz]
+
         plt.figure()
         if y is not None:
             plt.plot(data, y)
@@ -361,8 +369,14 @@ class VisODE():
                 logging.warning(
                     f'All values infinity - could not plot {x} and {y} for plot: {title}')
                 plt.close()
+            elif plot_kwargs.get('hue'):
+                logging.warning(
+                    f'Failed - attempting to plot {x} without {plot_kwargs.get("hue")}')
+                plot_kwargs.pop('hue')
+                self.sns_generic_plot(
+                    plot_func, out_path, x, y, data, title, figsize, style, **plot_kwargs)
             else:
-                raise error
+                logging.warning(error)
 
     def sns_barplot(self, out_path: str, x: str, y: str, data: pd.DataFrame,
                     title: str = None, xlabel=None, ylabel=None,

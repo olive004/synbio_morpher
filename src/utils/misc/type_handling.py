@@ -1,6 +1,7 @@
 
 
 import logging
+from copy import deepcopy
 
 
 def assert_uniform_type(list_like, target_type):
@@ -113,10 +114,11 @@ def merge_dicts(*dict_objs):
 
 def nest_list_dict(dict_of_lists: dict) -> list:
     vs = list(dict_of_lists.values())
-    return [{k: vs[i][j] for i, k in enumerate(dict_of_lists.keys())} for j in range(len(vs[0]))]
+    return [{k: vs[i][j] for i, k in enumerate(dict_of_lists.keys()) if vs[i]} for j in range(len(vs[0]))]
 
 
-def replace_value(d: dict, key, new_val) -> dict:
+def replace_value(og_d: dict, key, new_val) -> dict:
+    d = deepcopy(og_d)
     for k, v in d.items():
         if type(v) == dict:
             d[k] = replace_value(v, key, new_val)

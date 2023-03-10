@@ -71,6 +71,7 @@ def compose_kwargs(prev_configs: dict = None, config: dict = None) -> dict:
         "name": isolate_filename(data_manager.data.source),
         "signal": config["signal"],
         "simulation": config["simulation"],
+        "simulation_steady_state": config["simulation_steady_state"],
         "system_type": config["system_type"]
     })
     assert all([e in kwargs for e in ESSENTIAL_KWARGS]), 'Some of the kwargs for composing ' \
@@ -86,6 +87,7 @@ def expand_config(config: dict) -> dict:
     config["mutations"] = config.get("mutations", {})
     config["signal"] = load_json_as_dict(config.get("signal"))
     config["simulation"] = config.get("simulation", {})
+    config["simulation_steady_state"] = config.get("simulation_steady_state", {})
     config["system_type"] = config.get("system_type")
     return config
 

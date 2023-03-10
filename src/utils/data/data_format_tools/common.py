@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import jaxlib
 
+from src.srv.io.manage.sys_interface import PACKAGE_DIR
 from src.utils.misc.type_handling import inverse_dict
 
 
@@ -40,10 +41,14 @@ def load_json_as_dict(json_pathname: str, process=True) -> dict:
     elif type(json_pathname) == dict:
         jdict = json_pathname
     elif type(json_pathname) == str:
-        if os.stat(json_pathname).st_size == 0:
+        if PACKAGE_DIR not in json_pathname:
+            full_json_pathname = os.path.join(PACKAGE_DIR, json_pathname)
+        else: 
+            full_json_pathname = json_pathname
+        if os.stat(full_json_pathname).st_size == 0:
             jdict = {}
         else:
-            file = open(json_pathname)
+            file = open(full_json_pathname)
             jdict = json.load(file)
             file.close()
     else:
@@ -103,7 +108,7 @@ def process_dict_for_json(dict_like) -> Union[list, dict]:
             dict_like[k] = bool(v)
         elif type(v) == np.ndarray or type(v) in jaxlib.xla_extension.__dict__.values():
             dict_like[k] = v.tolist()
-        elif type(v) == np.float32 or type(v) == np.int64:
+        elif type(v) == np.float32 or type(v) == np.int64 or type(v) == np.float16:
             dict_like[k] = str(v)
     return dict_like
 
@@ -124,8 +129,8 @@ def write_csv(data: pd.DataFrame, out_path: str, overwrite=False):
         if overwrite or not os.path.exists(out_path):
             data.to_csv(out_path, index=None)
         else:
-            data.to_csv(out_path, mode='a', header=None, index=None)
-    elif type(data) == np.ndarray or type(data) == jaxlib.xla_extension.DeviceArray:
+            data.to_csv(out_path, mode='a', header=None, index=None) 
+    elif type(data) == np.ndarray or type(data) == jaxlib.xla_extension.DeviceArray or type(data) == jaxlib.xla_extension.ArrayImpl:
         pd.DataFrame(data).to_csv(out_path, mode='a', header=None, index=None)
     else:
         raise TypeError(

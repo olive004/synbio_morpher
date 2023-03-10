@@ -31,6 +31,13 @@ def parse_sig_args(kwargs: dict, circuit: Circuit, SignalType = Signal):
     signal_init_args = inspect.getfullargspec(SignalType.__init__).args
     sig_kwargs = {}
     sig_kwargs['onehot'] = make_onehot_signals(circuit=circuit, species_chosen=kwargs["signal"]['inputs'])
+
+    signal_species_idx = np.where(sig_kwargs['onehot'] == 1)[0]
+    signal_species = [s for s in circuit.model.species if circuit.model.species.index(s) in signal_species_idx]
+    reaction_has_signal = [bool(b) and all(b) for b in [[ro in signal_species for ro in r.output] for r in circuit.model.reactions]]
+    reactions_onehot = np.ones_like(circuit.qreactions.reactions.forward_rates) * reaction_has_signal
+    sig_kwargs['reactions_onehot'] = reactions_onehot
+
     sig_kwargs['time_interval'] = kwargs.get('simulation', {}).get('dt', 1)
     for k, v in kwargs["signal"].items():
         if k in signal_init_args:

@@ -3,7 +3,6 @@
 from typing import List, Dict
 import logging
 import os
-from typing import Union
 import numpy as np
 import pandas as pd
 from bioreaction.model.data_tools import construct_model_fromnames
@@ -19,7 +18,7 @@ from src.utils.misc.type_handling import flatten_nested_listlike
 from src.utils.results.analytics.naming import get_analytics_types_all, DIFF_KEY, RATIO_KEY
 from src.utils.misc.database_handling import expand_data_by_col
 from src.utils.results.writer import DataWriter
-from src.srv.parameter_prediction.interactions import InteractionMatrix, INTERACTION_TYPES, b_get_stats
+from src.srv.parameter_prediction.interactions import InteractionMatrix, b_get_stats, INTERACTION_TYPES, INTERACTION_FIELDS_TO_WRITE
 
 
 INTERACTION_STATS = ['max_interaction',
@@ -27,13 +26,9 @@ INTERACTION_STATS = ['max_interaction',
 MUTATION_INFO_COLUMN_NAMES = [
     'circuit_name',
     'mutation_name',
-    # 'source_species',
-    'sample_names',
     'mutation_num',
     'mutation_type',
     'mutation_positions',
-    # 'path_to_steady_state_data',
-    # 'path_to_signal_data',
     'path_to_template_circuit'
 ]
 
@@ -100,10 +95,10 @@ def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path
         return []
 
     interaction_path_keys = {
-        k: f'path_{k}' for k in INTERACTION_TYPES}
-    a_pathname = filt_stats[list(interaction_path_keys.values())[
+        k: f'path_{k}' for k in INTERACTION_FIELDS_TO_WRITE}
+    some_pathname = filt_stats[list(interaction_path_keys.values())[
         0]].to_list()[0]
-    experiment_folder = get_root_experiment_folder(a_pathname)
+    experiment_folder = get_root_experiment_folder(some_pathname)
     experiment_summary = load_experiment_output_summary(experiment_folder)
 
     extra_configs = []
@@ -121,21 +116,22 @@ def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path
     return extra_configs
 
 
-def get_mutation_info_columns():
+def get_mutation_info_columns(use_stats=False):
+    info_column_names = MUTATION_INFO_COLUMN_NAMES
+    if use_stats:
+        # Difference
+        info_column_names_interactions_diff = [[[f'{i}_{s}',
+                                                f'{i}_{s}{DIFF_KEY}'] for s in INTERACTION_STATS] for i in INTERACTION_TYPES]
+        info_column_names_interactions_diff = flatten_nested_listlike(
+            info_column_names_interactions_diff)
 
-    # Difference
-    info_column_names_interactions_diff = [[[f'{i}_{s}',
-                                             f'{i}_{s}{DIFF_KEY}'] for s in INTERACTION_STATS] for i in INTERACTION_TYPES]
-    info_column_names_interactions_diff = flatten_nested_listlike(
-        info_column_names_interactions_diff)
-
-    # Ratio
-    info_column_names_interactions_ratio = [
-        [[f'{i}_{s}{RATIO_KEY}'] for s in INTERACTION_STATS] for i in INTERACTION_TYPES]
-    info_column_names_interactions_ratio = flatten_nested_listlike(
-        info_column_names_interactions_ratio)
-    info_column_names = MUTATION_INFO_COLUMN_NAMES + \
-        info_column_names_interactions_diff + info_column_names_interactions_ratio
+        # Ratio
+        info_column_names_interactions_ratio = [
+            [[f'{i}_{s}{RATIO_KEY}'] for s in INTERACTION_STATS] for i in INTERACTION_TYPES]
+        info_column_names_interactions_ratio = flatten_nested_listlike(
+            info_column_names_interactions_ratio)
+        info_column_names = MUTATION_INFO_COLUMN_NAMES + \
+            info_column_names_interactions_diff + info_column_names_interactions_ratio
     return info_column_names
 
 
@@ -158,11 +154,17 @@ def b_tabulate_mutation_info(source_dir: str, data_writer: DataWriter, experimen
     def make_interaction_stats_and_sample_names(source_interaction_dirs: List[str], experiment_config: dict = None):
         interaction_matrices = [None] * len(source_interaction_dirs)
         for i, source_interaction_dir in enumerate(source_interaction_dirs):
+            matrix_paths = get_pathnames(file_key=INTERACTION_TYPES,
+                                         search_dir=source_interaction_dir,
+                                         subdirs=INTERACTION_TYPES,
+                                         as_dict=True, first_only=True)
+            matrix_paths.update(get_pathnames(file_key=[INTERACTION_FIELDS_TO_WRITE[0]],
+                                              search_dir=source_interaction_dir,
+                                              subdirs=[
+                                                  INTERACTION_FIELDS_TO_WRITE[0]],
+                                              as_dict=True, first_only=True, allow_empty=True))
             interaction_matrices[i] = InteractionMatrix(
-                matrix_paths=get_pathnames(file_key=INTERACTION_TYPES,
-                                           search_dir=source_interaction_dir,
-                                           subdirs=INTERACTION_TYPES,
-                                           as_dict=True, first_only=True),
+                matrix_paths=matrix_paths,
                 experiment_config=experiment_config
             )
         return b_get_stats(interaction_matrices), interaction_matrices[0].sample_names
@@ -232,31 +234,24 @@ def b_tabulate_mutation_info(source_dir: str, data_writer: DataWriter, experimen
         info_table = pd.concat([info_table, new_table])
         return info_table
 
-    def write_results(info_table: pd.DataFrame) -> None:
+    def prepare_for_writing(info_table: pd.DataFrame) -> pd.DataFrame:
         result_report_keys = get_analytics_types_all()
         info_table = expand_data_by_col(info_table, columns=result_report_keys, find_all_similar_columns=True,
                                         column_for_expanding_coldata='sample_names', idx_for_expanding_coldata=0)
+        return info_table
+
+    def write_table(info_table: pd.DataFrame) -> None:
         data_writer.output(
             out_type='csv', out_name='tabulated_mutation_info', **{'data': info_table})
-        # json_info_table = remove_invalid_json_values(info_table)
-        # data_writer.output(
-        #     out_type='json', out_name='tabulated_mutation_info', **{'data': json_info_table})
+
+    def write_results(info_table: pd.DataFrame) -> None:
+        info_table = prepare_for_writing(info_table)
+        write_table(info_table)
 
     info_table = init_info_table()
     circuit_dirs = get_subdirectories(source_dir, min_condition=3)
     for circ_idx, circuit_dir in enumerate(circuit_dirs):
         circuit_name = os.path.basename(circuit_dir)
-        if circuit_name == '2_medium':
-            # TESTING
-            print(1)
-        mutations_pathname = get_pathnames(
-            first_only=True, file_key='mutations', search_dir=circuit_dir)
-        mutations = GeneCircuitLoader().load_data(mutations_pathname).data
-        if os.path.isdir(os.path.join(circuit_dir, 'mutations')):
-            mutation_dirs = sorted(get_subdirectories(
-                os.path.join(circuit_dir, 'mutations')))
-        else:
-            mutation_dirs = sorted(get_subdirectories(circuit_dir))
 
         interaction_stats_og, sample_names = make_interaction_stats_and_sample_names(
             [circuit_dir], experiment_config=experiment_config)
@@ -269,7 +264,7 @@ def b_tabulate_mutation_info(source_dir: str, data_writer: DataWriter, experimen
             'mutation_num': 0,
             'mutation_type': [],
             'mutation_positions': [],
-            'path_to_template_circuit': mutations['template_file'].iloc[0]
+            'path_to_template_circuit': ''
         }
         current_og_table = pd.DataFrame.from_dict(
             {k: [v] for k, v in current_og_table.items()})
@@ -279,26 +274,37 @@ def b_tabulate_mutation_info(source_dir: str, data_writer: DataWriter, experimen
                                            circuit_dir],
                                        all_sample_names=all_sample_names, chosen_sample_names=sample_names)
 
-        interaction_stats = make_interaction_stats_and_sample_names(
-            mutation_dirs, experiment_config=experiment_config)[0]
+        mutations_pathname = get_pathnames(
+            first_only=True, file_key='mutations', search_dir=circuit_dir, allow_empty=True)
+        if mutations_pathname:
+            mutations = GeneCircuitLoader().load_data(mutations_pathname).data
+            if os.path.isdir(os.path.join(circuit_dir, 'mutations')):
+                mutation_dirs = sorted(get_subdirectories(
+                    os.path.join(circuit_dir, 'mutations')))
+            else:
+                mutation_dirs = sorted(get_subdirectories(circuit_dir))
 
-        # Mutated circuits
-        mutation_table = pd.DataFrame.from_dict({
-            'circuit_name': [circuit_name] * len(mutation_dirs),
-            'mutation_name': mutations['mutation_name'],
-            'mutation_num': mutations['count'],
-            'mutation_type': cast_astype(mutations['mutation_types'], int),
-            'mutation_positions': cast_astype(mutations['positions'], int),
-            'path_to_template_circuit': mutations['template_file']
-        })
-        # Expand the interaction keys in the table
-        info_table = update_info_table(info_table, curr_table=mutation_table,
-                                       int_stats=interaction_stats,
-                                       ref_stats=interaction_stats_og,
-                                       result_source_dirs=mutation_dirs,
-                                       all_sample_names=all_sample_names,
-                                       chosen_sample_names=sample_names,
-                                       check_coherent=True)
+            interaction_stats = make_interaction_stats_and_sample_names(
+                mutation_dirs, experiment_config=experiment_config)[0]
+
+            # Mutated circuits
+            mutation_table = pd.DataFrame.from_dict({
+                'circuit_name': [circuit_name] * len(mutation_dirs),
+                'mutation_name': mutations['mutation_name'],
+                'mutation_num': mutations['count'],
+                'mutation_type': cast_astype(mutations['mutation_types'], int),
+                'mutation_positions': cast_astype(mutations['positions'], int),
+                'path_to_template_circuit': mutations['template_file']
+            })
+            # Expand the interaction keys in the table
+            info_table = update_info_table(info_table, curr_table=mutation_table,
+                                           int_stats=interaction_stats,
+                                           ref_stats=interaction_stats_og,
+                                           result_source_dirs=mutation_dirs,
+                                           all_sample_names=all_sample_names,
+                                           chosen_sample_names=sample_names,
+                                           check_coherent=True)
+
         if circ_idx != 0 and np.mod(circ_idx, 10) == 0:
             info_table = write_results(info_table)
             info_table = init_info_table()

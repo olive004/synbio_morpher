@@ -40,12 +40,16 @@ class Experiment():
         self.total_time = 0
         self.data_writer = data_writer
         self.debug_inputs = debug_inputs
+        self.experiment_state = 'uninitiated'
 
     def run_experiment(self):
+        self.experiment_state = 'incomplete'
+        self.write_experiment()
         out = None
         self.iterate_protocols(self.protocols, out)
 
         self.total_time = datetime.now() - self.start_time
+        self.experiment_state = 'completed'
         self.write_experiment()
 
     def iterate_protocols(self, protocols: List[Protocol], out: Any):
@@ -75,7 +79,8 @@ class Experiment():
     def write_experiment(self):
         experiment_data = self.collect_experiment()
         self.data_writer.output(
-            out_type='json', out_name=self.name, data=experiment_data, write_master=False)
+            out_type='json', out_name=self.name, data=experiment_data, 
+            write_master=False, overwrite=True)
 
     def collect_experiment(self):
         return {
@@ -83,5 +88,6 @@ class Experiment():
             "protocols": make_attribute_list(self.protocols, Protocol, 'name'),
             "purpose": self.data_writer.purpose,
             "config_filepath": self.config,
-            "config_params": self.config_file
+            "config_params": self.config_file,
+            "experiment_state": self.experiment_state
         }

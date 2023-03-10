@@ -20,7 +20,7 @@ intLoopMax=10        # interaction site
 outMode=N
 outNumber=2
 outOverlap=B
-threads=1
+threads=0
 outCsvCols=*
 # Helix (only if --model=B):
 # --helixMinBP 2         # minimal number of base pairs inside a helix 

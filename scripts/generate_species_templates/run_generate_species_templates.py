@@ -45,7 +45,7 @@ def main(config=None, data_writer=None):
             ),
             Protocol(
                 CircuitModeller(
-                    result_writer=data_writer, config=config_file).compute_interaction_strengths,
+                    result_writer=data_writer, config=config_file).compute_interactions,
                 req_input=True,
                 name="compute_interaction_strengths"
             )

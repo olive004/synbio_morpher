@@ -26,79 +26,8 @@ def main(config=None, data_writer=None):
     if type(source_dirs) != list:
         source_dirs = [source_dirs]
 
-    binding_rates_threshold_upper = None
-    binding_rates_threshold_upper_text = f', with cutoff at {binding_rates_threshold_upper}' if binding_rates_threshold_upper else ''
-
-    protocols = visualisation_script_protocol_preamble(source_dirs)
-    protocols.append(
-        # Binding rates min interactions mutations
-        Protocol(
-            partial(
-                visualise_data, data_writer=data_writer, cols_x=[
-                    'binding_rates_dissociation_min_interaction'],
-                plot_type='histplot',
-                hue='mutation_num',
-                out_name='binding_rates_dissociation_min_freqs_mutations_logs',
-                threshold_value_max=binding_rates_threshold_upper,
-                exclude_rows_zero_in_cols=['mutation_num'],
-                misc_histplot_kwargs={
-                    "hue": 'mutation_num',
-                    "multiple": "dodge",
-                    "element": "poly"},
-                log_axis=(True, False),
-                use_sns=True,
-                title=f'Minimum ' + r'$k_d$' + ' strength',
-                xlabel='Dissociation rate ' + r'$k_d$' + ' (' + r'$s^{-1}$' + ')' +
-                f'{binding_rates_threshold_upper_text}'),
-            req_input=True,
-            name='visualise_mutated_interactions'
-        ),
-    )
-
     # Visualisations
-
-    # Binding rates
-    protocols.append(Protocol(
-        partial(
-            visualise_data,
-            data_writer=data_writer,
-            cols_x=['binding_rates_dissociation_min_interaction'],
-            plot_type='histplot',
-            out_name='binding_rates_dissociation_min_freqs_mutations_logs',
-            threshold_value_max=binding_rates_threshold_upper,
-            exclude_rows_zero_in_cols=['mutation_num'],
-            misc_histplot_kwargs={
-                "hue": 'mutation_num',
-                "multiple": "dodge",
-                "element": "poly"},
-            log_axis=(True, False),
-            use_sns=True,
-            hue='mutation_num',
-            title=f'Minimum ' + r'$k_d$' + ' strength',
-            xlabel='Dissociation rate ' + r'$k_d$' + ' (' +
-            r'$s^{-1}$' + ')' +
-            f'{binding_rates_threshold_upper_text}'),
-        req_input=True,
-        name='visualise_mutated_interactions'
-    ))
-    # Plot mean of interacting numbers
-    protocols.append(Protocol(
-        partial(
-            visualise_data, data_writer=data_writer,
-            cols_x=['mutation_num'],
-            cols_y=['num_interacting'],
-            plot_type='violin_plot',
-            out_name='num_interacting_barplot',
-            threshold_value_max=binding_rates_threshold_upper,
-            exclude_rows_zero_in_cols=['mutation_num'],
-            use_sns=True,
-            ci="sd",
-            title=f'{prettify_keys_for_label("mutation_num")} vs. {prettify_keys_for_label("num_interacting")}',
-            ylabel='Number of interactions',
-            xlabel='Number of mutations'),
-        req_input=True,
-        name='visualise_mutated_interactions'
-    ))
+    protocols = visualisation_script_protocol_preamble(source_dirs)
 
     def vis_analytics(data: pd.DataFrame):
         # Analytics visualisation

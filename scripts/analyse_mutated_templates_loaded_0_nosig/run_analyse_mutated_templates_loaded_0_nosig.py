@@ -32,8 +32,9 @@ def main(config=None, data_writer=None):
     # Binding rates interactions og min and max
     def interaction_vis(data: pd.DataFrame, data_writer, inputs: list):
         # Analytics visualisation
-        for o in inputs:
-            data = data[data['sample_name'] != o]
+        if inputs is not None:
+            for o in inputs:
+                data = data[data['sample_name'] != o]
         analytics_types = get_true_names_analytics(data)
         
         num_mutations = list(data['mutation_num'].unique()) + ['all']

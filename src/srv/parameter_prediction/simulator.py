@@ -4,14 +4,13 @@ from subprocess import PIPE, run
 import numpy as np
 from functools import partial
 from src.utils.misc.helper import vanilla_return, processor
-from src.utils.misc.numerical import SCIENTIFIC
-from src.utils.misc.units import per_mol_to_per_molecule
+from src.utils.misc.units import gibbs_K_cal, cal_to_J
 from src.srv.parameter_prediction.IntaRNA.bin.copomus.IntaRNA import IntaRNA
 
 
 SIMULATOR_UNITS = {
     'IntaRNA': {
-        'energy': 'kJ/mol',
+        'energy': 'kcal/mol',
         'postprocessing': {
             'energy': 'J/mol',
             'energy_molecular': 'J/molecule'
@@ -20,7 +19,8 @@ SIMULATOR_UNITS = {
         'coupled_rates': r'$s^{-1}$'
     },
 }
-MIN_INTERACTION_EQCONSTANT = 0.000000001
+NO_INTERACTION_EQCONSTANT = 30
+G_BASELINE = 0  # kJ/mol
 
 
 class RawSimulationHandling():
@@ -35,35 +35,41 @@ class RawSimulationHandling():
 
     def get_sim_interpretation_protocol(self):
 
-        def intaRNA_calculator(sample: dict):
+        def process_IntaRNA_sample(sample: dict):
             """ There are a variety of parameters that IntaRNA spits out. E is hybridisation energy"""
-            raw_sample = sample.get('E', 0)
-            return raw_sample
+            return {
+                'energies': sample.get('E', NO_INTERACTION_EQCONSTANT),
+                'binding': sample.get('bpList', '')
+            }
+
+        def process_interaction(sample):
+            if sample == False:  # No interactions
+                sample = {}
+            return process_IntaRNA_sample(sample)
 
         if self.simulator_name == "IntaRNA":
-            return intaRNA_calculator
+            return process_interaction
 
     def get_postprocessing(self):
 
         def energy_to_eqconstant(energies):
-            """ Translate interaction binding energy to the
-            equilibrium rate of binding. Output in mol:
-            AG = RT ln(K)
-            AG = RT ln(kb/kd)
-            K = e^(G / RT)
+            """ Translate interaction binding energy (kcal) to the
+            equilibrium rate of binding.
+            AG = - RT ln(K)
+            AG = - RT ln(kb/kd)
+            K = e^(- G / RT)
             """
-            energies = energies * 1000  # convert kJ/mol to J/mol
-            K = np.exp(np.divide(energies, SCIENTIFIC['RT']))
+            energies = energies * 1000  # convert kcal/mol to cal/mol
+            K = gibbs_K_cal(energies)
             return K
 
         def eqconstant_to_rates(eqconstants):
             """ Translate the equilibrium rate of binding to
             the rate of binding (either association or dissociation
             rate - in this case dissociation). Input in mol, output in molecules:
-            k_a: binding rate per Ms 
+            k_a: binding rate per Ms
             eqconstants: unitless but in terms of mol
             k_d: unbinding rate per s"""
-            # k_a = per_mol_to_per_molecules(self.fixed_rate_k_a)
             k_a = self.fixed_rate_k_a
             k_d = np.divide(k_a, eqconstants)
             return k_a*np.ones_like(k_d), k_d
@@ -80,46 +86,37 @@ class RawSimulationHandling():
             else:
                 return vanilla_return
 
-    def get_simulator(self, allow_self_interaction=True):
+    def get_simulator(self, allow_self_interaction: bool):
 
         if self.simulator_name == "IntaRNA":
-            from src.srv.parameter_prediction.simulator import simulate_intaRNA_data
             self.units = SIMULATOR_UNITS[self.simulator_name]['energy']
-            return partial(simulate_intaRNA_data,
+            if check_IntaRNA_path():
+                import sys
+                sys.path.append(check_IntaRNA_path())
+            return partial(simulate_IntaRNA,
                            allow_self_interaction=allow_self_interaction,
-                           sim_kwargs=self.sim_kwargs)
+                           sim_kwargs=self.sim_kwargs,
+                           simulator=IntaRNA())
 
         if self.simulator_name == "CopomuS":
             # from src.utils.parameter_prediction.IntaRNA.bin.CopomuS import CopomuS
-            # simulator = CopomuS(self.sim_config_args)
-            # simulator.main()
             raise NotImplementedError
 
         else:
             from src.srv.parameter_prediction.simulator import simulate_vanilla
             return simulate_vanilla
 
-    # def calculate_full_coupling_of_rates(self, k_d, eqconstants):
-    #     # k_a = per_mol_to_per_molecules(self.fixed_rate_k_a)
-    #     k_a = self.fixed_rate_k_a
-    #     full_interactions = np.divide(k_a, (k_d + eqconstants))  # .flatten()))
-    #     return full_interactions
-
-    # def calculate_full_coupling_of_rates(self, k_d, degradation_rates):
-    #     k_a = per_mol_to_per_molecules(self.fixed_rate_k_a)
-    #     full_interactions = np.divide(k_a, (k_d + degradation_rates.flatten()))
-    #     return full_interactions
-
 
 def simulate_vanilla(batch):
     raise NotImplementedError
-    return None
 
 
 def check_IntaRNA_path():
 
-    p = run('which IntaRNA', shell=True, stdout=PIPE, stderr=PIPE, universal_newlines=True)
-    p2 = run('IntaRNA --version', shell=True, stdout=PIPE, stderr=PIPE, universal_newlines=True)
+    p = run('which IntaRNA', shell=True, stdout=PIPE,
+            stderr=PIPE, universal_newlines=True)
+    p2 = run('IntaRNA --version', shell=True, stdout=PIPE,
+             stderr=PIPE, universal_newlines=True)
     if p.returncode == 0:
         if p2.returncode == 1:
             return p.stdout
@@ -127,11 +124,19 @@ def check_IntaRNA_path():
         logging.warning(f'Could not detect IntaRNA on system: {p}')
 
 
-def simulate_intaRNA_data(batch: dict, allow_self_interaction: bool, sim_kwargs: dict):
-    simulator = IntaRNA()
-    if check_IntaRNA_path():
-        import sys
-        sys.path.append(check_IntaRNA_path())
+def simulate_IntaRNA(input, compute_by_filename: bool, allow_self_interaction: bool, sim_kwargs: dict, simulator):
+    if compute_by_filename:
+        f = simulate_IntaRNA_fn
+    else:
+        f = simulate_IntaRNA_data
+    return f(input, allow_self_interaction=allow_self_interaction, sim_kwargs=sim_kwargs, simulator=simulator)
+
+
+def simulate_IntaRNA_data(batch: dict, allow_self_interaction: bool, sim_kwargs: dict, simulator):
+    """ Possible outputs of IntaRNA can be found in their README https://github.com/BackofenLab/IntaRNA 
+    Simply add any parameter column id's (E, ED1, seq1, ...) into the simulation arguments dict using the 
+    `outcsvcols` variable. """
+
     if batch is not None:
         data = {}
         for i, (label_i, sample_i) in enumerate(batch.items()):
@@ -148,4 +153,24 @@ def simulate_intaRNA_data(batch: dict, allow_self_interaction: bool, sim_kwargs:
             data[label_i] = current_pair
     else:
         data = simulator.run(**sim_kwargs)
+    return data
+
+
+def simulate_IntaRNA_fn(input: tuple, allow_self_interaction: bool, sim_kwargs: dict, simulator):
+    """ Use the FASTA filename to compute the interactions between all RNAs.
+    If threads = 0, interactions will be computed in parallel """
+    filename, species = input
+    data = {k: {k: False for k in species.keys()} for k in species.keys()}
+    species_str = {s.name: s for s in species}
+
+    sim_kwargs["query"] = filename
+    sim_kwargs["target"] = filename
+    output = simulator.run(**sim_kwargs)
+    if output:
+        if type(output) == dict:
+            output = [output]
+        for s in output:
+            if not allow_self_interaction and s['id1'] == s['id2']:
+                continue
+            data[species_str[s['id1']]][species_str[s['id2']]] = s
     return data
