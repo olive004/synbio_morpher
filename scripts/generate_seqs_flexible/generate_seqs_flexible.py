@@ -10,25 +10,33 @@ from src.utils.data.fake_data_generation.seq_generator import RNAGenerator
 from src.utils.circuit.agnostic_circuits.circuit_manager_new import CircuitModeller
 
 
+def generate_multiple_circuits(exp_configs, data_writer):
+    circuit_paths = []
+    for r, s, l, p, gp in zip(exp_configs.values()):
+        circuit_paths.append(RNAGenerator(data_writer=data_writer).generate_circuits(
+            iter_count=r,
+            circuit_paths=circuit_paths,
+            count=s, slength=l,
+            proportion_to_mutate=p,
+            protocol=gp),
+        )
+    return circuit_paths
+
+
 def main(config=None, data_writer=None):
     # set configs
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
-            "scripts", "generate_species_templates", "configs", "base_config.json"))
+        "scripts", "generate_species_templates", "configs", "base_config.json"))
     config_file = load_json_as_dict(config)
     config_file = prepare_config(config_file)
-    exp_configs = config_file.get("circuit_generation")
+    exp_configs = config_file["circuit_generation"]
 
     protocols = [
         Protocol(
-            partial(RNAGenerator(data_writer=data_writer).generate_circuits,
-                    iter_count=exp_configs.get("repetitions", 1),
-                    count=exp_configs.get("species_count", 3), slength=exp_configs["sequence_length"],
-                    proportion_to_mutate=exp_configs.get(
-                        "proportion_to_mutate", 0.3),
-                    protocol=exp_configs["generator_protocol"]),
-            req_output=True,
-            name="generating_sequences"
-        ),
+            partial(generate_multiple_circuits,
+                    exp_configs=exp_configs,
+                    data_writer=data_writer)
+        )
         [
             Protocol(
                 partial(construct_circuit_from_cfg,
