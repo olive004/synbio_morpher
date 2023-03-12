@@ -10,12 +10,87 @@
         },
         "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
         "circuit_generation": {
-            "repetitions": [20000],
-            "species_count": [3],
-            "sequence_length": [20],
-            "generator_protocol": ["random", "template_mix", "template_mutate", "template_split"],
-            "proportion_to_mutate": [0.5],
-            "template": [null]
+            "repetitions": [
+                100000,
+                100000,
+                100000,
+                100000,
+                50000,
+                50000,
+                50000,
+                50000,
+                50000,
+                50000
+            ],
+            "species_count": [
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3
+            ],
+            "sequence_length": [
+                20,
+                20,
+                20,
+                20,
+                20,
+                20,
+                20,
+                20,
+                20,
+                20
+            ],
+            "generator_protocol": [
+                "random",
+                "template_mix",
+                "template_mutate",
+                "template_split",
+                "template_mix",
+                "template_mutate",
+                "template_split",
+                "template_mix",
+                "template_mutate",
+                "template_split"
+            ],
+            "proportion_to_mutate": [
+                0.5,
+                0.5,
+                0.5,
+                0.5,
+                0.5,
+                0.5,
+                0.5,
+                0.5,
+                0.5,
+                0.5
+            ],
+            "template": [
+                null,
+                null,
+                null,
+                null,
+                "GCCCCGGGGCUCUCUAUACG",
+                "GCCCCGGGGCUCUCUAUACG",
+                "GCCCCGGGGCUCUCUAUACG",
+                "CGUGACGCUGGUUUCCUCCC",
+                "CGUGACGCUGGUUUCCUCCC",
+                "CGUGACGCUGGUUUCCUCCC"
+            ]
+        },
+        "mutations": {
+            "algorithm": "random",
+            "mutation_counts": 2,
+            "mutation_nums_within_sequence": [
+                1
+            ],
+            "mutation_nums_per_position": 1,
+            "concurrent_species_to_mutate": "single_species_at_a_time"
         },
         "system_type": "RNA"
     }

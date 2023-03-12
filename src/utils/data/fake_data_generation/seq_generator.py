@@ -1,6 +1,8 @@
 from functools import partial
 from typing import List
 import numpy as np
+import jax.numpy as jnp
+import jax.random as jr
 import random
 from Bio.Seq import Seq
 
@@ -34,6 +36,12 @@ class SeqGenerator():
         population = list(str_prob_dict.keys())
         probabilities = list(str_prob_dict.values())
         return ''.join(random.choices(population, probabilities, k=slength))
+
+    @staticmethod
+    def generate_str_from_probdict_jax(key, str_prob_dict: dict, shape) -> str:
+        population = jnp.array(np.arange(len(str_prob_dict)))
+        probabilities = jnp.array(str_prob_dict.values())
+        return ''.join(jr.choices(key, population, shape=shape, p=probabilities))
 
 
 class NucleotideGenerator(SeqGenerator):
