@@ -12,13 +12,14 @@ from src.utils.circuit.agnostic_circuits.circuit_manager_new import CircuitModel
 
 def generate_multiple_circuits(exp_configs, data_writer):
     circuit_paths = []
-    for r, s, l, p, gp in zip(exp_configs.values()):
+    for r, s, l, p, gp, t in zip(exp_configs.values()):
         circuit_paths.append(RNAGenerator(data_writer=data_writer).generate_circuits(
             iter_count=r,
             circuit_paths=circuit_paths,
             count=s, slength=l,
             proportion_to_mutate=p,
-            protocol=gp),
+            protocol=gp,
+            template=t),
         )
     return circuit_paths
 
