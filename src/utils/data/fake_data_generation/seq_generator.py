@@ -112,8 +112,6 @@ class NucleotideGenerator(SeqGenerator):
             seq_generator = partial(self.generate_str_from_probdict,
                                     str_prob_dict=self.SEQ_POOL, slength=slength)
         else:
-            seq_generator = partial(self.generate_str_from_probdict,
-                                    str_prob_dict=self.SEQ_POOL, slength=slength)
             raise NotImplementedError
 
         out_path = self.data_writer.output(out_name=name, out_type=out_type,

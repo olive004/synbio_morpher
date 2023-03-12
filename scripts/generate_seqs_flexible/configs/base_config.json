@@ -13,8 +13,9 @@
             "repetitions": [20000],
             "species_count": [3],
             "sequence_length": [20],
-            "generator_protocol": ["random"],
-            "proportion_to_mutate": [0.5]
+            "generator_protocol": ["random", "template_mix", "template_mutate", "template_split"],
+            "proportion_to_mutate": [0.5],
+            "template": [null]
         },
         "system_type": "RNA"
     }
