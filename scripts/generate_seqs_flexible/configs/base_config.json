@@ -91,5 +91,15 @@
             "mutation_nums_per_position": 1,
             "concurrent_species_to_mutate": "single_species_at_a_time"
         },
+        "simulation": {
+            "dt": 0.1,
+            "t0": 0,
+            "t1": 1200,
+            "solver": "diffrax",
+            "use_batch_mutations": true,
+            "batch_size": 50,
+            "max_circuits": 50,
+            "device": "gpu"
+        },
         "system_type": "RNA"
     }

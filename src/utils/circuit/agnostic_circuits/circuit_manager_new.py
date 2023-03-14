@@ -413,13 +413,12 @@ class CircuitModeller():
             logging.warning(
                 f'Signal differs between circuits, but only first signal used for simulation.')
 
-        signal.update_time_interval(self.dt)
 
         if self.simulation_args['solver'] == 'diffrax':
             self.sim_func = jax.vmap(
                 partial(bioreaction_sim_dfx_expanded,
                         t0=self.t0, t1=self.t1, dt0=self.dt,
-                        signal=signal.func, signal_onehot=signal.onehot,  # signal.reactions_onehot,
+                        # signal=signal.func, signal_onehot=signal.onehot,  # signal.reactions_onehot,
                         inputs=ref_circuit.qreactions.reactions.inputs,
                         outputs=ref_circuit.qreactions.reactions.outputs
                         ))
@@ -428,8 +427,8 @@ class CircuitModeller():
 
             def b_ivp(y0: np.ndarray, forward_rates: np.ndarray, reverse_rates: np.ndarray):
 
-                forward_rates = forward_rates + signal.reactions_onehot * \
-                    signal.func.keywords['target']
+                forward_rates = forward_rates #+ \
+                    # signal.reactions_onehot * signal.func.keywords['target']
                 copynumbers = [None] * y0.shape[0]
                 ts = [None] * y0.shape[0]
                 for i, (y0i, forward_rates_i, reverse_rates_i) in enumerate(zip(y0, forward_rates, reverse_rates)):
@@ -439,9 +438,8 @@ class CircuitModeller():
                             args=None,
                             inputs=ref_circuit.qreactions.reactions.inputs,
                             outputs=ref_circuit.qreactions.reactions.outputs,
-                            signal=signal.func,
-                            forward_rates=forward_rates_i, reverse_rates=reverse_rates_i,
-                            signal_onehot=np.zeros_like(signal.onehot)
+                            # signal=signal.func, signal_onehot=np.zeros_like(signal.onehot),
+                            forward_rates=forward_rates_i, reverse_rates=reverse_rates_i
                         ),
                         t_span=(self.t0, self.t1),
                         y0=y0i,
