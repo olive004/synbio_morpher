@@ -33,6 +33,7 @@ from src.utils.results.analytics.timeseries import get_precision, get_sensitivit
 from src.utils.misc.units import per_mol_to_per_molecule
 from src.utils.misc.type_handling import flatten_listlike
 from src.utils.misc.numerical import make_symmetrical_matrix_from_sequence
+from src.utils.modelling.deterministic import bioreaction_sim_dfx_expanded
 from tests.shared import CONFIG
 
 
@@ -119,30 +120,50 @@ def loop_sim(steady_state_results, params, reverse_rates, sim_model):
 
 
 def get_full_steady_states(starting_state, total_time, reverse_rates, sim_model, params):
+    # all_steady_states = []
+    # for i in range(0, reverse_rates.shape[0]):
+    #     rate_max = np.max([reverse_rates[i], sim_model.forward_rates])
+
+    #     steady_state_result = scipy.integrate.solve_ivp(
+    #         partial(bioreaction_sim_expanded, args=None,
+    #                 inputs=sim_model.inputs, outputs=sim_model.outputs,
+    #                 forward_rates=sim_model.forward_rates, reverse_rates=reverse_rates[i]),
+    #         (0, params.total_time),
+    #         y0=starting_state.concentrations,
+    #         method='DOP853')
+    #     if not steady_state_result.success:
+    #         raise ValueError(
+    #             'Steady state could not be found through solve_ivp')
+    #     all_steady_states.append(steady_state_result.y)
+    # return np.array(all_steady_states)
+    from datetime import datetime
+    import diffrax as dfx
+    v = datetime.now()
+
+    sim_func = jax.jit(jax.vmap(
+        partial(bioreaction_sim_dfx_expanded,
+                t0=0, t1=total_time, dt0=params.delta_t,
+                signal=None, signal_onehot=None,  # signal.reactions_onehot,
+                forward_rates=sim_model.forward_rates,
+                inputs=sim_model.inputs,
+                outputs=sim_model.outputs,
+                y0=starting_state.concentrations,
+                solver=dfx.Heun(),
+                max_steps=int(total_time * 3)
+                )), backend='cpu')
+    steady_state_results2 = sim_func(reverse_rates=reverse_rates)
+
+    vv = datetime.now() - v
+    plt.plot(steady_state_results2.ys[0])
+    plt.savefig('test.png')
     # steady_state_results = get_steady_states(
     #     starting_state, reverse_rates, sim_model, params)
-    all_steady_states = []
     # for ti in range(0, total_time, int(params.total_time)):
-    for i in range(0, reverse_rates.shape[0]):
-        rate_max = np.max([reverse_rates[i], sim_model.forward_rates])
-
-        steady_state_result = scipy.integrate.solve_ivp(
-            partial(bioreaction_sim_expanded, args=None,
-                    inputs=sim_model.inputs, outputs=sim_model.outputs,
-                    forward_rates=sim_model.forward_rates, reverse_rates=reverse_rates[i]),
-            (0, params.total_time),
-            y0=starting_state.concentrations,
-            method='DOP853')
-        if not steady_state_result.success:
-            raise ValueError(
-                'Steady state could not be found through solve_ivp')
-        all_steady_states.append(steady_state_result.y)
         # steady_state_results = loop_sim(
         #     steady_state_results, params, reverse_rates, sim_model)
     # for ti in range(0, total_time, int(params.total_time)):
     #     steady_state_results = loop_sim(steady_state_results, params, reverse_rates, sim_model)
-    return np.array(all_steady_states)
-    # return np.array(steady_state_results[0])
+    return np.array(steady_state_results[0])
 
 
 def get_full_final_states(steady_states, reverse_rates, total_time, new_model, params):
@@ -342,5 +363,5 @@ b_reverse_rates = make_reverse_rates(model, sim_model.reverse_rates, kds)
 clear_gpu()
 model = update_model_rates(model, a=a)
 batchsize = 3 # len(K_eqs)
-analytics_df = scan_all_params(kds, K_eqs, b_reverse_rates, model)
+analytics_df = scan_all_params(kds[:batchsize], K_eqs[:batchsize], b_reverse_rates[:batchsize], model)
 analytics_df.to_csv(os.path.join('output', '5_Keqs_ka', 'df.csv'))

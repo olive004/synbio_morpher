@@ -97,14 +97,16 @@ def bioreaction_sim_dfx_expanded(y0, t0, t1, dt0,
                                  inputs, outputs, forward_rates, reverse_rates,
                                  signal, signal_onehot: np.ndarray,
                                  solver=dfx.Tsit5(),
-                                 saveat=dfx.SaveAt(t0=True, t1=True, steps=True),
+                                 saveat=dfx.SaveAt(
+                                     t0=True, t1=True, steps=True),
                                  max_steps=16**5):
 
     term = dfx.ODETerm(
         partial(bioreaction_sim_expanded,
-                inputs=inputs, outputs=outputs, signal=signal,
-                forward_rates=forward_rates, reverse_rates=reverse_rates,
-                signal_onehot=signal_onehot)
+                inputs=inputs, outputs=outputs,
+                # signal=signal, signal_onehot=signal_onehot,
+                forward_rates=forward_rates, reverse_rates=reverse_rates
+                )
     )
     return dfx.diffeqsolve(term, solver,
                            t0=t0, t1=t1, dt0=dt0,
