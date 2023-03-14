@@ -1,8 +1,10 @@
 from bioreaction.model.data_tools import construct_model_fromnames
+from bioreaction.simulation.simfuncs.basic_de import bioreaction_sim_expanded
 from bioreaction.simulation.basic_sim import basic_de_sim, convert_model, BasicSimParams, BasicSimState
 from tqdm import tqdm
 import jax
 import pandas as pd
+import scipy
 import jax.numpy as jnp
 import numpy as np
 from copy import deepcopy
@@ -25,6 +27,7 @@ if __package__ is None or (__package__ == ''):
     sys.path.append(os.path.abspath(os.path.join('.')))
 
     __package__ = os.path.basename(module_path)
+
 
 from src.utils.results.analytics.timeseries import get_precision, get_sensitivity, get_step_response_times
 from src.utils.misc.units import per_mol_to_per_molecule
@@ -73,21 +76,6 @@ def define_matrices(num_species, size_interaction_array, num_unique_interactions
     return all_analytic_matrices
 
 
-def make_keqs():
-    K_eqs = np.zeros((num_iterations, num_species, num_species))
-    pows = np.power(num_Keqs, np.arange(num_unique_interactions))
-    for i in range(num_iterations):
-        interaction_strength_choices = np.floor(
-            np.mod(i / pows, num_Keqs)).astype(int)
-        if interaction_strength_choices[1] < interaction_strength_choices[3]:
-            continue
-        flat_triangle = K_eqs_range[list(
-            interaction_strength_choices)]
-        K_eqs[i] = make_symmetrical_matrix_from_sequence(
-            flat_triangle, num_species)
-    return K_eqs
-
-
 def make_reverse_rates(med_model, reverse_rates, interaction_matrices):
     index_translation = []
     for i, r in enumerate(med_model.reactions):
@@ -131,11 +119,30 @@ def loop_sim(steady_state_results, params, reverse_rates, sim_model):
 
 
 def get_full_steady_states(starting_state, total_time, reverse_rates, sim_model, params):
-    steady_state_results = get_steady_states(
-        starting_state, reverse_rates, sim_model, params)
-    for ti in range(0, total_time, int(params.total_time)):
-        steady_state_results = loop_sim(steady_state_results, params, reverse_rates, sim_model)
-    return np.array(steady_state_results[0])
+    # steady_state_results = get_steady_states(
+    #     starting_state, reverse_rates, sim_model, params)
+    all_steady_states = []
+    # for ti in range(0, total_time, int(params.total_time)):
+    for i in range(0, reverse_rates.shape[0]):
+        rate_max = np.max([reverse_rates[i], sim_model.forward_rates])
+
+        steady_state_result = scipy.integrate.solve_ivp(
+            partial(bioreaction_sim_expanded, args=None,
+                    inputs=sim_model.inputs, outputs=sim_model.outputs,
+                    forward_rates=sim_model.forward_rates, reverse_rates=reverse_rates[i]),
+            (0, params.total_time),
+            y0=starting_state.concentrations,
+            method='DOP853')
+        if not steady_state_result.success:
+            raise ValueError(
+                'Steady state could not be found through solve_ivp')
+        all_steady_states.append(steady_state_result.y)
+        # steady_state_results = loop_sim(
+        #     steady_state_results, params, reverse_rates, sim_model)
+    # for ti in range(0, total_time, int(params.total_time)):
+    #     steady_state_results = loop_sim(steady_state_results, params, reverse_rates, sim_model)
+    return np.array(all_steady_states)
+    # return np.array(steady_state_results[0])
 
 
 def get_full_final_states(steady_states, reverse_rates, total_time, new_model, params):
@@ -143,9 +150,11 @@ def get_full_final_states(steady_states, reverse_rates, total_time, new_model, p
     t_steps = max(int(total_time/params.delta_t/1000), 1)
     final_states = np.expand_dims(steady_states, axis=1)
     for ti in range(0, total_time, int(params.total_time)):
-        final_states_results = loop_sim(final_states_results, params, reverse_rates, new_model)
+        final_states_results = loop_sim(
+            final_states_results, params, reverse_rates, new_model)
         t_steps = max(int(final_states_results[1].shape[1]/1000), 1)
-        final_states = np.array(np.concatenate([final_states, final_states_results[1][:, ::t_steps, :]], axis=1))
+        final_states = np.array(np.concatenate(
+            [final_states, final_states_results[1][:, ::t_steps, :]], axis=1))
     t_final = np.arange(
         final_states.shape[1]) * params.delta_t
     return final_states, t_final
@@ -164,9 +173,10 @@ def get_analytics(steady_states, final_states, t, K_eqs, model, species_names, s
         peaks=peaks, starting_states=steady_states
     ))
     clear_gpu()
-    resp_vmap = jax.jit(jax.vmap(partial(get_step_response_times, signal_idx=input_species_idx, t=np.expand_dims(t, 0), signal_time=0.0)))
+    resp_vmap = jax.jit(jax.vmap(partial(get_step_response_times,
+                        signal_idx=input_species_idx, t=np.expand_dims(t, 0), signal_time=0.0)))
     response_times = np.array(resp_vmap(
-        data=np.swapaxes(final_states, 1, 2), steady_states=np.expand_dims(steady_states, axis=2), 
+        data=np.swapaxes(final_states, 1, 2), steady_states=np.expand_dims(steady_states, axis=2),
         deriv=jnp.gradient(np.swapaxes(final_states, 1, 2))[0]))
 
     analytics = {
@@ -194,7 +204,7 @@ def plot_scan(final_states, t_final, bi, species_names_onlyin, num_show_species)
         plt.plot(t_final[::100], final_states[i, ::100, :num_show_species])
         plt.title(str(bi+i))
     plt.legend(species_names_onlyin)
-    plt.savefig(os.path.join('output', '5_Keqs_all',
+    plt.savefig(os.path.join('output', '5_Keqs_ka',
                 f'final_states_{bi}-{bi+final_states.shape[0]}_{num_show_species}.svg'))
     plt.close()
 
@@ -254,7 +264,7 @@ def scan_all_params(kds, K_eqs, b_reverse_rates, model):
         analytics = get_analytics(
             steady_states, final_states, t_final, K_eqs[bi:bf], model, species_names, species_types, bi)
         analytics_df = pd.concat([analytics_df, analytics], axis=0)
-        analytics_df.to_csv(os.path.join('output', '5_Keqs_all', 'df.csv'))
+        analytics_df.to_csv(os.path.join('output', '5_Keqs_ka', 'df.csv'))
 
     return analytics_df
 
@@ -270,6 +280,8 @@ Keq = np.array(
 )
 # From src/utils/common/configs/RNA_circuit/molecular_params.json
 a = np.ones(3) * 0.08333
+a[1] = a[1] * 1.5
+a[2] = a[2] * 0.8
 d = np.ones(3) * 0.0008333
 ka = np.ones_like(Keq) * per_mol_to_per_molecule(1000000)
 kd = ka/Keq
@@ -301,6 +313,22 @@ num_iterations = int(total_iterations / total_processes)
 print('Making ', num_iterations,
       ' parameter combinations for equilibrium constants range: ', K_eqs_range)
 
+
+def make_keqs():
+    K_eqs = np.zeros((num_iterations, num_species, num_species))
+    pows = np.power(num_Keqs, np.arange(num_unique_interactions))
+    for i in range(num_iterations):
+        interaction_strength_choices = np.floor(
+            np.mod(i / pows, num_Keqs)).astype(int)
+        if interaction_strength_choices[1] < interaction_strength_choices[3]:
+            continue
+        flat_triangle = K_eqs_range[list(
+            interaction_strength_choices)]
+        K_eqs[i] = make_symmetrical_matrix_from_sequence(
+            flat_triangle, num_species)
+    return K_eqs
+
+
 K_eqs = jax.jit(make_keqs, backend='cpu')()
 didx = np.flatnonzero((K_eqs == 0).all((1, 2)))
 K_eqs = np.delete(K_eqs, didx, axis=0)
@@ -313,6 +341,6 @@ b_reverse_rates = make_reverse_rates(model, sim_model.reverse_rates, kds)
 
 clear_gpu()
 model = update_model_rates(model, a=a)
-batchsize = len(K_eqs)
+batchsize = 3 # len(K_eqs)
 analytics_df = scan_all_params(kds, K_eqs, b_reverse_rates, model)
-analytics_df.to_csv(os.path.join('output', '5_Keqs_all', 'df.csv'))
+analytics_df.to_csv(os.path.join('output', '5_Keqs_ka', 'df.csv'))

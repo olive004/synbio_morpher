@@ -129,13 +129,13 @@ class NucleotideGenerator(SeqGenerator):
                                            subfolder='circuits')
         return {'data_path': out_path}
 
-    def generate_circuits(self, num_circuits, slength, num_components: int,
-                          protocol="random",
-                          name='toy_mRNA_circuit',
-                          out_type='fasta',
-                          proportion_to_mutate=0, template=None) -> List[dict]:
+    def generate_circuits_batch(self, num_circuits, slength, num_components: int,
+                                protocol="random",
+                                name='toy_mRNA_circuit',
+                                out_type='fasta',
+                                proportion_to_mutate=0, template=None) -> List[dict]:
         shape = (num_circuits, slength)
-        paths = [None] * shape[0]
+        paths = [None] * num_circuits
         templates = self.generate_str_from_probdict_batch(
             str_prob_dict=self.SEQ_POOL, shape=shape)
         if protocol == "random":
@@ -144,14 +144,14 @@ class NucleotideGenerator(SeqGenerator):
             for n in range(1, num_components):
                 all_templates[n] = self.generate_str_from_probdict_batch(
                     str_prob_dict=self.SEQ_POOL, shape=shape)
-            for i in range(shape[0]):
+            for i in range(num_circuits):
                 paths[i] = self.data_writer.output(out_name=name, out_type=out_type,
                                                    seq_generator=None, stype=self.stype,
                                                    data=all_templates[i],
                                                    count=num_components, return_path=True,
                                                    subfolder='circuits')
         else:
-            for i in range(shape[0]):
+            for i in range(num_circuits):
                 t = template if template is not None else templates[i]
                 paths[i] = self.generate_circuit(
                     num_components=num_components, slength=slength,

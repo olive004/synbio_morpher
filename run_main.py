@@ -6,7 +6,8 @@ from fire import Fire
 # from src.utils.data.fake_data_generation.nc_sequences import main
 # from scripts.pair_species_mutation.run_pair_species_mutation import main
 # from scripts.generate_species_templates.run_generate_species_templates import main
-from scripts.ensemble_generate_circuits.run_ensemble_generate_circuits import main
+from scripts.generate_seqs_flexible.run_generate_seqs_flexible import main
+# from scripts.ensemble_generate_circuits.run_ensemble_generate_circuits import main
 # from scripts.gather_interaction_stats.run_gather_interaction_stats import main
 # from scripts.mutation_effect_on_interactions_signal.run_mutation_effect_on_interactions_signal import main
 # from scripts.summarise_simulation.run_summarise_simulation import main
