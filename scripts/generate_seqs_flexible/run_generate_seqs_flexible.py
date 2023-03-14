@@ -13,7 +13,7 @@ from src.utils.circuit.agnostic_circuits.circuit_manager_new import CircuitModel
 
 def generate_multiple_circuits(exp_configs, data_writer):
     circuit_paths = []
-    for r, s, l, p, gp, t in zip(exp_configs.values()):
+    for r, s, l, gp, p, t in zip(*list(exp_configs.values())):
         circuit_paths.append(RNAGenerator(data_writer=data_writer).generate_circuits_batch(
             num_circuits=r,
             num_components=s, slength=l,
@@ -27,7 +27,7 @@ def generate_multiple_circuits(exp_configs, data_writer):
 def main(config=None, data_writer=None):
     # set configs
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
-        "scripts", "generate_species_templates", "configs", "base_config.json"))
+        "scripts", "generate_seqs_flexible", "configs", "base_config.json"))
     config_file = load_json_as_dict(config)
     config_file = prepare_config(config_file)
     exp_configs = config_file["circuit_generation"]
