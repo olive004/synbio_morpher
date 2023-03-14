@@ -146,7 +146,7 @@ class NucleotideGenerator(SeqGenerator):
                     str_prob_dict=self.SEQ_POOL, shape=shape)
             all_templates = np.array(all_templates)
             for i in range(num_circuits):
-                paths[i] = self.data_writer.output(out_name=name, out_type=out_type,
+                paths[i] = self.data_writer.output(out_name=name + '_' + str(i), out_type=out_type,
                                                    seq_generator=None, stype=self.stype,
                                                    data=all_templates[:, i],
                                                    count=num_components, return_path=True,
@@ -156,9 +156,10 @@ class NucleotideGenerator(SeqGenerator):
             for i in range(num_circuits):
                 t = template if template is not None else templates[i]
                 paths[i] = self.generate_circuit(
+                    name=name + '_' + str(i),
                     num_components=num_components, slength=slength,
                     protocol=protocol,
-                    name=name, out_type=out_type,
+                    out_type=out_type,
                     proportion_to_mutate=proportion_to_mutate,
                     template=t
                 )
