@@ -38,10 +38,11 @@ class SeqGenerator():
         return ''.join(random.choices(population, probabilities, k=slength))
 
     @staticmethod
-    def generate_str_from_probdict_jax(key, str_prob_dict: dict, shape) -> str:
-        population = jnp.array(np.arange(len(str_prob_dict)))
-        probabilities = jnp.array(str_prob_dict.values())
-        return ''.join(jr.choices(key, population, shape=shape, p=probabilities))
+    def generate_str_from_probdict_batch(str_prob_dict: dict, shape) -> str:
+        population = np.array(list(str_prob_dict.keys()))
+        probabilities = np.array(list(str_prob_dict.values()))
+        str_choices = np.random.choice(population, size=shape, p=probabilities)
+        return [''.join(s) for s in str_choices]
 
 
 class NucleotideGenerator(SeqGenerator):
@@ -90,7 +91,7 @@ class NucleotideGenerator(SeqGenerator):
             circuit_paths.append(circuit_path)
         return circuit_paths
 
-    def generate_circuit(self, count=5, slength=20, protocol="random",
+    def generate_circuit(self, num_components=5, slength=20, protocol="random",
                          name='toy_mRNA_circuit',
                          out_type='fasta',
                          proportion_to_mutate=0, template=None) -> dict:
@@ -111,10 +112,10 @@ class NucleotideGenerator(SeqGenerator):
                                     mutate_prop=proportion_to_mutate,
                                     mutation_pool=self.SEQ_POOL)
         elif protocol == "template_split":
-            sequences = self.generate_split_template(template, count)
+            sequences = self.generate_split_template(template, num_components)
             seq_generator = partial(next_wrapper, generator=iter(sequences))
         elif protocol == "template_mix":
-            sequences = self.generate_mixed_template(template, count)
+            sequences = self.generate_mixed_template(template, num_components)
             seq_generator = partial(next_wrapper, generator=iter(sequences))
         elif protocol == "random":
             seq_generator = partial(self.generate_str_from_probdict,
@@ -123,10 +124,43 @@ class NucleotideGenerator(SeqGenerator):
             raise NotImplementedError
 
         out_path = self.data_writer.output(out_name=name, out_type=out_type,
-                                           seq_generator=seq_generator, stype=self.stype, 
-                                           count=count, return_path=True,
+                                           seq_generator=seq_generator, stype=self.stype,
+                                           count=num_components, return_path=True,
                                            subfolder='circuits')
         return {'data_path': out_path}
+
+    def generate_circuits(self, num_circuits, slength, num_components: int,
+                          protocol="random",
+                          name='toy_mRNA_circuit',
+                          out_type='fasta',
+                          proportion_to_mutate=0, template=None) -> List[dict]:
+        shape = (num_circuits, slength)
+        paths = [None] * shape[0]
+        templates = self.generate_str_from_probdict_batch(
+            str_prob_dict=self.SEQ_POOL, shape=shape)
+        if protocol == "random":
+            all_templates = [None] * num_components
+            all_templates[0] = templates
+            for n in range(1, num_components):
+                all_templates[n] = self.generate_str_from_probdict_batch(
+                    str_prob_dict=self.SEQ_POOL, shape=shape)
+            for i in range(shape[0]):
+                paths[i] = self.data_writer.output(out_name=name, out_type=out_type,
+                                                   seq_generator=None, stype=self.stype,
+                                                   data=all_templates[i],
+                                                   count=num_components, return_path=True,
+                                                   subfolder='circuits')
+        else:
+            for i in range(shape[0]):
+                t = template if template is not None else templates[i]
+                paths[i] = self.generate_circuit(
+                    num_components=num_components, slength=slength,
+                    protocol=protocol,
+                    name=name, out_type=out_type,
+                    proportion_to_mutate=proportion_to_mutate,
+                    template=t
+                )
+        return paths
 
 
 class RNAGenerator(NucleotideGenerator):
