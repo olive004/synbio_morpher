@@ -34,7 +34,7 @@ def sub_dir(data_writer, dirname):
 def main(config=None, data_writer=None):
     # set configs
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
-        "scripts", "generate_seqs_flexible", "configs", "base_config.json"))
+        "scripts", "generate_seqs_flexible", "configs", "randoms.json"))
     config_file = load_json_as_dict(config)
     config_file = prepare_config(config_file)
     exp_configs = config_file["circuit_generation"]

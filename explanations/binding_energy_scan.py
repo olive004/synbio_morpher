@@ -112,59 +112,69 @@ def get_steady_states(starting_state, reverse_rates, sim_model, params):
     return steady_state_results
 
 
-def loop_sim(steady_state_results, params: MedSimParams, reverse_rates, sim_model):
-
-    sim_func = partial(bioreaction_sim_dfx_expanded,
+def get_loop_simfunc(params, sim_model, saveat):
+    def to_vmap_basic(starting_state, reverse_rates):
+        return partial(bioreaction_sim_dfx_expanded,
                        t0=params.t_start, t1=params.t_end, dt0=params.delta_t,
                        signal=None, signal_onehot=None,  # signal.reactions_onehot,
                        forward_rates=sim_model.forward_rates,
                        inputs=sim_model.inputs,
                        outputs=sim_model.outputs,
                        solver=dfx.Heun(),
-                       saveat=dfx.SaveAt(ts=np.arange(params.t_start, np.min(
-                           [params.t_start + 2000, params.t_end]))),
-                       max_steps=16**6
-                       )
+                       saveat=saveat,
+                       max_steps=int(np.min([np.max([16**5, ((params.t_end - params.t_start)/params.delta_t) * 5]), 16**6]))
+                       )(y0=starting_state, reverse_rates=reverse_rates)
 
-    def to_vmap_basic(starting_state, reverse_rates):
-        return sim_func(y0=starting_state, reverse_rates=reverse_rates)
+    return jax.jit(jax.vmap(to_vmap_basic))
 
-    steady_state_results = jax.jit(jax.vmap(to_vmap_basic))(
-        steady_state_results, reverse_rates)
+
+def loop_sim(steady_state_results, reverse_rates, sim_func):
+    steady_state_results = sim_func(steady_state_results, reverse_rates)
     return steady_state_results
 
 
+def check_comparison(comparison, new_states):
+    return np.abs((comparison - new_states).mean()) < 0.01
+
+
 def get_full_steady_states(starting_state, total_time, reverse_rates, sim_model, params):
+    sim_func = get_loop_simfunc(params, sim_model=sim_model, saveat=dfx.SaveAt(t1=True))
     steady_state_results = loop_sim(
         np.repeat(np.expand_dims(starting_state.concentrations, axis=0), 
-                  repeats=reverse_rates.shape[0], axis=0), params, reverse_rates, sim_model)
+        repeats=reverse_rates.shape[0], axis=0), reverse_rates, 
+        sim_func=sim_func)
     tf = steady_state_results.stats['num_accepted_steps'][0]
     steady_state_results = np.array(steady_state_results.ys[:, tf-1, :])
-    for ti in range(0, total_time, int(params.total_time)):
-        ps = MedSimParams(t_start=ti, t_end=np.max(
-            [ti+params.total_time, total_time]), delta_t=params.delta_t, 
-            poisson_sim_reactions=None, brownian_sim_reaction=None)
+    comparison = steady_state_results
+    for ti in range(int(params.t_end), total_time, int(params.t_end)):
         steady_state_results = loop_sim(
-            steady_state_results, ps, reverse_rates, sim_model)
+            steady_state_results, reverse_rates, sim_func)
         tf = steady_state_results.stats['num_accepted_steps'][0]
         steady_state_results = np.array(steady_state_results.ys[:, tf-1, :])
+        if check_comparison(comparison, steady_state_results):
+            break
+        else:
+            comparison = steady_state_results
     return steady_state_results
 
 
 def get_full_final_states(steady_states, reverse_rates, total_time, new_model, params):
+    sim_func = get_loop_simfunc(params, sim_model=new_model, saveat=dfx.SaveAt(ts=np.linspace(params.t_start, params.t_end, 2000)))
     final_states_results = steady_states
-    full_final_states = steady_states
-    t = np.array([])
-    for ti in range(0, total_time, int(params.total_time)):
-        ps = MedSimParams(t_start=ti, t_end=np.max(
-            [ti+params.total_time, total_time]), delta_t=params.delta_t,
-            poisson_sim_reactions=None, brownian_sim_reaction=None)
+    full_final_states = np.expand_dims(steady_states, axis=1)
+    t = np.array([0])
+    comparison = final_states_results
+    for ti in range(0, total_time, int(params.t_end)):
         final_states_results = loop_sim(
-            final_states_results, ps, reverse_rates, new_model)
+            final_states_results, reverse_rates, sim_func)
         tf = final_states_results.stats['num_accepted_steps'][0]
-        t = np.concatenate([t, np.array(final_states_results.ts[0, :tf])], axis=0)
+        t = np.concatenate([t, np.array(final_states_results.ts[0, :tf])] + ti, axis=0)
         final_states_results = np.array(final_states_results.ys[:, :tf, :])
         full_final_states = np.concatenate([full_final_states, final_states_results], axis=1)
+        if check_comparison(comparison, final_states_results[:, -1, :]):
+            break
+        else:
+            comparison = final_states_results[:, -1, :]
     return full_final_states, t
 
 
@@ -209,7 +219,7 @@ def plot_scan(final_states, t_final, bi, species_names_onlyin, num_show_species)
     plt.figure(figsize=(50, 50))
     for i in range(num_rows**2):
         ax = plt.subplot(num_rows, num_rows, i+1)
-        plt.plot(t_final[::100], final_states[i, ::100, :num_show_species])
+        plt.plot(t_final, final_states[i, :, :num_show_species])
         plt.title(str(bi+i))
     plt.legend(species_names_onlyin)
     plt.savefig(os.path.join('output', '5_Keqs_ka',
@@ -225,10 +235,10 @@ def adjust_sim_params(reverse_rates, max_kd):
     # total_t_steady = 300
     # params_final = BasicSimParams(total_time=10.0, delta_t=dt)
     # total_t_final = 100
-    params_steady = MedSimParams(t_start=0, t_end=3000000.0, delta_t=dt,
+    params_steady = MedSimParams(t_start=0, t_end=30000.0, delta_t=dt,
         poisson_sim_reactions=None, brownian_sim_reaction=None)
     total_t_steady = 3000000
-    params_final = MedSimParams(t_start=0, t_end=1000000.0, delta_t=dt,
+    params_final = MedSimParams(t_start=0, t_end=10000.0, delta_t=dt,
         poisson_sim_reactions=None, brownian_sim_reaction=None)
     total_t_final = 1000000
 
@@ -351,7 +361,7 @@ b_reverse_rates = make_reverse_rates(model, sim_model.reverse_rates, kds)
 
 clear_gpu()
 model = update_model_rates(model, a=a)
-batchsize = 3 # len(K_eqs)
+batchsize = len(K_eqs)
 analytics_df = scan_all_params(
     kds[:batchsize], K_eqs[:batchsize], b_reverse_rates[:batchsize], model)
 analytics_df.to_csv(os.path.join('output', '5_Keqs_ka', 'df.csv'))
