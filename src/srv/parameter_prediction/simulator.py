@@ -70,7 +70,6 @@ class RawSimulationHandling():
             if self.postprocess:
                 self.units = SIMULATOR_UNITS[self.simulator_name]['rate']
                 processor_f = [
-                    unkilo,
                     equilibrium_constant_reparameterisation,
                     return_both_eqconstants_and_rates
                 ]

@@ -114,9 +114,9 @@ class Circuit():
 
     @signal.getter
     def signal(self):
-        if self._signal is None:
-            logging.warning(
-                f'Trying to retrieve None signal from circuit. Make sure signal specified in circuit config')
+        # if self._signal is None:
+        #     logging.warning(
+        #         f'Trying to retrieve None signal from circuit. Make sure signal specified in circuit config')
         return self._signal
 
     @signal.setter

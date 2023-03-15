@@ -139,7 +139,6 @@ def get_full_steady_states(starting_state, total_time, reverse_rates, sim_model,
     #             'Steady state could not be found through solve_ivp')
     #     all_steady_states.append(steady_state_result.y)
     # return np.array(all_steady_states)
-    v = datetime.now()
 
     sim_func = jax.jit(jax.vmap(
         partial(bioreaction_sim_dfx_expanded,
@@ -150,14 +149,11 @@ def get_full_steady_states(starting_state, total_time, reverse_rates, sim_model,
                 outputs=sim_model.outputs,
                 y0=starting_state.concentrations,
                 solver=dfx.Heun(),
+                saveat=dfx.SaveAt(ts=np.arange(2000)),
                 max_steps=16**6
                 )), backend='cpu')
     steady_state_results = sim_func(reverse_rates=reverse_rates)
     tf = steady_state_results.stats['num_accepted_steps'][0]
-
-    vv = datetime.now() - v
-    plt.plot(steady_state_results.ys[0])
-    plt.savefig('test.png')
     # steady_state_results = get_steady_states(
     #     starting_state, reverse_rates, sim_model, params)
     # for ti in range(0, total_time, int(params.total_time)):
@@ -165,7 +161,7 @@ def get_full_steady_states(starting_state, total_time, reverse_rates, sim_model,
         #     steady_state_results, params, reverse_rates, sim_model)
     # for ti in range(0, total_time, int(params.total_time)):
     #     steady_state_results = loop_sim(steady_state_results, params, reverse_rates, sim_model)
-    return np.array(steady_state_results.ys[:, :tf, :])
+    return np.array(steady_state_results.ys[:, tf-1, :])
 
 
 def get_full_final_states(steady_states, reverse_rates, total_time, new_model, params):
@@ -190,11 +186,12 @@ def get_full_final_states(steady_states, reverse_rates, total_time, new_model, p
                 inputs=sim_model.inputs,
                 outputs=sim_model.outputs,
                 solver=dfx.Heun(),
+                saveat=dfx.SaveAt(ts=np.arange(2000)),
                 max_steps=16**6
                 )), backend='cpu')
     final_states_results = sim_func(y0=steady_states, reverse_rates=reverse_rates)
     tf = final_states_results.stats['num_accepted_steps'][0]
-    return np.array(final_states_results.ys[:, :tf, :]), np.array(final_states_results.ts[0, :tf, :])
+    return np.array(final_states_results.ys[:, :tf, :]), np.array(final_states_results.ts[0, :tf])
 
 
 def get_analytics(steady_states, final_states, t, K_eqs, model, species_names, species_types, starting_circuit_idx):
@@ -378,6 +375,6 @@ b_reverse_rates = make_reverse_rates(model, sim_model.reverse_rates, kds)
 
 clear_gpu()
 model = update_model_rates(model, a=a)
-batchsize = 3 # len(K_eqs)
+batchsize = len(K_eqs)
 analytics_df = scan_all_params(kds[:batchsize], K_eqs[:batchsize], b_reverse_rates[:batchsize], model)
 analytics_df.to_csv(os.path.join('output', '5_Keqs_ka', 'df.csv'))

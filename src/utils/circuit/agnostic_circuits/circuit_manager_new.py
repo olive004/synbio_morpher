@@ -6,9 +6,12 @@ import inspect
 import os
 # import sys
 import logging
+import diffrax as dfx
 import numpy as np
 
 import jax
+# jax.config.update('jax_platform_name', 'cpu')
+
 from scipy import integrate
 from bioreaction.model.data_containers import Species
 from bioreaction.simulation.simfuncs.basic_de import bioreaction_sim, bioreaction_sim_expanded
@@ -61,7 +64,7 @@ class CircuitModeller():
         circuit = self.find_steady_states([circuit])[0]
         return circuit
 
-    def init_circuits(self, circuits: List[Circuit]) -> List[Circuit]:
+    def init_circuits(self, circuits: List[Circuit], batch=True) -> List[Circuit]:
         for i in range(len(circuits)):
             circuits[i] = self.compute_interactions(circuits[i])
         circuits = self.find_steady_states(circuits)
@@ -111,7 +114,7 @@ class CircuitModeller():
             max_time=self.steady_state_args['max_time'],
             time_interval=self.steady_state_args['time_interval'])
 
-        b_steady_states = self.compute_steady_states(modeller_steady_state,
+        b_steady_states, t = self.compute_steady_states(modeller_steady_state,
                                                      circuits=circuits,
                                                      solver_type=self.steady_state_args['steady_state_solver'],
                                                      use_zero_rates=self.steady_state_args['use_zero_rates'])
@@ -122,8 +125,7 @@ class CircuitModeller():
                 name='steady_states',
                 category='time_series',
                 vis_func=VisODE().plot,
-                vis_kwargs={'t': np.arange(0, np.shape(steady_states)[circuit.time_axis]) *
-                            modeller_steady_state.time_interval,
+                vis_kwargs={'t': t,
                             'legend': [s.name for s in circuit.model.species],
                             'out_type': 'svg'},
                 analytics_kwargs={'labels': [
@@ -169,23 +171,27 @@ class CircuitModeller():
         elif solver_type == 'jax':
             circuit = circuits[0]
 
-            sim_func = jax.vmap(partial(bioreaction_sim_dfx_expanded,
+            sim_func = jax.jit(jax.vmap(partial(bioreaction_sim_dfx_expanded,
                                         t0=self.t0, t1=self.t1, dt0=self.dt,
-                                        signal=vanilla_return, signal_onehot=np.zeros_like(
-                                            circuit.signal.reactions_onehot),  # signal.reactions_onehot,
+                                        signal=vanilla_return, signal_onehot=np.zeros(
+                                            len(circuit.model.reactions)),  # signal.reactions_onehot,
                                         inputs=circuit.qreactions.reactions.inputs,
-                                        outputs=circuit.qreactions.reactions.outputs
-                                        ))
+                                        outputs=circuit.qreactions.reactions.outputs,
+                                        solver=dfx.Heun(),
+                                        saveat=dfx.SaveAt(ts=np.arange(np.min([self.t1, 2000]))),
+                                        )))
             solution = sim_func(
                 y0=np.asarray([c.qreactions.quantities for c in circuits]),
                 forward_rates=np.asarray(
                     [c.qreactions.reactions.forward_rates for c in circuits]),
                 reverse_rates=np.asarray([c.qreactions.reactions.reverse_rates for c in circuits]))
 
-            tf = np.argmax(solution.ts >= np.inf)
+            tf = np.max([np.argmax(solution.ts >= np.inf), solution.ys.shape[1]])
             b_copynumbers = solution.ys[:, :tf, :]
 
-        return np.asarray(b_copynumbers)
+            if b_copynumbers.shape[circuit.species_axis+1] != len(circuit.model.species):
+                b_copynumbers = np.swapaxes(b_copynumbers, circuit.time_axis+1, circuit.species_axis+1)
+        return np.asarray(b_copynumbers), np.asarray(solution.ts[0, :tf])
 
     def model_circuit(self, y0: np.ndarray, circuit: Circuit):
         assert np.shape(y0)[circuit.time_axis] == 1, 'Please only use 1-d ' \
@@ -413,7 +419,6 @@ class CircuitModeller():
             logging.warning(
                 f'Signal differs between circuits, but only first signal used for simulation.')
 
-
         if self.simulation_args['solver'] == 'diffrax':
             self.sim_func = jax.vmap(
                 partial(bioreaction_sim_dfx_expanded,
@@ -427,8 +432,8 @@ class CircuitModeller():
 
             def b_ivp(y0: np.ndarray, forward_rates: np.ndarray, reverse_rates: np.ndarray):
 
-                forward_rates = forward_rates #+ \
-                    # signal.reactions_onehot * signal.func.keywords['target']
+                forward_rates = forward_rates  # + \
+                # signal.reactions_onehot * signal.func.keywords['target']
                 copynumbers = [None] * y0.shape[0]
                 ts = [None] * y0.shape[0]
                 for i, (y0i, forward_rates_i, reverse_rates_i) in enumerate(zip(y0, forward_rates, reverse_rates)):

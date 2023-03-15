@@ -44,22 +44,25 @@ class SeqGenerator():
         str_choices = np.random.choice(population, size=shape, p=probabilities)
         return [''.join(s) for s in str_choices]
 
+    def get_sequence_complement(self, seq):
+        if self.stype == 'RNA':
+            return str(Seq(seq).complement_rna())
+        else:
+            return str(Seq(seq).complement())
 
 class NucleotideGenerator(SeqGenerator):
 
     def __init__(self, data_writer) -> None:
         super().__init__(data_writer)
 
-    @staticmethod
-    def convert_symbolic_complement(real_seq, symbolic_complement):
-        comp_seq = str(Seq(real_seq).complement())
+    def convert_symbolic_complement(self, real_seq, symbolic_complement):
+        comp_seq = self.get_sequence_complement(real_seq)
         return list_to_str(ordered_merge(real_seq, comp_seq, symbolic_complement))
 
-    @staticmethod
-    def generate_split_template(template: str, count) -> list:
+    def generate_split_template(self, template: str, count) -> list:
         assert count < len(template), \
             f"Desired sequence length {len(template)} too short to accomodate {count} samples."
-        template_complement = str(Seq(template).complement())
+        template_complement = self.get_sequence_complement(template)
         fold = max(int(len(template) / count), 1)
 
         seqs = []  # could preallocate

@@ -182,6 +182,9 @@ def generate_differences_ratios(analytics: dict, ref_analytics) -> Tuple[dict]:
 
 def generate_analytics(data, time, labels: List[str], ref_circuit_data=None,
                        signal_idxs=None, signal_time=None):
+    if data.shape[0] != len(labels):
+        species_axis = data.shape.index(len(labels))
+        data = np.swapaxes(data, 0, species_axis)
     analytics = generate_base_analytics(data=data, time=time, labels=labels,
                                         signal_idxs=signal_idxs, signal_time=signal_time, 
                                         ref_circuit_data=ref_circuit_data)

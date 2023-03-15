@@ -27,6 +27,10 @@ def generate_multiple_circuits(exp_configs, data_writer):
     return flatten_listlike(circuit_paths)
 
 
+def sub_dir(data_writer, dirname):
+    data_writer.update_ensemble(dirname)
+
+
 def main(config=None, data_writer=None):
     # set configs
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
@@ -44,6 +48,10 @@ def main(config=None, data_writer=None):
                 req_output=True,
                 name="generate_circuits"
         ),
+        Protocol(
+            partial(sub_dir, 
+                    data_writer=data_writer, dirname='simulated_circuits')
+        ),
         [
             Protocol(
                 partial(construct_circuit_from_cfg,
@@ -57,16 +65,20 @@ def main(config=None, data_writer=None):
             Protocol(
                 partial(Evolver(data_writer=data_writer, sequence_type=config_file.get('system_type')).mutate,
                         write_to_subsystem=True,
-                        algorithm=config_file.get('mutations', {}).get('algorithm', 'random')),
+                        algorithm=config_file.get('mutations', {}).get('algorithm')),
                 req_input=True,
                 req_output=True,
                 name="generate_mutations"
             )
         ],
+        # Protocol(
+        #     data_writer.unsubdivide_last_dir
+        # ),
         Protocol(partial(CircuitModeller(result_writer=data_writer, config=config_file).batch_circuits,
                          write_to_subsystem=True, batch_size=config_file['simulation'].get('batch_size', 100),
                          methods={
-            "init_circuit": {},
+            "compute_interactions": {},
+            "find_steady_states": {'batch': True},
             "write_results": {'no_visualisations': config_file['experiment'].get('no_visualisations', True),
                               'no_numerical': config_file['experiment'].get('no_numerical', False)}
         }),
