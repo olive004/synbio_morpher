@@ -136,12 +136,14 @@ def loop_sim(steady_state_results, params: MedSimParams, reverse_rates, sim_mode
 
 def get_full_steady_states(starting_state, total_time, reverse_rates, sim_model, params):
     steady_state_results = loop_sim(
-        starting_state, ps, reverse_rates, sim_model)
+        np.repeat(np.expand_dims(starting_state.concentrations, axis=0), 
+                  repeats=reverse_rates.shape[0], axis=0), params, reverse_rates, sim_model)
     tf = steady_state_results.stats['num_accepted_steps'][0]
     steady_state_results = np.array(steady_state_results.ys[:, tf-1, :])
     for ti in range(0, total_time, int(params.total_time)):
         ps = MedSimParams(t_start=ti, t_end=np.max(
-            [ti+params.total_time, total_time]), delta_t=params.delta_t)
+            [ti+params.total_time, total_time]), delta_t=params.delta_t, 
+            poisson_sim_reactions=None, brownian_sim_reaction=None)
         steady_state_results = loop_sim(
             steady_state_results, ps, reverse_rates, sim_model)
         tf = steady_state_results.stats['num_accepted_steps'][0]
@@ -155,7 +157,8 @@ def get_full_final_states(steady_states, reverse_rates, total_time, new_model, p
     t = np.array([])
     for ti in range(0, total_time, int(params.total_time)):
         ps = MedSimParams(t_start=ti, t_end=np.max(
-            [ti+params.total_time, total_time]), delta_t=params.delta_t)
+            [ti+params.total_time, total_time]), delta_t=params.delta_t,
+            poisson_sim_reactions=None, brownian_sim_reaction=None)
         final_states_results = loop_sim(
             final_states_results, ps, reverse_rates, new_model)
         tf = final_states_results.stats['num_accepted_steps'][0]
@@ -222,9 +225,11 @@ def adjust_sim_params(reverse_rates, max_kd):
     # total_t_steady = 300
     # params_final = BasicSimParams(total_time=10.0, delta_t=dt)
     # total_t_final = 100
-    params_steady = MedSimParams(t_start=0, t_end=100000.0, delta_t=dt)
+    params_steady = MedSimParams(t_start=0, t_end=3000000.0, delta_t=dt,
+        poisson_sim_reactions=None, brownian_sim_reaction=None)
     total_t_steady = 3000000
-    params_final = MedSimParams(t_start=0, t_end=100000.0, delta_t=dt)
+    params_final = MedSimParams(t_start=0, t_end=1000000.0, delta_t=dt,
+        poisson_sim_reactions=None, brownian_sim_reaction=None)
     total_t_final = 1000000
 
     return params_steady, total_t_steady, params_final, total_t_final

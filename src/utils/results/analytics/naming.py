@@ -8,6 +8,7 @@ RATIO_KEY = '_ratio_from_mutation_to_base'
 
 def get_analytics_types_base() -> List[str]:
     return ['fold_change',
+            'final_deriv',
             'initial_steady_states',
             'max_amount',
             'min_amount',

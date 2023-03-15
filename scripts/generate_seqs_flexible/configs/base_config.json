@@ -11,16 +11,16 @@
         "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
         "circuit_generation": {
             "repetitions": [
-                100000,
-                100000,
-                100000,
-                100000,
-                50000,
-                50000,
-                50000,
-                50000,
-                50000,
-                50000
+                10,
+                10,
+                10,
+                10,
+                5,
+                5,
+                5,
+                5,
+                5,
+                5
             ],
             "species_count": [
                 3,
