@@ -71,9 +71,6 @@ def main(config=None, data_writer=None):
                 name="generate_mutations"
             )
         ],
-        # Protocol(
-        #     data_writer.unsubdivide_last_dir
-        # ),
         Protocol(partial(CircuitModeller(result_writer=data_writer, config=config_file).batch_circuits,
                          write_to_subsystem=True, batch_size=config_file['simulation'].get('batch_size', 100),
                          methods={

@@ -1,6 +1,7 @@
 from functools import partial
 from typing import List
 import numpy as np
+np.random.seed(0)
 import jax.numpy as jnp
 import jax.random as jr
 import random

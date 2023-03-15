@@ -1,6 +1,8 @@
+
 from bioreaction.model.data_tools import construct_model_fromnames
 from bioreaction.simulation.simfuncs.basic_de import bioreaction_sim_expanded
 from bioreaction.simulation.basic_sim import basic_de_sim, convert_model, BasicSimParams, BasicSimState
+from bioreaction.simulation.med_sim import MedSimParams
 
 from datetime import datetime
 import diffrax as dfx
@@ -32,13 +34,12 @@ if __package__ is None or (__package__ == ''):
     __package__ = os.path.basename(module_path)
 
 
-from src.utils.results.analytics.timeseries import get_precision, get_sensitivity, get_step_response_times
-from src.utils.misc.units import per_mol_to_per_molecule
-from src.utils.misc.type_handling import flatten_listlike
-from src.utils.misc.numerical import make_symmetrical_matrix_from_sequence
-from src.utils.modelling.deterministic import bioreaction_sim_dfx_expanded
 from tests.shared import CONFIG
-
+from src.utils.modelling.deterministic import bioreaction_sim_dfx_expanded
+from src.utils.misc.numerical import make_symmetrical_matrix_from_sequence
+from src.utils.misc.type_handling import flatten_listlike
+from src.utils.misc.units import per_mol_to_per_molecule
+from src.utils.results.analytics.timeseries import get_precision, get_sensitivity, get_step_response_times
 
 config = deepcopy(CONFIG)
 
@@ -111,14 +112,25 @@ def get_steady_states(starting_state, reverse_rates, sim_model, params):
     return steady_state_results
 
 
-def loop_sim(steady_state_results, params, reverse_rates, sim_model):
+def loop_sim(steady_state_results, params: MedSimParams, reverse_rates, sim_model):
+
+    sim_func = partial(bioreaction_sim_dfx_expanded,
+                       t0=params.t_start, t1=params.t_end, dt0=params.delta_t,
+                       signal=None, signal_onehot=None,  # signal.reactions_onehot,
+                       forward_rates=sim_model.forward_rates,
+                       inputs=sim_model.inputs,
+                       outputs=sim_model.outputs,
+                       solver=dfx.Heun(),
+                       saveat=dfx.SaveAt(ts=np.arange(params.t_start, np.min(
+                           [params.t_start + 2000, params.t_end]))),
+                       max_steps=16**6
+                       )
 
     def to_vmap_basic(starting_state, reverse_rates):
-        sim_model.reverse_rates = reverse_rates
-        return basic_de_sim(starting_state=BasicSimState(concentrations=starting_state), model=sim_model, params=params)
+        return sim_func(y0=starting_state, reverse_rates=reverse_rates)
 
     steady_state_results = jax.jit(jax.vmap(to_vmap_basic))(
-        steady_state_results[0], reverse_rates)
+        steady_state_results, reverse_rates)
     return steady_state_results
 
 
@@ -140,28 +152,30 @@ def get_full_steady_states(starting_state, total_time, reverse_rates, sim_model,
     #     all_steady_states.append(steady_state_result.y)
     # return np.array(all_steady_states)
 
-    sim_func = jax.jit(jax.vmap(
-        partial(bioreaction_sim_dfx_expanded,
-                t0=0, t1=params.total_time * 3, dt0=params.delta_t,
-                signal=None, signal_onehot=None,  # signal.reactions_onehot,
-                forward_rates=sim_model.forward_rates,
-                inputs=sim_model.inputs,
-                outputs=sim_model.outputs,
-                y0=starting_state.concentrations,
-                solver=dfx.Heun(),
-                saveat=dfx.SaveAt(ts=np.arange(2000)),
-                max_steps=16**6
-                )), backend='cpu')
-    steady_state_results = sim_func(reverse_rates=reverse_rates)
-    tf = steady_state_results.stats['num_accepted_steps'][0]
-    # steady_state_results = get_steady_states(
-    #     starting_state, reverse_rates, sim_model, params)
-    # for ti in range(0, total_time, int(params.total_time)):
-        # steady_state_results = loop_sim(
-        #     steady_state_results, params, reverse_rates, sim_model)
-    # for ti in range(0, total_time, int(params.total_time)):
-    #     steady_state_results = loop_sim(steady_state_results, params, reverse_rates, sim_model)
-    return np.array(steady_state_results.ys[:, tf-1, :])
+    # sim_func = jax.jit(jax.vmap(
+    #     partial(bioreaction_sim_dfx_expanded,
+    #             t0=0, t1=params.total_time * 3, dt0=params.delta_t,
+    #             signal=None, signal_onehot=None,  # signal.reactions_onehot,
+    #             forward_rates=sim_model.forward_rates,
+    #             inputs=sim_model.inputs,
+    #             outputs=sim_model.outputs,
+    #             y0=starting_state.concentrations,
+    #             solver=dfx.Heun(),
+    #             saveat=dfx.SaveAt(ts=np.arange(2000)),
+    #             max_steps=16**6
+    #             )), backend='cpu')
+    # steady_state_results = sim_func(reverse_rates=reverse_rates)
+    # tf = steady_state_results.stats['num_accepted_steps'][0]
+    steady_state_results = loop_sim(
+        starting_state, ps, reverse_rates, sim_model)
+    for ti in range(0, total_time, int(params.total_time)):
+        ps = MedSimParams(t_start=ti, t_end=np.max(
+            [ti+params.total_time, total_time]), delta_t=params.delta_t)
+        steady_state_results = loop_sim(
+            steady_state_results, ps, reverse_rates, sim_model)
+        tf = steady_state_results.stats['num_accepted_steps'][0]
+        steady_state_results = np.array(steady_state_results.ys[:, tf-1, :])
+    return steady_state_results
 
 
 def get_full_final_states(steady_states, reverse_rates, total_time, new_model, params):
@@ -189,7 +203,8 @@ def get_full_final_states(steady_states, reverse_rates, total_time, new_model, p
                 saveat=dfx.SaveAt(ts=np.arange(2000)),
                 max_steps=16**6
                 )), backend='cpu')
-    final_states_results = sim_func(y0=steady_states, reverse_rates=reverse_rates)
+    final_states_results = sim_func(
+        y0=steady_states, reverse_rates=reverse_rates)
     tf = final_states_results.stats['num_accepted_steps'][0]
     return np.array(final_states_results.ys[:, :tf, :]), np.array(final_states_results.ts[0, :tf])
 
@@ -251,9 +266,9 @@ def adjust_sim_params(reverse_rates, max_kd):
     # total_t_steady = 300
     # params_final = BasicSimParams(total_time=10.0, delta_t=dt)
     # total_t_final = 100
-    params_steady = BasicSimParams(total_time=100000.0, delta_t=dt)
+    params_steady = MedSimParams(t_start=0, t_end=100000.0, delta_t=dt)
     total_t_steady = 3000000
-    params_final = BasicSimParams(total_time=100000.0, delta_t=dt)
+    params_final = MedSimParams(t_start=0, t_end=100000.0, delta_t=dt)
     total_t_final = 1000000
 
     return params_steady, total_t_steady, params_final, total_t_final
@@ -376,5 +391,6 @@ b_reverse_rates = make_reverse_rates(model, sim_model.reverse_rates, kds)
 clear_gpu()
 model = update_model_rates(model, a=a)
 batchsize = len(K_eqs)
-analytics_df = scan_all_params(kds[:batchsize], K_eqs[:batchsize], b_reverse_rates[:batchsize], model)
+analytics_df = scan_all_params(
+    kds[:batchsize], K_eqs[:batchsize], b_reverse_rates[:batchsize], model)
 analytics_df.to_csv(os.path.join('output', '5_Keqs_ka', 'df.csv'))

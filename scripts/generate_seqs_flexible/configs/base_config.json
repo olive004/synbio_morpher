@@ -6,21 +6,21 @@
         "experiment": {
             "purpose": "generate_seqs_flexible",
             "test_mode": false,
-            "no_visualisations": false
+            "no_visualisations": true
         },
         "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
         "circuit_generation": {
             "repetitions": [
-                1,
-                10,
-                10,
-                10,
-                5,
-                5,
-                5,
-                5,
-                5,
-                5
+                1000000,
+                100000,
+                100000,
+                100000,
+                50000,
+                50000,
+                50000,
+                50000,
+                50000,
+                50000
             ],
             "species_count": [
                 3,
@@ -85,7 +85,7 @@
         },
         "mutations": {
             "algorithm": "random",
-            "mutation_counts": 1,
+            "mutation_counts": 8,
             "mutation_nums_within_sequence": [
                 1
             ],
@@ -95,10 +95,10 @@
         "simulation": {
             "dt": 0.1,
             "t0": 0,
-            "t1": 1200,
+            "t1": 1500,
             "solver": "diffrax",
             "use_batch_mutations": true,
-            "batch_size": 800,
+            "batch_size": 2000,
             "max_circuits": 10000,
             "device": "gpu"
         },
