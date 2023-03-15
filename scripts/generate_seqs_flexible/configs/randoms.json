@@ -12,23 +12,11 @@
         "circuit_generation": {
             "repetitions": [
                 100000,
-                100000,
-                100000,
-                100000,
-                50000,
-                50000,
-                50000,
-                50000,
-                50000,
-                50000
+                1,
+                1,
+                1
             ],
             "species_count": [
-                3,
-                3,
-                3,
-                3,
-                3,
-                3,
                 3,
                 3,
                 3,
@@ -38,33 +26,15 @@
                 20,
                 20,
                 20,
-                20,
-                20,
-                20,
-                20,
-                20,
-                20,
                 20
             ],
             "generator_protocol": [
                 "random",
                 "template_mix",
                 "template_mutate",
-                "template_split",
-                "template_mix",
-                "template_mutate",
-                "template_split",
-                "template_mix",
-                "template_mutate",
                 "template_split"
             ],
             "proportion_to_mutate": [
-                0.5,
-                0.5,
-                0.5,
-                0.5,
-                0.5,
-                0.5,
                 0.5,
                 0.5,
                 0.5,
@@ -74,13 +44,7 @@
                 null,
                 null,
                 null,
-                null,
-                "GCCCCGGGGCUCUCUAUACG",
-                "GCCCCGGGGCUCUCUAUACG",
-                "GCCCCGGGGCUCUCUAUACG",
-                "CGUGACGCUGGUUUCCUCCC",
-                "CGUGACGCUGGUUUCCUCCC",
-                "CGUGACGCUGGUUUCCUCCC"
+                null
             ]
         },
         "mutations": {
