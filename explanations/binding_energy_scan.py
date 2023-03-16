@@ -102,14 +102,14 @@ def clear_gpu():
         buf.delete()
 
 
-def get_steady_states(starting_state, reverse_rates, sim_model, params):
+# def get_steady_states(starting_state, reverse_rates, sim_model, params):
 
-    def to_vmap_basic(reverse_rates):
-        sim_model.reverse_rates = reverse_rates
-        return basic_de_sim(starting_state=starting_state, model=sim_model, params=params)
+#     def to_vmap_basic(reverse_rates):
+#         sim_model.reverse_rates = reverse_rates
+#         return basic_de_sim(starting_state=starting_state, model=sim_model, params=params)
 
-    steady_state_results = jax.jit(jax.vmap(to_vmap_basic))(reverse_rates)
-    return steady_state_results
+#     steady_state_results = jax.jit(jax.vmap(to_vmap_basic))(reverse_rates)
+#     return steady_state_results
 
 
 def get_loop_simfunc(params, sim_model, saveat):
@@ -126,6 +126,7 @@ def get_loop_simfunc(params, sim_model, saveat):
                        )(y0=starting_state, reverse_rates=reverse_rates)
 
     return jax.jit(jax.vmap(to_vmap_basic))
+    # return partial(scipy.integrate.solve_ivp, fun=to_vmap_basic, t_span=(params.t_start, params.t_end))
 
 
 def loop_sim(steady_state_results, reverse_rates, sim_func):
@@ -133,48 +134,59 @@ def loop_sim(steady_state_results, reverse_rates, sim_func):
     return steady_state_results
 
 
-def check_comparison(comparison):
-    return np.abs((comparison).mean()) < 0.01
+def has_steadied(comparison):
+    return np.sum(np.abs(comparison) > 0.08) == 0
 
 
 def get_full_steady_states(starting_state, total_time, reverse_rates, sim_model, params):
     sim_func = get_loop_simfunc(params, sim_model=sim_model, saveat=dfx.SaveAt(t1=True))
+    ti = 0
+    starting_state = np.repeat(np.expand_dims(starting_state.concentrations, axis=0), 
+        repeats=reverse_rates.shape[0], axis=0)
+    comparison = starting_state
     steady_state_results = loop_sim(
-        np.repeat(np.expand_dims(starting_state.concentrations, axis=0), 
-        repeats=reverse_rates.shape[0], axis=0), reverse_rates, 
+        starting_state, reverse_rates, 
         sim_func=sim_func)
     tf = steady_state_results.stats['num_accepted_steps'][0]
     steady_state_results = np.array(steady_state_results.ys[:, tf-1, :])
-    comparison = steady_state_results
-    for ti in range(int(params.t_end), total_time, int(params.t_end)):
+    ti += params.t_end - params.t_start
+    # for ti in range(int(params.t_end), total_time, int(params.t_end)):
+    while not has_steadied(comparison - steady_state_results) and (ti<total_time):
+        print('Steady states: ', ti, ' iterations. ', np.sum(np.abs(comparison - steady_state_results) > 0.08), ' left to steady out.')
+        comparison = steady_state_results
+        ti += params.t_end - params.t_start
         steady_state_results = loop_sim(
             steady_state_results, reverse_rates, sim_func)
         tf = steady_state_results.stats['num_accepted_steps'][0]
         steady_state_results = np.array(steady_state_results.ys[:, tf-1, :])
-        if check_comparison(comparison - steady_state_results):
-            break
-        else:
-            comparison = steady_state_results
     return steady_state_results
 
 
+def get_final_states(steady_states, reverse_rates, sim_func, t, ti, full_final_states):
+    final_states_results = loop_sim(
+        steady_states, reverse_rates, sim_func)
+    tf = final_states_results.stats['num_accepted_steps'][0]
+    t = np.concatenate([t, np.array(final_states_results.ts[0, :tf]) + ti], axis=0)
+    final_states_results = np.array(final_states_results.ys[:, :tf, :])
+    full_final_states = np.concatenate([full_final_states, final_states_results], axis=1)
+    return final_states_results, full_final_states, t
+
+
 def get_full_final_states(steady_states, reverse_rates, total_time, new_model, params):
-    sim_func = get_loop_simfunc(params, sim_model=new_model, saveat=dfx.SaveAt(ts=np.linspace(params.t_start, params.t_end, 2000)))
+    sim_func = get_loop_simfunc(params, sim_model=new_model, saveat=dfx.SaveAt(t1=True))
+    # sim_func = get_loop_simfunc(params, sim_model=new_model, saveat=dfx.SaveAt(ts=np.linspace(params.t_start, params.t_end, 100)))
     final_states_results = steady_states
     full_final_states = np.expand_dims(steady_states, axis=1)
     t = np.array([0])
-    comparison = final_states_results
-    for ti in range(0, total_time, int(params.t_end)):
-        final_states_results = loop_sim(
-            comparison, reverse_rates, sim_func)
-        tf = final_states_results.stats['num_accepted_steps'][0]
-        t = np.concatenate([t, np.array(final_states_results.ts[0, :tf]) + ti], axis=0)
-        final_states_results = np.array(final_states_results.ys[:, :tf, :])
-        full_final_states = np.concatenate([full_final_states, final_states_results], axis=1)
-        if check_comparison(final_states_results[:, -500:, :].max(axis=1) - final_states_results[:, -500:, :].min(axis=1)):
-            break
-        else:
-            comparison = final_states_results[:, -1, :]
+    steady_states = final_states_results
+    ti = 0
+
+    final_states_results, full_final_states, t = get_final_states(steady_states, reverse_rates, sim_func, t, ti, full_final_states)
+    while not has_steadied(steady_states - final_states_results[:, -1, :]) and (ti<total_time):
+        print('Steady states: ', ti, ' iterations. ', np.sum(np.abs(steady_states - final_states_results[:, -1, :]) > 0.08), ' left to steady out.')
+        steady_states = final_states_results[:, -1, :]
+        ti += params.t_end - params.t_start
+        final_states_results, full_final_states, t = get_final_states(steady_states, reverse_rates, sim_func, t, ti, full_final_states)
     return full_final_states, t
 
 
@@ -215,16 +227,20 @@ def get_analytics(steady_states, final_states, t, K_eqs, model, species_names, s
 
 
 def plot_scan(final_states, t_final, bi, species_names_onlyin, num_show_species):
-    num_rows = int(np.sqrt(final_states.shape[0]))
-    plt.figure(figsize=(50, 50))
-    for i in range(num_rows**2):
-        ax = plt.subplot(num_rows, num_rows, i+1)
-        plt.plot(t_final, final_states[i, :, :num_show_species])
-        plt.title(str(bi+i))
-    plt.legend(species_names_onlyin)
-    plt.savefig(os.path.join('output', '5_Keqs_ka',
-                f'final_states_{bi}-{bi+final_states.shape[0]}_{num_show_species}.svg'))
-    plt.close()
+    max_per_plot = np.min([final_states.shape[0], 49])
+    num_plots = np.max([1, int(np.ceil(final_states.shape[0] / max_per_plot))])
+    for p in tqdm(range(num_plots)):
+        num_rows = int(np.sqrt(max_per_plot))
+        plt.figure(figsize=(50, 50))
+        for i in range(num_rows**2):
+            ii = (p*num_rows**2)+i
+            ax = plt.subplot(num_rows, num_rows, i+1)
+            plt.plot(t_final, final_states[ii, :, :num_show_species])
+            plt.title(str(bi+ii))
+        plt.legend(species_names_onlyin)
+        plt.savefig(os.path.join('output', '5_Keqs_ka',
+                    f'final_states_{(bi+p)*max_per_plot}-{(bi+p)*max_per_plot+max_per_plot}_{num_show_species}.svg'))
+        plt.close()
 
 
 def adjust_sim_params(reverse_rates, max_kd):
@@ -235,19 +251,19 @@ def adjust_sim_params(reverse_rates, max_kd):
     # total_t_steady = 300
     # params_final = BasicSimParams(total_time=10.0, delta_t=dt)
     # total_t_final = 100
-    params_steady = MedSimParams(t_start=0, t_end=30000.0, delta_t=dt,
+    params_steady = MedSimParams(t_start=0, t_end=1000.0, delta_t=dt,
         poisson_sim_reactions=None, brownian_sim_reaction=None)
-    total_t_steady = 300000
-    params_final = MedSimParams(t_start=0, t_end=10000.0, delta_t=dt,
+    total_t_steady = 3000000
+    params_final = MedSimParams(t_start=0, t_end=1000.0, delta_t=dt,
         poisson_sim_reactions=None, brownian_sim_reaction=None)
-    total_t_final = 100000
+    total_t_final = 1000000
 
     return params_steady, total_t_steady, params_final, total_t_final
 
 
 def scan_all_params(kds, K_eqs, b_reverse_rates, model):
     max_kds = kds.max()
-    batchsize = 40
+    batchsize = b_reverse_rates.shape[0]
     target = 0.3
     a_sig = a * 1
     a_sig[input_species_idx] = a[input_species_idx] * (1 + target)
@@ -261,7 +277,7 @@ def scan_all_params(kds, K_eqs, b_reverse_rates, model):
 
     analytics_df = pd.DataFrame()
 
-    for bi in tqdm(range(0, b_reverse_rates.shape[0], batchsize)):
+    for bi in range(0, b_reverse_rates.shape[0], batchsize):
         clear_gpu()
         bf = min(bi+batchsize, b_reverse_rates.shape[0])
         reverse_rates = b_reverse_rates[bi:bf]
