@@ -21,13 +21,13 @@ class SignalFuncs():
              t) & (t < impulse_center+impulse_halfwidth),
             target/(2*impulse_halfwidth), 0)
 
-    @staticmethod
-    def step_function_integrated(t, impulse_center, target):
-        return 1 / (1 + jnp.exp(-t))
-
     # @staticmethod
     # def step_function_integrated(t, impulse_center, target):
-    #     return 1 * jnp.where(impulse_center < t, target, 0)
+    #     return 1 / (1 + jnp.exp(-t))
+
+    @staticmethod
+    def step_function_integrated(t, impulse_center, target):
+        return 1 * jnp.where(impulse_center < t, target, 0)
     
     @staticmethod
     def sine_function(t, width):

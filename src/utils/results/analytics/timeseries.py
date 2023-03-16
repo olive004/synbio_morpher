@@ -139,7 +139,7 @@ def generate_base_analytics(data: jnp.ndarray, time: jnp.ndarray, labels: List[s
             )
             analytics[f'response_time_wrt_species-{s_idx}'] = get_step_response_times(
                 data=data, t=time, steady_states=analytics['steady_states'],
-                deriv=analytics['first_derivative'], signal_idx=s_idx, signal_time=signal_time)
+                signal_time=signal_time)
             analytics[f'sensitivity_wrt_species-{s_idx}'] = get_sensitivity(
                 signal_idx=s_idx, peaks=peaks, starting_states=analytics['initial_steady_states']
             )
@@ -163,12 +163,12 @@ def generate_analytics(data, time, labels: List[str], ref_circuit_data=None,
         species_axis = data.shape.index(len(labels))
         data = np.swapaxes(data, 0, species_axis)
     analytics = generate_base_analytics(data=data, time=time, labels=labels,
-                                        signal_idxs=signal_idxs, signal_time=signal_time, 
+                                        signal_idxs=signal_idxs, signal_time=signal_time,
                                         ref_circuit_data=ref_circuit_data)
 
     # Differences & ratios
     ref_analytics = generate_base_analytics(data=ref_circuit_data, time=time, labels=labels,
-                                            signal_idxs=signal_idxs, signal_time=signal_time, 
+                                            signal_idxs=signal_idxs, signal_time=signal_time,
                                             ref_circuit_data=ref_circuit_data)
     differences, ratios = generate_differences_ratios(analytics, ref_analytics)
     return merge_dicts(analytics, differences, ratios)
