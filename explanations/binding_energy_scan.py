@@ -134,8 +134,8 @@ def loop_sim(steady_state_results, reverse_rates, sim_func):
     return steady_state_results
 
 
-def has_steadied(comparison):
-    return np.sum(np.abs(comparison) > 0.08) == 0
+def num_unsteadied(comparison):
+    return np.sum(np.abs(comparison) > 0.01)
 
 
 def get_full_steady_states(starting_state, total_time, reverse_rates, sim_model, params):
@@ -151,8 +151,9 @@ def get_full_steady_states(starting_state, total_time, reverse_rates, sim_model,
     steady_state_results = np.array(steady_state_results.ys[:, tf-1, :])
     ti += params.t_end - params.t_start
     # for ti in range(int(params.t_end), total_time, int(params.t_end)):
-    while not has_steadied(comparison - steady_state_results) and (ti<total_time):
-        print('Steady states: ', ti, ' iterations. ', np.sum(np.abs(comparison - steady_state_results) > 0.08), ' left to steady out.')
+    iter_time = datetime.now()
+    while (num_unsteadied(comparison - steady_state_results) > 0) and (ti<total_time):
+        print('Steady states: ', ti, ' iterations. ', num_unsteadied(comparison - steady_state_results), ' left to steady out. ', datetime.now() - iter_time)
         comparison = steady_state_results
         ti += params.t_end - params.t_start
         steady_state_results = loop_sim(
@@ -182,8 +183,9 @@ def get_full_final_states(steady_states, reverse_rates, total_time, new_model, p
     ti = 0
 
     final_states_results, full_final_states, t = get_final_states(steady_states, reverse_rates, sim_func, t, ti, full_final_states)
-    while not has_steadied(steady_states - final_states_results[:, -1, :]) and (ti<total_time):
-        print('Steady states: ', ti, ' iterations. ', np.sum(np.abs(steady_states - final_states_results[:, -1, :]) > 0.08), ' left to steady out.')
+    iter_time = datetime.now()
+    while (num_unsteadied(steady_states - final_states_results[:, -1, :]) > 0) and (ti<total_time):
+        print('Final states: ', ti, ' iterations. ', num_unsteadied(steady_states - final_states_results[:, -1, :]), ' left to steady out. ', datetime.now() - iter_time)
         steady_states = final_states_results[:, -1, :]
         ti += params.t_end - params.t_start
         final_states_results, full_final_states, t = get_final_states(steady_states, reverse_rates, sim_func, t, ti, full_final_states)
@@ -233,7 +235,9 @@ def plot_scan(final_states, t_final, bi, species_names_onlyin, num_show_species)
         num_rows = int(np.sqrt(max_per_plot))
         plt.figure(figsize=(50, 50))
         for i in range(num_rows**2):
-            ii = (p*num_rows**2)+i
+            ii = (p*(num_rows**2))+i
+            if ii >= final_states.shape[0]:
+                break
             ax = plt.subplot(num_rows, num_rows, i+1)
             plt.plot(t_final, final_states[ii, :, :num_show_species])
             plt.title(str(bi+ii))
@@ -256,7 +260,7 @@ def adjust_sim_params(reverse_rates, max_kd):
     total_t_steady = 3000000
     params_final = MedSimParams(t_start=0, t_end=1000.0, delta_t=dt,
         poisson_sim_reactions=None, brownian_sim_reaction=None)
-    total_t_final = 1000000
+    total_t_final = 3000000
 
     return params_steady, total_t_steady, params_final, total_t_final
 
@@ -369,6 +373,7 @@ K_eqs = jax.jit(make_keqs, backend='cpu')()
 didx = np.flatnonzero((K_eqs == 0).all((1, 2)))
 K_eqs = np.delete(K_eqs, didx, axis=0)
 
+print(K_eqs.shape[0], 'unique combinations to scan.')
 
 kds = ka / K_eqs
 sim_model = convert_model(model)

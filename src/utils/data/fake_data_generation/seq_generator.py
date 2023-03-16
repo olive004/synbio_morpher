@@ -61,6 +61,8 @@ class NucleotideGenerator(SeqGenerator):
         return list_to_str(ordered_merge(real_seq, comp_seq, symbolic_complement))
 
     def generate_split_template(self, template: str, count) -> list:
+        """ Example: AAACCCUUU -> CCCCCOOOOO + OOOOOCCCCC -> UUUGGCUUU + AAACCGAAA 
+        C = Complement, O = Original """
         assert count < len(template), \
             f"Desired sequence length {len(template)} too short to accomodate {count} samples."
         template_complement = self.get_sequence_complement(template)
@@ -74,6 +76,8 @@ class NucleotideGenerator(SeqGenerator):
         return seqs[:count]
 
     def generate_mixed_template(self, template: str, count) -> list:
+        """ Example: AAACCCUUU -> CCOOCCOOCC + OOCCOOCCOO -> AAACCCUUU + AAACCCUUU
+        C = Complement, O = Original """
         # TODO: Generate proper permutations or arpeggiations,
         # rank by mixedness and similarity. Can use list(permutations())
         # and ranking function in future.
@@ -95,7 +99,7 @@ class NucleotideGenerator(SeqGenerator):
             circuit_paths.append(circuit_path)
         return circuit_paths
 
-    def generate_circuit(self, num_components=5, slength=20, protocol="random",
+    def generate_circuit(self, num_components=3, slength=20, protocol="random",
                          name='toy_mRNA_circuit',
                          out_type='fasta',
                          proportion_to_mutate=0, template=None) -> dict:
