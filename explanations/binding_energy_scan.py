@@ -314,9 +314,9 @@ input_species_idx = 0
 output_species_idx = 1
 
 Keq = np.array(
-    [[1, 2, 1],
-     [2, 1, 0.5],
-     [1, 0.5, 2]]
+    [[1, 1, 1],
+     [1, 1, 1],
+     [1, 1, 1]]
 )
 # From src/utils/common/configs/RNA_circuit/molecular_params.json
 a = np.ones(3) * 0.08333

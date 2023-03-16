@@ -72,42 +72,19 @@ def get_rmse(data, ref_circuit_data):
     return jnp.expand_dims(rmse, axis=1)
 
 
-def get_step_response_times(data, t, steady_states, deriv, signal_idx: int, signal_time: int):
+def get_step_response_times(data, t, steady_states, signal_time: int):
     """ Assumes that data starts pre-perturbation, but after an initial steady state 
     has been reached. """
 
-    t_expanded = t * jnp.ones_like(steady_states)
     margin = 0.05
-    is_data_outside_stst = (data > (steady_states + steady_states * margin)
-                            ) | (data < (steady_states - steady_states * margin))
-
-    # 1. Get zero derivative within margin
-    fmargin = 0.001
-    fm = jnp.expand_dims(jnp.max(deriv, axis=1) * fmargin, axis=1)
-    zd = (deriv < fm) & (deriv > -fm)  # This is just dx/dt == 0
-
-    # 2. Find start time of signal change
-    # t0 = jnp.max(t * (zd[signal_idx] == False).astype(int))
-    t0 = signal_time
-
-    # 3. Get the time all species first start to change where the derivative is not zero
-    #    If tstart is equal to 0, it means the species did not change after the signal
-    tstart = jnp.max(
-        t * ((zd == False) & (t_expanded >= t0)).astype(int), axis=1)
-
-    # 4. Stop measuring response time where the species is within the
-    # steady state margin and has a zero derivative after its start time
-    idxs_first_zd_after_signal = jnp.argmax(
-        (t_expanded * zd >= jnp.expand_dims(tstart, axis=1)) & (is_data_outside_stst == False), axis=1)
-
+    is_steadystate = ~((data > (steady_states + steady_states * margin)
+                        ) | (data < (steady_states - steady_states * margin)))
     argmax_workaround = jnp.ones_like(
-        steady_states) * jnp.arange(len(t)) == jnp.expand_dims(idxs_first_zd_after_signal, axis=1)
-    tstop = jnp.where(jnp.max(t_expanded * argmax_workaround, axis=1) != 0,
-                      jnp.max(t_expanded * argmax_workaround, axis=1), tstart)
-
+        steady_states) * jnp.arange(len(t)) == jnp.expand_dims(np.argmax(is_steadystate, axis=1), axis=1)
+    tstop = jnp.max(t * argmax_workaround, axis=1)
     response_times = jnp.where(
-        tstart != 0,
-        tstop - t0,
+        (tstop != t[-1]) & (tstop >= signal_time),
+        tstop - signal_time,
         np.inf
     )
 
