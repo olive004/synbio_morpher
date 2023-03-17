@@ -75,7 +75,7 @@ def get_rmse(data, ref_circuit_data):
 def get_step_response_times(data, t, steady_states, signal_time: int):
     """ Assumes that data starts pre-perturbation, but after an initial steady state 
     has been reached. """
-
+    t = np.squeeze(t)
     margin = 0.05
     is_steadystate = ~((data > (steady_states + steady_states * margin)
                         ) | (data < (steady_states - steady_states * margin)))

@@ -206,10 +206,9 @@ def get_analytics(steady_states, final_states, t, K_eqs, model, species_names, s
     ))
     clear_gpu()
     resp_vmap = jax.jit(jax.vmap(partial(get_step_response_times,
-                        signal_idx=input_species_idx, t=np.expand_dims(t, 0), signal_time=0.0)))
+                        t=t, signal_time=0.0))) # np.expand_dims(t, 0)
     response_times = np.array(resp_vmap(
-        data=np.swapaxes(final_states, 1, 2), steady_states=np.expand_dims(steady_states, axis=2),
-        deriv=jnp.gradient(np.swapaxes(final_states, 1, 2))[0]))
+        data=np.swapaxes(final_states, 1, 2), steady_states=np.expand_dims(steady_states, axis=2)))
 
     analytics = {
         'precision': precision.flatten(),
@@ -242,7 +241,7 @@ def plot_scan(final_states, t_final, bi, species_names_onlyin, num_show_species)
             plt.plot(t_final, final_states[ii, :, :num_show_species])
             plt.title(str(bi+ii))
         plt.legend(species_names_onlyin)
-        plt.savefig(os.path.join('output', '5_Keqs_ka',
+        plt.savefig(os.path.join('output', '5_Keqs_exp',
                     f'final_states_{(bi+p)*max_per_plot}-{(bi+p)*max_per_plot+max_per_plot}_{num_show_species}.svg'))
         plt.close()
 
@@ -304,7 +303,7 @@ def scan_all_params(kds, K_eqs, b_reverse_rates, model):
         analytics = get_analytics(
             steady_states, final_states, t_final, K_eqs[bi:bf], model, species_names, species_types, bi)
         analytics_df = pd.concat([analytics_df, analytics], axis=0)
-        analytics_df.to_csv(os.path.join('output', '5_Keqs_ka', 'df.csv'))
+        analytics_df.to_csv(os.path.join('output', '5_Keqs_exp', 'df.csv'))
 
     return analytics_df
 
@@ -320,9 +319,11 @@ Keq = np.array(
 )
 # From src/utils/common/configs/RNA_circuit/molecular_params.json
 a = np.ones(3) * 0.08333
-a[1] = a[1] * 1.5
+a[1] = a[1] * 2
 a[2] = a[2] * 0.8
 d = np.ones(3) * 0.0008333
+d[1] = a[1] * 2
+d[2] = a[2] * 0.8
 ka = np.ones_like(Keq) * per_mol_to_per_molecule(1000000)
 kd = ka/Keq
 
@@ -335,7 +336,7 @@ s0 = np.concatenate(
 starting_state = BasicSimState(concentrations=s0)
 
 
-K_eqs_range = np.array([0.1, 0.5, 1.0, 1.5, 9])
+K_eqs_range = np.array([0.01, 0.5, 1.0, 1.5, 40])
 num_Keqs = np.size(K_eqs_range)
 num_unique_interactions = np.math.factorial(num_species)
 
@@ -385,4 +386,4 @@ model = update_model_rates(model, a=a)
 batchsize = len(K_eqs)
 analytics_df = scan_all_params(
     kds[:batchsize], K_eqs[:batchsize], b_reverse_rates[:batchsize], model)
-analytics_df.to_csv(os.path.join('output', '5_Keqs_ka', 'df.csv'))
+analytics_df.to_csv(os.path.join('output', '5_Keqs_exp', 'df.csv'))
