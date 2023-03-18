@@ -207,6 +207,7 @@ def get_analytics(steady_states, final_states, t, K_eqs, model, species_names, s
     resp_vmap = jax.jit(jax.vmap(partial(get_step_response_times,
                         t=t, signal_time=0.0))) # np.expand_dims(t, 0)
     response_times = np.array(resp_vmap(
+        deriv=np.gradient(np.swapaxes(final_states, 1, 2), axis=-1)[0],
         data=np.swapaxes(final_states, 1, 2), steady_states=np.expand_dims(
         np.swapaxes(final_states, 1, 2)[:, :, -1], axis=-1)))
 

@@ -49,7 +49,7 @@
         },
         "mutations": {
             "algorithm": "random",
-            "mutation_counts": 1,
+            "mutation_counts": 8,
             "mutation_nums_within_sequence": [
                 1
             ],
@@ -63,8 +63,8 @@
             "tmax": 120000,
             "solver": "diffrax",
             "use_batch_mutations": true,
-            "batch_size": 1000,
-            "max_circuits": 10000,
+            "batch_size": 100,
+            "max_circuits": 500,
             "device": "gpu"
         },
         "system_type": "RNA"
