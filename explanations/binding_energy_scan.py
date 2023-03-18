@@ -179,7 +179,6 @@ def get_full_final_states(steady_states, reverse_rates, total_time, new_model, p
     final_states_results = steady_states
     full_final_states = np.expand_dims(steady_states, axis=1)
     t = np.array([0])
-    steady_states = final_states_results
     ti = 0
 
     final_states_results, full_final_states, t = get_final_states(steady_states, reverse_rates, sim_func, t, ti, full_final_states)
@@ -208,7 +207,8 @@ def get_analytics(steady_states, final_states, t, K_eqs, model, species_names, s
     resp_vmap = jax.jit(jax.vmap(partial(get_step_response_times,
                         t=t, signal_time=0.0))) # np.expand_dims(t, 0)
     response_times = np.array(resp_vmap(
-        data=np.swapaxes(final_states, 1, 2), steady_states=np.expand_dims(steady_states, axis=2)))
+        data=np.swapaxes(final_states, 1, 2), steady_states=np.expand_dims(
+        np.swapaxes(final_states, 1, 2)[:, :, -1], axis=-1)))
 
     analytics = {
         'precision': precision.flatten(),
@@ -227,7 +227,7 @@ def get_analytics(steady_states, final_states, t, K_eqs, model, species_names, s
     return analytics_df
 
 
-def plot_scan(final_states, t_final, bi, species_names_onlyin, num_show_species):
+def plot_scan(final_states, t_final, bi, species_names_onlyin, num_show_species, num_show_species_i=0):
     max_per_plot = np.min([final_states.shape[0], 49])
     num_plots = np.max([1, int(np.ceil(final_states.shape[0] / max_per_plot))])
     for p in tqdm(range(num_plots)):
@@ -238,11 +238,11 @@ def plot_scan(final_states, t_final, bi, species_names_onlyin, num_show_species)
             if ii >= final_states.shape[0]:
                 break
             ax = plt.subplot(num_rows, num_rows, i+1)
-            plt.plot(t_final, final_states[ii, :, :num_show_species])
+            plt.plot(t_final, final_states[ii, :, num_show_species_i:num_show_species])
             plt.title(str(bi+ii))
         plt.legend(species_names_onlyin)
         plt.savefig(os.path.join('output', '5_Keqs_exp',
-                    f'final_states_{(bi+p)*max_per_plot}-{(bi+p)*max_per_plot+max_per_plot}_{num_show_species}.svg'))
+                    f'final_states_{(bi+p)*max_per_plot}-{(bi+p)*max_per_plot+max_per_plot}_{num_show_species_i}{num_show_species}.svg'))
         plt.close()
 
 
@@ -298,12 +298,17 @@ def scan_all_params(kds, K_eqs, b_reverse_rates, model):
             steady_states, reverse_rates, total_t_final, convert_model(model_sig), params=params_final)
         plot_scan(final_states, t_final, bi, species_names, len(species_names))
         plot_scan(final_states, t_final, bi, species_names_onlyin, num_species)
+        plot_scan(final_states, t_final, bi, species_names_onlyin[1:num_species], num_species, 1)
 
         clear_gpu()
         analytics = get_analytics(
             steady_states, final_states, t_final, K_eqs[bi:bf], model, species_names, species_types, bi)
         analytics_df = pd.concat([analytics_df, analytics], axis=0)
         analytics_df.to_csv(os.path.join('output', '5_Keqs_exp', 'df.csv'))
+        
+        np.save(os.path.join('output', '5_Keqs_exp', f't_{bi}.npy'), t_final)
+        np.save(os.path.join('output', '5_Keqs_exp', f'final_states_{bi}-{bf}.npy'), 
+                final_states[bi:bf, :, :])
 
     return analytics_df
 
@@ -319,11 +324,11 @@ Keq = np.array(
 )
 # From src/utils/common/configs/RNA_circuit/molecular_params.json
 a = np.ones(3) * 0.08333
-a[1] = a[1] * 2
-a[2] = a[2] * 0.8
+a[1] = a[1] * 3
+a[2] = a[2] * 0.5
 d = np.ones(3) * 0.0008333
-d[1] = a[1] * 2
-d[2] = a[2] * 0.8
+d[1] = a[1] * 1
+d[2] = a[2] * 1
 ka = np.ones_like(Keq) * per_mol_to_per_molecule(1000000)
 kd = ka/Keq
 

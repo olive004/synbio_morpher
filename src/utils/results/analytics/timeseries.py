@@ -6,7 +6,11 @@ from src.utils.misc.type_handling import merge_dicts
 from src.utils.results.analytics.naming import DIFF_KEY, RATIO_KEY
 
 
+TIMEAXIS = 1
+
 def get_derivative(data):
+    if data.shape[TIMEAXIS] <= 1:
+        return np.ones_like(data) * np.inf
     deriv = jnp.gradient(data)[1]
     return deriv  # get column derivative
 
@@ -83,7 +87,7 @@ def get_step_response_times(data, t, steady_states, signal_time: int):
         steady_states) * jnp.arange(len(t)) == jnp.expand_dims(np.argmax(is_steadystate, axis=1), axis=1)
     tstop = jnp.max(t * argmax_workaround, axis=1)
     response_times = jnp.where(
-        (tstop != t[-1]) & (tstop >= signal_time),
+        (tstop != t[-1]) & (tstop > signal_time),
         tstop - signal_time,
         np.inf
     )
