@@ -38,7 +38,7 @@ def main(config=None, data_writer=None):
     config_file = load_json_as_dict(config)
     config_file = prepare_config(config_file)
     exp_configs = config_file["circuit_generation"]
-
+ 
     protocols = [
         Protocol(
             partial(generate_multiple_circuits,
