@@ -21,7 +21,7 @@ plt.style.use('bmh')
 plt.style.use('seaborn-v0_8')
 
 os.environ["TF_CPP_MIN_LOG_LOVEL"] = "0"
-jax.config.update('jax_platform_name', 'gpu')
+jax.config.update('jax_platform_name', 'cpu')
 jax.devices()
 
 if __package__ is None or (__package__ == ''):
@@ -260,8 +260,7 @@ def plot_scan(final_states, t_final, bi, species_names_onlyin, num_show_species,
 
 
 def adjust_sim_params(reverse_rates, max_kd):
-    dt_scale = np.round(reverse_rates.max() / max_kd, 1)
-    dt = 15
+    dt = 0.1
 
     # params_steady = BasicSimParams(total_time=10.0, delta_t=dt)
     # total_t_steady = 300
@@ -279,7 +278,7 @@ def adjust_sim_params(reverse_rates, max_kd):
 
 def scan_all_params(kds, K_eqs, b_reverse_rates, model):
     max_kds = kds.max()
-    batchsize = b_reverse_rates.shape[0]
+    batchsize = int(b_reverse_rates.shape[0] / 2)
     target = 0.3
     a_sig = a * 1
     a_sig[input_species_idx] = a[input_species_idx] * (1 + target)
