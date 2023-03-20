@@ -1,4 +1,3 @@
-
 from bioreaction.model.data_tools import construct_model_fromnames
 from bioreaction.simulation.simfuncs.basic_de import bioreaction_sim_expanded
 from bioreaction.simulation.basic_sim import basic_de_sim, convert_model, BasicSimParams, BasicSimState
@@ -34,12 +33,13 @@ if __package__ is None or (__package__ == ''):
     __package__ = os.path.basename(module_path)
 
 
-from tests.shared import CONFIG
-from src.utils.modelling.deterministic import bioreaction_sim_dfx_expanded
-from src.utils.misc.numerical import make_symmetrical_matrix_from_sequence
-from src.utils.misc.type_handling import flatten_listlike
-from src.utils.misc.units import per_mol_to_per_molecule
 from src.utils.results.analytics.timeseries import get_precision, get_sensitivity, get_step_response_times
+from src.utils.misc.units import per_mol_to_per_molecule
+from src.utils.misc.type_handling import flatten_listlike
+from src.utils.misc.numerical import make_symmetrical_matrix_from_sequence
+from src.utils.modelling.deterministic import bioreaction_sim_dfx_expanded
+from tests.shared import CONFIG
+
 
 config = deepcopy(CONFIG)
 
@@ -122,7 +122,8 @@ def get_loop_simfunc(params, sim_model, saveat):
                        outputs=sim_model.outputs,
                        solver=dfx.Heun(),
                        saveat=saveat,
-                       max_steps=int(np.min([np.max([16**5, ((params.t_end - params.t_start)/params.delta_t) * 5]), 16**6]))
+                       max_steps=int(np.min(
+                           [np.max([16**5, ((params.t_end - params.t_start)/params.delta_t) * 5]), 16**6]))
                        )(y0=starting_state, reverse_rates=reverse_rates)
 
     return jax.jit(jax.vmap(to_vmap_basic))
@@ -139,21 +140,23 @@ def num_unsteadied(comparison):
 
 
 def get_full_steady_states(starting_state, total_time, reverse_rates, sim_model, params):
-    sim_func = get_loop_simfunc(params, sim_model=sim_model, saveat=dfx.SaveAt(t1=True))
+    sim_func = get_loop_simfunc(
+        params, sim_model=sim_model, saveat=dfx.SaveAt(t1=True))
     ti = 0
-    starting_state = np.repeat(np.expand_dims(starting_state.concentrations, axis=0), 
-        repeats=reverse_rates.shape[0], axis=0)
+    starting_state = np.repeat(np.expand_dims(starting_state.concentrations, axis=0),
+                               repeats=reverse_rates.shape[0], axis=0)
     comparison = starting_state
     steady_state_results = loop_sim(
-        starting_state, reverse_rates, 
+        starting_state, reverse_rates,
         sim_func=sim_func)
     tf = steady_state_results.stats['num_accepted_steps'][0]
     steady_state_results = np.array(steady_state_results.ys[:, tf-1, :])
     ti += params.t_end - params.t_start
     # for ti in range(int(params.t_end), total_time, int(params.t_end)):
     iter_time = datetime.now()
-    while (num_unsteadied(comparison - steady_state_results) > 0) and (ti<total_time):
-        print('Steady states: ', ti, ' iterations. ', num_unsteadied(comparison - steady_state_results), ' left to steady out. ', datetime.now() - iter_time)
+    while (num_unsteadied(comparison - steady_state_results) > 0) and (ti < total_time):
+        print('Steady states: ', ti, ' iterations. ', num_unsteadied(
+            comparison - steady_state_results), ' left to steady out. ', datetime.now() - iter_time)
         comparison = steady_state_results
         ti += params.t_end - params.t_start
         steady_state_results = loop_sim(
@@ -167,31 +170,37 @@ def get_final_states(steady_states, reverse_rates, sim_func, t, ti, full_final_s
     final_states_results = loop_sim(
         steady_states, reverse_rates, sim_func)
     tf = final_states_results.stats['num_accepted_steps'][0]
-    t = np.concatenate([t, np.array(final_states_results.ts[0, :tf]) + ti], axis=0)
+    t = np.concatenate(
+        [t, np.array(final_states_results.ts[0, :tf]) + ti], axis=0)
     final_states_results = np.array(final_states_results.ys[:, :tf, :])
-    full_final_states = np.concatenate([full_final_states, final_states_results], axis=1)
+    full_final_states = np.concatenate(
+        [full_final_states, final_states_results], axis=1)
     return final_states_results, full_final_states, t
 
 
 def get_full_final_states(steady_states, reverse_rates, total_time, new_model, params):
-    sim_func = get_loop_simfunc(params, sim_model=new_model, saveat=dfx.SaveAt(t1=True))
+    sim_func = get_loop_simfunc(
+        params, sim_model=new_model, saveat=dfx.SaveAt(t1=True))
     # sim_func = get_loop_simfunc(params, sim_model=new_model, saveat=dfx.SaveAt(ts=np.linspace(params.t_start, params.t_end, 100)))
     final_states_results = steady_states
     full_final_states = np.expand_dims(steady_states, axis=1)
     t = np.array([0])
     ti = 0
 
-    final_states_results, full_final_states, t = get_final_states(steady_states, reverse_rates, sim_func, t, ti, full_final_states)
+    final_states_results, full_final_states, t = get_final_states(
+        steady_states, reverse_rates, sim_func, t, ti, full_final_states)
     iter_time = datetime.now()
-    while (num_unsteadied(steady_states - final_states_results[:, -1, :]) > 0) and (ti<total_time):
-        print('Final states: ', ti, ' iterations. ', num_unsteadied(steady_states - final_states_results[:, -1, :]), ' left to steady out. ', datetime.now() - iter_time)
+    while (num_unsteadied(steady_states - final_states_results[:, -1, :]) > 0) and (ti < total_time):
+        print('Final states: ', ti, ' iterations. ', num_unsteadied(steady_states -
+              final_states_results[:, -1, :]), ' left to steady out. ', datetime.now() - iter_time)
         steady_states = final_states_results[:, -1, :]
         ti += params.t_end - params.t_start
-        final_states_results, full_final_states, t = get_final_states(steady_states, reverse_rates, sim_func, t, ti, full_final_states)
+        final_states_results, full_final_states, t = get_final_states(
+            steady_states, reverse_rates, sim_func, t, ti, full_final_states)
     return full_final_states, t
 
 
-def get_analytics(steady_states, final_states, t, K_eqs, model, 
+def get_analytics(steady_states, final_states, t, K_eqs, model,
                   species_names, species_types, input_species_idx,
                   starting_circuit_idx):
     batchsize = steady_states.shape[0]
@@ -207,11 +216,11 @@ def get_analytics(steady_states, final_states, t, K_eqs, model,
     ))
     clear_gpu()
     resp_vmap = jax.jit(jax.vmap(partial(get_step_response_times,
-                        t=t, signal_time=0.0, signal_idx=input_species_idx))) # np.expand_dims(t, 0)
+                                         t=t, signal_time=0.0, signal_idx=input_species_idx)))  # np.expand_dims(t, 0)
     response_times = np.array(resp_vmap(
         deriv=np.gradient(np.swapaxes(final_states, 1, 2), axis=-1),
         data=np.swapaxes(final_states, 1, 2), steady_states=np.expand_dims(
-        np.swapaxes(final_states, 1, 2)[:, :, -1], axis=-1)))
+            np.swapaxes(final_states, 1, 2)[:, :, -1], axis=-1)))
 
     analytics = {
         'precision': precision.flatten(),
@@ -241,7 +250,8 @@ def plot_scan(final_states, t_final, bi, species_names_onlyin, num_show_species,
             if ii >= final_states.shape[0]:
                 break
             ax = plt.subplot(num_rows, num_rows, i+1)
-            plt.plot(t_final, final_states[ii, :, num_show_species_i:num_show_species])
+            plt.plot(t_final, final_states[ii, :,
+                     num_show_species_i:num_show_species])
             plt.title(str(bi+ii))
         plt.legend(species_names_onlyin)
         plt.savefig(os.path.join('output', '5_Keqs_exp',
@@ -258,11 +268,11 @@ def adjust_sim_params(reverse_rates, max_kd):
     # params_final = BasicSimParams(total_time=10.0, delta_t=dt)
     # total_t_final = 100
     params_steady = MedSimParams(t_start=0, t_end=1000.0, delta_t=dt,
-        poisson_sim_reactions=None, brownian_sim_reaction=None)
-    total_t_steady = 3000
+                                 poisson_sim_reactions=None, brownian_sim_reaction=None)
+    total_t_steady = 3000000
     params_final = MedSimParams(t_start=0, t_end=1000.0, delta_t=dt,
-        poisson_sim_reactions=None, brownian_sim_reaction=None)
-    total_t_final = 3000
+                                poisson_sim_reactions=None, brownian_sim_reaction=None)
+    total_t_final = 3000000
 
     return params_steady, total_t_steady, params_final, total_t_final
 
@@ -301,17 +311,18 @@ def scan_all_params(kds, K_eqs, b_reverse_rates, model):
             steady_states, reverse_rates, total_t_final, convert_model(model_sig), params=params_final)
         plot_scan(final_states, t_final, bi, species_names, len(species_names))
         plot_scan(final_states, t_final, bi, species_names_onlyin, num_species)
-        plot_scan(final_states, t_final, bi, species_names_onlyin[1:num_species], num_species, 1)
+        plot_scan(final_states, t_final, bi,
+                  species_names_onlyin[1:num_species], num_species, 1)
 
         clear_gpu()
         analytics = get_analytics(
-            steady_states, final_states, t_final, K_eqs[bi:bf], model, 
+            steady_states, final_states, t_final, K_eqs[bi:bf], model,
             species_names, species_types, input_species_idx, bi)
         analytics_df = pd.concat([analytics_df, analytics], axis=0)
         analytics_df.to_csv(os.path.join('output', '5_Keqs_exp', 'df.csv'))
-        
+
         np.save(os.path.join('output', '5_Keqs_exp', f't_{bi}.npy'), t_final)
-        np.save(os.path.join('output', '5_Keqs_exp', f'final_states_{bi}-{bf}.npy'), 
+        np.save(os.path.join('output', '5_Keqs_exp', f'final_states_{bi}-{bf}.npy'),
                 final_states[bi:bf, :, :])
 
     return analytics_df
@@ -332,8 +343,8 @@ a[1] = a[1] * 5
 a[2] = a[2] * 0.3
 d = np.ones(3) * 0.0008333
 d[0] = d[0] * 0.5
-d[1] = a[1] * 1
-d[2] = a[2] * 1
+d[1] = d[1] * 1
+d[2] = d[2] * 1
 ka = np.ones_like(Keq) * per_mol_to_per_molecule(1000000)
 kd = ka/Keq
 
@@ -393,7 +404,7 @@ b_reverse_rates = make_reverse_rates(model, sim_model.reverse_rates, kds)
 
 clear_gpu()
 model = update_model_rates(model, a=a)
-batchsize = 3 #len(K_eqs)
+batchsize = len(K_eqs)
 analytics_df = scan_all_params(
     kds[:batchsize], K_eqs[:batchsize], b_reverse_rates[:batchsize], model)
 analytics_df.to_csv(os.path.join('output', '5_Keqs_exp', 'df.csv'))
