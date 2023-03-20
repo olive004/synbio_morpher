@@ -111,4 +111,5 @@ def bioreaction_sim_dfx_expanded(y0, t0, t1, dt0,
     return dfx.diffeqsolve(term, solver,
                            t0=t0, t1=t1, dt0=dt0,
                            y0=y0,
-                           saveat=saveat, max_steps=max_steps)  # 16**4)
+                           saveat=saveat, max_steps=max_steps,
+                           stepsize_controller=dfx.PIDController(rtol=1e-3, atol=1e-6))  # 16**4)

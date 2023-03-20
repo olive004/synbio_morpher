@@ -48,14 +48,6 @@ def main(config=None, data_writer=None):
                             protocols=protocols, data_writer=data_writer)
     experiment.run_experiment()
 
-    # circuit = construct_circuit_from_cfg(None, config_filepath=config)
-    # modeller = CircuitModeller(result_writer=data_writer)
-    # circuit = modeller.init_circuit(circuit)
-    # circuit = modeller.simulate_signal(
-    #     circuit, use_solver=config_file.get('signal').get('use_solver', 'naive'))
-
-    # modeller.write_results(circuit)
-
 
 if __name__ == "__main__":
     Fire(main)

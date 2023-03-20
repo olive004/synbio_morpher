@@ -191,7 +191,9 @@ def get_full_final_states(steady_states, reverse_rates, total_time, new_model, p
     return full_final_states, t
 
 
-def get_analytics(steady_states, final_states, t, K_eqs, model, species_names, species_types, starting_circuit_idx):
+def get_analytics(steady_states, final_states, t, K_eqs, model, 
+                  species_names, species_types, input_species_idx,
+                  starting_circuit_idx):
     batchsize = steady_states.shape[0]
 
     peaks = jnp.where(steady_states != final_states.max(
@@ -205,9 +207,9 @@ def get_analytics(steady_states, final_states, t, K_eqs, model, species_names, s
     ))
     clear_gpu()
     resp_vmap = jax.jit(jax.vmap(partial(get_step_response_times,
-                        t=t, signal_time=0.0))) # np.expand_dims(t, 0)
+                        t=t, signal_time=0.0, signal_idx=input_species_idx))) # np.expand_dims(t, 0)
     response_times = np.array(resp_vmap(
-        deriv=np.gradient(np.swapaxes(final_states, 1, 2), axis=-1)[0],
+        deriv=np.gradient(np.swapaxes(final_states, 1, 2), axis=-1),
         data=np.swapaxes(final_states, 1, 2), steady_states=np.expand_dims(
         np.swapaxes(final_states, 1, 2)[:, :, -1], axis=-1)))
 
@@ -233,7 +235,7 @@ def plot_scan(final_states, t_final, bi, species_names_onlyin, num_show_species,
     num_plots = np.max([1, int(np.ceil(final_states.shape[0] / max_per_plot))])
     for p in tqdm(range(num_plots)):
         num_rows = int(np.sqrt(max_per_plot))
-        plt.figure(figsize=(50, 50))
+        plt.figure(figsize=(10, 10))
         for i in range(num_rows**2):
             ii = (p*(num_rows**2))+i
             if ii >= final_states.shape[0]:
@@ -249,7 +251,7 @@ def plot_scan(final_states, t_final, bi, species_names_onlyin, num_show_species,
 
 def adjust_sim_params(reverse_rates, max_kd):
     dt_scale = np.round(reverse_rates.max() / max_kd, 1)
-    dt = 0.1 / dt_scale
+    dt = 15
 
     # params_steady = BasicSimParams(total_time=10.0, delta_t=dt)
     # total_t_steady = 300
@@ -257,10 +259,10 @@ def adjust_sim_params(reverse_rates, max_kd):
     # total_t_final = 100
     params_steady = MedSimParams(t_start=0, t_end=1000.0, delta_t=dt,
         poisson_sim_reactions=None, brownian_sim_reaction=None)
-    total_t_steady = 3000000
+    total_t_steady = 3000
     params_final = MedSimParams(t_start=0, t_end=1000.0, delta_t=dt,
         poisson_sim_reactions=None, brownian_sim_reaction=None)
-    total_t_final = 3000000
+    total_t_final = 3000
 
     return params_steady, total_t_steady, params_final, total_t_final
 
@@ -303,7 +305,8 @@ def scan_all_params(kds, K_eqs, b_reverse_rates, model):
 
         clear_gpu()
         analytics = get_analytics(
-            steady_states, final_states, t_final, K_eqs[bi:bf], model, species_names, species_types, bi)
+            steady_states, final_states, t_final, K_eqs[bi:bf], model, 
+            species_names, species_types, input_species_idx, bi)
         analytics_df = pd.concat([analytics_df, analytics], axis=0)
         analytics_df.to_csv(os.path.join('output', '5_Keqs_exp', 'df.csv'))
         
@@ -325,9 +328,10 @@ Keq = np.array(
 )
 # From src/utils/common/configs/RNA_circuit/molecular_params.json
 a = np.ones(3) * 0.08333
-a[1] = a[1] * 3
-a[2] = a[2] * 0.5
+a[1] = a[1] * 5
+a[2] = a[2] * 0.3
 d = np.ones(3) * 0.0008333
+d[0] = d[0] * 0.5
 d[1] = a[1] * 1
 d[2] = a[2] * 1
 ka = np.ones_like(Keq) * per_mol_to_per_molecule(1000000)
@@ -342,7 +346,7 @@ s0 = np.concatenate(
 starting_state = BasicSimState(concentrations=s0)
 
 
-K_eqs_range = np.array([0.01, 0.5, 1.0, 1.5, 40])
+K_eqs_range = np.array([0.01, 0.5, 1.0, 5, 40])
 num_Keqs = np.size(K_eqs_range)
 num_unique_interactions = np.math.factorial(num_species)
 
@@ -389,7 +393,7 @@ b_reverse_rates = make_reverse_rates(model, sim_model.reverse_rates, kds)
 
 clear_gpu()
 model = update_model_rates(model, a=a)
-batchsize = len(K_eqs)
+batchsize = 3 #len(K_eqs)
 analytics_df = scan_all_params(
     kds[:batchsize], K_eqs[:batchsize], b_reverse_rates[:batchsize], model)
 analytics_df.to_csv(os.path.join('output', '5_Keqs_exp', 'df.csv'))

@@ -1,7 +1,6 @@
 from functools import partial
 from typing import List
 import numpy as np
-np.random.seed(0)
 import jax.numpy as jnp
 import jax.random as jr
 import random
@@ -17,9 +16,11 @@ class SeqGenerator():
 
     SEQ_POOL = {}
 
-    def __init__(self, data_writer: DataWriter) -> None:
+    def __init__(self, data_writer: DataWriter, seed=0) -> None:
         self.stype = None
         self.data_writer = data_writer
+
+        np.random.seed(seed)
 
     @staticmethod
     def generate_mutated_template(template: str, mutate_prop, mutation_pool):
@@ -53,8 +54,8 @@ class SeqGenerator():
 
 class NucleotideGenerator(SeqGenerator):
 
-    def __init__(self, data_writer) -> None:
-        super().__init__(data_writer)
+    def __init__(self, data_writer, **kwargs) -> None:
+        super().__init__(data_writer, **kwargs)
 
     def convert_symbolic_complement(self, real_seq, symbolic_complement):
         comp_seq = self.get_sequence_complement(real_seq)
@@ -183,8 +184,8 @@ class RNAGenerator(NucleotideGenerator):
         'U': 0.246
     }
 
-    def __init__(self, data_writer) -> None:
-        super().__init__(data_writer)
+    def __init__(self, data_writer, **kwargs) -> None:
+        super().__init__(data_writer, **kwargs)
         self.stype = "RNA"
 
 
@@ -197,8 +198,8 @@ class DNAGenerator(NucleotideGenerator):
         'T': 0.246
     }
 
-    def __init__(self, data_writer) -> None:
-        super().__init__(data_writer)
+    def __init__(self, data_writer, **kwargs) -> None:
+        super().__init__(data_writer, **kwargs)
         self.stype = "DNA"
 
 

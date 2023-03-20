@@ -14,9 +14,9 @@ from src.utils.misc.type_handling import flatten_listlike
 
 def generate_multiple_circuits(exp_configs, data_writer):
     circuit_paths = []
-    for i, (r, s, l, gp, p, t) in enumerate(zip(*list(exp_configs.values()))):
+    for i, (r, s, l, gp, p, t, seed) in enumerate(zip(*list(exp_configs.values()))):
         name = 'toy_circuit_combo' + str(i)
-        circuit_paths.append(RNAGenerator(data_writer=data_writer).generate_circuits_batch(
+        circuit_paths.append(RNAGenerator(data_writer=data_writer, seed=seed).generate_circuits_batch(
             name=name,
             num_circuits=r,
             num_components=s, slength=l,
@@ -38,18 +38,18 @@ def main(config=None, data_writer=None):
     config_file = load_json_as_dict(config)
     config_file = prepare_config(config_file)
     exp_configs = config_file["circuit_generation"]
- 
+
     protocols = [
         Protocol(
             partial(generate_multiple_circuits,
                     exp_configs=exp_configs,
                     data_writer=data_writer),
-                # req_input=True,
-                req_output=True,
-                name="generate_circuits"
+            # req_input=True,
+            req_output=True,
+            name="generate_circuits"
         ),
         Protocol(
-            partial(sub_dir, 
+            partial(sub_dir,
                     data_writer=data_writer, dirname='simulated_circuits')
         ),
         [
