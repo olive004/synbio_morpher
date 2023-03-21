@@ -33,15 +33,11 @@ if __package__ is None or (__package__ == ''):
     __package__ = os.path.basename(module_path)
 
 
-from src.utils.results.analytics.timeseries import get_precision, get_sensitivity, get_step_response_times
-from src.utils.misc.units import per_mol_to_per_molecule
-from src.utils.misc.type_handling import flatten_listlike
-from src.utils.misc.numerical import make_symmetrical_matrix_from_sequence
 from src.utils.modelling.deterministic import bioreaction_sim_dfx_expanded
-from tests.shared import CONFIG
-
-
-config = deepcopy(CONFIG)
+from src.utils.misc.numerical import make_symmetrical_matrix_from_sequence
+from src.utils.misc.type_handling import flatten_listlike
+from src.utils.misc.units import per_mol_to_per_molecule
+from src.utils.results.analytics.timeseries import get_precision, get_sensitivity, get_step_response_times
 
 
 def update_model_rates(model, a=None, d=None, ka=None, kd=None):
@@ -112,12 +108,12 @@ def clear_gpu():
 #     return steady_state_results
 
 
-def get_loop_simfunc(params, sim_model, saveat):
+def get_loop_simfunc(params, sim_model, saveat, rates_scaling=1):
     def to_vmap_basic(starting_state, reverse_rates):
         return partial(bioreaction_sim_dfx_expanded,
                        t0=params.t_start, t1=params.t_end, dt0=params.delta_t,
                        signal=None, signal_onehot=None,  # signal.reactions_onehot,
-                       forward_rates=sim_model.forward_rates,
+                       forward_rates=sim_model.forward_rates * rates_scaling,
                        inputs=sim_model.inputs,
                        outputs=sim_model.outputs,
                        solver=dfx.Heun(),
@@ -136,22 +132,26 @@ def loop_sim(steady_state_results, reverse_rates, sim_func):
 
 
 def num_unsteadied(comparison):
-    return np.sum(np.abs(comparison) > 0.01)
+    return np.sum(np.abs(comparison) > 0.05)
 
 
 def get_full_steady_states(starting_state, total_time, reverse_rates, sim_model, params):
+    rates_max = np.max([np.max(sim_model.forward_rates), np.max(reverse_rates)])
     sim_func = get_loop_simfunc(
-        params, sim_model=sim_model, saveat=dfx.SaveAt(t1=True))
+        params, sim_model=sim_model, saveat=dfx.SaveAt(t1=True), rates_scaling=1/rates_max)
+
     ti = 0
     starting_state = np.repeat(np.expand_dims(starting_state.concentrations, axis=0),
                                repeats=reverse_rates.shape[0], axis=0)
     comparison = starting_state
     steady_state_results = loop_sim(
-        starting_state, reverse_rates,
+        starting_state, 
+        reverse_rates / rates_max,
         sim_func=sim_func)
     tf = steady_state_results.stats['num_accepted_steps'][0]
     steady_state_results = np.array(steady_state_results.ys[:, tf-1, :])
     ti += params.t_end - params.t_start
+
     # for ti in range(int(params.t_end), total_time, int(params.t_end)):
     iter_time = datetime.now()
     while (num_unsteadied(comparison - steady_state_results) > 0) and (ti < total_time):
@@ -160,10 +160,12 @@ def get_full_steady_states(starting_state, total_time, reverse_rates, sim_model,
         comparison = steady_state_results
         ti += params.t_end - params.t_start
         steady_state_results = loop_sim(
-            steady_state_results, reverse_rates, sim_func)
+            steady_state_results,
+            reverse_rates / rates_max,
+            sim_func)
         tf = steady_state_results.stats['num_accepted_steps'][0]
         steady_state_results = np.array(steady_state_results.ys[:, tf-1, :])
-    return steady_state_results
+    return steady_state_results * rates_max
 
 
 def get_final_states(steady_states, reverse_rates, sim_func, t, ti, full_final_states):
@@ -179,8 +181,9 @@ def get_final_states(steady_states, reverse_rates, sim_func, t, ti, full_final_s
 
 
 def get_full_final_states(steady_states, reverse_rates, total_time, new_model, params):
+    rates_max = np.max([np.max(sim_model.forward_rates), np.max(reverse_rates)])
     sim_func = get_loop_simfunc(
-        params, sim_model=new_model, saveat=dfx.SaveAt(t1=True))
+        params, sim_model=new_model, saveat=dfx.SaveAt(t1=True), rates_scaling=1/rates_max)
     # sim_func = get_loop_simfunc(params, sim_model=new_model, saveat=dfx.SaveAt(ts=np.linspace(params.t_start, params.t_end, 100)))
     final_states_results = steady_states
     full_final_states = np.expand_dims(steady_states, axis=1)
@@ -188,7 +191,7 @@ def get_full_final_states(steady_states, reverse_rates, total_time, new_model, p
     ti = 0
 
     final_states_results, full_final_states, t = get_final_states(
-        steady_states, reverse_rates, sim_func, t, ti, full_final_states)
+        steady_states, reverse_rates / rates_max, sim_func, t, ti, full_final_states)
     iter_time = datetime.now()
     while (num_unsteadied(steady_states - final_states_results[:, -1, :]) > 0) and (ti < total_time):
         print('Final states: ', ti, ' iterations. ', num_unsteadied(steady_states -
@@ -196,8 +199,8 @@ def get_full_final_states(steady_states, reverse_rates, total_time, new_model, p
         steady_states = final_states_results[:, -1, :]
         ti += params.t_end - params.t_start
         final_states_results, full_final_states, t = get_final_states(
-            steady_states, reverse_rates, sim_func, t, ti, full_final_states)
-    return full_final_states, t
+            steady_states, reverse_rates / rates_max, sim_func, t, ti, full_final_states)
+    return full_final_states * rates_max, t
 
 
 def get_analytics(steady_states, final_states, t, K_eqs, model,

@@ -99,7 +99,9 @@ def bioreaction_sim_dfx_expanded(y0, t0, t1, dt0,
                                  solver=dfx.Tsit5(),
                                  saveat=dfx.SaveAt(
                                      t0=True, t1=True, steps=True),
-                                 max_steps=16**5):
+                                 max_steps=16**5,
+                                 stepsize_controller=dfx.ConstantStepSize()):
+                                #  stepsize_controller=dfx.PIDController(rtol=1e-3, atol=1e-6)):
 
     term = dfx.ODETerm(
         partial(bioreaction_sim_expanded,
@@ -112,4 +114,4 @@ def bioreaction_sim_dfx_expanded(y0, t0, t1, dt0,
                            t0=t0, t1=t1, dt0=dt0,
                            y0=y0,
                            saveat=saveat, max_steps=max_steps,
-                           stepsize_controller=dfx.PIDController(rtol=1e-3, atol=1e-6))  # 16**4)
+                           stepsize_controller=stepsize_controller)  # 16**4)
