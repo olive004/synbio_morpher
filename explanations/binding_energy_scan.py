@@ -344,9 +344,9 @@ a = np.ones(3) * 0.08333
 a[1] = a[1] * 5
 a[2] = a[2] * 0.3
 d = np.ones(3) * 0.0008333
-d[0] = d[0] * 0.5
-d[1] = d[1] * 1
-d[2] = d[2] * 1
+d[0] = d[0] * 0.5 
+d[1] = a[1] * 1 
+d[2] = a[2] * 1 
 ka = np.ones_like(Keq) * per_mol_to_per_molecule(1000000)
 kd = ka/Keq
 
