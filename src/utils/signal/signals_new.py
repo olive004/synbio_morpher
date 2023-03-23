@@ -7,6 +7,8 @@ import jax.numpy as jnp
 # Various signal functions
 class SignalFuncs():
 
+    numtype = np.float32
+
     @staticmethod
     def sine_step_function(t, impulse_center, impulse_halfwidth, target):
         return (jnp.sin(t) + 1) * jnp.where(
@@ -73,11 +75,11 @@ class SignalFuncs():
         y0_ = np.expand_dims(heights, 1)-np.abs(y0-np.expand_dims(heights, 1))
         position_next = np.concatenate(
             [positions[1:], time_points+np.ones(1)], axis=0)  # [num_peaks]
-        mask = np.float32((xs >= np.expand_dims(positions, 1)) *
+        mask = self.numtype((xs >= np.expand_dims(positions, 1)) *
                           (xs < np.expand_dims(position_next, 1)) *
                           (xs < np.expand_dims(positions+durations, 1)))
         y1 = y0_*mask  # [num_peaks, time_points]
-        y = np.float32(np.sum(y1, axis=0))
+        y = self.numtype(np.sum(y1, axis=0))
         return y
 
 
