@@ -243,7 +243,7 @@ def adjust_sim_params():
     return params_steady, total_t_steady, params_final, total_t_final
 
 
-def scan_all_params(kds, K_eqs, b_reverse_rates, model):
+def scan_all_params(K_eqs, b_reverse_rates, model):
     batchsize = int(b_reverse_rates.shape[0] / 10)
     a_sig = a * 1
     a_sig[input_species_idx] = a[input_species_idx] * 2
@@ -262,6 +262,7 @@ def scan_all_params(kds, K_eqs, b_reverse_rates, model):
         clear_gpu()
         bf = min(bi+batchsize, b_reverse_rates.shape[0])
         reverse_rates = b_reverse_rates[bi:bf]
+
         params_steady, total_t_steady, params_final, total_t_final = adjust_sim_params()
 
         x_steady, t_steady = get_full_steady_states(
@@ -274,8 +275,7 @@ def scan_all_params(kds, K_eqs, b_reverse_rates, model):
         clear_gpu()
         x_final, t_final = get_full_steady_states(
             x_steady[:, -1, :], total_time=total_t_final, reverse_rates=reverse_rates, sim_model=scale_rates(convert_model(
-                model_sig)), params=params_final)
-
+                model_sig)), params=params_final, saveat=dfx.SaveAt(ts=np.linspace(params_final.t_start, params_final.t_end, 100)))
         plot_scan(x_final, t_final, bi, species_names, len(species_names))
         plot_scan(x_final, t_final, bi, species_names_onlyin, num_species)
         plot_scan(x_final, t_final, bi,
@@ -293,6 +293,7 @@ def scan_all_params(kds, K_eqs, b_reverse_rates, model):
                 x_final[bi:bf, :, :])
 
     return analytics_df
+
 
 
 num_species = 3
@@ -372,5 +373,5 @@ b_reverse_rates = make_batch_rates(model, sim_model.reverse_rates, kds)
 clear_gpu()
 batchsize = len(K_eqs)
 analytics_df = scan_all_params(
-    kds[:batchsize], K_eqs[:batchsize], b_reverse_rates[:batchsize], model)
+    K_eqs[:batchsize], b_reverse_rates[:batchsize], model)
 analytics_df.to_csv(os.path.join('output', '5_Keqs_exp', 'df.csv'))
