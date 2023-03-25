@@ -97,11 +97,10 @@ class TestCircuit(unittest.TestCase):
                             f'Loaded info table incorrectly')
 
 
-def main(args=None):
-    t = TestCircuit()
-    t.test_interactions()
-    unittest.main()
+def main():
 
+    t = TestCircuit()
+    t.test_refcircuits()
 
 if __name__ == '__main__':
     unittest.main()

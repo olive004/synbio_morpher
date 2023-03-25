@@ -72,7 +72,7 @@ ENSEMBLE_CONFIG = {
                 "function_name": "step_function_integrated",
                 # "function_name": "sine_step_function",
                 "function_kwargs": {
-                    "impulse_center": 5, 
+                    "impulse_center": 5,
                     # "impulse_halfwidth": 1,
                     "target": 5
                 }
@@ -85,7 +85,8 @@ ENSEMBLE_CONFIG = {
                 "use_batch_mutations": True,
                 "batch_size": 100,
                 "max_circuits": 1000,
-                "device": "cpu"
+                "device": "cpu",
+                "use_rate_scaling": True
             },
             "source_of_interaction_stats": {
                 "is_source_dir_incomplete": True,
@@ -113,38 +114,47 @@ def five_circuits(config: dict, data_writer=None):
 
     paths = [
         # toy_mRNA_circuit_0
-        os.path.join(PACKAGE_DIR, 'tests', 'configs', 'circuits', '0_weak.fasta'),
+        os.path.join(PACKAGE_DIR, 'tests', 'configs',
+                     'circuits', '0_weak.fasta'),
         # toy_mRNA_circuit_940
-        os.path.join(PACKAGE_DIR, 'tests', 'configs', 'circuits', '1_med_weak.fasta'),
+        os.path.join(PACKAGE_DIR, 'tests', 'configs',
+                     'circuits', '1_med_weak.fasta'),
         # toy_mRNA_circuit_1306
-        os.path.join(PACKAGE_DIR, 'tests', 'configs', 'circuits', '2_medium.fasta'),
+        os.path.join(PACKAGE_DIR, 'tests', 'configs',
+                     'circuits', '2_medium.fasta'),
         # toy_mRNA_circuit_648
-        os.path.join(PACKAGE_DIR, 'tests', 'configs', 'circuits', '3_med_strong.fasta'),
+        os.path.join(PACKAGE_DIR, 'tests', 'configs',
+                     'circuits', '3_med_strong.fasta'),
         # toy_mRNA_circuit_999
-        os.path.join(PACKAGE_DIR, 'tests', 'configs', 'circuits', '4_strong.fasta')
+        os.path.join(PACKAGE_DIR, 'tests', 'configs',
+                     'circuits', '4_strong.fasta')
     ]
 
     interaction_paths = []
     for inter in ['binding_rates_dissociation', 'eqconstants']:
         interaction_paths.append([
             # toy_mRNA_circuit_0
-            os.path.join(PACKAGE_DIR, 'tests', 'configs', inter, f'0_weak_{inter}.csv'),
+            os.path.join(PACKAGE_DIR, 'tests', 'configs',
+                         inter, f'0_weak_{inter}.csv'),
             # toy_mRNA_circuit_940
-            os.path.join(PACKAGE_DIR, 'tests', 'configs', inter, f'1_med_weak_{inter}.csv'),
+            os.path.join(PACKAGE_DIR, 'tests', 'configs',
+                         inter, f'1_med_weak_{inter}.csv'),
             # toy_mRNA_circuit_1306
-            os.path.join(PACKAGE_DIR, 'tests', 'configs', inter, f'2_medium_{inter}.csv'),
+            os.path.join(PACKAGE_DIR, 'tests', 'configs',
+                         inter, f'2_medium_{inter}.csv'),
             # toy_mRNA_circuit_648
             os.path.join(PACKAGE_DIR, 'tests', 'configs', inter,
                          f'3_med_strong_{inter}.csv'),
             # toy_mRNA_circuit_999
-            os.path.join(PACKAGE_DIR, 'tests', 'configs', inter, f'4_strong_{inter}.csv')
+            os.path.join(PACKAGE_DIR, 'tests', 'configs',
+                         inter, f'4_strong_{inter}.csv')
         ])
 
     # interactions = np.expand_dims(np.expand_dims(np.arange(
     #     len(paths)), axis=1), axis=2) * np.ones((len(paths), species_num, species_num)) * default_interaction
     interactions_cfg = [
         {'binding_rates_association': config['molecular_params']
-            ['creation_rate'], 'binding_rates_dissociation': bp, 'eqconstants': ep}
+            ['association_binding_rate' + '_per_molecule'], 'binding_rates_dissociation': bp, 'eqconstants': ep}
         for bp, ep in zip(interaction_paths[0], interaction_paths[1])]
 
     return [construct_circuit_from_cfg(
@@ -172,7 +182,7 @@ def simulate(circuits, config, data_writer):
         write_to_subsystem=True,
         batch_size=config['simulation'].get('batch_size', 100),
         methods={
-            "init_circuit": {},
+            "init_circuits": {'batch': True},
             "simulate_signal_batch": {'ref_circuit': None,
                                       'batch': config['simulation']['use_batch_mutations']},
             "write_results": {'no_visualisations': config['experiment']['no_visualisations'],

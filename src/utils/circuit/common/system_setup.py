@@ -25,13 +25,11 @@ def construct_bioreaction_model(data: Data, molecular_params: dict):
     for i in range(len(model.reactions)):
         if model.reactions[i].input == []:
             model.reactions[i].forward_rate = molecular_params.get(
-                'creation_rate' + '_per_molecule', molecular_params.get(
-                'creation_rate'))
+                'creation_rate')
             model.reactions[i].reverse_rate = 0
         elif model.reactions[i].output == []:
             model.reactions[i].reverse_rate = molecular_params.get(
-                'degradation_rate' + '_per_molecule', molecular_params.get(
-                'degradation_rate'))
+                'degradation_rate')
             model.reactions[i].forward_rate = 0
         else:
             model.reactions[i].forward_rate = 0

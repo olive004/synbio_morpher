@@ -60,14 +60,13 @@ class InteractionMatrix():
         self.experiment_config = experiment_config
 
         init_nodes = num_nodes if num_nodes is not None else 3
-        random_matrices = np.random.rand(
-            init_nodes, init_nodes, 5) * 0.000001
+        nans = np.zeros((init_nodes, init_nodes)) * np.nan
         self.interactions = MolecularInteractions(
-            binding_rates_association=random_matrices[:, :, 0],
-            binding_rates_dissociation=random_matrices[:, :, 1],
-            energies=random_matrices[:, :, 2],
-            eqconstants=random_matrices[:, :, 3],
-            binding_sites=random_matrices[:, :, 4],
+            binding_rates_association=nans,
+            binding_rates_dissociation=nans,
+            energies=nans,
+            eqconstants=nans,
+            binding_sites=nans,
             units='test'
         )
 
