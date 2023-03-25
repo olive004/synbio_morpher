@@ -21,7 +21,7 @@ plt.style.use('bmh')
 plt.style.use('seaborn-v0_8')
 
 os.environ["TF_CPP_MIN_LOG_LOVEL"] = "0"
-jax.config.update('jax_platform_name', 'cpu')
+jax.config.update('jax_platform_name', 'gpu')
 jax.devices()
 
 if __package__ is None or (__package__ == ''):
@@ -122,11 +122,6 @@ def get_loop_simfunc(params, sim_model, saveat):
     return jax.jit(jax.vmap(to_vmap_basic))
 
 
-def loop_sim(steady_state_results, reverse_rates, sim_func):
-    steady_state_results = sim_func(steady_state_results, reverse_rates)
-    return steady_state_results
-
-
 def num_unsteadied(comparison):
     return np.sum(np.abs(comparison) > 0.05)
 
@@ -142,18 +137,16 @@ def get_full_steady_states(y0, total_time, reverse_rates, sim_model, params, sav
             y00 = y0
         else:
             y00 = ys[:, -1, :]
-        x_res = loop_sim(
-            y00,
-            reverse_rates,
-            sim_func=sim_func)
 
-        if x_res.ys.ndim == 3 and (x_res.ys.shape[1] == 1):
+        x_res = sim_func(y00, reverse_rates)
+
+        if np.sum(np.argmax(x_res.ts >= np.inf)) > 0:
+            ys = x_res.ys[:, :np.argmax(x_res.ts >= np.inf), :]
+            ts = x_res.ts[:, :np.argmax(x_res.ts >= np.inf)] + ti
+        else:
             ys = x_res.ys
             ts = x_res.ts + ti
-        else:
-            ys = x_res.ys[:, :np.argmax(x_res.ts >= np.inf), :]  
-            ts = x_res.ts[:, :np.argmax(x_res.ts >= np.inf)] + ti
-        
+            
         if ti == params.t_start:
             ys_full = ys
             ts_full = ts
@@ -161,7 +154,7 @@ def get_full_steady_states(y0, total_time, reverse_rates, sim_model, params, sav
             ys_full = np.concatenate([ys_full, ys], axis=1)
             ts_full = np.concatenate([ts_full, ts], axis=1)
 
-        if (num_unsteadied(ys[:, -1, :] - y00) > 0) and (ti < total_time):
+        if (num_unsteadied(ys[:, -1, :] - y00) == 0) or (ti >= total_time):
             break
         print('Steady states: ', ti, ' iterations. ', (num_unsteadied(
             ys[:, -1, :] - y00)), ' left to steady out. ', datetime.now() - iter_time)
@@ -244,12 +237,11 @@ def adjust_sim_params():
 
 
 def scan_all_params(K_eqs, b_reverse_rates, model):
-    batchsize = int(b_reverse_rates.shape[0] / 10)
+    batchsize = int(b_reverse_rates.shape[0] / 1)
     a_sig = a * 1
     a_sig[input_species_idx] = a[input_species_idx] * 2
     model_steady = update_model_rates(model, a=a)
     model_sig = update_model_rates(deepcopy(model), a=a_sig)
-    # starting_state = BasicSimState(concentrations=s0)
 
     species_names = [s.name for s in model.species]
     species_names_onlyin = species_names[:num_species]
@@ -257,13 +249,12 @@ def scan_all_params(K_eqs, b_reverse_rates, model):
                      else 'bound' for s in model.species]
 
     analytics_df = pd.DataFrame()
+    params_steady, total_t_steady, params_final, total_t_final = adjust_sim_params()
 
     for bi in range(0, b_reverse_rates.shape[0], batchsize):
         clear_gpu()
         bf = min(bi+batchsize, b_reverse_rates.shape[0])
         reverse_rates = b_reverse_rates[bi:bf]
-
-        params_steady, total_t_steady, params_final, total_t_final = adjust_sim_params()
 
         x_steady, t_steady = get_full_steady_states(
             np.repeat(np.expand_dims(s0, axis=0),
