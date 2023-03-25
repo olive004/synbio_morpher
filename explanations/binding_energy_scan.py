@@ -123,7 +123,7 @@ def get_loop_simfunc(params, sim_model, saveat):
 
 
 def num_unsteadied(comparison):
-    return np.sum(np.abs(comparison) > 0.05)
+    return np.sum(np.abs(comparison) > 0.1)
 
 
 def get_full_steady_states(y0, total_time, reverse_rates, sim_model, params, saveat=dfx.SaveAt(t0=True, t1=True, steps=True)):
