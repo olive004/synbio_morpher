@@ -181,7 +181,7 @@ class CircuitModeller():
                                         outputs=circuit.qreactions.reactions.outputs,
                                         forward_rates=circuit.qreactions.reactions.forward_rates,
                                         solver=dfx.Tsit5(),
-                                        saveat=dfx.SaveAt(t1=True),
+                                        saveat=dfx.SaveAt(t1=True)
                                         )))
 
             starting_states = np.asarray(

@@ -11,7 +11,6 @@ import pandas as pd
 from src.srv.io.manage.sys_interface import SCRIPT_DIR, DATA_DIR
 from src.utils.results.writer import DataWriter
 from src.utils.results.result_writer import ResultWriter
-from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.misc.io import convert_pathname_to_module, get_pathnames_from_mult_dirs
 from src.utils.results.experiments import Protocol
 from src.utils.data.data_format_tools.common import load_json_as_dict, load_csv_mult

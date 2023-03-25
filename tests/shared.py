@@ -78,9 +78,9 @@ ENSEMBLE_CONFIG = {
                 }
             },
             "simulation": {
-                "dt": 0.005,
+                "dt": 0.1,
                 "t0": 0,
-                "t1": 150,
+                "t1": 1500,
                 "solver": "diffrax",
                 "use_batch_mutations": True,
                 "batch_size": 100,
