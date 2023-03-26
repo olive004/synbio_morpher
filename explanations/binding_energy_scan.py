@@ -21,7 +21,7 @@ plt.style.use('bmh')
 plt.style.use('seaborn-v0_8')
 
 os.environ["TF_CPP_MIN_LOG_LOVEL"] = "0"
-jax.config.update('jax_platform_name', 'gpu')
+jax.config.update('jax_platform_name', 'cpu')
 jax.devices()
 
 if __package__ is None or (__package__ == ''):
@@ -33,18 +33,18 @@ if __package__ is None or (__package__ == ''):
     __package__ = os.path.basename(module_path)
 
 
-from src.utils.modelling.deterministic import bioreaction_sim_dfx_expanded
-from src.utils.misc.numerical import make_symmetrical_matrix_from_sequence
-from src.utils.misc.type_handling import flatten_listlike
-from src.utils.misc.units import per_mol_to_per_molecule
 from src.utils.results.analytics.timeseries import get_precision, get_sensitivity, get_step_response_times
+from src.utils.misc.units import per_mol_to_per_molecule
+from src.utils.misc.type_handling import flatten_listlike
+from src.utils.misc.numerical import make_symmetrical_matrix_from_sequence
+from src.utils.modelling.deterministic import bioreaction_sim_dfx_expanded
 
 
 def scale_rates(sim_model):
     m = np.max([sim_model.forward_rates.max(), sim_model.reverse_rates.max()])
     sim_model.forward_rates = sim_model.forward_rates/m
     sim_model.reverse_rates = sim_model.reverse_rates/m
-    return sim_model
+    return sim_model, m
 
 
 def update_model_rates(model, a=None, d=None, ka=None, kd=None):
@@ -146,16 +146,13 @@ def get_full_steady_states(y0, total_time, reverse_rates, sim_model, params, sav
         else:
             ys = x_res.ys
             ts = x_res.ts + ti
-            
+
         if ti == params.t_start:
             ys_full = ys
             ts_full = ts
         else:
             ys_full = np.concatenate([ys_full, ys], axis=1)
             ts_full = np.concatenate([ts_full, ts], axis=1)
-        if ys_full.shape[1] > 1000:
-            ys_full = ys_full[:, ::max(int(ys_full.shape[1]/2000), 1), :]
-            ts_full = ts_full[:, ::max(int(ys_full.shape[1]/2000), 1)]
 
         if (num_unsteadied(ys[:, -1, :] - y00) == 0) or (ti >= total_time):
             print('Done: ', datetime.now() - iter_time)
@@ -232,10 +229,10 @@ def adjust_sim_params():
 
     params_steady = MedSimParams(t_start=0, t_end=1000.0, delta_t=dt,
                                  poisson_sim_reactions=None, brownian_sim_reaction=None)
-    total_t_steady = 3000
+    total_t_steady = 3000000
     params_final = MedSimParams(t_start=0, t_end=1000.0, delta_t=dt,
                                 poisson_sim_reactions=None, brownian_sim_reaction=None)
-    total_t_final = 3000
+    total_t_final = 3000000
 
     return params_steady, total_t_steady, params_final, total_t_final
 
@@ -260,21 +257,20 @@ def scan_all_params(K_eqs, b_reverse_rates, model):
         bf = min(bi+batchsize, b_reverse_rates.shape[0])
         reverse_rates = b_reverse_rates[bi:bf]
 
+        sim_model, scaling = scale_rates(convert_model(model_steady))
         x_steady, t_steady = get_full_steady_states(
             np.repeat(np.expand_dims(s0, axis=0),
                       repeats=reverse_rates.shape[0], axis=0),
             total_time=total_t_steady,
-            reverse_rates=reverse_rates, sim_model=scale_rates(convert_model(
-                model_steady)), params=params_steady, saveat=dfx.SaveAt(t1=True))
+            reverse_rates=reverse_rates/scaling, sim_model=sim_model, 
+            params=params_steady, saveat=dfx.SaveAt(t1=True))
 
         clear_gpu()
+        sim_model, scaling = scale_rates(convert_model(model_sig))
         x_final, t_final = get_full_steady_states(
-            x_steady[:, -1, :], total_time=total_t_final, reverse_rates=reverse_rates, sim_model=scale_rates(convert_model(
-                model_sig)), params=params_final, saveat=dfx.SaveAt(ts=np.linspace(params_final.t_start, params_final.t_end, 100)))
-        plot_scan(x_final, t_final, bi, species_names, len(species_names))
-        plot_scan(x_final, t_final, bi, species_names_onlyin, num_species)
-        plot_scan(x_final, t_final, bi,
-                  species_names_onlyin[1:num_species], num_species, 1)
+            x_steady[:, -1, :], total_time=total_t_final, reverse_rates=reverse_rates/scaling, 
+            sim_model=sim_model, params=params_final, 
+            saveat=dfx.SaveAt(ts=np.linspace(params_final.t_start, params_final.t_end, 1000)))
 
         clear_gpu()
         analytics = get_analytics(
@@ -287,13 +283,18 @@ def scan_all_params(K_eqs, b_reverse_rates, model):
         np.save(os.path.join('output', '5_Keqs_exp', f'final_states_{bi}-{bf}.npy'),
                 x_final[bi:bf, :, :])
 
+        plot_scan(x_final, t_final, bi, species_names, len(species_names))
+        plot_scan(x_final, t_final, bi, species_names_onlyin, num_species)
+        plot_scan(x_final, t_final, bi,
+                  species_names_onlyin[1:num_species], num_species, 1)
     return analytics_df
-
 
 
 num_species = 3
 input_species_idx = 0
 output_species_idx = 1
+model = construct_model_fromnames([str(i) for i in range(num_species)])
+model.species = model.species[-num_species:] + model.species[:-num_species]
 
 Keq = np.array(
     [[1, 1, 1],
@@ -301,22 +302,20 @@ Keq = np.array(
      [1, 1, 1]]
 )
 # From src/utils/common/configs/RNA_circuit/molecular_params.json
-a = np.ones(3) * 0.08333
-# a[1] = a[1] * 1
-# a[2] = a[2] * 1
-d = np.ones(3) * 0.0008333
-# d[0] = d[0] * 0.5 
-# d[1] = d[1] * 1 
-# d[2] = d[2] * 1 
+a = np.ones(num_species) * 0.08333
+# a[1] = a[1] * 1.2
+# a[2] = a[2] * 0.8
+d = np.ones(len(model.species)) * 0.0008333
+# d = np.ones(num_species) * 0.0008333
+# d[0] = d[0] * 0.5
+# d[1] = d[1] * 1
+# d[2] = d[2] * 1
 ka = np.ones_like(Keq) * per_mol_to_per_molecule(1000000)
 kd = ka/Keq
 
-model = construct_model_fromnames([str(i) for i in range(num_species)])
-model.species = model.species[-num_species:] + model.species[:-num_species]
 model = update_model_rates(model, a, d, ka, kd)
 
-s0 = np.concatenate(
-    [np.array([1.0, 1.0, 1.0]), np.zeros(len(model.species[num_species:]))])
+s0 = np.zeros(len(model.species))
 starting_state = BasicSimState(concentrations=s0)
 
 
@@ -364,9 +363,8 @@ kds = ka / K_eqs
 sim_model = convert_model(model)
 b_reverse_rates = make_batch_rates(model, sim_model.reverse_rates, kds)
 
-
 clear_gpu()
-batchsize = len(K_eqs)
+batchsize = 3 # len(K_eqs)
 analytics_df = scan_all_params(
     K_eqs[:batchsize], b_reverse_rates[:batchsize], model)
 analytics_df.to_csv(os.path.join('output', '5_Keqs_exp', 'df.csv'))
