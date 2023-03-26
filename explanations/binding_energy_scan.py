@@ -153,8 +153,12 @@ def get_full_steady_states(y0, total_time, reverse_rates, sim_model, params, sav
         else:
             ys_full = np.concatenate([ys_full, ys], axis=1)
             ts_full = np.concatenate([ts_full, ts], axis=1)
+        if ys_full.shape[1] > 1000:
+            ys_full = ys_full[:, ::max(int(ys_full.shape[1]/2000), 1), :]
+            ts_full = ts_full[:, ::max(int(ys_full.shape[1]/2000), 1)]
 
         if (num_unsteadied(ys[:, -1, :] - y00) == 0) or (ti >= total_time):
+            print('Done: ', datetime.now() - iter_time)
             break
         print('Steady states: ', ti, ' iterations. ', (num_unsteadied(
             ys[:, -1, :] - y00)), ' left to steady out. ', datetime.now() - iter_time)
@@ -228,10 +232,10 @@ def adjust_sim_params():
 
     params_steady = MedSimParams(t_start=0, t_end=1000.0, delta_t=dt,
                                  poisson_sim_reactions=None, brownian_sim_reaction=None)
-    total_t_steady = 3000000
+    total_t_steady = 3000
     params_final = MedSimParams(t_start=0, t_end=1000.0, delta_t=dt,
                                 poisson_sim_reactions=None, brownian_sim_reaction=None)
-    total_t_final = 3000000
+    total_t_final = 3000
 
     return params_steady, total_t_steady, params_final, total_t_final
 
