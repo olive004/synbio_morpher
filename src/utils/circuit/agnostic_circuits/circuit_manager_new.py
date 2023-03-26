@@ -64,15 +64,12 @@ class CircuitModeller():
         # logging.warning(f'Using device {config.get("simulation", {}).get("device", "cpu")}')
 
     def init_circuit(self, circuit: Circuit) -> Circuit:
-        circuit = self.compute_interactions(circuit)
         circuit = self.find_steady_states([circuit])[0]
         if self.steady_state_args.get('use_rate_scaling', True):
             circuit = self.scale_rates([circuit])[0]
         return circuit
 
     def init_circuits(self, circuits: List[Circuit], batch=True) -> List[Circuit]:
-        for i in range(len(circuits)):
-            circuits[i] = self.compute_interactions(circuits[i])
         circuits = self.find_steady_states(circuits)
         if self.steady_state_args.get('use_rate_scaling', True):
             circuits = self.scale_rates(circuits)
@@ -249,7 +246,7 @@ class CircuitModeller():
         forward_rates = [None] * len(circuits)
         reverse_rates = [None] * len(circuits)
 
-        for c in circuits:
+        for i, c in enumerate(circuits):
             forward_rates[i] = c.qreactions.reactions.forward_rates
             reverse_rates[i] = c.qreactions.reactions.reverse_rates
 
@@ -279,6 +276,7 @@ class CircuitModeller():
 
             return b_steady_states, b_reverse_rates
 
+        signal = ref_circuit.signal
         b_steady_states, b_reverse_rates = prepare_batch_params(circuits)
 
         s_time = datetime.now()
@@ -444,9 +442,9 @@ class CircuitModeller():
 
             # Signal into parameter
             signal = ref_circuit.signal
-            forward_rates = ref_circuit.forward_rates + ref_circuit.forward_rates * \
+            forward_rates = ref_circuit.qreactions.reactions.forward_rates + ref_circuit.qreactions.reactions.forward_rates * \
                 signal.reactions_onehot * signal.func.keywords['target']
-            
+
             self.sim_func = jax.jit(jax.vmap(
                 partial(bioreaction_sim_dfx_expanded,
                         t0=self.t0, t1=self.t1, dt0=self.dt,
@@ -455,9 +453,10 @@ class CircuitModeller():
                         inputs=ref_circuit.qreactions.reactions.inputs,
                         outputs=ref_circuit.qreactions.reactions.outputs,
                         solver=dfx.Tsit5(),
-                        saveat=dfx.SaveAt(ts=np.linspace(self.t0, self.t1, 100))
+                        saveat=dfx.SaveAt(
+                            ts=np.linspace(self.t0, self.t1, 100))
                         )))
-            
+
         elif self.simulation_args['solver'] == 'ivp':
             # way slower
 

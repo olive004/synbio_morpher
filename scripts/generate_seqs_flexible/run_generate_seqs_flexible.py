@@ -75,7 +75,7 @@ def main(config=None, data_writer=None):
                          write_to_subsystem=True, batch_size=config_file['simulation'].get('batch_size', 100),
                          methods={
             "compute_interactions": {},
-            "find_steady_states": {'batch': True},
+            "init_circuits": {'batch': True},
             "write_results": {'no_visualisations': config_file['experiment'].get('no_visualisations', True),
                               'no_numerical': config_file['experiment'].get('no_numerical', False)}
         }),

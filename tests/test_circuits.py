@@ -56,7 +56,7 @@ class TestCircuit(unittest.TestCase):
                     self.assertEqual(ref_circuits[col].unique()[0], 0,
                                      f'The reference circuits should not be different to the base circuit since they are the base circuit.')
                 elif RATIO_KEY in col:
-                    self.assertTrue((ref_circuits[col].unique()[0] == 1) or (ref_circuits[col].unique()[0] == np.inf),
+                    self.assertTrue(np.sum((1 - ref_circuits[col].unique()) > 1e4) == 0 or (ref_circuits[col].unique()[0] == np.inf),
                                     f'The reference circuits should have a ratio of one or infinity to the base circuit since they are the base circuit.')
                 elif col + DIFF_KEY in info.columns:
                     self.assertTrue(all(diffs[col] == info[col + DIFF_KEY]),

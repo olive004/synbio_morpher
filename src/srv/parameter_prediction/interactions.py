@@ -78,8 +78,7 @@ class InteractionMatrix():
                 if isinstance(matrix_path, str):
                     loaded_matrix, self.units, self.sample_names = self.load(
                         matrix_path)
-                    if matrix_type in INTERACTION_TYPES:
-                        loaded_matrix = loaded_matrix.to_numpy()
+                    loaded_matrix = loaded_matrix.to_numpy()
                     self.interactions.__setattr__(matrix_type, loaded_matrix)
                     self.interactions.units = self.units
             if 'binding_rates_association' in matrix_paths:
@@ -155,13 +154,13 @@ class InteractionDataHandler():
         if not test_mode:
             interactions = self.parse(data)
         else:
+            nans = np.ones((len(data), len(data))) * np.nan
             interactions = MolecularInteractions(
-                binding_rates_association=np.random.rand(len(data), len(data)),
-                binding_rates_dissociation=np.random.rand(
-                    len(data), len(data)),
-                energies=np.random.rand(len(data), len(data)),
-                eqconstants=np.random.rand(len(data), len(data)),
-                binding_sites=np.random.zeros(len(data), len(data))
+                binding_rates_association=nans,
+                binding_rates_dissociation=nans,
+                energies=nans,
+                eqconstants=nans,
+                binding_sites=nans
             )
         interactions.units = self.units
         return interactions
@@ -177,12 +176,12 @@ class InteractionDataHandler():
 
     def make_matrix(self, data: dict) -> Tuple[np.ndarray, np.ndarray]:
         energies = np.zeros((len(data), len(data)))
-        binding = [list(i) for i in energies]
+        binding = np.zeros((len(data), len(data)))
         for i, (name_i, sample) in enumerate(data.items()):
             for j, (name_j, raw_sample) in enumerate(sample.items()):
                 fields = self.sample_processor(raw_sample)
                 energies[i, j] = fields['energies']
-                binding[i][j] = fields['binding']
+                binding[i, j] = fields['binding']
         matrix, (a_rates, d_rates) = self.sample_postproc(energies)
         return matrix, energies, a_rates, d_rates, binding
 
@@ -207,13 +206,9 @@ class InteractionSimulator():
 def b_get_stats(interactions_mxs: List[InteractionMatrix]):
     b_interaction_attrs = {}
     for interaction_attr in INTERACTION_FIELDS_TO_WRITE:
-        if interaction_attr in INTERACTION_TYPES:
-            b_interaction_attrs[interaction_attr] = np.concatenate([np.expand_dims(
-                im.interactions.__getattribute__(interaction_attr), axis=0) for im in interactions_mxs], axis=0)
-        else:
-            b_interaction_attrs[interaction_attr] = [
-                im.interactions.__getattribute__(interaction_attr) for im in interactions_mxs]
-    # For 0-indexing
+        b_interaction_attrs[interaction_attr] = np.concatenate([np.expand_dims(
+            im.interactions.__getattribute__(interaction_attr), axis=0) for im in interactions_mxs], axis=0)
+    
     batch_dim = b_interaction_attrs['eqconstants'].ndim - 2 - 1
     idxs_interacting = get_unique_interacting_idxs(
         b_interaction_attrs['eqconstants'], batch_dim)
@@ -238,12 +233,8 @@ def b_get_stats(interactions_mxs: List[InteractionMatrix]):
     for interaction_attr in INTERACTION_FIELDS_TO_WRITE:
         for i, s in enumerate(interactions_mxs[0].sample_names):
             for ii, s in enumerate(interactions_mxs[0].sample_names):
-                if interaction_attr in INTERACTION_TYPES:
-                    stats[interaction_attr + '_' + str(i) + '-' + str(
-                        ii)] = b_interaction_attrs[interaction_attr][:, i, ii]
-                else:
-                    stats[interaction_attr + '_' + str(i) + '-' + str(
-                        ii)] = [df.iloc[i, ii] for df in b_interaction_attrs[interaction_attr]]
+                stats[interaction_attr + '_' + str(i) + '-' + str(
+                    ii)] = b_interaction_attrs[interaction_attr][:, i, ii]
         # stats[interaction_attr + '_' + 'max_interaction'] = np.max(
         #     np.max(b_interaction_attrs[interaction_attr], axis=1), axis=1)
         # stats[interaction_attr + '_' + 'min_interaction'] = np.min(

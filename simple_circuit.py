@@ -125,7 +125,8 @@ def simulate(circuits, config, data_writer):
         write_to_subsystem=True,
         batch_size=config['simulation'].get('batch_size', 100),
         methods={
-            "init_circuit": {},
+            "compute_interactions": {},
+            "init_circuits": {'batch': True},
             "simulate_signal_batch": {'ref_circuit': None,
                                       'batch': True},
             "write_results": {'no_visualisations': False,

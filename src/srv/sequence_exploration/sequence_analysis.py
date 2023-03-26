@@ -157,7 +157,15 @@ def b_tabulate_mutation_info(source_dir: str, data_writer: DataWriter, experimen
             matrix_paths = get_pathnames(file_key=INTERACTION_TYPES,
                                          search_dir=source_interaction_dir,
                                          subdirs=INTERACTION_TYPES,
-                                         as_dict=True, first_only=True)
+                                         as_dict=True, first_only=True, allow_empty=False)
+            # if not matrix_paths:
+            #     # The interactions might have been written to the above directory, bit hacky
+            #     matrix_paths = get_pathnames(file_key=[os.path.basename(
+            #         source_interaction_dir) + '_' + i for i in INTERACTION_TYPES],
+            #         search_dir=os.path.dirname(
+            #         source_interaction_dir),
+            #         subdirs=INTERACTION_TYPES,
+            #         as_dict=True, first_only=True, allow_empty=False)
             matrix_paths.update(get_pathnames(file_key=[INTERACTION_FIELDS_TO_WRITE[0]],
                                               search_dir=source_interaction_dir,
                                               subdirs=[

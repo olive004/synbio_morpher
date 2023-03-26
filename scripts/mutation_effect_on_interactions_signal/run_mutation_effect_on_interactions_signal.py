@@ -97,7 +97,8 @@ def main(config=None, data_writer=None):
             Protocol(partial(CircuitModeller(result_writer=data_writer, config=config_file).batch_circuits,
                              write_to_subsystem=True, batch_size=config_file['simulation'].get('batch_size', 100),
                              methods={
-                "init_circuit": {},
+                "compute_interactions": {},
+                "init_circuits": {'batch': True},
                 "simulate_signal_batch": {'ref_circuit': None,
                                           'batch': True},
                 "write_results": {'no_visualisations': config_file['experiment'].get('no_visualisations', True),
