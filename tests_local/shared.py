@@ -114,19 +114,19 @@ def five_circuits(config: dict, data_writer=None):
 
     paths = [
         # toy_mRNA_circuit_0
-        os.path.join(PACKAGE_DIR, 'tests', 'configs',
+        os.path.join(PACKAGE_DIR, 'tests_local', 'configs',
                      'circuits', '0_weak.fasta'),
         # toy_mRNA_circuit_940
-        os.path.join(PACKAGE_DIR, 'tests', 'configs',
+        os.path.join(PACKAGE_DIR, 'tests_local', 'configs',
                      'circuits', '1_med_weak.fasta'),
         # toy_mRNA_circuit_1306
-        os.path.join(PACKAGE_DIR, 'tests', 'configs',
+        os.path.join(PACKAGE_DIR, 'tests_local', 'configs',
                      'circuits', '2_medium.fasta'),
         # toy_mRNA_circuit_648
-        os.path.join(PACKAGE_DIR, 'tests', 'configs',
+        os.path.join(PACKAGE_DIR, 'tests_local', 'configs',
                      'circuits', '3_med_strong.fasta'),
         # toy_mRNA_circuit_999
-        os.path.join(PACKAGE_DIR, 'tests', 'configs',
+        os.path.join(PACKAGE_DIR, 'tests_local', 'configs',
                      'circuits', '4_strong.fasta')
     ]
 
@@ -134,19 +134,19 @@ def five_circuits(config: dict, data_writer=None):
     for inter in ['binding_rates_dissociation', 'eqconstants']:
         interaction_paths.append([
             # toy_mRNA_circuit_0
-            os.path.join(PACKAGE_DIR, 'tests', 'configs',
+            os.path.join(PACKAGE_DIR, 'tests_local', 'configs',
                          inter, f'0_weak_{inter}.csv'),
             # toy_mRNA_circuit_940
-            os.path.join(PACKAGE_DIR, 'tests', 'configs',
+            os.path.join(PACKAGE_DIR, 'tests_local', 'configs',
                          inter, f'1_med_weak_{inter}.csv'),
             # toy_mRNA_circuit_1306
-            os.path.join(PACKAGE_DIR, 'tests', 'configs',
+            os.path.join(PACKAGE_DIR, 'tests_local', 'configs',
                          inter, f'2_medium_{inter}.csv'),
             # toy_mRNA_circuit_648
-            os.path.join(PACKAGE_DIR, 'tests', 'configs', inter,
+            os.path.join(PACKAGE_DIR, 'tests_local', 'configs', inter,
                          f'3_med_strong_{inter}.csv'),
             # toy_mRNA_circuit_999
-            os.path.join(PACKAGE_DIR, 'tests', 'configs',
+            os.path.join(PACKAGE_DIR, 'tests_local', 'configs',
                          inter, f'4_strong_{inter}.csv')
         ])
 

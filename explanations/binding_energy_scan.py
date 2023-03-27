@@ -293,82 +293,83 @@ def scan_all_params(K_eqs, b_reverse_rates, model):
     return analytics_df
 
 
-num_species = 3
-input_species_idx = 0
-output_species_idx = 1
-model = construct_model_fromnames([str(i) for i in range(num_species)])
-model.species = model.species[-num_species:] + model.species[:-num_species]
+if __name__ == 'main':
+    num_species = 3
+    input_species_idx = 0
+    output_species_idx = 1
+    model = construct_model_fromnames([str(i) for i in range(num_species)])
+    model.species = model.species[-num_species:] + model.species[:-num_species]
 
-Keq = np.array(
-    [[1, 1, 1],
-     [1, 1, 1],
-     [1, 1, 1]]
-)
-# From src/utils/common/configs/RNA_circuit/molecular_params.json
-a = np.ones(num_species) * 0.08333
-a[1] = a[1] * 1.2
-a[2] = a[2] * 0.8
-d = np.ones(len(model.species)) * 0.0008333
-# d = np.ones(num_species) * 0.0008333
-# d[0] = d[0] * 0.5
-# d[1] = d[1] * 1
-# d[2] = d[2] * 1
-ka = np.ones_like(Keq) * per_mol_to_per_molecule(1000000)
-kd = ka/Keq
+    Keq = np.array(
+        [[1, 1, 1],
+        [1, 1, 1],
+        [1, 1, 1]]
+    )
+    # From src/utils/common/configs/RNA_circuit/molecular_params.json
+    a = np.ones(num_species) * 0.08333
+    # a[1] = a[1] * 1.2
+    # a[2] = a[2] * 0.8
+    d = np.ones(len(model.species)) * 0.0008333
+    # d = np.ones(num_species) * 0.0008333
+    # d[0] = d[0] * 0.5
+    # d[1] = d[1] * 1
+    # d[2] = d[2] * 1
+    ka = np.ones_like(Keq) * per_mol_to_per_molecule(1000000)
+    kd = ka/Keq
 
-model = update_model_rates(model, a, d, ka, kd)
+    model = update_model_rates(model, a, d, ka, kd)
 
-s0 = np.zeros(len(model.species))
-starting_state = BasicSimState(concentrations=s0)
-
-
-# K_eqs_range = np.array([0.01, 0.5, 1.0, 5, 40, 100])
-K_eqs_range = np.array([0.01, 0.5, 1.0, 5, 40])
-num_Keqs = np.size(K_eqs_range)
-num_unique_interactions = np.math.factorial(num_species)
+    s0 = np.zeros(len(model.species))
+    starting_state = BasicSimState(concentrations=s0)
 
 
-# Set loop vars
-analytic_types = ['precision']
-all_analytic_matrices = define_matrices(
-    num_species, num_Keqs, num_unique_interactions, len(analytic_types))
-
-total_iterations = np.power(num_Keqs, num_unique_interactions)
-total_processes = 1
-sub_process = 0
-num_iterations = int(total_iterations / total_processes)
-
-print('Making ', num_iterations,
-      ' parameter combinations for equilibrium constants range: ', K_eqs_range)
+    K_eqs_range = np.array([0.01, 0.5, 1.0, 5, 40, 100])
+    # K_eqs_range = np.array([0.01, 0.5, 1.0, 5, 40])
+    num_Keqs = np.size(K_eqs_range)
+    num_unique_interactions = np.math.factorial(num_species)
 
 
-def make_keqs():
-    K_eqs = np.zeros((num_iterations, num_species, num_species))
-    pows = np.power(num_Keqs, np.arange(num_unique_interactions))
-    for i in range(num_iterations):
-        interaction_strength_choices = np.floor(
-            np.mod(i / pows, num_Keqs)).astype(int)
-        if interaction_strength_choices[1] < interaction_strength_choices[3]:
-            continue
-        flat_triangle = K_eqs_range[list(
-            interaction_strength_choices)]
-        K_eqs[i] = make_symmetrical_matrix_from_sequence(
-            flat_triangle, num_species)
-    return K_eqs
+    # Set loop vars
+    analytic_types = ['precision']
+    all_analytic_matrices = define_matrices(
+        num_species, num_Keqs, num_unique_interactions, len(analytic_types))
+
+    total_iterations = np.power(num_Keqs, num_unique_interactions)
+    total_processes = 1
+    sub_process = 0
+    num_iterations = int(total_iterations / total_processes)
+
+    print('Making ', num_iterations,
+        ' parameter combinations for equilibrium constants range: ', K_eqs_range)
 
 
-K_eqs = jax.jit(make_keqs, backend='cpu')()
-didx = np.flatnonzero((K_eqs == 0).all((1, 2)))
-K_eqs = np.delete(K_eqs, didx, axis=0)
+    def make_keqs():
+        K_eqs = np.zeros((num_iterations, num_species, num_species))
+        pows = np.power(num_Keqs, np.arange(num_unique_interactions))
+        for i in range(num_iterations):
+            interaction_strength_choices = np.floor(
+                np.mod(i / pows, num_Keqs)).astype(int)
+            if interaction_strength_choices[1] < interaction_strength_choices[3]:
+                continue
+            flat_triangle = K_eqs_range[list(
+                interaction_strength_choices)]
+            K_eqs[i] = make_symmetrical_matrix_from_sequence(
+                flat_triangle, num_species)
+        return K_eqs
 
-print(K_eqs.shape[0], 'unique combinations to scan.')
 
-kds = ka / K_eqs
-sim_model = convert_model(model)
-b_reverse_rates = make_batch_rates(model, sim_model.reverse_rates, kds)
+    K_eqs = jax.jit(make_keqs, backend='cpu')()
+    didx = np.flatnonzero((K_eqs == 0).all((1, 2)))
+    K_eqs = np.delete(K_eqs, didx, axis=0)
 
-clear_gpu()
-batchsize = len(K_eqs)
-analytics_df = scan_all_params(
-    K_eqs[:batchsize], b_reverse_rates[:batchsize], model)
-analytics_df.to_csv(os.path.join('output', '5_Keqs_exp', 'df.csv'))
+    print(K_eqs.shape[0], 'unique combinations to scan.')
+
+    kds = ka / K_eqs
+    sim_model = convert_model(model)
+    b_reverse_rates = make_batch_rates(model, sim_model.reverse_rates, kds)
+
+    clear_gpu()
+    batchsize = len(K_eqs)
+    analytics_df = scan_all_params(
+        K_eqs[:batchsize], b_reverse_rates[:batchsize], model)
+    analytics_df.to_csv(os.path.join('output', '5_Keqs_exp', 'df.csv'))

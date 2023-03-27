@@ -5,7 +5,7 @@ from functools import partial
 from copy import deepcopy
 
 
-from tests.shared import create_test_inputs, CONFIG, TEST_CONFIG
+from tests_local.shared import create_test_inputs, CONFIG, TEST_CONFIG
 from src.utils.results.analytics.naming import get_true_names_analytics, RATIO_KEY
 from src.utils.results.analytics.timeseries import generate_analytics
 from src.utils.signal.signals_new import SignalFuncs

@@ -4,7 +4,7 @@ import pandas as pd
 import logging
 
 
-from tests.shared import create_test_inputs, CONFIG, TEST_CONFIG
+from tests_local.shared import create_test_inputs, CONFIG, TEST_CONFIG
 # from tests.shared import TEST_CONFIG as CONFIG
 from src.srv.sequence_exploration.sequence_analysis import load_tabulated_info
 from src.utils.results.analytics.naming import get_true_names_analytics, DIFF_KEY, RATIO_KEY

@@ -29,7 +29,7 @@ def expand_model_config(in_config: dict, out_config: dict, sample_names: List[st
         out_config['starting_concentration'] = {}
         for s in sample_names:
             out_config['starting_concentration'][s] = in_config['molecular_params'].get(
-                'starting_copynumbers', 1)
+                'starting_copynumbers', 100)
     if in_config.get('interactions') is not None or in_config.get('interactions_loaded'):
         out_config['interactions_state'] = 'loaded'
     else:
