@@ -11,11 +11,9 @@ TIMEAXIS = 1
 
 def get_peaks(initial_steady_states, final_steady_states, maxa, mina):
     return jnp.where(
-        (initial_steady_states > mina) &
-        (final_steady_states > mina) &
-        ((final_steady_states > maxa) ==
-         (initial_steady_states > final_steady_states)),
-        mina, maxa
+        initial_steady_states < final_steady_states,
+        maxa - mina + initial_steady_states,
+        mina - maxa + initial_steady_states
     )
 
 
@@ -89,7 +87,7 @@ def get_rmse(data, ref_circuit_data):
 
 def get_step_response_times2(data, t, steady_states, signal_time: int):
     """ Assumes that data starts pre-perturbation, but after an initial steady state 
-    has been reached. """
+    has been reached. Not using this one rn, as it hasn't been as reliable """
     t = np.squeeze(t)
     margin = 0.05
     is_steadystate = ~((data > (steady_states + steady_states * margin)
@@ -118,7 +116,7 @@ def get_step_response_times(data, t, steady_states, deriv, signal_idx: int, sign
                             ) | (data < (steady_states - steady_states * margin))
 
     # 1. Get zero derivative within margin
-    fmargin = 0.001
+    fmargin = 0.01
     fm = jnp.expand_dims(jnp.max(deriv, axis=1) * fmargin, axis=1)
     zd = (deriv < fm) & (deriv > -fm)  # This is just dx/dt == 0
 
@@ -182,7 +180,7 @@ def generate_base_analytics(data: jnp.ndarray, time: jnp.ndarray, labels: List[s
     )
 
     peaks = get_peaks(analytics['initial_steady_states'], analytics['steady_states'],
-                      analytics['max_amount'], analytics['min_amount']) * (signal_onehot == 0) * 1 + analytics['steady_states'] * signal_onehot
+                      analytics['max_amount'], analytics['min_amount']) 
 
     analytics['overshoot'] = get_overshoot(
         steady_states=analytics['steady_states'],
