@@ -21,7 +21,7 @@ plt.style.use('bmh')
 plt.style.use('seaborn-v0_8')
 
 os.environ["TF_CPP_MIN_LOG_LOVEL"] = "0"
-jax.config.update('jax_platform_name', 'cpu')
+jax.config.update('jax_platform_name', 'gpu')
 jax.devices()
 
 if __package__ is None or (__package__ == ''):
@@ -33,7 +33,7 @@ if __package__ is None or (__package__ == ''):
     __package__ = os.path.basename(module_path)
 
 
-from src.utils.results.analytics.timeseries import get_precision, get_sensitivity, get_step_response_times
+from src.utils.results.analytics.timeseries import get_precision, get_sensitivity, get_step_response_times, get_overshoot
 from src.utils.misc.units import per_mol_to_per_molecule
 from src.utils.misc.type_handling import flatten_listlike
 from src.utils.misc.numerical import make_symmetrical_matrix_from_sequence
@@ -179,6 +179,7 @@ def get_analytics(steady_states, final_states, t, K_eqs, model,
     sensitivity = np.array(jax.jit(jax.vmap(partial(get_sensitivity, signal_idx=input_species_idx)))(
         peaks=peaks, starting_states=steady_states
     ))
+    overshoots = np.array(get_overshoot(np.swapaxes(final_states, 1, 2)[:, :, -1], peaks=peaks))
     clear_gpu()
     resp_vmap = jax.jit(jax.vmap(partial(get_step_response_times,
                                          t=t, signal_time=0.0, signal_idx=input_species_idx)))  # np.expand_dims(t, 0)
@@ -187,10 +188,12 @@ def get_analytics(steady_states, final_states, t, K_eqs, model,
         data=np.swapaxes(final_states, 1, 2), steady_states=np.expand_dims(
             np.swapaxes(final_states, 1, 2)[:, :, -1], axis=-1)))
 
+
     analytics = {
         'precision': precision.flatten(),
         'sensitivity': sensitivity.flatten(),
-        'response_times': response_times.flatten()
+        'response_times': response_times.flatten(),
+        'overshoots': overshoots.flatten()
     }
     analytics_df = pd.DataFrame.from_dict(analytics)
     analytics_df['circuit_name'] = np.repeat(np.expand_dims(
@@ -303,8 +306,8 @@ Keq = np.array(
 )
 # From src/utils/common/configs/RNA_circuit/molecular_params.json
 a = np.ones(num_species) * 0.08333
-# a[1] = a[1] * 1.2
-# a[2] = a[2] * 0.8
+a[1] = a[1] * 1.2
+a[2] = a[2] * 0.8
 d = np.ones(len(model.species)) * 0.0008333
 # d = np.ones(num_species) * 0.0008333
 # d[0] = d[0] * 0.5
@@ -319,6 +322,7 @@ s0 = np.zeros(len(model.species))
 starting_state = BasicSimState(concentrations=s0)
 
 
+# K_eqs_range = np.array([0.01, 0.5, 1.0, 5, 40, 100])
 K_eqs_range = np.array([0.01, 0.5, 1.0, 5, 40])
 num_Keqs = np.size(K_eqs_range)
 num_unique_interactions = np.math.factorial(num_species)
@@ -364,7 +368,7 @@ sim_model = convert_model(model)
 b_reverse_rates = make_batch_rates(model, sim_model.reverse_rates, kds)
 
 clear_gpu()
-batchsize = 3 # len(K_eqs)
+batchsize = len(K_eqs)
 analytics_df = scan_all_params(
     K_eqs[:batchsize], b_reverse_rates[:batchsize], model)
 analytics_df.to_csv(os.path.join('output', '5_Keqs_exp', 'df.csv'))

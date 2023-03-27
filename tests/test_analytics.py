@@ -54,13 +54,13 @@ class TestAnalytics(unittest.TestCase):
 
         analytics = {k: np.array(v) for k, v in
                      partial(generate_analytics, time=t, labels=fake_species,
-                             signal_idxs=[np.where(signal_onehot == 1)[0]],
+                             signal_onehot=signal_onehot,
                              signal_time=t1/2,
                              ref_circuit_data=ref_circuit_data)(data).items()
                      }
         analytics_rev = {k: np.array(v) for k, v in
                          partial(generate_analytics, time=t, labels=fake_species,
-                                 signal_idxs=[np.where(signal_onehot == 1)[0]],
+                                 signal_onehot=signal_onehot,
                                  signal_time=t1/2,
                                  ref_circuit_data=ref_circuit_data_rev)(data_rev).items()
                          }

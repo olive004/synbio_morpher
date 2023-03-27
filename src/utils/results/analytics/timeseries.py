@@ -8,11 +8,22 @@ from src.utils.results.analytics.naming import DIFF_KEY, RATIO_KEY
 
 TIMEAXIS = 1
 
+
+def get_peaks(initial_steady_states, final_steady_states, maxa, mina):
+    return jnp.where(
+        (initial_steady_states > mina) &
+        (final_steady_states > mina) &
+        ((final_steady_states > maxa) ==
+         (initial_steady_states > final_steady_states)),
+        mina, maxa
+    )
+
+
 def get_derivative(data):
     if data.shape[TIMEAXIS] <= 1:
         return np.ones_like(data) * np.inf
     deriv = jnp.gradient(data)[1]
-    return deriv  # get column derivative
+    return deriv
 
 
 def get_fold_change(starting_states, steady_states):
@@ -149,9 +160,10 @@ def frequency(data):
 
 
 def generate_base_analytics(data: jnp.ndarray, time: jnp.ndarray, labels: List[str],
-                            signal_idxs: jnp.ndarray, signal_time,
+                            signal_onehot: jnp.ndarray, signal_time,
                             ref_circuit_data: jnp.ndarray) -> dict:
     """ Assuming [species, time] for data """
+    signal_idxs = [int(np.where(signal_onehot == 1)[0])]
     if data is None:
         return {}
     analytics = {
@@ -169,8 +181,9 @@ def generate_base_analytics(data: jnp.ndarray, time: jnp.ndarray, labels: List[s
         steady_states=analytics['steady_states']
     )
 
-    peaks = jnp.where(analytics['initial_steady_states'] !=
-                      analytics['max_amount'], analytics['max_amount'], analytics['min_amount'])
+    peaks = get_peaks(analytics['initial_steady_states'], analytics['steady_states'],
+                      analytics['max_amount'], analytics['min_amount']) * (signal_onehot == 0) * 1 + analytics['steady_states'] * signal_onehot
+
     analytics['overshoot'] = get_overshoot(
         steady_states=analytics['steady_states'],
         peaks=peaks
@@ -206,17 +219,17 @@ def generate_differences_ratios(analytics: dict, ref_analytics) -> Tuple[dict]:
 
 
 def generate_analytics(data, time, labels: List[str], ref_circuit_data=None,
-                       signal_idxs=None, signal_time=None):
+                       signal_onehot=None, signal_time=None):
     if data.shape[0] != len(labels):
         species_axis = data.shape.index(len(labels))
         data = np.swapaxes(data, 0, species_axis)
     analytics = generate_base_analytics(data=data, time=time, labels=labels,
-                                        signal_idxs=signal_idxs, signal_time=signal_time,
+                                        signal_onehot=signal_onehot, signal_time=signal_time,
                                         ref_circuit_data=ref_circuit_data)
 
     # Differences & ratios
     ref_analytics = generate_base_analytics(data=ref_circuit_data, time=time, labels=labels,
-                                            signal_idxs=signal_idxs, signal_time=signal_time,
+                                            signal_onehot=signal_onehot, signal_time=signal_time,
                                             ref_circuit_data=ref_circuit_data)
     differences, ratios = generate_differences_ratios(analytics, ref_analytics)
     return merge_dicts(analytics, differences, ratios)
