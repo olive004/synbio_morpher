@@ -30,18 +30,20 @@
         "function_name": "step_function_integrated",
         "function_kwargs": {
             "impulse_center": 5, 
-            "target": 5
+            "target": 2
         }
     },
     "simulation": {
         "dt": 0.1,
         "t0": 0,
-        "t1": 1500,
+        "t1": 100,
+        "tmax": 20000,
         "solver": "diffrax",
         "use_batch_mutations": true,
         "batch_size": 100,
         "max_circuits": 1000,
-        "device": "cpu"
+        "device": "cpu",
+        "threshold_steady_states": 0.1
     },
     "system_type": "RNA"
 }

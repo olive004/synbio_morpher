@@ -11,16 +11,16 @@
         "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
         "circuit_generation": {
             "repetitions": [
-                10,
-                10,
-                10,
-                10,
-                5,
-                5,
-                5,
-                5,
-                5,
-                5
+                10000,
+                1000,
+                1000,
+                1000,
+                1000,
+                1000,
+                1000,
+                1000,
+                1000,
+                1000
             ],
             "species_count": [
                 3,
@@ -95,11 +95,12 @@
         "simulation": {
             "dt": 0.1,
             "t0": 0,
-            "t1": 1500,
+            "t1": 200,
+            "tmax": 120000,
             "solver": "diffrax",
             "use_batch_mutations": true,
-            "batch_size": 2000,
-            "max_circuits": 10000,
+            "batch_size": 1000,
+            "max_circuits": 5000,
             "device": "gpu"
         },
         "system_type": "RNA"

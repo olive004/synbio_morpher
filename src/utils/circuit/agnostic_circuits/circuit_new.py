@@ -48,8 +48,9 @@ class Circuit():
         self.subname = 'ref_circuit'
 
         self.result_collector = ResultCollector()
+        self.include_prod_deg = False
         self.model = construct_bioreaction_model(
-            config.get('data'), config.get('molecular_params'), include_prod_deg=False)
+            config.get('data'), config.get('molecular_params'), include_prod_deg=self.include_prod_deg)
         self.circuit_size = len(self.model.species)
         self.data: DataManager = config.get('data')
         self.qreactions = self.init_reactions(self.model, config)
@@ -126,7 +127,7 @@ class Circuit():
 def update_species_simulated_rates(circuit: Circuit,
                                    interactions: MolecularInteractions) -> Circuit:
     ordered_species = sorted(get_unique(flatten_listlike(
-        [r.input for r in circuit.model.reactions])))
+        [r.input for r in circuit.model.reactions if r.output])))
     for i, r in enumerate(circuit.model.reactions):
         if len(r.input) == 2:
             si = r.input[0]

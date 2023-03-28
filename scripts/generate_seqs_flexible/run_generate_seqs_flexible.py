@@ -34,7 +34,7 @@ def sub_dir(data_writer, dirname):
 def main(config=None, data_writer=None):
     # set configs
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
-        "scripts", "generate_seqs_flexible", "configs", "randoms.json"))
+        "scripts", "generate_seqs_flexible", "configs", "base_config.json"))
     config_file = load_json_as_dict(config)
     config_file = prepare_config(config_file)
     exp_configs = config_file["circuit_generation"]
@@ -74,10 +74,10 @@ def main(config=None, data_writer=None):
         Protocol(partial(CircuitModeller(result_writer=data_writer, config=config_file).batch_circuits,
                          write_to_subsystem=True, batch_size=config_file['simulation'].get('batch_size', 100),
                          methods={
-            "compute_interactions": {},
-            "init_circuits": {'batch': True},
-            "write_results": {'no_visualisations': config_file['experiment'].get('no_visualisations', True),
-                              'no_numerical': config_file['experiment'].get('no_numerical', False)}
+            "compute_interactions": {}
+            # "init_circuits": {'batch': True},
+            # "write_results": {'no_visualisations': config_file['experiment'].get('no_visualisations', True),
+            #                   'no_numerical': config_file['experiment'].get('no_numerical', False)}
         }),
             req_input=True,
             name="simulate_visualisations"

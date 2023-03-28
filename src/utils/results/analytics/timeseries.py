@@ -161,7 +161,7 @@ def generate_base_analytics(data: jnp.ndarray, time: jnp.ndarray, labels: List[s
                             signal_onehot: jnp.ndarray, signal_time,
                             ref_circuit_data: jnp.ndarray) -> dict:
     """ Assuming [species, time] for data """
-    signal_idxs = [int(np.where(signal_onehot == 1)[0])]
+    signal_idxs = None if signal_onehot is None else [int(np.where(signal_onehot == 1)[0])]
     if data is None:
         return {}
     analytics = {

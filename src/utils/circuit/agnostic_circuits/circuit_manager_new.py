@@ -101,7 +101,7 @@ class CircuitModeller():
             self.result_writer.output(
                 data=interactions_to_df(
                     interaction_matrix,
-                    labels=sorted([s.name for s in get_unique(flatten_listlike([r.input for r in circuit.model.reactions]))])),
+                    labels=sorted([s.name for s in get_unique(flatten_listlike([r.input for r in circuit.model.reactions if r.output]))])),
                 out_type='csv', out_name=circuit.name,
                 overwrite=True, new_file=True,
                 filename_addon=filename_addon, subfolder=filename_addon)
@@ -183,7 +183,8 @@ class CircuitModeller():
                                         outputs=circuit.qreactions.reactions.outputs,
                                         forward_rates=forward_rates,
                                         solver=dfx.Tsit5(),
-                                        saveat=dfx.SaveAt(t1=True)
+                                        saveat=dfx.SaveAt(
+                                            ts=np.linspace(self.t0, self.t1, int(np.min([200, self.t1-self.t0]))))
                                         )))
 
             starting_states = np.asarray(
@@ -262,21 +263,35 @@ class CircuitModeller():
                               ref_circuit: Circuit,
                               batch=True):
 
-        def prepare_batch_params(circuits):
+        signal = ref_circuit.signal
+
+        def prepare_batch_params(circuits: List[Circuit]):
 
             # Batch
+            signal_species = [ref_circuit.model.species[ii] for ii in np.where(
+                signal.onehot * np.arange(len(ref_circuit.model.species)) != 0)[0]]
+            translated_species = [[s] for s in ref_circuit.model.species if s not in flatten_listlike(
+                [r.output for r in ref_circuit.model.reactions])] + [r.input for r in ref_circuit.model.reactions]
+            signal_factor = np.array(
+                [[s.count(sigs) / len(s) for s in translated_species] for sigs in signal_species])
+
             b_steady_states = [None] * len(circuits)
             b_reverse_rates = [None] * len(circuits)
             for i, c in enumerate(circuits):
-                b_steady_states[i] = c.result_collector.get_result(
-                    'steady_states').analytics['steady_states'].flatten()
+                if not c.include_prod_deg:
+                    initial_s = c.result_collector.get_result(
+                        'steady_states').analytics['steady_states'].flatten()
+                    b_steady_states[i] = initial_s * ((signal.onehot == 0) * 1) + np.sum(
+                        initial_s * signal_factor * signal.func.keywords['target']) * signal.onehot
+                else:
+                    b_steady_states[i] = c.result_collector.get_result(
+                        'steady_states').analytics['steady_states'].flatten()
                 b_reverse_rates[i] = c.qreactions.reactions.reverse_rates
             b_steady_states = np.asarray(b_steady_states)
             b_reverse_rates = np.asarray(b_reverse_rates)
 
             return b_steady_states, b_reverse_rates
 
-        signal = ref_circuit.signal
         b_steady_states, b_reverse_rates = prepare_batch_params(circuits)
 
         s_time = datetime.now()
@@ -334,7 +349,7 @@ class CircuitModeller():
             analytics_func = jax.vmap(partial(
                 generate_analytics, time=t, labels=[
                     s.name for s in ref_circuit.model.species],
-                signal_idxs=signal.onehot, signal_time=signal.func.keywords[
+                signal_onehot=signal.onehot, signal_time=signal.func.keywords[
                     'impulse_center'],
                 ref_circuit_data=ref_circuit_data))
             b_analytics = analytics_func(
@@ -442,7 +457,7 @@ class CircuitModeller():
 
             # Signal into parameter
             signal = ref_circuit.signal
-            forward_rates = ref_circuit.qreactions.reactions.forward_rates + ref_circuit.qreactions.reactions.forward_rates * \
+            forward_rates = ref_circuit.qreactions.reactions.forward_rates * ((signal.reactions_onehot == 0) * 1) + ref_circuit.qreactions.reactions.forward_rates * \
                 signal.reactions_onehot * signal.func.keywords['target']
 
             self.sim_func = jax.jit(jax.vmap(
@@ -454,7 +469,7 @@ class CircuitModeller():
                         outputs=ref_circuit.qreactions.reactions.outputs,
                         solver=dfx.Tsit5(),
                         saveat=dfx.SaveAt(
-                            ts=np.linspace(self.t0, self.t1, 100))
+                            ts=np.linspace(self.t0, self.t1, int(np.min([200, self.t1-self.t0]))))
                         )))
 
         elif self.simulation_args['solver'] == 'ivp':
