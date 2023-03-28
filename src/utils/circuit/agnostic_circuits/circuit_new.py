@@ -49,7 +49,7 @@ class Circuit():
 
         self.result_collector = ResultCollector()
         self.model = construct_bioreaction_model(
-            config.get('data'), config.get('molecular_params'))
+            config.get('data'), config.get('molecular_params'), include_prod_deg=False)
         self.circuit_size = len(self.model.species)
         self.data: DataManager = config.get('data')
         self.qreactions = self.init_reactions(self.model, config)

@@ -19,8 +19,8 @@ def add_data_to_species(model: BasicModel, data: Data):
     return model
 
 
-def construct_bioreaction_model(data: Data, molecular_params: dict):
-    model = construct_model_fromnames(data.sample_names)
+def construct_bioreaction_model(data: Data, molecular_params: dict, include_prod_deg: bool):
+    model = construct_model_fromnames(data.sample_names, include_prod_deg=include_prod_deg)
     model = add_data_to_species(model, data)
     for i in range(len(model.reactions)):
         # if model.reactions[i].input == []:
