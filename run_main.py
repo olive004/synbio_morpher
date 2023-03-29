@@ -1,6 +1,6 @@
 import logging
 from fire import Fire
-from tests_local.test_circuits import main
+# from tests_local.test_circuits import main
 # from tests_local.test_analytics import main
 # from scripts.agnostic_simulation.run_agnostic_simulation import main
 # from scripts.RNA_circuit_simulation.run_RNA_circuit import main
@@ -9,7 +9,7 @@ from tests_local.test_circuits import main
 # from scripts.generate_species_templates.run_generate_species_templates import main
 # from scripts.generate_seqs_flexible.run_generate_seqs_flexible import main
 # from scripts.ensemble_generate_circuits.run_ensemble_generate_circuits import main
-# from scripts.gather_interaction_stats.run_gather_interaction_stats import main
+from scripts.gather_interaction_stats.run_gather_interaction_stats import main
 # from scripts.mutation_effect_on_interactions_signal.run_mutation_effect_on_interactions_signal import main
 # from scripts.summarise_simulation.run_summarise_simulation import main
 # from scripts.analyse_mutated_templates.run_analyse_mutated_templates import main

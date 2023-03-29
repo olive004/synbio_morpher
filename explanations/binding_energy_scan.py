@@ -34,7 +34,7 @@ if __package__ is None or (__package__ == ''):
     __package__ = os.path.basename(module_path)
 
 
-from src.utils.results.analytics.timeseries import get_precision, get_sensitivity, get_step_response_times, get_overshoot, get_peaks
+from src.utils.results.analytics.timeseries import get_sensitivity_simp, get_precision_simp, get_step_response_times, get_overshoot, get_peaks
 from src.utils.misc.units import per_mol_to_per_molecule
 from src.utils.misc.type_handling import flatten_listlike
 from src.utils.misc.numerical import make_symmetrical_matrix_from_sequence
@@ -167,17 +167,17 @@ def get_full_steady_states(y0, total_time, reverse_rates, sim_model, params, sav
 
 def get_analytics(steady_states, final_states, t, K_eqs, model,
                   species_names, species_types, input_species_idx,
-                  starting_circuit_idx):
+                  starting_circuit_idx, signal_factor):
     batchsize = steady_states.shape[0]
 
     peaks = get_peaks(steady_states, final_states[:, -1, :],
                       final_states.max(axis=1), final_states.min(axis=1)) 
 
-    precision = np.array(jax.jit(jax.vmap(partial(get_precision, signal_idx=input_species_idx)))(
+    precision = np.array(jax.jit(jax.vmap(partial(get_precision_simp, signal_factor=signal_factor)))(
         starting_states=steady_states,
         steady_states=final_states[:, -1, :]
     ))
-    sensitivity = np.array(jax.jit(jax.vmap(partial(get_sensitivity, signal_idx=input_species_idx)))(
+    sensitivity = np.array(jax.jit(jax.vmap(partial(get_sensitivity_simp, signal_factor=signal_factor)))(
         peaks=peaks, starting_states=steady_states
     ))
     overshoots = np.array(get_overshoot(np.swapaxes(
@@ -285,10 +285,10 @@ def scan_all_params(s0, K_eqs, b_reverse_rates, model, include_prod_deg=True):
         if not include_prod_deg:
             sig_onehot = (np.arange(len(model.species))
                           == input_species_idx) * 1
-            x_steady_sig = x_steady[:, -1, :] * ((sig_onehot == 0) * 1) + \
-                x_steady[:, -1, :] * sig_onehot * sig_factor
-            # x_steady_sig = x_steady[:, -1, :] + \
-            #     s0_i * (sig_factor - 1) * sig_onehot
+            # x_steady_sig = x_steady[:, -1, :] * ((sig_onehot == 0) * 1) + \
+            #     x_steady[:, -1, :] * sig_onehot * sig_factor
+            x_steady_sig = x_steady[:, -1, :] + \
+                s0_i * (sig_factor - 1) * sig_onehot
         else:
             x_steady_sig = x_steady[:, -1, :]
         # x_final, t_final = get_full_steady_states(
@@ -300,13 +300,13 @@ def scan_all_params(s0, K_eqs, b_reverse_rates, model, include_prod_deg=True):
             sim_func=get_loop_simfunc(params_final, sim_model=sim_model, saveat=dfx.SaveAt(
                 ts=np.linspace(params_final.t_start, params_final.t_end, 100))),
             t0=params_final.t_start,
-            t1=params_final.t_end, threshold=0.1, reverse_rates=reverse_rates/scaling)
+            t1=params_final.t_end, threshold=0.05, reverse_rates=reverse_rates/scaling)
 
         clear_gpu()
         # x_steady_sig[:, input_species_idx] = s0_i[:, input_species_idx]
         analytics = get_analytics(
             x_steady[:, -1, :], x_final, t_final, K_eqs[bi:bf], model,
-            species_names, species_types, input_species_idx, bi)
+            species_names, species_types, input_species_idx, bi, signal_factor=sig_factor - 1)
         analytics_df = pd.concat([analytics_df, analytics], axis=0)
         analytics_df.to_csv(os.path.join('output', '5_Keqs_exp', 'df.csv'))
 
@@ -314,8 +314,8 @@ def scan_all_params(s0, K_eqs, b_reverse_rates, model, include_prod_deg=True):
         np.save(os.path.join('output', '5_Keqs_exp', f'final_states_{bi}-{bf}.npy'),
                 x_final[bi:bf, :, :])
 
-        plot_scan(x_final, t_final, bi, species_names, len(species_names))
         plot_scan(x_final, t_final, bi, species_names_onlyin, num_species)
+        plot_scan(x_final, t_final, bi, species_names, len(species_names))
         plot_scan(x_final, t_final, bi,
                   species_names_onlyin[1:num_species], num_species, 1)
     return analytics_df
@@ -353,10 +353,12 @@ if __name__ == '__main__':
     s0 = np.concatenate([
         np.ones(num_species) * s0_s,
         np.zeros(len(model.species) - num_species)])
+    # s0[1] = 170
+    # s0[2] = 55
     starting_state = BasicSimState(concentrations=s0)
 
-    K_eqs_range = np.array([0.02, 0.8, 1.2, 4, 30, 60, 110])
-    # K_eqs_range = np.array([0.01, 0.5, 1.0, 5, 40, 100])
+    # K_eqs_range = np.array([0.02, 0.8, 1.2, 4, 30, 60, 110])
+    K_eqs_range = np.array([0.01, 0.5, 1.0, 5, 40, 100])
     # K_eqs_range = np.array([0.01, 0.5, 1.0, 5, 40])
     num_Keqs = np.size(K_eqs_range)
     num_unique_interactions = np.math.factorial(num_species)

@@ -57,6 +57,15 @@ def get_precision(signal_idx: int, starting_states, steady_states):
     return calculate_precision(output_diff, starting_states, signal_diff, signal_0)
 
 
+def get_precision_simp(starting_states, steady_states, signal_factor):
+    numer = jnp.where((starting_states != 0).astype(int),
+                      (steady_states - starting_states) / starting_states, 1)
+
+    precision = jnp.absolute(jnp.divide(
+        numer, signal_factor))
+    return jnp.divide(1, precision)
+
+
 def calculate_sensitivity(output_diff, starting_states, signal_diff, signal_0) -> jnp.ndarray:
     denom = jnp.where(signal_0 != 0, signal_diff / signal_0, np.inf)
     numer = jnp.where((starting_states != 0).astype(int),
@@ -75,6 +84,13 @@ def get_sensitivity(signal_idx: int, starting_states, peaks):
     signal_diff = signal_1 - signal_0
 
     return calculate_sensitivity(output_diff, starting_states, signal_diff, signal_0)
+
+
+def get_sensitivity_simp(starting_states, peaks, signal_factor):
+    numer = jnp.where((starting_states != 0).astype(int),
+                      (peaks - starting_states) / starting_states, np.inf)
+    return jnp.absolute(jnp.divide(
+        numer, signal_factor))
 
 
 def get_rmse(data, ref_circuit_data):

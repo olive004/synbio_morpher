@@ -1,6 +1,6 @@
 
 
-from typing import List, Dict
+from typing import List, Dict, Union
 import logging
 import os
 import numpy as np
@@ -83,7 +83,7 @@ def filter_data(data: pd.DataFrame, filters: dict = {}):
     return filt_stats
 
 
-def pull_circuits_from_stats(stats_pathname, filters: dict, write_key='data_path') -> List[Dict]:
+def pull_circuits_from_stats(stats_pathname: Union[pd.DataFrame, str], filters: dict, write_key='data_path') -> List[Dict]:
 
     stats = GeneCircuitLoader().load_data(stats_pathname).data
     filt_stats = filter_data(stats, filters)
