@@ -34,11 +34,11 @@ if __package__ is None or (__package__ == ''):
     __package__ = os.path.basename(module_path)
 
 
-from src.utils.modelling.deterministic import bioreaction_sim_dfx_expanded
-from src.utils.misc.numerical import make_symmetrical_matrix_from_sequence
-from src.utils.misc.type_handling import flatten_listlike
+from src.utils.results.analytics.timeseries import get_precision, get_sensitivity, get_step_response_times, get_overshoot, get_peaks
 from src.utils.misc.units import per_mol_to_per_molecule
-from src.utils.results.analytics.timeseries import get_precision, get_sensitivity, get_step_response_times, get_overshoot
+from src.utils.misc.type_handling import flatten_listlike
+from src.utils.misc.numerical import make_symmetrical_matrix_from_sequence
+from src.utils.modelling.deterministic import bioreaction_sim_dfx_expanded
 
 
 def scale_rates(sim_model, reverse_rates):
@@ -170,8 +170,9 @@ def get_analytics(steady_states, final_states, t, K_eqs, model,
                   starting_circuit_idx):
     batchsize = steady_states.shape[0]
 
-    peaks = jnp.where(steady_states != final_states.max(
-        axis=1), final_states.max(axis=1), final_states.min(axis=1))
+    peaks = get_peaks(steady_states, final_states[:, -1, :],
+                      final_states.max(axis=1), final_states.min(axis=1)) 
+
     precision = np.array(jax.jit(jax.vmap(partial(get_precision, signal_idx=input_species_idx)))(
         starting_states=steady_states,
         steady_states=final_states[:, -1, :]
@@ -230,10 +231,10 @@ def plot_scan(final_states, t_final, bi, species_names_onlyin, num_show_species,
 def adjust_sim_params():
     dt = 0.1
 
-    params_steady = MedSimParams(t_start=0, t_end=100.0, delta_t=dt,
+    params_steady = MedSimParams(t_start=0, t_end=1000.0, delta_t=dt,
                                  poisson_sim_reactions=None, brownian_sim_reaction=None)
     total_t_steady = 3000000
-    params_final = MedSimParams(t_start=0, t_end=100.0, delta_t=dt,
+    params_final = MedSimParams(t_start=0, t_end=1000.0, delta_t=dt,
                                 poisson_sim_reactions=None, brownian_sim_reaction=None)
     total_t_final = 3000000
 
@@ -265,19 +266,29 @@ def scan_all_params(s0, K_eqs, b_reverse_rates, model, include_prod_deg=True):
 
         sim_model, scaling = scale_rates(
             convert_model(model_steady), reverse_rates)
-        x_steady, t_steady = get_full_steady_states(
+        # x_steady, t_steady = get_full_steady_states(
+        #     s0_i, total_time=total_t_steady,
+        #     reverse_rates=reverse_rates/scaling, sim_model=sim_model,
+        #     params=params_steady, saveat=dfx.SaveAt(t1=True))
+        x_steady, t_steady = simulate_steady_states(
             s0_i, total_time=total_t_steady,
-            reverse_rates=reverse_rates/scaling, sim_model=sim_model,
-            params=params_steady, saveat=dfx.SaveAt(t1=True))
+            sim_func=get_loop_simfunc(
+                params_steady, sim_model=sim_model, 
+                saveat=dfx.SaveAt(t1=True)),
+                # saveat=dfx.SaveAt(ts=np.linspace(params_final.t_start, params_final.t_end, 100))),
+            t0=params_steady.t_start,
+            t1=params_steady.t_end, threshold=0.2, reverse_rates=reverse_rates/scaling)
 
-        clear_gpu()
+        # clear_gpu()
         sim_model, scaling = scale_rates(
             convert_model(model_sig), reverse_rates)
         if not include_prod_deg:
             sig_onehot = (np.arange(len(model.species))
                           == input_species_idx) * 1
-            x_steady_sig = x_steady[:, -1, :] + \
-                s0_i * (sig_factor - 1) * sig_onehot
+            x_steady_sig = x_steady[:, -1, :] * ((sig_onehot == 0) * 1) + \
+                x_steady[:, -1, :] * sig_onehot * sig_factor
+            # x_steady_sig = x_steady[:, -1, :] + \
+            #     s0_i * (sig_factor - 1) * sig_onehot
         else:
             x_steady_sig = x_steady[:, -1, :]
         # x_final, t_final = get_full_steady_states(
@@ -287,13 +298,14 @@ def scan_all_params(s0, K_eqs, b_reverse_rates, model, include_prod_deg=True):
         x_final, t_final = simulate_steady_states(
             x_steady_sig, total_time=total_t_final,
             sim_func=get_loop_simfunc(params_final, sim_model=sim_model, saveat=dfx.SaveAt(
-                ts=np.linspace(params_final.t_start, params_final.t_end, 1000))),
+                ts=np.linspace(params_final.t_start, params_final.t_end, 100))),
             t0=params_final.t_start,
-            t1=params_final.t_end, threshold=0.2, reverse_rates=reverse_rates)
+            t1=params_final.t_end, threshold=0.1, reverse_rates=reverse_rates/scaling)
 
         clear_gpu()
+        # x_steady_sig[:, input_species_idx] = s0_i[:, input_species_idx]
         analytics = get_analytics(
-            x_steady_sig, x_final, t_final, K_eqs[bi:bf], model,
+            x_steady[:, -1, :], x_final, t_final, K_eqs[bi:bf], model,
             species_names, species_types, input_species_idx, bi)
         analytics_df = pd.concat([analytics_df, analytics], axis=0)
         analytics_df.to_csv(os.path.join('output', '5_Keqs_exp', 'df.csv'))
@@ -343,7 +355,8 @@ if __name__ == '__main__':
         np.zeros(len(model.species) - num_species)])
     starting_state = BasicSimState(concentrations=s0)
 
-    K_eqs_range = np.array([0.01, 0.5, 1.0, 5, 40, 100])
+    K_eqs_range = np.array([0.02, 0.8, 1.2, 4, 30, 60, 110])
+    # K_eqs_range = np.array([0.01, 0.5, 1.0, 5, 40, 100])
     # K_eqs_range = np.array([0.01, 0.5, 1.0, 5, 40])
     num_Keqs = np.size(K_eqs_range)
     num_unique_interactions = np.math.factorial(num_species)
