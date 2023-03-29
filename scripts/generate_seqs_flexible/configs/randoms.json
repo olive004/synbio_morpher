@@ -9,6 +9,7 @@
             "no_visualisations": true
         },
         "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
+        "include_prod_deg": false,
         "circuit_generation": {
             "repetitions": [
                 20000,
@@ -62,13 +63,15 @@
         "simulation": {
             "dt": 0.1,
             "t0": 0,
-            "t1": 1500,
+            "t1": 150,
             "tmax": 120000,
             "solver": "diffrax",
             "use_batch_mutations": true,
             "batch_size": 1000,
             "max_circuits": 5000,
-            "device": "gpu"
+            "device": "cpu",
+            "threshold_steady_states": 0.1, 
+            "use_rate_scaling": true
         },
         "system_type": "RNA"
     }

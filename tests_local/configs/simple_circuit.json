@@ -43,7 +43,8 @@
         "batch_size": 100,
         "max_circuits": 1000,
         "device": "cpu",
-        "threshold_steady_states": 0.1
+        "threshold_steady_states": 0.1, 
+        "use_rate_scaling": true
     },
     "system_type": "RNA"
 }

@@ -61,17 +61,16 @@ class CircuitModeller():
 
         jax.config.update('jax_platform_name', config.get(
             'simulation', {}).get('device', 'cpu'))
-        # logging.warning(f'Using device {config.get("simulation", {}).get("device", "cpu")}')
 
     def init_circuit(self, circuit: Circuit) -> Circuit:
         circuit = self.find_steady_states([circuit])[0]
-        if self.steady_state_args.get('use_rate_scaling', True):
+        if self.simulation_args.get('use_rate_scaling', True):
             circuit = self.scale_rates([circuit])[0]
         return circuit
 
     def init_circuits(self, circuits: List[Circuit], batch=True) -> List[Circuit]:
         circuits = self.find_steady_states(circuits)
-        if self.steady_state_args.get('use_rate_scaling', True):
+        if self.simulation_args.get('use_rate_scaling', True):
             circuits = self.scale_rates(circuits)
         return circuits
 
@@ -268,21 +267,32 @@ class CircuitModeller():
         def prepare_batch_params(circuits: List[Circuit]):
 
             # Batch
-            signal_species = [ref_circuit.model.species[ii] for ii in np.where(
-                signal.onehot * np.arange(len(ref_circuit.model.species)) != 0)[0]]
-            translated_species = [[s] for s in ref_circuit.model.species if s not in flatten_listlike(
-                [r.output for r in ref_circuit.model.reactions])] + [r.input for r in ref_circuit.model.reactions]
-            signal_factor = np.array(
-                [[s.count(sigs) / len(s) for s in translated_species] for sigs in signal_species])
+            # signal_species = [ref_circuit.model.species[ii] for ii in np.where(
+            #     signal.onehot * np.arange(len(ref_circuit.model.species)) != 0)[0]]
+            # untranslated_species = {s: [s] for s in ref_circuit.model.species if s not in flatten_listlike(
+            #     [r.output for r in ref_circuit.model.reactions])}
+            # untranslated_species.update(
+            #     {r.output[0]: r.input for r in ref_circuit.model.reactions if r.output and len(
+            #         r.output) == 1})
+            # signal_factor = np.array(
+            #     [[untranslated_species[s].count(sigs) for s in ref_circuit.model.species] for sigs in signal_species])
 
             b_steady_states = [None] * len(circuits)
             b_reverse_rates = [None] * len(circuits)
             for i, c in enumerate(circuits):
                 if not c.include_prod_deg:
-                    initial_s = c.result_collector.get_result(
-                        'steady_states').analytics['steady_states'].flatten()
-                    b_steady_states[i] = initial_s * ((signal.onehot == 0) * 1) + np.sum(
-                        initial_s * signal_factor * signal.func.keywords['target']) * signal.onehot
+                    b_steady_states[i] = c.result_collector.get_result(
+                        'steady_states').analytics['steady_states'].flatten() * ((signal.onehot == 0) * 1) + \
+                        (c.result_collector.get_result(
+                            'steady_states').analytics['initial_steady_states'].flatten() *
+                         signal.func.keywords['target'] - c.result_collector.get_result(
+                            'steady_states').analytics['initial_steady_states'].flatten()) * signal.onehot
+                    # b_steady_states[i] = c.result_collector.get_result(
+                    #     'steady_states').analytics['steady_states'].flatten() * ((signal.onehot == 0) * 1) + \
+                    #     (c.result_collector.get_result(
+                    #         'steady_states').analytics['initial_steady_states'].flatten() *
+                    #      signal.func.keywords['target'] + c.result_collector.get_result(
+                    #         'steady_states').analytics['steady_states'].flatten()) * signal.onehot
                 else:
                     b_steady_states[i] = c.result_collector.get_result(
                         'steady_states').analytics['steady_states'].flatten()

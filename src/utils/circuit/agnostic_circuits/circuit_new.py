@@ -48,7 +48,7 @@ class Circuit():
         self.subname = 'ref_circuit'
 
         self.result_collector = ResultCollector()
-        self.include_prod_deg = False
+        self.include_prod_deg = config.get('include_prod_deg', True)
         self.model = construct_bioreaction_model(
             config.get('data'), config.get('molecular_params'), include_prod_deg=self.include_prod_deg)
         self.circuit_size = len(self.model.species)
