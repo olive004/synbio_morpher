@@ -451,9 +451,13 @@ class CircuitModeller():
         self.result_writer.unsubdivide()
         return circuit
 
-    def prepare_internal_funcs(self, circuits: List[Circuit]):
+    def prepare_internal_funcs(self, circuits: List[Circuit], methods: dict):
         """ Create simulation function. If more customisation is needed per circuit, move
         variables into the relevant wrapper simulation method """
+
+        if 'simulate_signal_batch' not in methods:
+            return
+
         ref_circuit = circuits[0]
         signal = ref_circuit.signal
         signal_f = vanilla_return if signal is None else signal.func
@@ -520,7 +524,7 @@ class CircuitModeller():
                        include_normal_run: bool = True,
                        write_to_subsystem=True):
 
-        self.prepare_internal_funcs(circuits)
+        self.prepare_internal_funcs(circuits, methods)
         batch_size = len(circuits) if batch_size is None else batch_size
 
         num_subcircuits = len(flatten_nested_dict(circuits[0].mutations))
