@@ -6,13 +6,11 @@ from fire import Fire
 from src.utils.common.setup_new import construct_circuit_from_cfg, prepare_config
 from src.srv.io.manage.script_manager import script_preamble
 from src.utils.results.experiments import Experiment, Protocol
-from src.utils.results.result_writer import ResultWriter
 from src.srv.sequence_exploration.sequence_analysis import pull_circuits_from_stats
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.evolution.evolver import Evolver
 from src.utils.misc.io import get_pathnames
 from src.utils.misc.scripts_io import get_search_dir
-from src.utils.circuit.common.config_setup import parse_cfg_args
 from src.utils.common.setup_new import expand_config
 from src.utils.circuit.agnostic_circuits.circuit_manager_new import CircuitModeller
 
@@ -99,7 +97,8 @@ def main(config=None, data_writer=None):
             Protocol(partial(CircuitModeller(result_writer=data_writer, config=config_file).batch_circuits,
                              write_to_subsystem=True, batch_size=config_file['simulation'].get('batch_size', 100),
                              methods={
-                "init_circuit": {},
+                "compute_interactions": {},
+                "init_circuits": {'batch': True},
                 "simulate_signal_batch": {'ref_circuit': None,
                                           'batch': True},
                 "write_results": {'no_visualisations': config_file['experiment'].get('no_visualisations', True),

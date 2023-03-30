@@ -100,7 +100,7 @@ class Evolver():
     def mutate(self, circuit: Circuit, algorithm: str, write_to_subsystem=False, write_to_fasta=False):
         """ algorithm can be either random or all """
         if write_to_subsystem:
-            self.data_writer.subdivide_writing(circuit.name)
+            self.data_writer.subdivide_writing(circuit.name, safe_dir_change=False)
         if self.is_mutation_possible(circuit):
             mutator = self.get_mutator(algorithm)
             circuit = mutator(circuit)

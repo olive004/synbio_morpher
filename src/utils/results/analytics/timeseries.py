@@ -6,9 +6,22 @@ from src.utils.misc.type_handling import merge_dicts
 from src.utils.results.analytics.naming import DIFF_KEY, RATIO_KEY
 
 
+TIMEAXIS = 1
+
+
+def get_peaks(initial_steady_states, final_steady_states, maxa, mina):
+    return jnp.where(
+        initial_steady_states < final_steady_states,
+        maxa - mina + initial_steady_states,
+        mina - maxa + initial_steady_states
+    )
+
+
 def get_derivative(data):
+    if data.shape[TIMEAXIS] <= 1:
+        return np.ones_like(data) * np.inf
     deriv = jnp.gradient(data)[1]
-    return deriv  # get column derivative
+    return deriv
 
 
 def get_fold_change(starting_states, steady_states):
@@ -44,6 +57,15 @@ def get_precision(signal_idx: int, starting_states, steady_states):
     return calculate_precision(output_diff, starting_states, signal_diff, signal_0)
 
 
+def get_precision_simp(starting_states, steady_states, signal_factor):
+    numer = jnp.where((starting_states != 0).astype(int),
+                      (steady_states - starting_states) / starting_states, 1)
+
+    precision = jnp.absolute(jnp.divide(
+        numer, signal_factor))
+    return jnp.divide(1, precision)
+
+
 def calculate_sensitivity(output_diff, starting_states, signal_diff, signal_0) -> jnp.ndarray:
     denom = jnp.where(signal_0 != 0, signal_diff / signal_0, np.inf)
     numer = jnp.where((starting_states != 0).astype(int),
@@ -64,12 +86,40 @@ def get_sensitivity(signal_idx: int, starting_states, peaks):
     return calculate_sensitivity(output_diff, starting_states, signal_diff, signal_0)
 
 
+def get_sensitivity_simp(starting_states, peaks, signal_factor):
+    numer = jnp.where((starting_states != 0).astype(int),
+                      (peaks - starting_states) / starting_states, np.inf)
+    return jnp.absolute(jnp.divide(
+        numer, signal_factor))
+
+
 def get_rmse(data, ref_circuit_data):
     if ref_circuit_data is None:
         return jnp.zeros(shape=(jnp.shape(data)[0], 1))
     rmse = jnp.sqrt(
         jnp.sum(jnp.divide(jnp.power(data - ref_circuit_data, 2), jnp.shape(data)[1]), axis=1))
     return jnp.expand_dims(rmse, axis=1)
+
+
+def get_step_response_times2(data, t, steady_states, signal_time: int):
+    """ Assumes that data starts pre-perturbation, but after an initial steady state 
+    has been reached. Not using this one rn, as it hasn't been as reliable """
+    t = np.squeeze(t)
+    margin = 0.05
+    is_steadystate = ~((data > (steady_states + steady_states * margin)
+                        ) | (data < (steady_states - steady_states * margin)))
+    argmax_workaround = jnp.ones_like(
+        steady_states) * jnp.arange(len(t)) == jnp.expand_dims(np.argmax(is_steadystate, axis=1), axis=1)
+    tstop = jnp.max(t * argmax_workaround, axis=1)
+    response_times = jnp.where(
+        (tstop != t[-1]) & (tstop > signal_time),
+        tstop - signal_time,
+        np.inf
+    )
+
+    if response_times.ndim == 1:
+        return jnp.expand_dims(response_times, axis=1)
+    return response_times
 
 
 def get_step_response_times(data, t, steady_states, deriv, signal_idx: int, signal_time: int):
@@ -82,7 +132,7 @@ def get_step_response_times(data, t, steady_states, deriv, signal_idx: int, sign
                             ) | (data < (steady_states - steady_states * margin))
 
     # 1. Get zero derivative within margin
-    fmargin = 0.001
+    fmargin = 0.01
     fm = jnp.expand_dims(jnp.max(deriv, axis=1) * fmargin, axis=1)
     zd = (deriv < fm) & (deriv > -fm)  # This is just dx/dt == 0
 
@@ -124,9 +174,10 @@ def frequency(data):
 
 
 def generate_base_analytics(data: jnp.ndarray, time: jnp.ndarray, labels: List[str],
-                            signal_idxs: jnp.ndarray, signal_time,
+                            signal_onehot: jnp.ndarray, signal_time,
                             ref_circuit_data: jnp.ndarray) -> dict:
     """ Assuming [species, time] for data """
+    signal_idxs = None if signal_onehot is None else [int(np.where(signal_onehot == 1)[0])]
     if data is None:
         return {}
     analytics = {
@@ -144,8 +195,9 @@ def generate_base_analytics(data: jnp.ndarray, time: jnp.ndarray, labels: List[s
         steady_states=analytics['steady_states']
     )
 
-    peaks = jnp.where(analytics['initial_steady_states'] !=
-                      analytics['max_amount'], analytics['max_amount'], analytics['min_amount'])
+    peaks = get_peaks(analytics['initial_steady_states'], analytics['steady_states'],
+                      analytics['max_amount'], analytics['min_amount']) 
+
     analytics['overshoot'] = get_overshoot(
         steady_states=analytics['steady_states'],
         peaks=peaks
@@ -181,14 +233,17 @@ def generate_differences_ratios(analytics: dict, ref_analytics) -> Tuple[dict]:
 
 
 def generate_analytics(data, time, labels: List[str], ref_circuit_data=None,
-                       signal_idxs=None, signal_time=None):
+                       signal_onehot=None, signal_time=None):
+    if data.shape[0] != len(labels):
+        species_axis = data.shape.index(len(labels))
+        data = np.swapaxes(data, 0, species_axis)
     analytics = generate_base_analytics(data=data, time=time, labels=labels,
-                                        signal_idxs=signal_idxs, signal_time=signal_time, 
+                                        signal_onehot=signal_onehot, signal_time=signal_time,
                                         ref_circuit_data=ref_circuit_data)
 
     # Differences & ratios
     ref_analytics = generate_base_analytics(data=ref_circuit_data, time=time, labels=labels,
-                                            signal_idxs=signal_idxs, signal_time=signal_time, 
+                                            signal_onehot=signal_onehot, signal_time=signal_time,
                                             ref_circuit_data=ref_circuit_data)
     differences, ratios = generate_differences_ratios(analytics, ref_analytics)
     return merge_dicts(analytics, differences, ratios)
