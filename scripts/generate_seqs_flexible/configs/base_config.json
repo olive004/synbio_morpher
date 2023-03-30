@@ -1,0 +1,107 @@
+{ 
+        "interaction_simulator": {
+            "name": "IntaRNA",
+            "postprocess": true
+        },
+        "experiment": {
+            "purpose": "generate_seqs_flexible",
+            "test_mode": false,
+            "no_visualisations": true
+        },
+        "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
+        "circuit_generation": {
+            "repetitions": [
+                10000,
+                1000,
+                1000,
+                1000,
+                1000,
+                1000,
+                1000,
+                1000,
+                1000,
+                1000
+            ],
+            "species_count": [
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3
+            ],
+            "sequence_length": [
+                20,
+                20,
+                20,
+                20,
+                20,
+                20,
+                20,
+                20,
+                20,
+                20
+            ],
+            "generator_protocol": [
+                "random",
+                "template_mix",
+                "template_mutate",
+                "template_split",
+                "template_mix",
+                "template_mutate",
+                "template_split",
+                "template_mix",
+                "template_mutate",
+                "template_split"
+            ],
+            "proportion_to_mutate": [
+                0.5,
+                0.5,
+                0.5,
+                0.5,
+                0.5,
+                0.5,
+                0.5,
+                0.5,
+                0.5,
+                0.5
+            ],
+            "template": [
+                null,
+                null,
+                null,
+                null,
+                "GCCCCGGGGCUCUCUAUACG",
+                "GCCCCGGGGCUCUCUAUACG",
+                "GCCCCGGGGCUCUCUAUACG",
+                "CGUGACGCUGGUUUCCUCCC",
+                "CGUGACGCUGGUUUCCUCCC",
+                "CGUGACGCUGGUUUCCUCCC"
+            ]
+        },
+        "mutations": {
+            "algorithm": "random",
+            "mutation_counts": 8,
+            "mutation_nums_within_sequence": [
+                1
+            ],
+            "mutation_nums_per_position": 1,
+            "concurrent_species_to_mutate": "single_species_at_a_time"
+        },
+        "simulation": {
+            "dt": 0.1,
+            "t0": 0,
+            "t1": 200,
+            "tmax": 120000,
+            "solver": "diffrax",
+            "use_batch_mutations": true,
+            "batch_size": 1000,
+            "max_circuits": 5000,
+            "device": "gpu"
+        },
+        "system_type": "RNA"
+    }

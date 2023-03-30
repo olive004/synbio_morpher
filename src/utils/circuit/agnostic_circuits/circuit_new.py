@@ -48,8 +48,9 @@ class Circuit():
         self.subname = 'ref_circuit'
 
         self.result_collector = ResultCollector()
+        self.include_prod_deg = config.get('include_prod_deg', True)
         self.model = construct_bioreaction_model(
-            config.get('data'), config.get('molecular_params'))
+            config.get('data'), config.get('molecular_params'), include_prod_deg=self.include_prod_deg)
         self.circuit_size = len(self.model.species)
         self.data: DataManager = config.get('data')
         self.qreactions = self.init_reactions(self.model, config)
@@ -85,14 +86,13 @@ class Circuit():
         if interaction_cfg is None and interactions_loaded is None:
             num_in_species = len(get_unique(flatten_listlike(
                 [r.input for r in self.model.reactions])))
-            random_matrices = np.random.rand(
-                num_in_species, num_in_species, 5) * 0.0001
+            nans = np.zeros((num_in_species, num_in_species)) * np.nan
             self.interactions = MolecularInteractions(
-                binding_rates_association=random_matrices[:, :, 0],
-                binding_rates_dissociation=random_matrices[:, :, 1],
-                energies=random_matrices[:, :, 2],
-                eqconstants=random_matrices[:, :, 3],
-                binding_sites=random_matrices[:, :, 4],
+                binding_rates_association=nans,
+                binding_rates_dissociation=nans,
+                energies=nans,
+                eqconstants=nans,
+                binding_sites=nans,
                 units='test'
             )
         else:
@@ -114,9 +114,9 @@ class Circuit():
 
     @signal.getter
     def signal(self):
-        if self._signal is None:
-            logging.warning(
-                f'Trying to retrieve None signal from circuit. Make sure signal specified in circuit config')
+        # if self._signal is None:
+        #     logging.warning(
+        #         f'Trying to retrieve None signal from circuit. Make sure signal specified in circuit config')
         return self._signal
 
     @signal.setter
@@ -127,7 +127,7 @@ class Circuit():
 def update_species_simulated_rates(circuit: Circuit,
                                    interactions: MolecularInteractions) -> Circuit:
     ordered_species = sorted(get_unique(flatten_listlike(
-        [r.input for r in circuit.model.reactions])))
+        [r.input for r in circuit.model.reactions if r.output])))
     for i, r in enumerate(circuit.model.reactions):
         if len(r.input) == 2:
             si = r.input[0]

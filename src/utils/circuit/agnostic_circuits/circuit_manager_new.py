@@ -6,12 +6,16 @@ import inspect
 import os
 # import sys
 import logging
+import diffrax as dfx
 import numpy as np
 
 import jax
+# jax.config.update('jax_platform_name', 'cpu')
+
 from scipy import integrate
 from bioreaction.model.data_containers import Species
 from bioreaction.simulation.simfuncs.basic_de import bioreaction_sim, bioreaction_sim_expanded
+from bioreaction.simulation.manager import simulate_steady_states
 
 from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
 from src.srv.parameter_prediction.interactions import InteractionDataHandler, InteractionSimulator, INTERACTION_FIELDS_TO_WRITE
@@ -43,6 +47,9 @@ class CircuitModeller():
         self.dt = config.get('simulation', {}).get('dt', 1)
         self.t0 = config.get('simulation', {}).get('t0', 0)
         self.t1 = config.get('simulation', {}).get('t1', 10)
+        self.threshold_steady_states = config.get('simulation', {}).get(
+            'threshold_steady_states', 0.1)
+        self.tmax = config.get('simulation', {}).get('tmax', self.t1)
 
         self.max_circuits = config.get('simulation', {}).get(
             'max_circuits', 10000)  # Maximum number of circuits to hold in memory
@@ -54,17 +61,17 @@ class CircuitModeller():
 
         jax.config.update('jax_platform_name', config.get(
             'simulation', {}).get('device', 'cpu'))
-        # logging.warning(f'Using device {config.get("simulation", {}).get("device", "cpu")}')
 
     def init_circuit(self, circuit: Circuit) -> Circuit:
-        circuit = self.compute_interactions(circuit)
         circuit = self.find_steady_states([circuit])[0]
+        if self.simulation_args.get('use_rate_scaling', True):
+            circuit = self.scale_rates([circuit])[0]
         return circuit
 
-    def init_circuits(self, circuits: List[Circuit]) -> List[Circuit]:
-        for i in range(len(circuits)):
-            circuits[i] = self.compute_interactions(circuits[i])
+    def init_circuits(self, circuits: List[Circuit], batch=True) -> List[Circuit]:
         circuits = self.find_steady_states(circuits)
+        if self.simulation_args.get('use_rate_scaling', True):
+            circuits = self.scale_rates(circuits)
         return circuits
 
     # @time_it
@@ -93,7 +100,7 @@ class CircuitModeller():
             self.result_writer.output(
                 data=interactions_to_df(
                     interaction_matrix,
-                    labels=sorted([s.name for s in get_unique(flatten_listlike([r.input for r in circuit.model.reactions]))])),
+                    labels=sorted([s.name for s in get_unique(flatten_listlike([r.input for r in circuit.model.reactions if r.output]))])),
                 out_type='csv', out_name=circuit.name,
                 overwrite=True, new_file=True,
                 filename_addon=filename_addon, subfolder=filename_addon)
@@ -111,10 +118,10 @@ class CircuitModeller():
             max_time=self.steady_state_args['max_time'],
             time_interval=self.steady_state_args['time_interval'])
 
-        b_steady_states = self.compute_steady_states(modeller_steady_state,
-                                                     circuits=circuits,
-                                                     solver_type=self.steady_state_args['steady_state_solver'],
-                                                     use_zero_rates=self.steady_state_args['use_zero_rates'])
+        b_steady_states, t = self.compute_steady_states(modeller_steady_state,
+                                                        circuits=circuits,
+                                                        solver_type=self.steady_state_args['steady_state_solver'],
+                                                        use_zero_rates=self.steady_state_args['use_zero_rates'])
 
         for circuit, steady_states in zip(circuits, b_steady_states):
             circuit.result_collector.add_result(
@@ -122,8 +129,7 @@ class CircuitModeller():
                 name='steady_states',
                 category='time_series',
                 vis_func=VisODE().plot,
-                vis_kwargs={'t': np.arange(0, np.shape(steady_states)[circuit.time_axis]) *
-                            modeller_steady_state.time_interval,
+                vis_kwargs={'t': t,
                             'legend': [s.name for s in circuit.model.species],
                             'out_type': 'svg'},
                 analytics_kwargs={'labels': [
@@ -132,15 +138,8 @@ class CircuitModeller():
         return circuits
 
     def compute_steady_states(self, modeller: Modeller, circuits: List[Circuit],
-                              solver_type: str = 'naive', use_zero_rates: bool = False) -> List[Circuit]:
-        if solver_type == 'naive':
-            b_copynumbers = []
-            for circuit in circuits:
-                copynumbers = self.model_circuit(
-                    modeller, y0=circuit.qreactions.quantities, circuit=circuit)
-                # TODO: reshape to copynumbers[1] or copynumbers[0][1]
-                b_copynumbers.append(copynumbers)
-        elif solver_type == 'ivp':
+                              solver_type: str = 'jax', use_zero_rates: bool = False) -> List[Circuit]:
+        if solver_type == 'ivp':
             b_copynumbers = []
             for circuit in circuits:
                 r = circuit.qreactions.reactions
@@ -151,10 +150,6 @@ class CircuitModeller():
                           circuit.qreactions.reactions.forward_rates) < 1e2) * 1
 
                 steady_state_result = integrate.solve_ivp(
-                    # partial(bioreaction_sim_expanded, args=None, inputs=r.inputs, outputs=r.outputs,
-                    #         signal=vanilla_return, signal_onehot=np.ones_like(
-                    #             r.forward_rates),
-                    #         forward_rates=r.forward_rates, reverse_rates=r.reverse_rates),
                     partial(bioreaction_sim, args=None, reactions=r, signal=vanilla_return,
                             signal_onehot=np.zeros_like(circuit.signal.reactions_onehot)),
                     (0, modeller.max_time),
@@ -166,26 +161,41 @@ class CircuitModeller():
                         f'are in {circuit.interactions.units}. {SIMULATOR_UNITS}')
                 copynumbers = steady_state_result.y
                 b_copynumbers.append(copynumbers)
+                t = steady_state_result.t
+
         elif solver_type == 'jax':
             circuit = circuits[0]
 
-            sim_func = jax.vmap(partial(bioreaction_sim_dfx_expanded,
+            forward_rates = circuit.qreactions.reactions.forward_rates
+            reverse_rates = np.asarray(
+                [c.qreactions.reactions.reverse_rates for c in circuits])
+            if self.steady_state_args.get('use_rate_scaling', True):
+                c = np.max([np.max(forward_rates), np.max(reverse_rates)])
+                forward_rates = forward_rates/c
+                reverse_rates = reverse_rates/c
+
+            sim_func = jax.jit(jax.vmap(partial(bioreaction_sim_dfx_expanded,
                                         t0=self.t0, t1=self.t1, dt0=self.dt,
-                                        signal=vanilla_return, signal_onehot=np.zeros_like(
-                                            circuit.signal.reactions_onehot),  # signal.reactions_onehot,
+                                        signal=vanilla_return, signal_onehot=np.zeros(
+                                            len(circuit.model.reactions)),
                                         inputs=circuit.qreactions.reactions.inputs,
-                                        outputs=circuit.qreactions.reactions.outputs
-                                        ))
-            solution = sim_func(
-                y0=np.asarray([c.qreactions.quantities for c in circuits]),
-                forward_rates=np.asarray(
-                    [c.qreactions.reactions.forward_rates for c in circuits]),
-                reverse_rates=np.asarray([c.qreactions.reactions.reverse_rates for c in circuits]))
+                                        outputs=circuit.qreactions.reactions.outputs,
+                                        forward_rates=forward_rates,
+                                        solver=dfx.Tsit5(),
+                                        saveat=dfx.SaveAt(
+                                            ts=np.linspace(self.t0, self.t1, int(np.min([200, self.t1-self.t0]))))
+                                        )))
 
-            tf = np.argmax(solution.ts >= np.inf)
-            b_copynumbers = solution.ys[:, :tf, :]
+            starting_states = np.asarray(
+                [c.qreactions.quantities for c in circuits])
+            b_copynumbers, t = simulate_steady_states(
+                y0=starting_states, total_time=self.tmax, sim_func=sim_func,
+                t0=self.t0, t1=self.t1,
+                threshold=self.threshold_steady_states, reverse_rates=reverse_rates)
 
-        return np.asarray(b_copynumbers)
+            b_copynumbers = np.swapaxes(b_copynumbers, 1, 2)
+
+        return np.asarray(b_copynumbers), np.squeeze(t)
 
     def model_circuit(self, y0: np.ndarray, circuit: Circuit):
         assert np.shape(y0)[circuit.time_axis] == 1, 'Please only use 1-d ' \
@@ -232,36 +242,74 @@ class CircuitModeller():
                         1] = zero_out_negs(current_copynumbers)
         return copynumbers
 
+    def scale_rates(self, circuits: List[Circuit], batch: bool = True) -> List[Circuit]:
+        forward_rates = [None] * len(circuits)
+        reverse_rates = [None] * len(circuits)
+
+        for i, c in enumerate(circuits):
+            forward_rates[i] = c.qreactions.reactions.forward_rates
+            reverse_rates[i] = c.qreactions.reactions.reverse_rates
+
+        rate_max = np.max([np.max(np.asarray(forward_rates)),
+                          np.max(np.asarray(reverse_rates))])
+
+        for i in range(len(circuits)):
+            circuits[i].qreactions.reactions.forward_rates = circuits[i].qreactions.reactions.forward_rates / rate_max
+            circuits[i].qreactions.reactions.reverse_rates = circuits[i].qreactions.reactions.reverse_rates / rate_max
+        return circuits
+
     def simulate_signal_batch(self, circuits: List[Circuit],
                               ref_circuit: Circuit,
                               batch=True):
+
         signal = ref_circuit.signal
-        signal.update_time_interval(self.dt)
 
-        # Batch
-        b_steady_states = [None] * len(circuits)
-        b_forward_rates = [None] * len(circuits)
-        b_reverse_rates = [None] * len(circuits)
-        for i, c in enumerate(circuits):
-            b_steady_states[i] = c.result_collector.get_result(
-                'steady_states').analytics['steady_states'].flatten()
-            b_forward_rates[i] = c.qreactions.reactions.forward_rates
-            b_reverse_rates[i] = c.qreactions.reactions.reverse_rates
-        b_steady_states = np.asarray(b_steady_states)
-        b_forward_rates = np.asarray(b_forward_rates)
-        b_reverse_rates = np.asarray(b_reverse_rates)
+        def prepare_batch_params(circuits: List[Circuit]):
 
-        # Signal into parameter
-        b_forward_rates = b_forward_rates + b_forward_rates * \
-            signal.reactions_onehot * signal.func.keywords['target']
+            # Batch
+            # signal_species = [ref_circuit.model.species[ii] for ii in np.where(
+            #     signal.onehot * np.arange(len(ref_circuit.model.species)) != 0)[0]]
+            # untranslated_species = {s: [s] for s in ref_circuit.model.species if s not in flatten_listlike(
+            #     [r.output for r in ref_circuit.model.reactions])}
+            # untranslated_species.update(
+            #     {r.output[0]: r.input for r in ref_circuit.model.reactions if r.output and len(
+            #         r.output) == 1})
+            # signal_factor = np.array(
+            #     [[untranslated_species[s].count(sigs) for s in ref_circuit.model.species] for sigs in signal_species])
+
+            b_steady_states = [None] * len(circuits)
+            b_reverse_rates = [None] * len(circuits)
+            for i, c in enumerate(circuits):
+                if not c.include_prod_deg:
+                    b_steady_states[i] = c.result_collector.get_result(
+                        'steady_states').analytics['steady_states'].flatten() * ((signal.onehot == 0) * 1) + \
+                        (c.result_collector.get_result(
+                            'steady_states').analytics['initial_steady_states'].flatten() *
+                         signal.func.keywords['target'] - c.result_collector.get_result(
+                            'steady_states').analytics['initial_steady_states'].flatten()) * signal.onehot
+                    # b_steady_states[i] = c.result_collector.get_result(
+                    #     'steady_states').analytics['steady_states'].flatten() * ((signal.onehot == 0) * 1) + \
+                    #     (c.result_collector.get_result(
+                    #         'steady_states').analytics['initial_steady_states'].flatten() *
+                    #      signal.func.keywords['target'] + c.result_collector.get_result(
+                    #         'steady_states').analytics['steady_states'].flatten()) * signal.onehot
+                else:
+                    b_steady_states[i] = c.result_collector.get_result(
+                        'steady_states').analytics['steady_states'].flatten()
+                b_reverse_rates[i] = c.qreactions.reactions.reverse_rates
+            b_steady_states = np.asarray(b_steady_states)
+            b_reverse_rates = np.asarray(b_reverse_rates)
+
+            return b_steady_states, b_reverse_rates
+
+        b_steady_states, b_reverse_rates = prepare_batch_params(circuits)
 
         s_time = datetime.now()
-        solution = self.sim_func(
-            y0=b_steady_states, forward_rates=b_forward_rates, reverse_rates=b_reverse_rates)
-
-        tf = np.argmax(solution.ts >= np.inf)
-        b_new_copynumbers = solution.ys[:, :tf, :]
-        t = solution.ts[0, :tf]
+        b_new_copynumbers, t = simulate_steady_states(
+            y0=b_steady_states, total_time=self.tmax, sim_func=self.sim_func,
+            t0=self.t0, t1=self.t1,
+            threshold=self.threshold_steady_states,
+            reverse_rates=b_reverse_rates)
 
         s_time = datetime.now() - s_time
         logging.warning(
@@ -311,7 +359,7 @@ class CircuitModeller():
             analytics_func = jax.vmap(partial(
                 generate_analytics, time=t, labels=[
                     s.name for s in ref_circuit.model.species],
-                signal_idxs=np.where(signal.onehot == 1)[0], signal_time=signal.func.keywords[
+                signal_onehot=signal.onehot, signal_time=signal.func.keywords[
                     'impulse_center'],
                 ref_circuit_data=ref_circuit_data))
             b_analytics = analytics_func(
@@ -408,28 +456,39 @@ class CircuitModeller():
         variables into the relevant wrapper simulation method """
         ref_circuit = circuits[0]
         signal = ref_circuit.signal
+        signal_f = vanilla_return if signal is None else signal.func
+        signal_onehot = 1 if signal is None else signal.onehot
 
         if not all(signal == c.signal for c in circuits):
             logging.warning(
                 f'Signal differs between circuits, but only first signal used for simulation.')
 
-        signal.update_time_interval(self.dt)
-
         if self.simulation_args['solver'] == 'diffrax':
-            self.sim_func = jax.vmap(
+
+            # Signal into parameter
+            signal = ref_circuit.signal
+            forward_rates = ref_circuit.qreactions.reactions.forward_rates * ((signal.reactions_onehot == 0) * 1) + ref_circuit.qreactions.reactions.forward_rates * \
+                signal.reactions_onehot * signal.func.keywords['target']
+
+            self.sim_func = jax.jit(jax.vmap(
                 partial(bioreaction_sim_dfx_expanded,
                         t0=self.t0, t1=self.t1, dt0=self.dt,
-                        signal=signal.func, signal_onehot=signal.onehot,  # signal.reactions_onehot,
+                        signal=signal_f, signal_onehot=signal_onehot,
+                        forward_rates=forward_rates,
                         inputs=ref_circuit.qreactions.reactions.inputs,
-                        outputs=ref_circuit.qreactions.reactions.outputs
-                        ))
+                        outputs=ref_circuit.qreactions.reactions.outputs,
+                        solver=dfx.Tsit5(),
+                        saveat=dfx.SaveAt(
+                            ts=np.linspace(self.t0, self.t1, int(np.min([200, self.t1-self.t0]))))
+                        )))
+
         elif self.simulation_args['solver'] == 'ivp':
             # way slower
 
             def b_ivp(y0: np.ndarray, forward_rates: np.ndarray, reverse_rates: np.ndarray):
 
-                forward_rates = forward_rates + signal.reactions_onehot * \
-                    signal.func.keywords['target']
+                forward_rates = forward_rates  # + \
+                # signal.reactions_onehot * signal.func.keywords['target']
                 copynumbers = [None] * y0.shape[0]
                 ts = [None] * y0.shape[0]
                 for i, (y0i, forward_rates_i, reverse_rates_i) in enumerate(zip(y0, forward_rates, reverse_rates)):
@@ -439,9 +498,7 @@ class CircuitModeller():
                             args=None,
                             inputs=ref_circuit.qreactions.reactions.inputs,
                             outputs=ref_circuit.qreactions.reactions.outputs,
-                            signal=signal.func,
-                            forward_rates=forward_rates_i, reverse_rates=reverse_rates_i,
-                            signal_onehot=np.zeros_like(signal.onehot)
+                            forward_rates=forward_rates_i, reverse_rates=reverse_rates_i
                         ),
                         t_span=(self.t0, self.t1),
                         y0=y0i,

@@ -4,7 +4,8 @@ from subprocess import PIPE, run
 import numpy as np
 from functools import partial
 from src.utils.misc.helper import vanilla_return, processor
-from src.utils.misc.units import gibbs_K_cal, cal_to_J
+from src.utils.misc.units import unkilo
+from src.utils.modelling.physical import equilibrium_constant_reparameterisation
 from src.srv.parameter_prediction.IntaRNA.bin.copomus.IntaRNA import IntaRNA
 
 
@@ -19,8 +20,7 @@ SIMULATOR_UNITS = {
         'coupled_rates': r'$s^{-1}$'
     },
 }
-NO_INTERACTION_EQCONSTANT = 30
-G_BASELINE = 0  # kJ/mol
+NO_INTERACTION_EQCONSTANT = 0
 
 
 class RawSimulationHandling():
@@ -52,17 +52,6 @@ class RawSimulationHandling():
 
     def get_postprocessing(self):
 
-        def energy_to_eqconstant(energies):
-            """ Translate interaction binding energy (kcal) to the
-            equilibrium rate of binding.
-            AG = - RT ln(K)
-            AG = - RT ln(kb/kd)
-            K = e^(- G / RT)
-            """
-            energies = energies * 1000  # convert kcal/mol to cal/mol
-            K = gibbs_K_cal(energies)
-            return K
-
         def eqconstant_to_rates(eqconstants):
             """ Translate the equilibrium rate of binding to
             the rate of binding (either association or dissociation
@@ -80,9 +69,12 @@ class RawSimulationHandling():
         if self.simulator_name == "IntaRNA":
             if self.postprocess:
                 self.units = SIMULATOR_UNITS[self.simulator_name]['rate']
-                return partial(processor, funcs=[
-                    energy_to_eqconstant,
-                    return_both_eqconstants_and_rates])
+                processor_f = [
+                    equilibrium_constant_reparameterisation,
+                    return_both_eqconstants_and_rates
+                ]
+                return partial(
+                    processor, funcs=processor_f)
             else:
                 return vanilla_return
 

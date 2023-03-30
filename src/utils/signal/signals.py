@@ -112,6 +112,9 @@ class AdaptationTarget(Signal):
 
 
 class OscillatingSignal(Signal):
+    
+    numtype = np.float64
+    
     def __init__(self, identities_idx, positions, heights, durations,
                  signal=None, total_time=None, magnitude=1) -> None:
         super().__init__(identities_idx, signal, total_time, magnitude)
@@ -139,9 +142,9 @@ class OscillatingSignal(Signal):
         y0_ = np.expand_dims(heights, 1)-np.abs(y0-np.expand_dims(heights, 1))
         position_next = np.concatenate(
             [positions[1:], time_points+np.ones(1)], axis=0)  # [num_peaks]
-        mask = np.float32((xs >= np.expand_dims(positions, 1)) *
+        mask = self.numtype((xs >= np.expand_dims(positions, 1)) *
                           (xs < np.expand_dims(position_next, 1)) *
                           (xs < np.expand_dims(positions+durations, 1)))
         y1 = y0_*mask  # [num_peaks, time_points]
-        y = np.float32(np.sum(y1, axis=0))
+        y = self.numtype(np.sum(y1, axis=0))
         return y

@@ -5,7 +5,7 @@ from functools import partial
 from copy import deepcopy
 
 
-from tests.shared import create_test_inputs, CONFIG, TEST_CONFIG
+from tests_local.shared import create_test_inputs, CONFIG, TEST_CONFIG
 from src.utils.results.analytics.naming import get_true_names_analytics, RATIO_KEY
 from src.utils.results.analytics.timeseries import generate_analytics
 from src.utils.signal.signals_new import SignalFuncs
@@ -54,13 +54,13 @@ class TestAnalytics(unittest.TestCase):
 
         analytics = {k: np.array(v) for k, v in
                      partial(generate_analytics, time=t, labels=fake_species,
-                             signal_idxs=[np.where(signal_onehot == 1)[0]],
+                             signal_onehot=signal_onehot,
                              signal_time=t1/2,
                              ref_circuit_data=ref_circuit_data)(data).items()
                      }
         analytics_rev = {k: np.array(v) for k, v in
                          partial(generate_analytics, time=t, labels=fake_species,
-                                 signal_idxs=[np.where(signal_onehot == 1)[0]],
+                                 signal_onehot=signal_onehot,
                                  signal_time=t1/2,
                                  ref_circuit_data=ref_circuit_data_rev)(data_rev).items()
                          }

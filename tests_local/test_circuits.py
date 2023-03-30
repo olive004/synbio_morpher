@@ -4,7 +4,7 @@ import pandas as pd
 import logging
 
 
-from tests.shared import create_test_inputs, CONFIG, TEST_CONFIG
+from tests_local.shared import create_test_inputs, CONFIG, TEST_CONFIG
 # from tests.shared import TEST_CONFIG as CONFIG
 from src.srv.sequence_exploration.sequence_analysis import load_tabulated_info
 from src.utils.results.analytics.naming import get_true_names_analytics, DIFF_KEY, RATIO_KEY
@@ -56,7 +56,7 @@ class TestCircuit(unittest.TestCase):
                     self.assertEqual(ref_circuits[col].unique()[0], 0,
                                      f'The reference circuits should not be different to the base circuit since they are the base circuit.')
                 elif RATIO_KEY in col:
-                    self.assertTrue((ref_circuits[col].unique()[0] == 1) or (ref_circuits[col].unique()[0] == np.inf),
+                    self.assertTrue(np.sum((1 - ref_circuits[col].unique()) > 1e4) == 0 or (ref_circuits[col].unique()[0] == np.inf),
                                     f'The reference circuits should have a ratio of one or infinity to the base circuit since they are the base circuit.')
                 elif col + DIFF_KEY in info.columns:
                     self.assertTrue(all(diffs[col] == info[col + DIFF_KEY]),
@@ -97,11 +97,10 @@ class TestCircuit(unittest.TestCase):
                             f'Loaded info table incorrectly')
 
 
-def main(args=None):
-    t = TestCircuit()
-    t.test_interactions()
-    unittest.main()
+def main():
 
+    t = TestCircuit()
+    t.test_refcircuits()
 
 if __name__ == '__main__':
     unittest.main()

@@ -24,7 +24,7 @@ def per_mol_to_per_molecule(per_mol):
 
 
 def cal_to_J(E_cal):
-    """ convert calories to joules """
+    """ Convert calories to joules """
     return E_cal * SCIENTIFIC['cal_to_J_factor']
 
 
@@ -32,13 +32,6 @@ def j_to_cal(E_j):
     return E_j / SCIENTIFIC['cal_to_J_factor']
 
 
-def gibbs_K(E):
-    """ In J/mol. dG = - RT ln(K) """
-    K = np.exp(np.divide(-E, SCIENTIFIC['RT']))
-    return K
-
-
-def gibbs_K_cal(E):
-    """ In cal/mol. dG = - RT ln(K) """
-    K = np.exp(np.divide(-E, SCIENTIFIC['RT_cal']))
-    return K
+def unkilo(kilo):
+    """ A unit in kilos is turned into its equivalent un-kilos """
+    return kilo * 1000
