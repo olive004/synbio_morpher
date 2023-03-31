@@ -128,7 +128,9 @@ def string_to_num_fromlist(string_list, base_string):
 
 
 def string_to_tuple_list(string):
+    """ GC """
     if not string:
         return []
-    else:
-        return [(int(x), int(y)) for x, y in (t.strip('()').split(',') for t in string.split(':'))]
+    tuple_strings = string.split(':')
+    tuples = [tuple(map(int, ts.strip('()').split(','))) for ts in tuple_strings]
+    return tuples

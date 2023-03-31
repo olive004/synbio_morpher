@@ -4,7 +4,6 @@ from subprocess import PIPE, run
 import numpy as np
 from functools import partial
 from src.utils.misc.helper import vanilla_return, processor
-from src.utils.misc.units import unkilo
 from src.utils.modelling.physical import equilibrium_constant_reparameterisation
 from src.srv.parameter_prediction.IntaRNA.bin.copomus.IntaRNA import IntaRNA
 

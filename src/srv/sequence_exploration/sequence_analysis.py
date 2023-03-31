@@ -48,7 +48,6 @@ def load_tabulated_info(source_dirs: list):
 
 def generate_interaction_stats(path_name: dict, writer: DataWriter = None, experiment_dir: str = None, **stat_addons) -> pd.DataFrame:
 
-    interactions = 1
     interactions = InteractionMatrix(
         matrix_paths=path_name, experiment_dir=experiment_dir)
 

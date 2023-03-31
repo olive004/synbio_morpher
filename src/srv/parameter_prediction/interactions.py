@@ -12,6 +12,7 @@ from src.srv.io.loaders.experiment_loading import INTERACTION_FILE_ADDONS, load_
 from src.srv.io.loaders.misc import load_csv
 from src.srv.io.manage.sys_interface import PACKAGE_DIR
 from src.utils.data.data_format_tools.common import determine_file_format
+from src.utils.misc.string_handling import string_to_tuple_list
 
 
 INTERACTION_TYPES = sorted(INTERACTION_FILE_ADDONS.keys())
@@ -233,13 +234,11 @@ def b_get_stats(interactions_mxs: List[InteractionMatrix]):
     for interaction_attr in INTERACTION_FIELDS_TO_WRITE:
         for i, s in enumerate(interactions_mxs[0].sample_names):
             for ii, s in enumerate(interactions_mxs[0].sample_names):
+                attr = b_interaction_attrs[interaction_attr][:, i, ii]
+                if interaction_attr == 'binding_sites':
+                    string_to_tuple_list(attr)
                 stats[interaction_attr + '_' + str(i) + '-' + str(
-                    ii)] = b_interaction_attrs[interaction_attr][:, i, ii]
-        # stats[interaction_attr + '_' + 'max_interaction'] = np.max(
-        #     np.max(b_interaction_attrs[interaction_attr], axis=1), axis=1)
-        # stats[interaction_attr + '_' + 'min_interaction'] = np.min(
-        #     np.min(b_interaction_attrs[interaction_attr], axis=1), axis=1)
-    # stats = {k: [v] for k, v in stats.items()}
+                    ii)] = attr
     stats = pd.DataFrame.from_dict(stats, dtype=object)
     return stats
 
