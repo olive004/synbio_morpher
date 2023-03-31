@@ -83,7 +83,7 @@ class CircuitModeller():
                 filename = None
             interactions = self.run_interaction_simulator(
                 species=sorted(get_unique(flatten_listlike(
-                    [r.input for r in circuit.model.reactions]))),
+                    [r.input for r in circuit.model.reactions if r.output]))),
                 filename=filename)
             circuit.interactions = interactions
             circuit.interactions_state = 'computed'
