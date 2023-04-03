@@ -133,7 +133,7 @@ def five_circuits(config: dict, data_writer=None):
     ]
 
     interaction_paths = []
-    for inter in ['binding_rates_dissociation', 'eqconstants', 'energies']:
+    for inter in ['binding_rates_dissociation', 'eqconstants', 'energies', 'binding_sites']:
         interaction_paths.append([
             # toy_mRNA_circuit_0
             os.path.join(PACKAGE_DIR, 'tests_local', 'configs',
@@ -158,8 +158,9 @@ def five_circuits(config: dict, data_writer=None):
         {'binding_rates_association': config['molecular_params']['association_binding_rate' + '_per_molecule'],
          'binding_rates_dissociation': bp,
          'eqconstants': ep,
-         'energies': eg}
-        for bp, ep, eg in zip(interaction_paths[0], interaction_paths[1], interaction_paths[2])]
+         'energies': eg,
+         'binding_sites': bs}
+        for bp, ep, eg, bs in zip(interaction_paths[0], interaction_paths[1], interaction_paths[2], interaction_paths[3])]
 
     return [construct_circuit_from_cfg(
         {'data_path': p,

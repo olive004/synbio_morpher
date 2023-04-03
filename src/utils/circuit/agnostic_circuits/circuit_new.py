@@ -45,7 +45,7 @@ class Circuit():
 
     def init_refcircuit(self, config: dict):
         self.name = config.get("name")
-        self.subname = 'ref_circuit'
+        self.subname = config.get('subname', 'ref_circuit')
 
         self.result_collector = ResultCollector()
         self.include_prod_deg = config.get('include_prod_deg', True)
