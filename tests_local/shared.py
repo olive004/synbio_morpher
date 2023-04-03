@@ -86,7 +86,7 @@ ENSEMBLE_CONFIG = {
                 "use_batch_mutations": True,
                 "batch_size": 100,
                 "max_circuits": 1000,
-                "device": "cpu",
+                "device": "gpu",
                 "threshold_steady_states": 0.1,
                 "use_rate_scaling": True
             },

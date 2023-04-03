@@ -177,7 +177,7 @@ class InteractionDataHandler():
 
     def make_matrix(self, data: dict) -> Tuple[np.ndarray, np.ndarray]:
         energies = np.zeros((len(data), len(data)))
-        binding = np.array([[''] * len(data)] * len(data)).astype(str)
+        binding = np.array([[''] * len(data)] * len(data)).astype(object)
         for i, (name_i, sample) in enumerate(data.items()):
             for j, (name_j, raw_sample) in enumerate(sample.items()):
                 fields = self.sample_processor(raw_sample)
