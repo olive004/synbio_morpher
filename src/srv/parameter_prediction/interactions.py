@@ -134,7 +134,7 @@ class InteractionMatrix():
         return [idx for idx in idxs_interacting if len(set(idx)) == 1]
 
     def get_unique_interacting_idxs(self):
-        idxs_interacting = np.argwhere(self.interactions.eqconstants != 1)
+        idxs_interacting = np.argwhere(self.interactions.energies < 0)
         # Assuming symmetry in interactions
         idxs_interacting = sorted([tuple(sorted(i)) for i in idxs_interacting])
         return list(set(idxs_interacting))
@@ -235,8 +235,9 @@ def b_get_stats(interactions_mxs: List[InteractionMatrix]):
         for i, s in enumerate(interactions_mxs[0].sample_names):
             for ii, s in enumerate(interactions_mxs[0].sample_names):
                 attr = b_interaction_attrs[interaction_attr][:, i, ii]
-                if interaction_attr == 'binding_sites':
-                    string_to_tuple_list(attr)
+                if interaction_attr == 'binding_sites' and not np.isnan(attr):
+                    if type(attr) == np.ndarray and len(attr) == 1:
+                        string_to_tuple_list(attr[0])
                 stats[interaction_attr + '_' + str(i) + '-' + str(
                     ii)] = attr
     stats = pd.DataFrame.from_dict(stats, dtype=object)

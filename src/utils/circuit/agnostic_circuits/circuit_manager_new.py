@@ -83,7 +83,7 @@ class CircuitModeller():
                 filename = None
             interactions = self.run_interaction_simulator(
                 species=sorted(get_unique(flatten_listlike(
-                    [r.input for r in circuit.model.reactions if r.output]))),
+                    circuit.get_in_species()))),
                 filename=filename)
             circuit.interactions = interactions
             circuit.interactions_state = 'computed'
@@ -100,7 +100,7 @@ class CircuitModeller():
             self.result_writer.output(
                 data=interactions_to_df(
                     interaction_matrix,
-                    labels=sorted([s.name for s in get_unique(flatten_listlike([r.input for r in circuit.model.reactions if r.output]))])),
+                    labels=sorted([s.name for s in get_unique(flatten_listlike(circuit.get_in_species()))])),
                 out_type='csv', out_name=circuit.name,
                 overwrite=True, new_file=True,
                 filename_addon=filename_addon, subfolder=filename_addon)

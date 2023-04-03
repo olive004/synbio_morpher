@@ -55,7 +55,7 @@ ENSEMBLE_CONFIG = {
             },
             "mutations": {
                 "algorithm": "random",
-                "mutation_counts": 0,
+                "mutation_counts": 10,
                 "mutation_nums_within_sequence": [1],
                 "mutation_nums_per_position": 1,
                 "seed": 3,
@@ -78,14 +78,16 @@ ENSEMBLE_CONFIG = {
                 }
             },
             "simulation": {
-                "dt": 0.1,
+                "dt": 0.001,
                 "t0": 0,
-                "t1": 1500,
+                "t1": 100,
+                "tmax": 20000,
                 "solver": "diffrax",
                 "use_batch_mutations": True,
                 "batch_size": 100,
                 "max_circuits": 1000,
                 "device": "cpu",
+                "threshold_steady_states": 0.1,
                 "use_rate_scaling": True
             },
             "source_of_interaction_stats": {
@@ -131,7 +133,7 @@ def five_circuits(config: dict, data_writer=None):
     ]
 
     interaction_paths = []
-    for inter in ['binding_rates_dissociation', 'eqconstants']:
+    for inter in ['binding_rates_dissociation', 'eqconstants', 'energies']:
         interaction_paths.append([
             # toy_mRNA_circuit_0
             os.path.join(PACKAGE_DIR, 'tests_local', 'configs',
@@ -153,9 +155,11 @@ def five_circuits(config: dict, data_writer=None):
     # interactions = np.expand_dims(np.expand_dims(np.arange(
     #     len(paths)), axis=1), axis=2) * np.ones((len(paths), species_num, species_num)) * default_interaction
     interactions_cfg = [
-        {'binding_rates_association': config['molecular_params']
-            ['association_binding_rate' + '_per_molecule'], 'binding_rates_dissociation': bp, 'eqconstants': ep}
-        for bp, ep in zip(interaction_paths[0], interaction_paths[1])]
+        {'binding_rates_association': config['molecular_params']['association_binding_rate' + '_per_molecule'],
+         'binding_rates_dissociation': bp,
+         'eqconstants': ep,
+         'energies': eg}
+        for bp, ep, eg in zip(interaction_paths[0], interaction_paths[1], interaction_paths[2])]
 
     return [construct_circuit_from_cfg(
         {'data_path': p,
