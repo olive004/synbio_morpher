@@ -280,7 +280,7 @@ class CircuitModeller():
             b_steady_states = [None] * len(circuits)
             b_reverse_rates = [None] * len(circuits)
             for i, c in enumerate(circuits):
-                if not c.include_prod_deg:
+                if not c.use_product_degradation:
                     b_steady_states[i] = c.result_collector.get_result(
                         'steady_states').analytics['steady_states'].flatten() * ((signal.onehot == 0) * 1) + \
                         (c.result_collector.get_result(
@@ -417,6 +417,7 @@ class CircuitModeller():
             subcircuits[i].name = circuit.name
             subcircuits[i].circuit_size = circuit.circuit_size
             subcircuits[i].signal: Signal = circuit.signal
+            subcircuits[i].use_product_degradation = circuit.use_product_degradation
 
             # Cannot be by ref
             subcircuits[i].model = deepcopy(circuit.model)

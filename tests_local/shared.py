@@ -78,7 +78,7 @@ ENSEMBLE_CONFIG = {
                 }
             },
             "simulation": {
-                "dt": 0.001,
+                "dt": 0.1,
                 "t0": 0,
                 "t1": 100,
                 "tmax": 20000,
@@ -155,7 +155,7 @@ def five_circuits(config: dict, data_writer=None):
     # interactions = np.expand_dims(np.expand_dims(np.arange(
     #     len(paths)), axis=1), axis=2) * np.ones((len(paths), species_num, species_num)) * default_interaction
     interactions_cfg = [
-        {'binding_rates_association': config['molecular_params']['association_binding_rate' + '_per_molecule'],
+        {'binding_rates_association': config['molecular_params']['association_binding_rate'],
          'binding_rates_dissociation': bp,
          'eqconstants': ep,
          'energies': eg,

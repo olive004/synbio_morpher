@@ -29,7 +29,7 @@ class RawSimulationHandling():
         self.postprocess = config.get('postprocess')
         self.sim_kwargs = config.get('simulator_kwargs', {})
         self.fixed_rate_k_a = config.get(
-            'molecular_params').get('association_binding_rate' + '_per_molecule')
+            'molecular_params').get('association_binding_rate')
         self.units = ''
 
     def get_sim_interpretation_protocol(self):
