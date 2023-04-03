@@ -210,9 +210,9 @@ def b_get_stats(interactions_mxs: List[InteractionMatrix]):
         b_interaction_attrs[interaction_attr] = np.concatenate([np.expand_dims(
             im.interactions.__getattribute__(interaction_attr), axis=0) for im in interactions_mxs], axis=0)
     
-    batch_dim = b_interaction_attrs['eqconstants'].ndim - 2 - 1
+    batch_dim = b_interaction_attrs['energies'].ndim - 2 - 1
     idxs_interacting = get_unique_interacting_idxs(
-        b_interaction_attrs['eqconstants'], batch_dim)
+        b_interaction_attrs['energies'], batch_dim)
 
     idxs_other_interacting = get_interacting_species(idxs_interacting)
     idxs_self_interacting = get_selfinteracting_species(idxs_interacting)
@@ -254,7 +254,7 @@ def get_selfinteracting_species(idxs_interacting: np.ndarray):
 
 
 def get_unique_interacting_idxs(interaction_attr: np.ndarray, batch_dim: int):
-    idxs_interacting = np.argwhere(interaction_attr > 1)
+    idxs_interacting = np.argwhere(interaction_attr < 0)
     samples = idxs_interacting[:, batch_dim+1:]
     samples.sort(axis=1)  # In-place sorting of idxs_interacting
     # idxs_interacting = np.concatenate(
