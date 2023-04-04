@@ -48,9 +48,9 @@ class Circuit():
         self.subname = config.get('subname', 'ref_circuit')
 
         self.result_collector = ResultCollector()
-        self.use_product_degradation = config.get('include_prod_deg', True)
+        self.use_prod_and_deg = config.get('include_prod_deg', True)
         self.model = construct_bioreaction_model(
-            config.get('data'), config.get('molecular_params'), include_prod_deg=self.use_product_degradation)
+            config.get('data'), config.get('molecular_params'), include_prod_deg=self.use_prod_and_deg)
         self.circuit_size = len(self.model.species)
         self.data: DataManager = config.get('data')
         self.qreactions = self.init_reactions(self.model, config)
@@ -70,7 +70,7 @@ class Circuit():
         self.name: str = None
         self.subname = None
         self.result_collector = ResultCollector()
-        self.use_product_degradation = True
+        self.use_prod_and_deg = True
         self.model = None
         self.circuit_size = None
         self.qreactions = None

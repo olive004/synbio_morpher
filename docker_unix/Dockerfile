@@ -14,8 +14,7 @@ RUN apt-get update && \
     yes | apt-get install python3-pip
 RUN cd /usr/lib/install_requirements && \
     pip install -r ./requirements.txt 
-RUN pip install "jax[cuda11_cudnn82]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
-
+RUN pip install "jax[cuda12_pip]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 ################################################################################
 #  setup environment
 ################################################################################

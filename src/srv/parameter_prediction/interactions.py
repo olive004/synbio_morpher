@@ -235,7 +235,7 @@ def b_get_stats(interactions_mxs: List[InteractionMatrix]):
         for i, s in enumerate(interactions_mxs[0].sample_names):
             for ii, s in enumerate(interactions_mxs[0].sample_names):
                 attr = b_interaction_attrs[interaction_attr][:, i, ii]
-                if interaction_attr == 'binding_sites' and not np.isnan(attr):
+                if interaction_attr == 'binding_sites' and (type(attr) == str):
                     if type(attr) == np.ndarray and len(attr) == 1:
                         string_to_tuple_list(attr[0])
                 stats[interaction_attr + '_' + str(i) + '-' + str(

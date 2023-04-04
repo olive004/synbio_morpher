@@ -63,15 +63,15 @@ class CircuitModeller():
             'simulation', {}).get('device', 'cpu'))
 
     def init_circuit(self, circuit: Circuit) -> Circuit:
-        circuit = self.find_steady_states([circuit])[0]
         if self.simulation_args.get('use_rate_scaling', True):
             circuit = self.scale_rates([circuit])[0]
+        circuit = self.find_steady_states([circuit])[0]
         return circuit
 
     def init_circuits(self, circuits: List[Circuit], batch=True) -> List[Circuit]:
-        circuits = self.find_steady_states(circuits)
         if self.simulation_args.get('use_rate_scaling', True):
             circuits = self.scale_rates(circuits)
+        circuits = self.find_steady_states(circuits)
         return circuits
 
     # @time_it
@@ -87,7 +87,7 @@ class CircuitModeller():
                 filename=filename)
             circuit.interactions = interactions
             circuit.interactions_state = 'computed'
-        elif circuit.interactions_state == 'loaded':
+        elif circuit.interactions_state == 'loaded' or (circuit.interactions_state == 'computed'):
             pass
         else:
             circuit.init_interactions()
@@ -134,7 +134,7 @@ class CircuitModeller():
                             'out_type': 'svg'},
                 analytics_kwargs={'labels': [
                     s.name for s in circuit.model.species]},
-                no_write=False)
+                no_write=True)
         return circuits
 
     def compute_steady_states(self, modeller: Modeller, circuits: List[Circuit],
@@ -256,12 +256,15 @@ class CircuitModeller():
         for i in range(len(circuits)):
             circuits[i].qreactions.reactions.forward_rates = circuits[i].qreactions.reactions.forward_rates / rate_max
             circuits[i].qreactions.reactions.reverse_rates = circuits[i].qreactions.reactions.reverse_rates / rate_max
+
+        self.dt = np.max([np.max(forward_rates/rate_max), np.max(reverse_rates/rate_max)])
         return circuits
 
     def simulate_signal_batch(self, circuits: List[Circuit],
                               ref_circuit: Circuit,
                               batch=True):
 
+        self.prepare_internal_funcs(circuits)
         signal = ref_circuit.signal
 
         def prepare_batch_params(circuits: List[Circuit]):
@@ -280,7 +283,7 @@ class CircuitModeller():
             b_steady_states = [None] * len(circuits)
             b_reverse_rates = [None] * len(circuits)
             for i, c in enumerate(circuits):
-                if not c.use_product_degradation:
+                if not c.use_prod_and_deg:
                     b_steady_states[i] = c.result_collector.get_result(
                         'steady_states').analytics['steady_states'].flatten() * ((signal.onehot == 0) * 1) + \
                         (c.result_collector.get_result(
@@ -309,7 +312,8 @@ class CircuitModeller():
             y0=b_steady_states, total_time=self.tmax, sim_func=self.sim_func,
             t0=self.t0, t1=self.t1,
             threshold=self.threshold_steady_states,
-            reverse_rates=b_reverse_rates)
+            reverse_rates=b_reverse_rates,
+            dt0=np.repeat(self.dt, repeats=b_reverse_rates.shape[0]))
 
         s_time = datetime.now() - s_time
         logging.warning(
@@ -417,7 +421,7 @@ class CircuitModeller():
             subcircuits[i].name = circuit.name
             subcircuits[i].circuit_size = circuit.circuit_size
             subcircuits[i].signal: Signal = circuit.signal
-            subcircuits[i].use_product_degradation = circuit.use_product_degradation
+            subcircuits[i].use_prod_and_deg = circuit.use_prod_and_deg
 
             # Cannot be by ref
             subcircuits[i].model = deepcopy(circuit.model)
@@ -452,12 +456,11 @@ class CircuitModeller():
         self.result_writer.unsubdivide()
         return circuit
 
-    def prepare_internal_funcs(self, circuits: List[Circuit], methods: dict):
+    def prepare_internal_funcs(self, circuits: List[Circuit]):
         """ Create simulation function. If more customisation is needed per circuit, move
         variables into the relevant wrapper simulation method """
 
-        if 'simulate_signal_batch' not in methods:
-            return
+        del self.sim_func
 
         ref_circuit = circuits[0]
         signal = ref_circuit.signal
@@ -525,7 +528,6 @@ class CircuitModeller():
                        include_normal_run: bool = True,
                        write_to_subsystem=True):
 
-        self.prepare_internal_funcs(circuits, methods)
         batch_size = len(circuits) if batch_size is None else batch_size
 
         num_subcircuits = len(flatten_nested_dict(circuits[0].mutations))

@@ -14,11 +14,13 @@
             },
             "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
             "circuit_generation": {
-                "repetitions": 20000,
+                "repetitions": 100000,
                 "species_count": 3,
                 "sequence_length": 20,
                 "generator_protocol": "random",
-                "proportion_to_mutate": 0.5
+                "proportion_to_mutate": 0.5,
+                "template": null,
+                "seed": 5
             },
             "system_type": "RNA"
         },
@@ -54,9 +56,9 @@
                 "postprocess": true
             },
             "filters": {
-                "min_num_interacting": 3,
+                "min_num_interacting": 2,
                 "max_self_interacting": null,
-                "max_total": 500
+                "max_total": 1000
             },
             "mutations": {
                 "algorithm": "random",
@@ -78,12 +80,15 @@
             "simulation": {
                 "dt": 0.1,
                 "t0": 0,
-                "t1": 1200,
+                "t1": 150,
+                "tmax": 120000,
                 "solver": "diffrax",
                 "use_batch_mutations": true,
-                "batch_size": 8000,
-                "max_circuits": 10000,
-                "device": "cpu"
+                "batch_size": 1000,
+                "max_circuits": 5000,
+                "device": "cpu",
+                "threshold_steady_states": 0.1, 
+                "use_rate_scaling": true
             },
             "source_of_interaction_stats": {
                 "is_source_dir_incomplete": true,
