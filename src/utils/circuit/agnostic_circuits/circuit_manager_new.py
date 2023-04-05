@@ -285,14 +285,27 @@ class CircuitModeller():
 
             b_steady_states = [None] * len(circuits)
             b_reverse_rates = [None] * len(circuits)
+            
+            use_single = True
+            species_chosen = circuits[0].model.species[np.argmax(signal.onehot)] 
+            other_species = flatten_listlike([r.output for r in circuits[0].model.reactions if species_chosen in r.input])
+            onehots = np.array([1 if s in other_species + [species_chosen] else 0 for s in circuits[0].model.species])
             for i, c in enumerate(circuits):
                 if not c.use_prod_and_deg:
-                    b_steady_states[i] = c.result_collector.get_result(
-                        'steady_states').analytics['steady_states'].flatten() * ((signal.onehot == 0) * 1) + \
-                        (c.result_collector.get_result(
-                            'steady_states').analytics['initial_steady_states'].flatten() *
-                         signal.func.keywords['target'] - c.result_collector.get_result(
-                            'steady_states').analytics['initial_steady_states'].flatten()) * signal.onehot
+                    if use_single:
+                        b_steady_states[i] = c.result_collector.get_result(
+                            'steady_states').analytics['steady_states'].flatten() * ((signal.onehot == 0) * 1) + \
+                            (c.result_collector.get_result(
+                                'steady_states').analytics['initial_steady_states'].flatten() *
+                            signal.func.keywords['target'] - c.result_collector.get_result(
+                                'steady_states').analytics['initial_steady_states'].flatten()) * signal.onehot
+                    else:
+                        b_steady_states[i] = c.result_collector.get_result(
+                            'steady_states').analytics['steady_states'].flatten() * ((onehots == 0) * 1) + \
+                            (c.result_collector.get_result(
+                                'steady_states').analytics['steady_states'].flatten() *
+                            signal.func.keywords['target']) * onehots
+
                     # b_steady_states[i] = c.result_collector.get_result(
                     #     'steady_states').analytics['steady_states'].flatten() * ((signal.onehot == 0) * 1) + \
                     #     (c.result_collector.get_result(
