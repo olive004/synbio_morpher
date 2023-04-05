@@ -87,7 +87,7 @@ ENSEMBLE_CONFIG = {
                 "batch_size": 100,
                 "max_circuits": 1000,
                 "device": "cpu",
-                "threshold_steady_states": 0.1,
+                "threshold_steady_states": 0.05,
                 "use_rate_scaling": True
             },
             "source_of_interaction_stats": {
@@ -163,8 +163,8 @@ def five_circuits(config: dict, data_writer=None):
         for bp, ep, eg, bs in zip(interaction_paths[0], interaction_paths[1], interaction_paths[2], interaction_paths[3])]
 
     return [construct_circuit_from_cfg(
-        {'data_path': p
-        #  'interactions': i
+        {'data_path': p,
+         'interactions': i
          }, config) for p, i in zip(paths, interactions_cfg)], config, data_writer
 
 

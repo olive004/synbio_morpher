@@ -1,6 +1,7 @@
 
 
 import logging
+from typing import List, Union
 from copy import deepcopy
 
 
@@ -75,6 +76,12 @@ def get_bulkiest_dict_key(dict_like):
             if len(v) > len(prev_v):
                 k_bulkiest = k
     return k_bulkiest
+
+
+def get_first_elements(tuples_list: List[Union[tuple, list]], empty_replacement = ()):
+    """ GC """
+    return [t[0] if t else empty_replacement for t in tuples_list]
+
 
 
 def get_unique(list_like: list):

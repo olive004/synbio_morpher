@@ -63,6 +63,7 @@ def compose_kwargs(prev_configs: dict = None, config: dict = None) -> dict:
         "data": data_manager.data,
         "data_path": data_manager.source,
         # For pre-loading interactions
+        "include_prod_deg": config["include_prod_deg"],
         "interactions": config["interactions"],
         "interactions_loaded": config["interactions_loaded"],
         "interaction_simulator": config["interaction_simulator"],
@@ -80,6 +81,7 @@ def compose_kwargs(prev_configs: dict = None, config: dict = None) -> dict:
 
 
 def expand_config(config: dict) -> dict:
+    config["include_prod_deg"] = config.get("include_prod_deg", True)
     config["interactions"] = config.get("interactions")
     config["interactions_loaded"] = config.get("interactions_loaded")
     config["interaction_simulator"] = config.get("interaction_simulator", {"name": "IntaRNA"})

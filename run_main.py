@@ -11,7 +11,7 @@ from fire import Fire
 # from scripts.ensemble_generate_circuits.run_ensemble_generate_circuits import main
 # from scripts.gather_interaction_stats.run_gather_interaction_stats import main
 # from scripts.mutation_effect_on_interactions_signal.run_mutation_effect_on_interactions_signal import main
-from scripts.summarise_simulation.run_summarise_simulation import main
+# from scripts.summarise_simulation.run_summarise_simulation import main
 # from scripts.analyse_mutated_templates.run_analyse_mutated_templates import main
 # from scripts.analyse_mutated_templates_loaded_0.run_analyse_mutated_templates_loaded import main
 # from scripts.analyse_mutated_templates_loaded_0_nosig.run_analyse_mutated_templates_loaded_0_nosig import main
@@ -23,7 +23,7 @@ from scripts.summarise_simulation.run_summarise_simulation import main
 # from scripts.analyse_mutated_templates_loaded_5.run_analyse_mutated_templates_loaded_5 import main
 # from scripts.analyse_mutated_templates_loaded_means.run_analyse_mutated_templates_loaded_means import main
 # from scripts.intarna_sandbox.run_intarna_sandbox import main
-# from scripts.ensemble_mutation_effect_analysis.run_ensemble_mutation_effect_analysis import main
+from scripts.ensemble_mutation_effect_analysis.run_ensemble_mutation_effect_analysis import main
 # from scripts.ensemble_visualisation.run_ensemble_visualisation import main
 # from scripts.parameter_based_simulation.run_parameter_based_simulation import main
 # from scripts.stitch_parameter_grid.run_stitch_parameter_grid import main

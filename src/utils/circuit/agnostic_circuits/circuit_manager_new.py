@@ -134,7 +134,7 @@ class CircuitModeller():
                             'out_type': 'svg'},
                 analytics_kwargs={'labels': [
                     s.name for s in circuit.model.species]},
-                no_write=True)
+                no_write=False)
         return circuits
 
     def compute_steady_states(self, modeller: Modeller, circuits: List[Circuit],
@@ -169,10 +169,10 @@ class CircuitModeller():
             forward_rates = circuit.qreactions.reactions.forward_rates
             reverse_rates = np.asarray(
                 [c.qreactions.reactions.reverse_rates for c in circuits])
-            if self.steady_state_args.get('use_rate_scaling', True):
-                c = np.max([np.max(forward_rates), np.max(reverse_rates)])
-                forward_rates = forward_rates/c
-                reverse_rates = reverse_rates/c
+            # if self.steady_state_args.get('use_rate_scaling', True):
+            #     c = np.max([np.max(forward_rates), np.max(reverse_rates)])
+            #     forward_rates = forward_rates/c
+            #     reverse_rates = reverse_rates/c
 
             sim_func = jax.jit(jax.vmap(partial(bioreaction_sim_dfx_expanded,
                                         t0=self.t0, t1=self.t1, dt0=self.dt,
@@ -247,9 +247,11 @@ class CircuitModeller():
         reverse_rates = [None] * len(circuits)
 
         for i, c in enumerate(circuits):
-            forward_rates[i] = c.qreactions.reactions.forward_rates
-            reverse_rates[i] = c.qreactions.reactions.reverse_rates
+            forward_rates[i] = np.array(c.qreactions.reactions.forward_rates)
+            reverse_rates[i] = np.array(c.qreactions.reactions.reverse_rates)
 
+        forward_rates, reverse_rates = np.array(
+            forward_rates), np.array(reverse_rates)
         rate_max = np.max([np.max(np.asarray(forward_rates)),
                           np.max(np.asarray(reverse_rates))])
 
@@ -257,7 +259,8 @@ class CircuitModeller():
             circuits[i].qreactions.reactions.forward_rates = circuits[i].qreactions.reactions.forward_rates / rate_max
             circuits[i].qreactions.reactions.reverse_rates = circuits[i].qreactions.reactions.reverse_rates / rate_max
 
-        self.dt = np.max([np.max(forward_rates/rate_max), np.max(reverse_rates/rate_max)])
+        self.dt = np.min([np.max(forward_rates[forward_rates > 0]/rate_max),
+                         np.max(reverse_rates[reverse_rates > 0]/rate_max)]) * 10
         return circuits
 
     def simulate_signal_batch(self, circuits: List[Circuit],
@@ -487,7 +490,7 @@ class CircuitModeller():
                         outputs=ref_circuit.qreactions.reactions.outputs,
                         solver=dfx.Tsit5(),
                         saveat=dfx.SaveAt(
-                            ts=np.linspace(self.t0, self.t1, int(np.min([200, self.t1-self.t0]))))
+                            ts=np.linspace(self.t0, self.t1, 500))  # int(np.min([500, self.t1-self.t0]))))
                         )))
 
         elif self.simulation_args['solver'] == 'ivp':
