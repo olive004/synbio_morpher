@@ -3,27 +3,9 @@
         "purpose": "ensemble_mutation_effect_analysis"
     },
     "base_configs_ensemble": {
-        "gather_interaction_stats": {
-            "interaction_simulator": {
-                "name": "IntaRNA",
-                "postprocess": true
-            },
-            "interaction_file_keyword": ["energies", "eqconstants", "binding_rates_dissociation"],
-            "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
-            "experiment": {
-                "purpose": "gather_interaction_stats"
-            },    
-            "system_type": "RNA",
-            "source_of_interactions": {
-                "is_source_dir_incomplete": false,
-                "source_dir": "./data/ensemble_mutation_effect_analysis/2023_04_04_092945/generate_species_templates",
-                "purpose_to_get_source_dir_from": null,
-                "source_dir_actually_used_POSTERITY": null
-            }
-        },
         "mutation_effect_on_interactions_signal": {
             "system_type": "RNA",
-            "include_prod_deg": false,
+            "include_prod_deg": true,
             "data_path": null,
             "experiment": {
                 "purpose": "mutation_effect_on_interactions_signal",
@@ -68,14 +50,15 @@
                 "max_circuits": 7000,
                 "device": "cpu",
                 "threshold_steady_states": 0.1, 
-                "use_rate_scaling": true
+                "use_rate_scaling": false
             },
             "source_of_interaction_stats": {
-                "is_source_dir_incomplete": true,
-                "source_dir": "./data/ensemble_mutation_effect_analysis",
+                "is_source_dir_incomplete": false,
+                "source_dir": "data/ensemble_mutation_effect_analysis/2023_04_05_223653/gather_interaction_stats/",
                 "purpose_to_get_source_dir_from": "gather_interaction_stats",
                 "source_dir_actually_used_POSTERITY": null
             },
+            "molecular_params_factor": 100,
             "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json"
         },
         "summarise_simulation": {

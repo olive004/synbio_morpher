@@ -37,12 +37,14 @@ def expand_model_config(in_config: dict, out_config: dict, sample_names: List[st
     return out_config
 
 
-def process_molecular_params(params: dict) -> dict:
+def process_molecular_params(params: dict, factor=1) -> dict:
     new_params = {}
     for k, v in params.items():
         if 'rate' in k and '_per_molecule' not in k:
             new_params[k + '_per_molecule'] = per_mol_to_per_molecule(v)
     params.update(new_params)
+    params['creation_rate'] = params['creation_rate'] * factor
+    params['degradation_rate'] = params['degradation_rate'] * factor
     return params
 
 
@@ -85,7 +87,7 @@ def expand_config(config: dict) -> dict:
     config["interactions"] = config.get("interactions")
     config["interactions_loaded"] = config.get("interactions_loaded")
     config["interaction_simulator"] = config.get("interaction_simulator", {"name": "IntaRNA"})
-    config["molecular_params"] = process_molecular_params(deepcopy(load_json_as_dict(config.get("molecular_params"))))
+    config["molecular_params"] = process_molecular_params(deepcopy(load_json_as_dict(config.get("molecular_params"))), config.get("molecular_params_factor", 1))
     config["mutations"] = config.get("mutations", {})
     config["signal"] = load_json_as_dict(config.get("signal"))
     config["simulation"] = config.get("simulation", {})

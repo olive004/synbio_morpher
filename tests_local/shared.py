@@ -84,10 +84,11 @@ ENSEMBLE_CONFIG = {
                 "tmax": 20000,
                 "solver": "diffrax",
                 "use_batch_mutations": True,
+                "interaction_factor": 1,
                 "batch_size": 100,
                 "max_circuits": 1000,
                 "device": "cpu",
-                "threshold_steady_states": 0.05,
+                "threshold_steady_states": 0.001,
                 "use_rate_scaling": True
             },
             "source_of_interaction_stats": {

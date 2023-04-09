@@ -19,7 +19,7 @@ from bioreaction.simulation.manager import simulate_steady_states
 
 from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
 from src.srv.parameter_prediction.interactions import InteractionDataHandler, InteractionSimulator, INTERACTION_FIELDS_TO_WRITE
-from src.utils.circuit.agnostic_circuits.circuit_new import Circuit, update_species_simulated_rates, interactions_to_df
+from src.utils.circuit.agnostic_circuits.circuit_new import Circuit, interactions_to_df
 from src.utils.misc.helper import vanilla_return
 from src.utils.misc.numerical import invert_onehot, zero_out_negs
 from src.utils.misc.runtime import clear_caches
@@ -42,13 +42,15 @@ class CircuitModeller():
         self.simulation_args = config.get('simulation', {})
         self.interaction_simulator = InteractionSimulator(
             sim_args=self.simulator_args)
+        self.interaction_factor = self.simulation_args.get(
+            'interaction_factor')
         self.discard_numerical_mutations = config['experiment'].get(
             'no_numerical', False)
         self.dt = config.get('simulation', {}).get('dt', 1)
         self.t0 = config.get('simulation', {}).get('t0', 0)
         self.t1 = config.get('simulation', {}).get('t1', 10)
         self.threshold_steady_states = config.get('simulation', {}).get(
-            'threshold_steady_states', 0.1)
+            'threshold_steady_states', 0.01)
         self.tmax = config.get('simulation', {}).get('tmax', self.t1)
 
         self.max_circuits = config.get('simulation', {}).get(
@@ -91,8 +93,11 @@ class CircuitModeller():
             pass
         else:
             circuit.init_interactions()
-        circuit = update_species_simulated_rates(
-            circuit, circuit.interactions)
+        circuit.interactions.binding_rates_association = circuit.interactions.binding_rates_association * \
+            self.interaction_factor
+        circuit.interactions.binding_rates_dissociation = circuit.interactions.binding_rates_dissociation * \
+            self.interaction_factor
+        circuit.update_species_simulated_rates(circuit.interactions)
 
         for filename_addon in sorted(INTERACTION_FIELDS_TO_WRITE):
             interaction_matrix = circuit.interactions.__getattribute__(
@@ -285,11 +290,14 @@ class CircuitModeller():
 
             b_steady_states = [None] * len(circuits)
             b_reverse_rates = [None] * len(circuits)
-            
+
             use_single = True
-            species_chosen = circuits[0].model.species[np.argmax(signal.onehot)] 
-            other_species = flatten_listlike([r.output for r in circuits[0].model.reactions if species_chosen in r.input])
-            onehots = np.array([1 if s in other_species + [species_chosen] else 0 for s in circuits[0].model.species])
+            species_chosen = circuits[0].model.species[np.argmax(
+                signal.onehot)]
+            other_species = flatten_listlike(
+                [r.output for r in circuits[0].model.reactions if species_chosen in r.input])
+            onehots = np.array([1 if s in other_species + [species_chosen]
+                               else 0 for s in circuits[0].model.species])
             for i, c in enumerate(circuits):
                 if not c.use_prod_and_deg:
                     if use_single:
@@ -297,14 +305,14 @@ class CircuitModeller():
                             'steady_states').analytics['steady_states'].flatten() * ((signal.onehot == 0) * 1) + \
                             (c.result_collector.get_result(
                                 'steady_states').analytics['initial_steady_states'].flatten() *
-                            signal.func.keywords['target'] - c.result_collector.get_result(
+                             signal.func.keywords['target'] - c.result_collector.get_result(
                                 'steady_states').analytics['initial_steady_states'].flatten()) * signal.onehot
                     else:
                         b_steady_states[i] = c.result_collector.get_result(
                             'steady_states').analytics['steady_states'].flatten() * ((onehots == 0) * 1) + \
                             (c.result_collector.get_result(
                                 'steady_states').analytics['steady_states'].flatten() *
-                            signal.func.keywords['target']) * onehots
+                             signal.func.keywords['target']) * onehots
 
                     # b_steady_states[i] = c.result_collector.get_result(
                     #     'steady_states').analytics['steady_states'].flatten() * ((signal.onehot == 0) * 1) + \
@@ -491,7 +499,8 @@ class CircuitModeller():
 
             # Signal into parameter
             signal = ref_circuit.signal
-            forward_rates = ref_circuit.qreactions.reactions.forward_rates * ((signal.reactions_onehot == 0) * 1) + ref_circuit.qreactions.reactions.forward_rates * \
+            forward_rates = ref_circuit.qreactions.reactions.forward_rates * ((signal.reactions_onehot == 0) * 1) + \
+                ref_circuit.qreactions.reactions.forward_rates * \
                 signal.reactions_onehot * signal.func.keywords['target']
 
             self.sim_func = jax.jit(jax.vmap(

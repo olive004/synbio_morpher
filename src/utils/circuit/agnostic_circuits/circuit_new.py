@@ -64,7 +64,7 @@ class Circuit():
         self.mutations = {}
         self.mutations_args: dict = config.get('mutations', {})
 
-        self = update_species_simulated_rates(self, self.interactions)
+        self.update_species_simulated_rates(self.interactions)
 
     def init_mutation(self):
         self.name: str = None
@@ -99,7 +99,7 @@ class Circuit():
         else:
             self.interactions = InteractionMatrix(
                 matrix_paths=interaction_cfg, interactions_kwargs=interactions_loaded).interactions
-    
+
     def get_in_species(self):
         return [r.input for r in self.model.reactions if r.output]
 
@@ -111,6 +111,22 @@ class Circuit():
         del self.data
         del self.mutations
         del self.mutations_args
+
+    def update_species_simulated_rates(self, interactions: MolecularInteractions):
+        ordered_species = sorted(get_unique(flatten_listlike(
+            self.get_in_species())))
+        for i, r in enumerate(self.model.reactions):
+            if len(r.input) == 2:
+                si = r.input[0]
+                sj = r.input[1]
+                interaction_idx_si = ordered_species.index(si)
+                interaction_idx_sj = ordered_species.index(sj)
+                self.model.reactions[i].forward_rate = interactions.binding_rates_association[
+                    interaction_idx_si, interaction_idx_sj]
+                self.model.reactions[i].reverse_rate = interactions.binding_rates_dissociation[
+                    interaction_idx_si, interaction_idx_sj]
+        self.qreactions.reactions = self.qreactions.init_reactions(
+            self.model)
 
     @property
     def signal(self):
@@ -126,22 +142,3 @@ class Circuit():
     @signal.setter
     def signal(self, value):
         self._signal = value
-
-
-def update_species_simulated_rates(circuit: Circuit,
-                                   interactions: MolecularInteractions) -> Circuit:
-    ordered_species = sorted(get_unique(flatten_listlike(
-        circuit.get_in_species())))
-    for i, r in enumerate(circuit.model.reactions):
-        if len(r.input) == 2:
-            si = r.input[0]
-            sj = r.input[1]
-            interaction_idx_si = ordered_species.index(si)
-            interaction_idx_sj = ordered_species.index(sj)
-            circuit.model.reactions[i].forward_rate = interactions.binding_rates_association[
-                interaction_idx_si, interaction_idx_sj]
-            circuit.model.reactions[i].reverse_rate = interactions.binding_rates_dissociation[
-                interaction_idx_si, interaction_idx_sj]
-    circuit.qreactions.reactions = circuit.qreactions.init_reactions(
-        circuit.model)
-    return circuit
