@@ -43,7 +43,7 @@ class CircuitModeller():
         self.interaction_simulator = InteractionSimulator(
             sim_args=self.simulator_args)
         self.interaction_factor = self.simulation_args.get(
-            'interaction_factor')
+            'interaction_factor', 1)
         self.discard_numerical_mutations = config['experiment'].get(
             'no_numerical', False)
         self.dt = config.get('simulation', {}).get('dt', 1)
