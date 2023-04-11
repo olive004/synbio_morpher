@@ -80,8 +80,7 @@ def get_bulkiest_dict_key(dict_like):
 
 def get_first_elements(tuples_list: List[Union[tuple, list]], empty_replacement = ()):
     """ GC """
-    return [t[0] if t else empty_replacement for t in tuples_list]
-
+    return [[tt[0] for tt in t] if t else empty_replacement for t in tuples_list]
 
 
 def get_unique(list_like: list):

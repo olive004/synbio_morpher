@@ -46,10 +46,11 @@
                 "tmax": 120000,
                 "solver": "diffrax",
                 "use_batch_mutations": true,
+                "interaction_factor": 2,
                 "batch_size": 2000,
                 "max_circuits": 7000,
                 "device": "cpu",
-                "threshold_steady_states": 0.1, 
+                "threshold_steady_states": 0.05, 
                 "use_rate_scaling": false
             },
             "source_of_interaction_stats": {
@@ -58,7 +59,7 @@
                 "purpose_to_get_source_dir_from": "gather_interaction_stats",
                 "source_dir_actually_used_POSTERITY": null
             },
-            "molecular_params_factor": 100,
+            "molecular_params_factor": 30,
             "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json"
         },
         "summarise_simulation": {

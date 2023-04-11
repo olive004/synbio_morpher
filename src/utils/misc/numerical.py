@@ -57,7 +57,7 @@ def calculate_num_decimals(floatlike):
     return int(np.log10(float(str(floatlike)[::-1]))) + 1
 
 
-def count_monotonic_group_lengths(lst, increasing=True):
+def find_monotonic_group_idxs(lst, increasing=True):
     """
     Returns the number of groups of integers in lst that are monotonically increasing or decreasing without a gap.
     GC 50%
@@ -95,6 +95,11 @@ def count_monotonic_group_lengths(lst, increasing=True):
     elif len(lst) == 1:
         all_l.append(current_group)
 
+    return all_l
+
+
+def count_monotonic_group_lengths(lst, increasing=True):
+    all_l = find_monotonic_group_idxs(lst, increasing)
     return [len(l) for l in all_l]
 
 
@@ -186,6 +191,10 @@ def init_matrix(self, ndims=2, init_type="rand", uniform_val=1) -> np.array:
 
 def invert_onehot(onehot):
     return (onehot == 0).astype(onehot.dtype)
+
+
+def is_within_range(number, range_tuple):
+    return np.logical_and(range_tuple[0] <= number, number <= range_tuple[-1])
 
 
 def make_symmetrical_matrix_from_sequence(arr, side_length: int, total_dimensions: int = 2, sequence: str = 'triangular'):
