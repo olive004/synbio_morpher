@@ -176,6 +176,11 @@ class Tabulated(ABC):
         return pd.DataFrame.from_dict(dict(
             zip(self.column_names, [[v] for v in self.data])),
             dtype=object)
+    
+    def from_table(self, table: pd.DataFrame):
+        """ Reverse of as_table. Table should only have one row """
+        for c in table.columns:
+            self.__setattr__(c, table[c].values)
 
     @abstractmethod
     def get_table_properties(self):

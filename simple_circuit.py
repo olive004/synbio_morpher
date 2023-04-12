@@ -27,7 +27,7 @@ def five_circuits():
             "generator_protocol": "template_mutate",
             "proportion_to_mutate": 0.5
         },
-        "mutations": {
+        "mutations_args": {
             "algorithm": "random",
             "mutation_counts": 1,
             "mutation_nums_within_sequence": [1],
@@ -114,7 +114,7 @@ def mutate(circuits, config, data_writer):
                     sequence_type=config.get('system_type')).mutate(
             c,
             write_to_subsystem=True,
-            algorithm=config.get('mutations', {}).get('algorithm', 'random'))
+            algorithm=config.get('mutations_args', {}).get('algorithm', 'random'))
     return circuits, config, data_writer
 
 

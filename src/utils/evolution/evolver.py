@@ -100,7 +100,8 @@ class Evolver():
     def mutate(self, circuit: Circuit, algorithm: str, write_to_subsystem=False, write_to_fasta=False):
         """ algorithm can be either random or all """
         if write_to_subsystem:
-            self.data_writer.subdivide_writing(circuit.name, safe_dir_change=False)
+            self.data_writer.subdivide_writing(
+                circuit.name, safe_dir_change=False)
         if self.is_mutation_possible(circuit):
             mutator = self.get_mutator(algorithm)
             circuit = mutator(circuit)
@@ -109,7 +110,7 @@ class Evolver():
 
         if write_to_fasta:
             self.write_to_fasta(circuit)
-        
+
         if write_to_subsystem:
             self.data_writer.unsubdivide_last_dir()
         return circuit
@@ -144,7 +145,7 @@ class Evolver():
                                 mutation_idx=mutation_idx,
                                 mutation_types=mutation_types, algorithm=algorithm,
                                 template_file=circuit.data.source)
-                                
+
                             self.write_mutations(mutation)
                             circuit.mutations[specie.name][mutation.mutation_name] = mutation
             return circuit
@@ -220,7 +221,7 @@ class Evolver():
             mutation_name=specie.name+'_' +
             f'm{mutation_count}-' + str(
                 mutation_idx),
-            template_species=specie,
+            template_species=specie.name,
             mutation_types=mutation_types,
             count=mutation_count,
             positions=positions,
@@ -239,7 +240,9 @@ class Evolver():
             pass
         self.data_writer.output()
 
-    def load_mutations(self):
-        filename = os.path.join(
-            self.data_writer.write_dir, add_outtype(self.out_name, self.out_type))
-        return load_csv(filename, load_as='dict')
+    def load_mutations(self, filename=None):
+        if filename is None:
+            filename = os.path.join(
+                self.data_writer.write_dir, add_outtype(self.out_name, self.out_type))
+        table = load_csv(filename, load_as='dict')
+        return {table.iloc[i]['']: Mutations.from_table(table.iloc[i]) for i in range(len(table))}

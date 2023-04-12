@@ -76,12 +76,12 @@
 #     def init_mutations(self, config: dict):
 #         self.mutations = {}
 #         self.mutation_nums_within_sequence = config.get(
-#             "mutations", {}).get("mutation_nums_within_sequence")
+#             "mutations_args", {}).get("mutation_nums_within_sequence")
 #         self.mutation_nums_per_position = config.get(
-#             "mutations", {}).get("mutation_nums_per_position")
+#             "mutations_args", {}).get("mutation_nums_per_position")
 #         # Counts: mutated iterations of a sequence
 #         self.mutation_counts = config.get(
-#             "mutations", {}).get("mutation_counts")
+#             "mutations_args", {}).get("mutation_counts")
 #         self.process_mutations()
 
 #     def make_interactions(self, config):

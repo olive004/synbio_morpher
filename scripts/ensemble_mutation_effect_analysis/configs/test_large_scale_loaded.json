@@ -22,7 +22,7 @@
                 "max_self_interacting": null,
                 "max_total": 1000
             },
-            "mutations": {
+            "mutations_args": {
                 "algorithm": "random",
                 "mutation_counts": 8,
                 "mutation_nums_within_sequence": [1, 3, 5, 10, 15],

@@ -82,10 +82,10 @@ class Mutations(Tabulated):
         super().__init__()
 
     def get_table_properties(self):
-        exempt_keys = ['template_species']
+        # exempt_keys = ['template_species']
         props = self.__dict__
-        for k in exempt_keys:
-            props.pop(k)
+        # for k in exempt_keys:
+        #     props.pop(k)
         return list(props.keys()), list(props.values())
 
     def get_sequence(self):

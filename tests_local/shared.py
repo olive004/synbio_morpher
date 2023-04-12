@@ -53,7 +53,7 @@ ENSEMBLE_CONFIG = {
                 "purpose": "mutation_effect_on_interactions_signal",
                 "test_mode": False
             },
-            "mutations": {
+            "mutations_args": {
                 "algorithm": "random",
                 "mutation_counts": 0,
                 "mutation_nums_within_sequence": [1],
@@ -174,10 +174,10 @@ def mutate(circuits, config, data_writer):
     for c in circuits:
         c = Evolver(data_writer=data_writer,
                     sequence_type=config.get('system_type'),
-                    seed=config.get('mutations', {}).get('seed')).mutate(
+                    seed=config.get("mutations_args", {}).get('seed')).mutate(
             c,
             write_to_subsystem=True,
-            algorithm=config.get('mutations', {}).get('algorithm', 'random'))
+            algorithm=config.get("mutations_args", {}).get('algorithm', 'random'))
     return circuits, config, data_writer
 
 

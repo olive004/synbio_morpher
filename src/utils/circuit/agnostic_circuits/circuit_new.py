@@ -61,8 +61,8 @@ class Circuit():
         if config.get('interactions_loaded') is not None or config.get('interactions') is not None:
             assert self.interactions_state != 'uninitialised', f'The interactions should have been initialised from {config.get("interactions")}'
         self.signal: Signal = None
+        self.mutations_args: dict = config.get('mutation_args', {})
         self.mutations = {}
-        self.mutations_args: dict = config.get('mutations', {})
 
         self.update_species_simulated_rates(self.interactions)
 

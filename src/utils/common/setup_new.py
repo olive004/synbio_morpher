@@ -19,7 +19,7 @@ ESSENTIAL_KWARGS = [
     # "interactions",
     "interaction_simulator",
     "molecular_params",
-    # "mutations",
+    # "mutations_args",
     "system_type",
 ]
 
@@ -53,7 +53,7 @@ def compose_kwargs(prev_configs: dict = None, config: dict = None) -> dict:
 
     if prev_configs is not None:
         for kwarg, c in prev_configs.items():
-            if kwarg not in ['experiment', 'mutations', 'signal', 'simulation']:
+            if kwarg not in ['experiment', 'mutations_args', 'signal', 'simulation']:
                 config[kwarg] = c
 
     data_manager = DataManager(filepath=make_filename_safely(config.get("data_path", None)),
@@ -70,7 +70,7 @@ def compose_kwargs(prev_configs: dict = None, config: dict = None) -> dict:
         "interactions_loaded": config["interactions_loaded"],
         "interaction_simulator": config["interaction_simulator"],
         "molecular_params": config["molecular_params"],
-        "mutations": cast_all_values_as_list(config["mutations"]),
+        "mutations_args": cast_all_values_as_list(config["mutations_args"]),
         "name": isolate_filename(data_manager.data.source),
         "signal": config["signal"],
         "simulation": config["simulation"],
@@ -88,7 +88,7 @@ def expand_config(config: dict) -> dict:
     config["interactions_loaded"] = config.get("interactions_loaded")
     config["interaction_simulator"] = config.get("interaction_simulator", {"name": "IntaRNA"})
     config["molecular_params"] = process_molecular_params(deepcopy(load_json_as_dict(config.get("molecular_params"))), config.get("molecular_params_factor", 1))
-    config["mutations"] = config.get("mutations", {})
+    config["mutations_args"] = config.get("mutations_args", {})
     config["signal"] = load_json_as_dict(config.get("signal"))
     config["simulation"] = config.get("simulation", {})
     config["simulation_steady_state"] = config.get("simulation_steady_state", {})
