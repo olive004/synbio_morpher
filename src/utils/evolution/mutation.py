@@ -1,5 +1,6 @@
 
 
+from typing import List
 from copy import deepcopy
 from bioreaction.model.data_containers import Species
 from src.utils.circuit.agnostic_circuits.circuit_new import Circuit
@@ -67,12 +68,14 @@ def get_mutation_type_mapping(sequence_type):
 class Mutations(Tabulated):
 
     def __init__(self, mutation_name: str, template_species: Species,
-                 template_file: str, positions: list, mutation_types: list,
+                 template_name: str, template_seq: str,
+                 template_file: str, positions: List[int], mutation_types: List[int],
                  count: int, sequence_type: str, algorithm: str) -> None:
+
         self.mutation_name = mutation_name
         self.template_species = template_species
-        self.template_name = self.template_species.name
-        self.template_seq = self.template_species.physical_data
+        self.template_name = template_name # self.template_species.name
+        self.template_seq = template_seq # self.template_species.physical_data
         self.mutation_types = mutation_types
         self.positions = positions
         self.count = count
@@ -82,16 +85,16 @@ class Mutations(Tabulated):
         super().__init__()
 
     def get_table_properties(self):
-        # exempt_keys = ['template_species']
+        exempt_keys = ['template_species']
         props = self.__dict__
-        # for k in exempt_keys:
-        #     props.pop(k)
+        for k in exempt_keys:
+            props.pop(k)
         return list(props.keys()), list(props.values())
 
     def get_sequence(self):
         seq = list(deepcopy(self.template_seq))
         for i, p in enumerate(self.positions):
-            seq[p] = self.reverse_mut_mapping(self.mutation_types[i])
+            seq[int(p)] = self.reverse_mut_mapping(int(self.mutation_types[i]))
         return ''.join(seq)
 
     def reverse_mut_mapping(self, mut_encoding: int):

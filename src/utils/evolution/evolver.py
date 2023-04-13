@@ -7,7 +7,7 @@ from bioreaction.model.data_containers import Species
 from src.srv.io.loaders.misc import load_csv
 from src.utils.evolution.mutation import get_mutation_type_mapping, Mutations
 from src.utils.misc.type_handling import flatten_listlike, flatten_nested_dict
-from src.utils.results.writer import DataWriter
+from src.utils.results.writer import DataWriter, kwargs_from_table
 from src.utils.misc.string_handling import add_outtype
 
 
@@ -221,7 +221,9 @@ class Evolver():
             mutation_name=specie.name+'_' +
             f'm{mutation_count}-' + str(
                 mutation_idx),
-            template_species=specie.name,
+            template_species=specie,
+            template_name=specie.name, 
+            template_seq=specie.physical_data,
             mutation_types=mutation_types,
             count=mutation_count,
             positions=positions,
@@ -240,9 +242,16 @@ class Evolver():
             pass
         self.data_writer.output()
 
-    def load_mutations(self, filename=None):
-        if filename is None:
-            filename = os.path.join(
-                self.data_writer.write_dir, add_outtype(self.out_name, self.out_type))
-        table = load_csv(filename, load_as='dict')
-        return {table.iloc[i]['']: Mutations.from_table(table.iloc[i]) for i in range(len(table))}
+def load_mutations(circuit, filename=None):
+    table = load_csv(filename, load_as='pandas')
+    circuit.mutations = {} 
+    species_names = [s.name for s in circuit.model.species]
+    for i in range(len(table)):
+        mutating_species = circuit.model.species[species_names.index(table.iloc[i]['template_name'])]
+        if mutating_species not in circuit.mutations:
+            circuit.mutations[mutating_species] = {table.iloc[i]['mutation_name']: Mutations(template_species=mutating_species, **kwargs_from_table(Mutations, table=table.iloc[i]))}
+        else:
+            circuit.mutations[mutating_species].update({table.iloc[i]['mutation_name']: Mutations(template_species=mutating_species, **kwargs_from_table(Mutations, table=table.iloc[i]))})
+        circuit.mutations[mutating_species][table.iloc[i]['mutation_name']].mutation_types = [int(v) for v in circuit.mutations[mutating_species][table.iloc[i]['mutation_name']].mutation_types]
+        circuit.mutations[mutating_species][table.iloc[i]['mutation_name']].positions = [int(v) for v in circuit.mutations[mutating_species][table.iloc[i]['mutation_name']].positions]
+    return circuit

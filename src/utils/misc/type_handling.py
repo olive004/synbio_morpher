@@ -2,6 +2,7 @@
 
 import logging
 from typing import List, Union
+import typing
 from copy import deepcopy
 
 
@@ -19,6 +20,20 @@ def cast_all_values_as_list(dict_like):
     return new_dict
     # return {k: [v] for k, v in dict_like.items() if not type(v) == list}
     # return {k: [v] for k, v in dict_like.items()}
+
+
+def convert_type_from_pandas(pobj, expected_type):
+    if type(pobj) == expected_type:
+        return pobj
+    elif (type(pobj) == str) and (expected_type == list):
+        return strlist_to_list(pobj)
+    elif type(expected_type) == typing._GenericAlias:
+        if expected_type.__origin__ == list:
+            pobj = convert_type_from_pandas(pobj, list)
+            if '__args__' in expected_type.__dict__:
+                return [expected_type.__args__[0](o) for o in pobj]
+    else:
+        return pobj
 
 
 def extend_int_to_list(int_like, target_num):
@@ -135,3 +150,9 @@ def replace_value(og_d: dict, key, new_val) -> dict:
 
 def rm_nones(list_like: list) -> list:
     return list(filter(lambda item: item is not None, list_like))
+
+
+def strlist_to_list(strlist) -> list:
+    listobj = strlist.strip('[]')
+    listobj = listobj.split(',')
+    return listobj

@@ -3,6 +3,7 @@ from functools import partial
 from abc import ABC, abstractmethod
 import os
 import pandas as pd
+import inspect
 
 
 from src.srv.io.manage.sys_interface import SCRIPT_DIR, DATA_DIR
@@ -10,7 +11,7 @@ from src.utils.data.data_format_tools.common import write_csv, write_json, write
 from src.utils.data.data_format_tools.manipulate_fasta import write_fasta_file
 from src.utils.misc.io import create_location, get_subdirectories
 from src.utils.misc.string_handling import add_outtype, make_time_str
-from src.utils.misc.type_handling import find_sublist_max
+from src.utils.misc.type_handling import find_sublist_max, convert_type_from_pandas
 
 
 class DataWriter():
@@ -176,12 +177,17 @@ class Tabulated(ABC):
         return pd.DataFrame.from_dict(dict(
             zip(self.column_names, [[v] for v in self.data])),
             dtype=object)
-    
-    def from_table(self, table: pd.DataFrame):
-        """ Reverse of as_table. Table should only have one row """
-        for c in table.columns:
-            self.__setattr__(c, table[c].values)
 
     @abstractmethod
     def get_table_properties(self):
         pass
+
+
+def kwargs_from_table(tabulated_cls: Tabulated, table: pd.Series):
+    """ Reverse of as_table. Table should only have one row """
+    kwargs = {}
+    for c in table.index:
+        if c in inspect.getfullargspec(getattr(tabulated_cls, '__init__')).args:
+            expected_type = inspect.getfullargspec(getattr(tabulated_cls, '__init__')).annotations[c]
+            kwargs[c] = convert_type_from_pandas(table[c], expected_type)
+    return kwargs
