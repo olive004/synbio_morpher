@@ -555,10 +555,10 @@ class CircuitModeller():
 
         batch_size = len(circuits) if batch_size is None else batch_size
 
-        num_subcircuits = len(flatten_nested_dict(circuits[0].mutations))
-        expected_tot_subcircuits = len(circuits) * (1+num_subcircuits)
+        num_subcircuits = [len(flatten_nested_dict(c.mutations)) + 1 for c in circuits]
+        expected_tot_subcircuits = sum(num_subcircuits)
         if expected_tot_subcircuits > self.max_circuits:
-            viable_circuit_num = int(self.max_circuits / (num_subcircuits+1))
+            viable_circuit_num = int(self.max_circuits)
         else:
             viable_circuit_num = len(circuits)
 
@@ -574,7 +574,7 @@ class CircuitModeller():
 
             # Preallocate then create subcircuits - otherwise memory leak
             subcircuits_time = datetime.now()
-            subcircuits = [None] * (viable_circuit_num * (1+num_subcircuits))
+            subcircuits = [None] * sum(num_subcircuits[vi:vf])
             c_idx = 0
             for i, circuit in enumerate(circuits[vi: vf]):
                 curr_subcircuits = self.load_mutations(circuit)

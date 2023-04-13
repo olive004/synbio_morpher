@@ -37,7 +37,7 @@ class Circuit():
     time_axis = 1
 
     def __init__(self, config: dict, as_mutation=False):
-
+        
         if as_mutation:
             self.init_mutation()
         else:
@@ -79,6 +79,9 @@ class Circuit():
         self.signal: Signal = None
 
     def init_reactions(self, model: BasicModel, config: dict) -> QuantifiedReactions:
+        import jax
+        jax.config.update('jax_platform_name', 'cpu')
+        
         qreactions = QuantifiedReactions()
         qreactions.init_properties(model, config)
         return qreactions
