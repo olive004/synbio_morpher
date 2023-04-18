@@ -12,7 +12,7 @@
         "include_prod_deg": false,
         "circuit_generation": {
             "repetitions": [
-                2000000,
+                1000000,
                 1,
                 1,
                 1
@@ -67,7 +67,7 @@
             "tmax": 120000,
             "solver": "diffrax",
             "use_batch_mutations": true,
-            "batch_size": 2000,
+            "batch_size": 1000,
             "max_circuits": 7000,
             "device": "cpu",
             "threshold_steady_states": 0.05, 

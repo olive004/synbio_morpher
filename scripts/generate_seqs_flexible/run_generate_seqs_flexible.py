@@ -1,6 +1,5 @@
 from functools import partial
 import os
-import numpy as np
 from fire import Fire
 
 from src.srv.io.manage.script_manager import script_preamble
@@ -33,8 +32,8 @@ def sub_dir(data_writer, dirname):
 
 
 def batch_circuits(circuit_cfgs: list, config_file: dict, data_writer, max_circuits=1e4):
-    for b in range(0, int(np.ceil(len(circuit_cfgs)/max_circuits)), int(max_circuits)):
-        bf = int(max([b + max_circuits, len(circuit_cfgs)]))
+    for b in range(0, len(circuit_cfgs), int(max_circuits)):
+        bf = int(min([b + max_circuits, len(circuit_cfgs)]))
         curr_circuit_cfgs = circuit_cfgs[b:bf]
         curr_circuits = [None] * len(curr_circuit_cfgs)
         for i, c in enumerate(curr_circuit_cfgs):
