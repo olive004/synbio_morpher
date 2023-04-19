@@ -22,8 +22,11 @@ logger.setLevel(logging.INFO)
 def hist3d(data, x, y, log_scale=[False, False, False]):
     import plotly.graph_objects as go
 
-    xv = data[x]
-    yv = data[y]
+    if type(x) == str and type(y) == str:
+        xv = data[x]
+        yv = data[y]
+    else:
+        xv, yv = x, y
     h = np.histogram2d(xv, yv, bins=50)
 
 

@@ -12,7 +12,7 @@ INTERACTION_FILE_ADDONS = {
     # 'coupled_binding_rates': SIMULATOR_UNITS['IntaRNA']['rate'],
     'binding_rates_dissociation': SIMULATOR_UNITS['IntaRNA']['rate'],
     'eqconstants': 'eqconstants',
-    'energies': 'kJ/mol'
+    'energies': 'kcal/mol'
 }
 
 
