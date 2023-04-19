@@ -188,8 +188,6 @@ def generate_base_analytics(data: jnp.ndarray, time: jnp.ndarray, labels: List[s
         'RMSE': get_rmse(data, ref_circuit_data),
         'steady_states': jnp.expand_dims(data[:, -1], axis=1)
     }
-    analytics['final_deriv'] = jnp.expand_dims(
-        analytics['first_derivative'][:, -1], axis=1)
     analytics['fold_change'] = get_fold_change(
         starting_states=analytics['initial_steady_states'],
         steady_states=analytics['steady_states']
