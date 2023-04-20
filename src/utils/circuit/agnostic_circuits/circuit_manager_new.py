@@ -556,19 +556,26 @@ class CircuitModeller():
         batch_size = len(circuits) if batch_size is None else batch_size
 
         num_subcircuits = [len(flatten_nested_dict(c.mutations)) + 1 for c in circuits]
-        expected_tot_subcircuits = sum(num_subcircuits)
-        if expected_tot_subcircuits > self.max_circuits:
-            viable_circuit_num = int(self.max_circuits)
-        else:
-            viable_circuit_num = len(circuits)
+        tot_subcircuits = sum(num_subcircuits)
+        
+        viable_circuit_nums = [0]
+        next_viable = 0
+        for i, ns in enumerate(num_subcircuits):
+            if next_viable < self.max_circuits:
+                next_viable += ns
+                if i == len(num_subcircuits) - 1:
+                    viable_circuit_nums.append(i)
+            else:
+                viable_circuit_nums.append(i)
+                next_viable = 0
 
         logging.warning(
-            f'\tFrom {len(circuits)} circuits, a total of {expected_tot_subcircuits} mutated circuits will be simulated.')
+            f'\tFrom {len(circuits)} circuits, a total of {tot_subcircuits} mutated circuits will be simulated.')
 
         start_time = datetime.now()
-        for vi in range(0, len(circuits), viable_circuit_num):
+        for i, vi in enumerate(viable_circuit_nums[:-1]):
             single_batch_time = datetime.now()
-            vf = min(vi+viable_circuit_num, len(circuits))
+            vf = min(viable_circuit_nums[i+1] + 1, len(circuits))
             logging.warning(
                 f'\t\tStarting new round of viable circuits ({vi} - {vf} / {len(circuits)})')
 
@@ -588,13 +595,13 @@ class CircuitModeller():
                     filter(lambda item: item is not None, subcircuits))
             subcircuits_time = datetime.now() - subcircuits_time
             logging.warning(
-                f'\t\tMaking subcircuits {int(vi/viable_circuit_num*len(subcircuits))} - {int(vf/viable_circuit_num*len(subcircuits))} took {subcircuits_time.total_seconds()}s')
+                f'\t\tMaking subcircuits {int(sum(num_subcircuits[:vi]))} - {int(sum(num_subcircuits[:vf]))} took {subcircuits_time.total_seconds()}s')
 
             # Batch
             ref_circuit = subcircuits[0]
             for b in range(0, len(subcircuits), batch_size):
                 logging.warning(
-                    f'\tBatching {b} - {b+batch_size} circuits (out of {int(vi/viable_circuit_num*len(subcircuits))} - {int(vf/viable_circuit_num*len(subcircuits))} (total: {expected_tot_subcircuits})) (Circuits: {vi} - {vf} of {len(circuits)})')
+                    f'\tBatching {b} - {b+batch_size} circuits (out of {int(sum(num_subcircuits[:vi]))} - {int(sum(num_subcircuits[:vf]))} (total: {tot_subcircuits})) (Circuits: {vi} - {vf} of {len(circuits)})')
                 bf = b+batch_size if b + \
                     batch_size < len(subcircuits) else len(subcircuits)
 
@@ -608,7 +615,7 @@ class CircuitModeller():
 
             single_batch_time = datetime.now() - single_batch_time
             logging.warning(
-                f'Single batch: {single_batch_time} \nProjected time: {single_batch_time.total_seconds() * len(circuits)/viable_circuit_num}s \nTotal time: {str(datetime.now() - start_time)}')
+                f'Single batch: {single_batch_time} \nProjected time: {single_batch_time.total_seconds() * len(subcircuits)/tot_subcircuits}s \nTotal time: {str(datetime.now() - start_time)}')
             del subcircuits
         return circuits
 
