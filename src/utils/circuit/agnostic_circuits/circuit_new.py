@@ -89,7 +89,7 @@ class Circuit():
     def init_interactions(self, interaction_cfg: dict = None, interactions_loaded: dict = None) -> MolecularInteractions:
         if interaction_cfg is None and interactions_loaded is None:
             num_in_species = len(get_unique(flatten_listlike(
-                self.get_in_species())))
+                self.get_input_species())))
             nans = np.zeros((num_in_species, num_in_species)) * np.nan
             self.interactions = MolecularInteractions(
                 binding_rates_association=nans,
@@ -103,7 +103,7 @@ class Circuit():
             self.interactions = InteractionMatrix(
                 matrix_paths=interaction_cfg, interactions_kwargs=interactions_loaded).interactions
 
-    def get_in_species(self):
+    def get_input_species(self):
         return [r.input for r in self.model.reactions if r.output]
 
     def reset_to_initial_state(self):
@@ -117,7 +117,7 @@ class Circuit():
 
     def update_species_simulated_rates(self, interactions: MolecularInteractions):
         ordered_species = sorted(get_unique(flatten_listlike(
-            self.get_in_species())))
+            self.get_input_species())))
         for i, r in enumerate(self.model.reactions):
             if len(r.input) == 2:
                 si = r.input[0]

@@ -71,11 +71,10 @@ def enhance_data(info: pd.DataFrame):
     grouped = info.groupby(['circuit_name', 'sample_name'], as_index=False)
     mutation_log = grouped[numerical_cols].apply(
         lambda x: np.log(x / x.loc[x['mutation_num'] == 0].squeeze()))
-    mutation_log['mutation_num'] = info['mutation_num']
-    mutation_log['RMSE'] = info['RMSE']
-    mutation_log['sp_distance'] = info['sp_distance']
     for c in key_cols:
         mutation_log[c] = info[c]
+    for c in numerical_cols:
+        info[c + '_logm'] = mutation_log[c]
 
 
     # Melt energies
@@ -108,8 +107,9 @@ def enhance_data(info: pd.DataFrame):
     for k in ['binding_sites', 'binding_rates_dissociation', 'eqconstants']:
         infom[k] = info.melt(good_cols, value_vars=get_true_interaction_cols(
             info, k), var_name=f'{k}_idx', value_name=k)[k]
-        infom[k + '_logm'] = mutation_log.melt(mutation_cols, value_vars=get_true_interaction_cols(
-            mutation_log, k), var_name=f'{k}_idx', value_name=k)[k]
+        if k != 'binding_sites':
+            infom[k + '_logm'] = mutation_log.melt(mutation_cols, value_vars=get_true_interaction_cols(
+                mutation_log, k), var_name=f'{k}_idx', value_name=k)[k]
 
 
     # Energy diffs:
@@ -164,7 +164,7 @@ def enhance_data(info: pd.DataFrame):
 
     named_aggs = {}
     for c in relevant_cols:
-        for cc in [c, c + '_log']:
+        for cc in [c, c + '_logm']:
             named_aggs.update({cc + '_std': pd.NamedAgg(column=cc, aggfunc="std")})
             named_aggs.update({cc + '_mean': pd.NamedAgg(column=cc, aggfunc="mean")})
             named_aggs.update({cc + '_std_normed_by_mean': pd.NamedAgg(column=cc,
@@ -191,8 +191,8 @@ def enhance_data(info: pd.DataFrame):
                     for m, range_tuples in zip(info_e['mutation_positions'], info_e[r])]
 
 
-    infom['frac_muts_in_binding_site'] = info_e.groupby(['circuit_name', 'mutation_num', 'sample_name'], as_index=False).agg({isb: lambda x: sum(x) / np.max([1, len(x)]) for isb in mut_in_bs_cols}).melt(
-        id_vars=['circuit_name', 'mutation_num', 'sample_name'], value_vars=mut_in_bs_cols, var_name='idx', value_name='frac_muts_in_binding_site')['frac_muts_in_binding_site']
+    infom['frac_muts_in_binding_site'] = info_e.groupby(['circuit_name', 'mutation_name', 'sample_name'], as_index=False).agg({isb: lambda x: sum(x) / np.max([1, len(x)]) for isb in mut_in_bs_cols}).melt(
+        id_vars=['circuit_name', 'mutation_name', 'sample_name'], value_vars=mut_in_bs_cols, var_name='idx', value_name='frac_muts_in_binding_site')['frac_muts_in_binding_site']
 
 
     v = infom.groupby(['circuit_name', 'mutation_num', 'sample_name'], as_index=False).agg(
@@ -203,5 +203,7 @@ def enhance_data(info: pd.DataFrame):
             ] = v['frac_muts_in_binding_site' + '_std']
     info_summ['frac_muts_in_binding_site' + '_mean'
             ] = v['frac_muts_in_binding_site' + '_mean']
+    info_summ['frac_muts_in_binding_site' + '_std_normed_by_mean'
+            ] = v['frac_muts_in_binding_site' + '_std_normed_by_mean']
 
     return info, infom, info_summ
