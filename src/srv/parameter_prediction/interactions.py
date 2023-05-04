@@ -143,15 +143,14 @@ class InteractionMatrix():
 class InteractionDataHandler():
 
     def __init__(self, simulation_handler: RawSimulationHandling,
-                 data: dict = None,
-                 test_mode=False):
+                 quantities: np.array,
+                 num_species: int = 3):
         self.sample_processor = simulation_handler.get_sim_interpretation_protocol()
-        self.sample_postproc = simulation_handler.get_postprocessing()
-        if data is not None:
-            self.init_data(data, test_mode)
+        self.sample_postproc = simulation_handler.get_postprocessing(
+            initial=quantities, num_species=num_species)
         self.units = simulation_handler.units
 
-    def init_data(self, data, test_mode: bool = False):
+    def init_data(self, data: dict, test_mode: bool = False):
         if not test_mode:
             interactions = self.parse(data)
         else:
@@ -191,14 +190,15 @@ class InteractionSimulator():
     def __init__(self, sim_args: dict = None, allow_self_interaction: bool = True):
 
         self.simulation_handler = RawSimulationHandling(sim_args)
-        self.data_handler = InteractionDataHandler(
-            simulation_handler=self.simulation_handler)
         self.simulator = self.simulation_handler.get_simulator(
             allow_self_interaction)
 
-    def run(self, input: Union[dict, Tuple[str, dict]], compute_by_filename: bool):
+    def run(self, input: Union[dict, Tuple[str, dict]], quantities, compute_by_filename: bool):
         """ Makes nested dictionary for querying interactions as 
         {sample1: {sample2: interaction}} """
+        self.data_handler = InteractionDataHandler(
+            simulation_handler=self.simulation_handler, quantities=quantities,
+            num_species=len(input))
         data = self.simulator(input, compute_by_filename=compute_by_filename)
         data = self.data_handler.init_data(data)
         return data

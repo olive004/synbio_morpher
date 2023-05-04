@@ -9,8 +9,8 @@
             "data_path": null,
             "experiment": {
                 "purpose": "mutation_effect_on_interactions_signal",
-                "no_visualisations": true,
-                "no_numerical": true,
+                "no_visualisations": false,
+                "no_numerical": false,
                 "test_mode": false
             },
             "interaction_simulator": {
@@ -41,7 +41,7 @@
                 }
             },
             "simulation": {
-                "dt": 0.1,
+                "dt": 0.01,
                 "t0": 0,
                 "t1": 100,
                 "tmax": 120000,

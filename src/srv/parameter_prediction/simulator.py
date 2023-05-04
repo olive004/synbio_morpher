@@ -49,7 +49,7 @@ class RawSimulationHandling():
         if self.simulator_name == "IntaRNA":
             return process_interaction
 
-    def get_postprocessing(self):
+    def get_postprocessing(self, **processor_kwrgs):
 
         def eqconstant_to_rates(eqconstants):
             """ Translate the equilibrium rate of binding to
@@ -69,7 +69,9 @@ class RawSimulationHandling():
             if self.postprocess:
                 self.units = SIMULATOR_UNITS[self.simulator_name]['rate']
                 processor_f = [
-                    equilibrium_constant_reparameterisation,
+                    partial(
+                        equilibrium_constant_reparameterisation, 
+                        **processor_kwrgs),
                     return_both_eqconstants_and_rates
                 ]
                 return partial(

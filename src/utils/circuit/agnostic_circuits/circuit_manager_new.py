@@ -83,10 +83,12 @@ class CircuitModeller():
                 filename = circuit.data.source
             else:
                 filename = None
+            input_species = sorted(get_unique(flatten_listlike(
+                    circuit.get_input_species())))
             interactions = self.run_interaction_simulator(
-                species=sorted(get_unique(flatten_listlike(
-                    circuit.get_input_species()))),
-                filename=filename)
+                species=input_species,
+                filename=filename,
+                quantities=sorted([r.quantity for r in circuit.qreactions.reactants if r.species in input_species]))
             circuit.interactions = interactions
             circuit.interactions_state = 'computed'
         elif circuit.interactions_state == 'loaded' or (circuit.interactions_state == 'computed'):
@@ -111,12 +113,12 @@ class CircuitModeller():
                 filename_addon=filename_addon, subfolder=filename_addon)
         return circuit
 
-    def run_interaction_simulator(self, species: List[Species], filename=None) -> InteractionDataHandler:
+    def run_interaction_simulator(self, species: List[Species], quantities, filename=None) -> InteractionDataHandler:
         data = {s: s.physical_data for s in species}
         # if filename is not None:
         #     return self.interaction_simulator.run((filename, data), compute_by_filename=True)
         # else:
-        return self.interaction_simulator.run(data, compute_by_filename=False)
+        return self.interaction_simulator.run(data, quantities=quantities, compute_by_filename=False)
 
     def find_steady_states(self, circuits: List[Circuit], batch=True) -> List[Circuit]:
         modeller_steady_state = Deterministic(

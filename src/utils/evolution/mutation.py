@@ -117,4 +117,7 @@ def implement_mutation(circuit: Circuit, mutation: Mutations):
     else:
         raise KeyError(
             f'Could not find specie {mutation.template_name} in model for mutation {mutation.mutation_name}')
+
+    circuit.qreactions.update_reactants(circuit.model)
+    circuit.qreactions.update_reactions(circuit.model)
     return circuit
