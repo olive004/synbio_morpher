@@ -96,8 +96,9 @@ def get_sensitivity_simp(starting_states, peaks, signal_factor):
 def get_rmse(data, ref_circuit_data):
     if ref_circuit_data is None:
         return jnp.zeros(shape=(jnp.shape(data)[0], 1))
+    t_max = min([jnp.shape(data)[-1], jnp.shape(ref_circuit_data)[-1]]) 
     rmse = jnp.sqrt(
-        jnp.sum(jnp.divide(jnp.power(data - ref_circuit_data, 2), jnp.shape(data)[1]), axis=1))
+        jnp.sum(jnp.divide(jnp.power(data[:, :t_max] - ref_circuit_data[:, :t_max], 2), jnp.shape(data)[1]), axis=1))
     return jnp.expand_dims(rmse, axis=1)
 
 

@@ -79,8 +79,8 @@ class Circuit():
         self.signal: Signal = None
 
     def init_reactions(self, model: BasicModel, config: dict) -> QuantifiedReactions:
-        import jax
-        jax.config.update('jax_platform_name', 'cpu')
+        # import jax
+        # jax.config.update('jax_platform_name', 'cpu')
         
         qreactions = QuantifiedReactions()
         qreactions.init_properties(model, config)

@@ -3,7 +3,7 @@
 # https://quay.io/repository/biocontainers/intarna
 FROM quay.io/biocontainers/intarna:3.3.2--pl5321h7ff8a90_0 AS IntaRNA_build
 
-FROM nvidia/cuda:12.1.0-devel-ubuntu22.04 AS workdir_build
+FROM nvidia/cuda:11.8.0-devel-ubuntu22.04 AS workdir_build
 
 ################################################################################
 #  Install python dependencies
@@ -37,7 +37,7 @@ COPY --from=IntaRNA_build /usr/local/include/IntaRNA /usr/local/include/
 ################################################################################
 #  Install conda and IntaRNA dependencies
 ################################################################################
-RUN export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/cuda/lib64
+RUN export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/cuda/lib64:/
 RUN yes | apt-get install wget && \
     wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
 RUN (sleep 1; echo yes; sleep 1; echo /root/miniconda3; sleep 1; echo yes) | bash Miniconda3-latest-Linux-x86_64.sh
