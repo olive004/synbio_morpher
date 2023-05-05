@@ -50,7 +50,7 @@
                 "interaction_factor": 1,
                 "batch_size": 2000,
                 "max_circuits": 7000,
-                "device": "gpu",
+                "device": "cpu",
                 "threshold_steady_states": 0.05, 
                 "use_rate_scaling": false
             },
