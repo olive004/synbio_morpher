@@ -14,6 +14,8 @@ docker build -t genetic_glitch:latest docker_unix
 #     --env NVIDIA_VISIBLE_DEVICES=all \
 #     docker.io/nvidia/cuda:11.6.2-base-ubuntu20.04 \
 #     cuda-11.6.2-base-ubuntu20.04 nvidia-smi
+cp ./requirements.txt ./docker_unix
+
 docker create -it \
 --rm \
 --gpus all \

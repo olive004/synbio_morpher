@@ -143,11 +143,9 @@ class InteractionMatrix():
 class InteractionDataHandler():
 
     def __init__(self, simulation_handler: RawSimulationHandling,
-                 quantities: np.array,
-                 num_species: int = 3):
+                 quantities: np.array):
         self.sample_processor = simulation_handler.get_sim_interpretation_protocol()
-        self.sample_postproc = simulation_handler.get_postprocessing(
-            initial=quantities, num_species=num_species)
+        self.sample_postproc = simulation_handler.get_postprocessing(initial=quantities)
         self.units = simulation_handler.units
 
     def init_data(self, data: dict, test_mode: bool = False):
@@ -197,8 +195,7 @@ class InteractionSimulator():
         """ Makes nested dictionary for querying interactions as 
         {sample1: {sample2: interaction}} """
         self.data_handler = InteractionDataHandler(
-            simulation_handler=self.simulation_handler, quantities=quantities,
-            num_species=len(input))
+            simulation_handler=self.simulation_handler, quantities=quantities)
         data = self.simulator(input, compute_by_filename=compute_by_filename)
         data = self.data_handler.init_data(data)
         return data

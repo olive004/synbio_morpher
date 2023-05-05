@@ -79,8 +79,11 @@ class Circuit():
         self.signal: Signal = None
 
     def init_reactions(self, model: BasicModel, config: dict) -> QuantifiedReactions:
-        # import jax
+        import jax
+        from jax.lib import xla_bridge
+        print(xla_bridge.get_backend().platform)
         # jax.config.update('jax_platform_name', 'cpu')
+        jax.config.update('jax_platform_name', str(xla_bridge.get_backend().platform))
         
         qreactions = QuantifiedReactions()
         qreactions.init_properties(model, config)

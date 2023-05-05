@@ -14,7 +14,9 @@ RUN apt-get update && \
     yes | apt-get install python3-pip
 RUN cd /usr/lib/install_requirements && \
     pip install -r ./requirements.txt 
-RUN pip install "jax[cuda12_pip]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+RUN pip install --upgrade "jax[cuda11_pip]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+RUN export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/cuda/lib64:/
+# RUN pip install "jax[cuda11_pip]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 ################################################################################
 #  setup environment
 ################################################################################
@@ -37,14 +39,13 @@ COPY --from=IntaRNA_build /usr/local/include/IntaRNA /usr/local/include/
 ################################################################################
 #  Install conda and IntaRNA dependencies
 ################################################################################
-RUN export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/cuda/lib64:/
-RUN yes | apt-get install wget && \
-    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-RUN (sleep 1; echo yes; sleep 1; echo /root/miniconda3; sleep 1; echo yes) | bash Miniconda3-latest-Linux-x86_64.sh
-RUN . /root/miniconda3/bin/activate && \
-    yes | conda install -c conda-forge -c bioconda intarna
+# RUN yes | apt-get install wget && \
+#     wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+# RUN (sleep 1; echo yes; sleep 1; echo /root/miniconda3; sleep 1; echo yes) | bash Miniconda3-latest-Linux-x86_64.sh
+# RUN . /root/miniconda3/bin/activate && \
+#     yes | conda install -c conda-forge -c bioconda intarna
 
-# Switch up the IntaRNAs
-RUN mv /root/miniconda3/bin/IntaRNA /root/miniconda3/bin/IntaRNA2
-RUN mv /usr/local/bin/IntaRNA /root/miniconda3/bin/IntaRNA
-RUN ln -s /root/miniconda3/bin/IntaRNA /usr/local/bin/IntaRNA
+# # Switch up the IntaRNAs
+# RUN mv /root/miniconda3/bin/IntaRNA /root/miniconda3/bin/IntaRNA2
+# RUN mv /usr/local/bin/IntaRNA /root/miniconda3/bin/IntaRNA
+# RUN ln -s /root/miniconda3/bin/IntaRNA /usr/local/bin/IntaRNA

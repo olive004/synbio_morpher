@@ -13,18 +13,14 @@ def F(E):
     return F
 
 
-def equilibrium_constant_reparameterisation(E, initial: np.array, num_species: int):
-    """ The energy input E is $\Delta G$ in kcal/mol. Using an
-    initial concentration of 1 mol, as this matches the relative
-    fluorescence of 0.5 to the equilibrium constant of 1. 
+def equilibrium_constant_reparameterisation(E, initial: np.array):
+    """ The energy input E is $\Delta G$ in kcal/mol. 
     IMPORTANT: Using the mean initial quantity of all species, as this 
     equation was derived under the assumption that all unbound species 
     start with the same concentration and have the same interactions """
     # return 1/initial * (1/F(E) - 1)
-    return np.divide(
-        1 - F(E),
-        np.power(F(E), 2) * np.mean(initial) * (1+num_species)
-    )
+    Fs = np.exp(-0.8 * (E + 10))
+    return Fs/initial
 
 
 def gibbs_K(E):
