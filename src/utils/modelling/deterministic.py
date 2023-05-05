@@ -105,7 +105,8 @@ def bioreaction_sim_dfx_expanded(y0, t0, t1, dt0,
     term = dfx.ODETerm(
         partial(bioreaction_sim_expanded,
                 inputs=inputs, outputs=outputs,
-                # signal=signal, signal_onehot=signal_onehot,
+                # signal=signal, 
+                signal_onehot=signal_onehot,
                 forward_rates=forward_rates, reverse_rates=reverse_rates
                 )
     )

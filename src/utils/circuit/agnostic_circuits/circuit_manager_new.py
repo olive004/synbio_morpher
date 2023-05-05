@@ -146,6 +146,7 @@ class CircuitModeller():
 
     def compute_steady_states(self, modeller: Modeller, circuits: List[Circuit],
                               solver_type: str = 'jax', use_zero_rates: bool = False) -> List[Circuit]:
+            
         if solver_type == 'ivp':
             b_copynumbers = []
             for circuit in circuits:
@@ -156,9 +157,10 @@ class CircuitModeller():
                         ((circuit.qreactions.reactions.reverse_rates -
                           circuit.qreactions.reactions.forward_rates) < 1e2) * 1
 
+                signal_onehot = np.zeros_like(circuit.signal.reactions_onehot) if circuit.use_prod_and_deg else np.zeros_like(circuit.signal.onehot)
                 steady_state_result = integrate.solve_ivp(
                     partial(bioreaction_sim, args=None, reactions=r, signal=vanilla_return,
-                            signal_onehot=np.zeros_like(circuit.signal.reactions_onehot)),
+                            signal_onehot=signal_onehot),
                     (0, modeller.max_time),
                     y0=circuit.qreactions.quantities,
                     method=self.steady_state_args.get('method', 'DOP853'))
@@ -181,10 +183,10 @@ class CircuitModeller():
             #     forward_rates = forward_rates/c
             #     reverse_rates = reverse_rates/c
 
+            signal_onehot = np.zeros_like(circuit.signal.reactions_onehot) if circuit.use_prod_and_deg else np.zeros_like(circuit.signal.onehot)
             sim_func = jax.jit(jax.vmap(partial(bioreaction_sim_dfx_expanded,
                                         t0=self.t0, t1=self.t1, dt0=self.dt,
-                                        signal=vanilla_return, signal_onehot=np.zeros(
-                                            len(circuit.model.reactions)),
+                                        signal=vanilla_return, signal_onehot=signal_onehot,
                                         inputs=circuit.qreactions.reactions.inputs,
                                         outputs=circuit.qreactions.reactions.outputs,
                                         forward_rates=forward_rates,
@@ -262,12 +264,12 @@ class CircuitModeller():
         rate_max = np.max([np.max(np.asarray(forward_rates)),
                           np.max(np.asarray(reverse_rates))])
 
-        for i in range(len(circuits)):
-            circuits[i].qreactions.reactions.forward_rates = circuits[i].qreactions.reactions.forward_rates / rate_max
-            circuits[i].qreactions.reactions.reverse_rates = circuits[i].qreactions.reactions.reverse_rates / rate_max
+        # for i in range(len(circuits)):
+        #     circuits[i].qreactions.reactions.forward_rates = circuits[i].qreactions.reactions.forward_rates / rate_max
+        #     circuits[i].qreactions.reactions.reverse_rates = circuits[i].qreactions.reactions.reverse_rates / rate_max
 
-        self.dt = np.min([np.max(forward_rates[forward_rates > 0]/rate_max),
-                         np.max(reverse_rates[reverse_rates > 0]/rate_max)]) * 10
+        self.dt = 0.1 / rate_max
+        
         return circuits
 
     def simulate_signal_batch(self, circuits: List[Circuit],
@@ -307,8 +309,7 @@ class CircuitModeller():
                             'steady_states').analytics['steady_states'].flatten() * ((signal.onehot == 0) * 1) + \
                             (c.result_collector.get_result(
                                 'steady_states').analytics['initial_steady_states'].flatten() *
-                             signal.func.keywords['target'] - c.result_collector.get_result(
-                                'steady_states').analytics['initial_steady_states'].flatten()) * signal.onehot
+                             signal.func.keywords['target']) * signal.onehot
                     else:
                         b_steady_states[i] = c.result_collector.get_result(
                             'steady_states').analytics['steady_states'].flatten() * ((onehots == 0) * 1) + \

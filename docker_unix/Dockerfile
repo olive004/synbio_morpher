@@ -3,7 +3,7 @@
 # https://quay.io/repository/biocontainers/intarna
 FROM quay.io/biocontainers/intarna:3.3.2--pl5321h7ff8a90_0 AS IntaRNA_build
 
-FROM nvidia/cuda:11.8.0-devel-ubuntu22.04 AS workdir_build
+FROM nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04 AS workdir_build
 
 ################################################################################
 #  Install python dependencies
@@ -17,6 +17,7 @@ RUN cd /usr/lib/install_requirements && \
 RUN pip install --upgrade "jax[cuda11_pip]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 RUN export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/cuda/lib64:/
 # RUN pip install "jax[cuda11_pip]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+
 ################################################################################
 #  setup environment
 ################################################################################
@@ -33,6 +34,7 @@ WORKDIR /workdir
 ################################################################################
 COPY --from=IntaRNA_build /usr/local/bin/IntaRNA /usr/local/bin/
 COPY --from=IntaRNA_build /usr/local/include/IntaRNA /usr/local/include/
+COPY --from=IntaRNA_build /usr/local/lib/* /usr/local/lib/
 # COPY --from=IntaRNA_build /usr/lib/x86_64-linux-gnu/* /usr/lib/x86_64-linux-gnu/
 
 

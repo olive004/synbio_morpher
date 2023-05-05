@@ -81,7 +81,6 @@ class Circuit():
     def init_reactions(self, model: BasicModel, config: dict) -> QuantifiedReactions:
         import jax
         from jax.lib import xla_bridge
-        print(xla_bridge.get_backend().platform)
         # jax.config.update('jax_platform_name', 'cpu')
         jax.config.update('jax_platform_name', str(xla_bridge.get_backend().platform))
         
