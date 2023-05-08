@@ -51,7 +51,7 @@
                 "batch_size": 2000,
                 "max_circuits": 7000,
                 "device": "gpu",
-                "threshold_steady_states": 0.001, 
+                "threshold_steady_states": 100, 
                 "use_rate_scaling": true
             },
             "source_of_interaction_stats": {
