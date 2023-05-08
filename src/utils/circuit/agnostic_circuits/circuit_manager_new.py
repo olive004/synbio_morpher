@@ -268,7 +268,7 @@ class CircuitModeller():
         #     circuits[i].qreactions.reactions.forward_rates = circuits[i].qreactions.reactions.forward_rates / rate_max
         #     circuits[i].qreactions.reactions.reverse_rates = circuits[i].qreactions.reactions.reverse_rates / rate_max
 
-        self.dt = 0.1 / rate_max
+        self.dt = 1 / (2 * rate_max)
         
         return circuits
 
@@ -329,10 +329,11 @@ class CircuitModeller():
                 b_reverse_rates[i] = c.qreactions.reactions.reverse_rates
             b_steady_states = np.asarray(b_steady_states)
             b_reverse_rates = np.asarray(b_reverse_rates)
+            b_og_states = np.array([c.result_collector.get_result('steady_states').analytics['initial_steady_states'].flatten() * onehots + b_steady_states[i] * ((onehots == 0) * 1) for i, c in enumerate(circuits)])
 
-            return b_steady_states, b_reverse_rates
+            return b_steady_states, b_reverse_rates, b_og_states
 
-        b_steady_states, b_reverse_rates = prepare_batch_params(circuits)
+        b_steady_states, b_reverse_rates, b_og_states = prepare_batch_params(circuits)
 
         s_time = datetime.now()
         b_new_copynumbers, t = simulate_steady_states(
@@ -348,6 +349,11 @@ class CircuitModeller():
 
         if np.shape(b_new_copynumbers)[1] != ref_circuit.circuit_size and np.shape(b_new_copynumbers)[-1] == ref_circuit.circuit_size:
             b_new_copynumbers = np.swapaxes(b_new_copynumbers, 1, 2)
+        
+        # Fix first entry for signal species
+        for i, c in enumerate(circuits): 
+            if not c.use_prod_and_deg:
+                b_new_copynumbers[i, :, :] = np.concatenate([np.expand_dims(b_og_states[i, :], axis=1), b_new_copynumbers[i, :, 1:]], axis=1)
 
         # Get analytics batched too
         def append_nest_dicts(l: list, i1: int, d: dict) -> list:
@@ -563,14 +569,13 @@ class CircuitModeller():
         
         viable_circuit_nums = [0]
         next_viable = 0
-        for i, ns in enumerate(num_subcircuits):
-            if next_viable < self.max_circuits:
-                next_viable += ns
-                if i == len(num_subcircuits) - 1:
-                    viable_circuit_nums.append(i)
-            else:
-                viable_circuit_nums.append(i)
-                next_viable = 0
+        i = 0
+        while i < len(num_subcircuits):
+            while (i < len(num_subcircuits)) and (next_viable + num_subcircuits[i] < self.max_circuits):
+                next_viable += num_subcircuits[i]
+                i += 1
+            viable_circuit_nums.append(i)
+            next_viable = 0
 
         logging.warning(
             f'\tFrom {len(circuits)} circuits, a total of {tot_subcircuits} mutated circuits will be simulated.')
@@ -578,7 +583,7 @@ class CircuitModeller():
         start_time = datetime.now()
         for i, vi in enumerate(viable_circuit_nums[:-1]):
             single_batch_time = datetime.now()
-            vf = min(viable_circuit_nums[i+1] + 1, len(circuits))
+            vf = min(viable_circuit_nums[i+1], len(circuits))
             logging.warning(
                 f'\t\tStarting new round of viable circuits ({vi} - {vf} / {len(circuits)})')
 

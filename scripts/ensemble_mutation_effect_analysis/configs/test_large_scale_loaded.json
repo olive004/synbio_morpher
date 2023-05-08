@@ -43,7 +43,7 @@
             "simulation": {
                 "dt": 0.01,
                 "t0": 0,
-                "t1": 100,
+                "t1": 200,
                 "tmax": 120000,
                 "solver": "diffrax",
                 "use_batch_mutations": true,
@@ -51,8 +51,8 @@
                 "batch_size": 2000,
                 "max_circuits": 7000,
                 "device": "gpu",
-                "threshold_steady_states": 0.05, 
-                "use_rate_scaling": false
+                "threshold_steady_states": 0.001, 
+                "use_rate_scaling": true
             },
             "source_of_interaction_stats": {
                 "is_source_dir_incomplete": false,
