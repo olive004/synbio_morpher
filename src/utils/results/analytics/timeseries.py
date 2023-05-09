@@ -223,13 +223,15 @@ def generate_base_analytics(data: jnp.ndarray, time: jnp.ndarray, labels: List[s
 
 
 def generate_differences_ratios(analytics: dict, ref_analytics) -> Tuple[dict]:
+    t_axis = 1
     differences = {}
     ratios = {}
     for k in ref_analytics.keys():
+        t_end = np.min([ref_analytics[k].shape[t_axis], analytics[k].shape[t_axis]])
         differences[k +
-                    DIFF_KEY] = jnp.subtract(analytics[k], ref_analytics[k])
-        ratios[k + RATIO_KEY] = jnp.where(ref_analytics[k] !=
-                                          0, jnp.divide(analytics[k], ref_analytics[k]), np.inf)
+                    DIFF_KEY] = jnp.subtract(analytics[k][:, :t_end], ref_analytics[k][:, :t_end])
+        ratios[k + RATIO_KEY] = jnp.where(ref_analytics[k][:, :t_end] !=
+                                          0, jnp.divide(analytics[k][:, :t_end], ref_analytics[k][:, :t_end]), np.inf)
     return differences, ratios
 
 
