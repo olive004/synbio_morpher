@@ -127,7 +127,7 @@ def get_step_response_times(data, t, steady_states, deriv, signal_time: int):
     """ Assumes that data starts pre-perturbation, but after an initial steady state 
     has been reached. """
 
-    t_expanded = t[:data.shape[-1]] * jnp.ones_like(steady_states)
+    t_expanded = t * jnp.ones_like(steady_states)
     margin_stst = 0.001
     is_data_outside_stst = (data > (steady_states + steady_states * margin_stst)
                             ) | (data < (steady_states - steady_states * margin_stst))
@@ -214,7 +214,7 @@ def generate_base_analytics(data: jnp.ndarray, time: jnp.ndarray, labels: List[s
                 steady_states=analytics['steady_states']
             )
             analytics[f'response_time_wrt_species-{s_idx}'] = get_step_response_times(
-                data=data, t=time, steady_states=analytics['steady_states'],
+                data=data, t=time[:data.shape[-1]] , steady_states=analytics['steady_states'],
                 deriv=analytics['first_derivative'], signal_time=signal_time)
             analytics[f'sensitivity_wrt_species-{s_idx}'] = get_sensitivity(
                 signal_idx=s_idx, peaks=peaks, starting_states=analytics['initial_steady_states']

@@ -41,7 +41,7 @@
                 }
             },
             "simulation": {
-                "dt": 0.01,
+                "dt": 0.1,
                 "t0": 0,
                 "t1": 200,
                 "tmax": 120000,
@@ -51,7 +51,7 @@
                 "batch_size": 2000,
                 "max_circuits": 7000,
                 "device": "gpu",
-                "threshold_steady_states": 100, 
+                "threshold_steady_states": 0.001, 
                 "use_rate_scaling": true
             },
             "source_of_interaction_stats": {
