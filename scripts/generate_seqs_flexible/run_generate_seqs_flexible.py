@@ -1,6 +1,7 @@
 from functools import partial
 import os
 from fire import Fire
+import numpy as np
 
 from src.srv.io.manage.script_manager import script_preamble
 from src.utils.common.setup_new import construct_circuit_from_cfg, prepare_config
@@ -39,7 +40,8 @@ def batch_circuits(circuit_cfgs: list, config_file: dict, data_writer, max_circu
         for i, c in enumerate(curr_circuit_cfgs):
             circuit = construct_circuit_from_cfg(
                 prev_configs=c, config_file=config_file)
-            circuit = Evolver(data_writer=data_writer, sequence_type=config_file.get('system_type')).mutate(
+            circuit = Evolver(data_writer=data_writer, sequence_type=config_file.get('system_type'),
+                              seed=config_file.get('mutations_args', {}).get('seed', np.random.randint(1000))).mutate(
                 circuit=circuit,
                 write_to_subsystem=True,
                 algorithm=config_file.get('mutations_args', {}).get('algorithm'))

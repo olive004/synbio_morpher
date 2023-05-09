@@ -25,10 +25,11 @@
             },
             "mutations_args": {
                 "algorithm": "random",
-                "mutation_counts": 8,
+                "mutation_counts": 10,
                 "mutation_nums_within_sequence": [1, 2, 3, 5, 10, 15],
                 "mutation_nums_per_position": 1,
-                "concurrent_species_to_mutate": "single_species_at_a_time"
+                "concurrent_species_to_mutate": "single_species_at_a_time",
+                "seed": 0
             },
             "signal": {
                 "inputs": ["RNA_0"],
@@ -51,7 +52,7 @@
                 "batch_size": 2000,
                 "max_circuits": 7000,
                 "device": "gpu",
-                "threshold_steady_states": 0.001, 
+                "threshold_steady_states": 0.01, 
                 "use_rate_scaling": true
             },
             "source_of_interaction_stats": {
