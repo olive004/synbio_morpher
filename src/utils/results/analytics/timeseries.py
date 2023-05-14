@@ -102,27 +102,6 @@ def get_rmse(data, ref_circuit_data):
     return jnp.expand_dims(rmse, axis=1)
 
 
-def get_step_response_times2(data, t, steady_states, signal_time: int):
-    """ Assumes that data starts pre-perturbation, but after an initial steady state 
-    has been reached. Not using this one rn, as it hasn't been as reliable """
-    t = np.squeeze(t)
-    margin = 0.05
-    is_steadystate = ~((data > (steady_states + steady_states * margin)
-                        ) | (data < (steady_states - steady_states * margin)))
-    argmax_workaround = jnp.ones_like(
-        steady_states) * jnp.arange(len(t)) == jnp.expand_dims(np.argmax(is_steadystate, axis=1), axis=1)
-    tstop = jnp.max(t * argmax_workaround, axis=1)
-    response_times = jnp.where(
-        (tstop != t[-1]) & (tstop > signal_time),
-        tstop - signal_time,
-        np.inf
-    )
-
-    if response_times.ndim == 1:
-        return jnp.expand_dims(response_times, axis=1)
-    return response_times
-
-
 def get_step_response_times(data, t, steady_states, deriv, signal_time: int):
     """ Assumes that data starts pre-perturbation, but after an initial steady state 
     has been reached. """
@@ -213,9 +192,11 @@ def generate_base_analytics(data: jnp.ndarray, time: jnp.ndarray, labels: List[s
                 starting_states=analytics['initial_steady_states'],
                 steady_states=analytics['steady_states']
             )
+            # t axis : 1
+            t_end = np.min([len(time), data.shape[1]])
             analytics[f'response_time_wrt_species-{s_idx}'] = get_step_response_times(
-                data=data, t=time[:data.shape[-1]] , steady_states=analytics['steady_states'],
-                deriv=analytics['first_derivative'], signal_time=signal_time)
+                data=data[:, :t_end], t=time[:t_end], steady_states=analytics['steady_states'][:, :t_end],
+                deriv=analytics['first_derivative'][:, :t_end], signal_time=signal_time)
             analytics[f'sensitivity_wrt_species-{s_idx}'] = get_sensitivity(
                 signal_idx=s_idx, peaks=peaks, starting_states=analytics['initial_steady_states']
             )

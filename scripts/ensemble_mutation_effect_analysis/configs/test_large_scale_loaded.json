@@ -21,7 +21,8 @@
                 "min_num_interacting": 2,
                 "min_num_self_interacting": 1,
                 "max_self_interacting": null,
-                "max_total": 1000
+                "max_total": 1000,
+                "not_in_dirs": ["data/ensemble_mutation_effect_analysis/2023_05_09_220322/mutation_effect_on_interactions_signal"]
             },
             "mutations_args": {
                 "algorithm": "random",
@@ -177,7 +178,7 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "analyse_mutated_templates_loaded_2": {
+        "xanalyse_mutated_templates_loaded_2": {
             "experiment": {
                 "purpose": "analyse_mutated_templates_loaded_2"
             },
@@ -191,7 +192,7 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "analyse_mutated_templates_loaded_2_nosig": {
+        "xanalyse_mutated_templates_loaded_2_nosig": {
             "experiment": {
                 "purpose": "analyse_mutated_templates_loaded_2_nosig"
             },
