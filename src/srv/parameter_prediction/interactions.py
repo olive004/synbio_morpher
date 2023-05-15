@@ -82,6 +82,10 @@ class InteractionMatrix():
                     loaded_matrix = loaded_matrix.to_numpy()
                     self.interactions.__setattr__(matrix_type, loaded_matrix)
                     self.interactions.units = self.units
+                elif isinstance(matrix_path, np.ndarray):
+                    loaded_matrix = matrix_path.to_numpy()
+                    self.interactions.__setattr__(matrix_type, loaded_matrix)
+                    self.interactions.units = self.units
             if 'binding_rates_association' in matrix_paths:
                 self.interactions.binding_rates_association = matrix_paths['binding_rates_association'] * np.ones_like(
                     self.interactions.binding_rates_dissociation)
