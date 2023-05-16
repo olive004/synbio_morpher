@@ -22,10 +22,7 @@ from src.utils.results.analytics.naming import get_true_interaction_cols
 SEQ_LENGTH = 20
 
 
-
-def enhance_data(info: pd.DataFrame):
-    # Add / process columns
-
+def proc_info(info):
     info['num_interacting_all'] = info['num_interacting'] + info['num_self_interacting']
     info['sp_distance'] = 0
     info.loc[(info['sensitivity_wrt_species-6'] <= 1) & (info['precision_wrt_species-6'] <= 10), 'sp_distance'] = np.sqrt(
@@ -44,7 +41,7 @@ def enhance_data(info: pd.DataFrame):
     #  Binding sites
 
     num_group_cols = [e.replace('energies', 'binding_sites_groups')
-                    for e in get_true_interaction_cols(info, 'energies')]
+                for e in get_true_interaction_cols(info, 'energies')]
     num_bs_cols = [e.replace('energies', 'binding_sites_count')
                 for e in get_true_interaction_cols(info, 'energies')]
     bs_idxs_cols = [e.replace('energies', 'binding_sites_idxs')
@@ -75,15 +72,19 @@ def enhance_data(info: pd.DataFrame):
         mutation_log[c] = info[c]
     for c in numerical_cols:
         info[c + '_logm'] = mutation_log[c]
+        
+    return info, num_group_cols, num_bs_cols, numerical_cols, key_cols, mutation_log, bs_range_cols
 
 
-    # Melt energies
+# Melt energies
 
+def melt(info, num_group_cols, num_bs_cols, numerical_cols, key_cols, mutation_log):
     good_cols = list(info.columns)
     [good_cols.remove(x) for x in get_true_interaction_cols(info, 'binding_rates_dissociation') + get_true_interaction_cols(info, 'eqconstants') +
     get_true_interaction_cols(info, 'energies') + get_true_interaction_cols(info, 'binding_sites') + num_group_cols + num_bs_cols]
     binding_idx_map = {e.replace('energies_', ''): i for i, e in enumerate(
         get_true_interaction_cols(info, 'energies'))}
+    
 
     infom = info.melt(good_cols, value_vars=get_true_interaction_cols(
         info, 'energies'), var_name='idx', value_name='energies')
@@ -119,9 +120,11 @@ def enhance_data(info: pd.DataFrame):
             lambda x: x - x.iloc[0]).melt(value_vars=get_true_interaction_cols(info, k), var_name='idx', value_name=f'{k}_diffs')[f'{k}_diffs']
         infom[f'{k}_diffs' + '_logm'] = mutation_log.groupby(['circuit_name'])[get_true_interaction_cols(mutation_log, k)].apply(
             lambda x: x - x.iloc[0]).melt(value_vars=get_true_interaction_cols(mutation_log, k), var_name='idx', value_name=f'{k}_diffs')[f'{k}_diffs']
+    
+    return infom
 
 
-    #
+def summ(info, infom, bs_range_cols):
     # Standard Deviations
 
     relevant_cols = [
@@ -205,5 +208,14 @@ def enhance_data(info: pd.DataFrame):
             ] = v['frac_muts_in_binding_site' + '_mean']
     info_summ['frac_muts_in_binding_site' + '_std_normed_by_mean'
             ] = v['frac_muts_in_binding_site' + '_std_normed_by_mean']
+    
+    return info_summ
+
+def enhance_data(info: pd.DataFrame):
+    # Add / process columns
+    
+    info, num_group_cols, num_bs_cols, numerical_cols, key_cols, mutation_log, bs_range_cols = proc_info(info)
+    infom = melt(info, num_group_cols, num_bs_cols, numerical_cols, key_cols, mutation_log)
+    info_summ = summ(info, infom, bs_range_cols)
 
     return info, infom, info_summ

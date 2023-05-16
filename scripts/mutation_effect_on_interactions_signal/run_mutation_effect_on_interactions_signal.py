@@ -46,7 +46,8 @@ def main(config=None, data_writer=None):
         # Filter circuits
         Protocol(
             partial(pull_circuits_from_stats,
-                    filters=config_file.get("filters", {})),
+                    filters=config_file.get("filters", {}),
+                    ignore_interactions=True),
             req_input=True,
             req_output=True,
             name='pull_circuit_from_stats'

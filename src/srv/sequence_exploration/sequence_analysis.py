@@ -90,7 +90,7 @@ def filter_data(data: pd.DataFrame, filters: dict = {}):
     return filt_stats
 
 
-def pull_circuits_from_stats(stats_pathname: Union[pd.DataFrame, str], filters: dict, write_key='data_path') -> List[Dict]:
+def pull_circuits_from_stats(stats_pathname: Union[pd.DataFrame, str], filters: dict, write_key='data_path', ignore_interactions=False) -> List[Dict]:
 
     stats = GeneCircuitLoader().load_data(stats_pathname).data
     filt_stats = filter_data(stats, filters)
@@ -110,15 +110,18 @@ def pull_circuits_from_stats(stats_pathname: Union[pd.DataFrame, str], filters: 
 
     extra_configs = []
     for index, row in filt_stats.iterrows():
+        if filters.get('max_circuits') is not None and (index > filters.get('max_circuits')):
+            break
         extra_config = load_experiment_config(experiment_folder)
         extra_config.update({write_key: get_path_from_output_summary(
             name=row["name"], output_summary=experiment_summary)})
-        extra_config["interactions"] = {
-            k: row[path_key] for k, path_key in interaction_path_keys.items()
-        }
+        if not ignore_interactions:
+            extra_config["interactions"] = {
+                k: row[path_key] for k, path_key in interaction_path_keys.items()
+            }
         extra_configs.append(extra_config)
-    if filters.get('max_circuits') is not None:
-        extra_configs = extra_configs[:filters.get('max_circuits')]
+    # if filters.get('max_circuits') is not None:
+    #     extra_configs = extra_configs[:filters.get('max_circuits')]
 
     return extra_configs
 
