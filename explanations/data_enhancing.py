@@ -78,7 +78,7 @@ def proc_info(info):
 
 # Melt energies
 
-def melt(info, num_group_cols, num_bs_cols, numerical_cols, key_cols, mutation_log):
+def melt(info, num_group_cols, num_bs_cols, numerical_cols, key_cols, mutation_log, bs_range_cols):
     good_cols = list(info.columns)
     [good_cols.remove(x) for x in get_true_interaction_cols(info, 'binding_rates_dissociation') + get_true_interaction_cols(info, 'eqconstants') +
     get_true_interaction_cols(info, 'energies') + get_true_interaction_cols(info, 'binding_sites') + num_group_cols + num_bs_cols]
@@ -121,10 +121,29 @@ def melt(info, num_group_cols, num_bs_cols, numerical_cols, key_cols, mutation_l
         infom[f'{k}_diffs' + '_logm'] = mutation_log.groupby(['circuit_name'])[get_true_interaction_cols(mutation_log, k)].apply(
             lambda x: x - x.iloc[0]).melt(value_vars=get_true_interaction_cols(mutation_log, k), var_name='idx', value_name=f'{k}_diffs')[f'{k}_diffs']
     
+
+    info_e = info.explode(column=['mutation_type', 'mutation_positions'])
+
+    mut_in_bs_cols = [e.replace('energies', 'is_mutation_in_binding_site')
+                    for e in get_true_interaction_cols(info, 'energies')]
+    mut_in_edge_cols = [e.replace('energies', 'is_mutation_on_edge')
+                        for e in get_true_interaction_cols(info, 'energies')]
+
+    for isb, r in zip(mut_in_bs_cols, bs_range_cols):
+        info_e[isb] = [any([is_within_range(m, r) for r in range_tuples])
+                    for m, range_tuples in zip(info_e['mutation_positions'], info_e[r])]
+    for ise, r in zip(mut_in_edge_cols, bs_range_cols):
+        info_e[ise] = [any([(m == r[0]) or (m == r[-1]) for r in range_tuples])
+                    for m, range_tuples in zip(info_e['mutation_positions'], info_e[r])]
+
+
+    infom['frac_muts_in_binding_site'] = info_e.groupby(['circuit_name', 'mutation_name', 'sample_name'], as_index=False).agg({isb: lambda x: sum(x) / np.max([1, len(x)]) for isb in mut_in_bs_cols}).melt(
+        id_vars=['circuit_name', 'mutation_name', 'sample_name'], value_vars=mut_in_bs_cols, var_name='idx', value_name='frac_muts_in_binding_site')['frac_muts_in_binding_site']
+
     return infom
 
 
-def summ(info, infom, bs_range_cols):
+def summ(infom):
     # Standard Deviations
 
     relevant_cols = [
@@ -175,28 +194,7 @@ def summ(info, infom, bs_range_cols):
     info_summ = infom.groupby(
         ['circuit_name', 'mutation_num', 'sample_name'], as_index=False).agg(**named_aggs)
 
-
-    #
     # Mutations within binding
-
-    info_e = info.explode(column=['mutation_type', 'mutation_positions'])
-
-    mut_in_bs_cols = [e.replace('energies', 'is_mutation_in_binding_site')
-                    for e in get_true_interaction_cols(info, 'energies')]
-    mut_in_edge_cols = [e.replace('energies', 'is_mutation_on_edge')
-                        for e in get_true_interaction_cols(info, 'energies')]
-
-    for isb, r in zip(mut_in_bs_cols, bs_range_cols):
-        info_e[isb] = [any([is_within_range(m, r) for r in range_tuples])
-                    for m, range_tuples in zip(info_e['mutation_positions'], info_e[r])]
-    for ise, r in zip(mut_in_edge_cols, bs_range_cols):
-        info_e[ise] = [any([(m == r[0]) or (m == r[-1]) for r in range_tuples])
-                    for m, range_tuples in zip(info_e['mutation_positions'], info_e[r])]
-
-
-    infom['frac_muts_in_binding_site'] = info_e.groupby(['circuit_name', 'mutation_name', 'sample_name'], as_index=False).agg({isb: lambda x: sum(x) / np.max([1, len(x)]) for isb in mut_in_bs_cols}).melt(
-        id_vars=['circuit_name', 'mutation_name', 'sample_name'], value_vars=mut_in_bs_cols, var_name='idx', value_name='frac_muts_in_binding_site')['frac_muts_in_binding_site']
-
 
     v = infom.groupby(['circuit_name', 'mutation_num', 'sample_name'], as_index=False).agg(
         **{'frac_muts_in_binding_site' + '_std': pd.NamedAgg(column='frac_muts_in_binding_site', aggfunc='std'),
@@ -215,7 +213,7 @@ def enhance_data(info: pd.DataFrame):
     # Add / process columns
     
     info, num_group_cols, num_bs_cols, numerical_cols, key_cols, mutation_log, bs_range_cols = proc_info(info)
-    infom = melt(info, num_group_cols, num_bs_cols, numerical_cols, key_cols, mutation_log)
-    info_summ = summ(info, infom, bs_range_cols)
+    infom = melt(info, num_group_cols, num_bs_cols, numerical_cols, key_cols, mutation_log, bs_range_cols)
+    info_summ = summ(infom)
 
     return info, infom, info_summ
