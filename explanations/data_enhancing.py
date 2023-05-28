@@ -1,3 +1,4 @@
+from functools import partial
 import numpy as np
 import os
 import sys
@@ -78,15 +79,16 @@ def proc_info(info):
 
 # Melt energies
 
-def melt(info, num_group_cols, num_bs_cols, numerical_cols, key_cols, mutation_log, bs_range_cols):
+def melt(info, num_group_cols, num_bs_cols, numerical_cols, key_cols, mutation_log, bs_range_cols, num_species=3):
+    get_true_interaction_cols2 = partial(get_true_interaction_cols, num_species=num_species)
     good_cols = list(info.columns)
-    [good_cols.remove(x) for x in get_true_interaction_cols(info, 'binding_rates_dissociation') + get_true_interaction_cols(info, 'eqconstants') +
-    get_true_interaction_cols(info, 'energies') + get_true_interaction_cols(info, 'binding_sites') + num_group_cols + num_bs_cols]
+    [good_cols.remove(x) for x in get_true_interaction_cols2(info, 'binding_rates_dissociation') + get_true_interaction_cols2(info, 'eqconstants') +
+    get_true_interaction_cols2(info, 'energies') + get_true_interaction_cols2(info, 'binding_sites') + num_group_cols + num_bs_cols]
     binding_idx_map = {e.replace('energies_', ''): i for i, e in enumerate(
-        get_true_interaction_cols(info, 'energies'))}
+        get_true_interaction_cols2(info, 'energies'))}
     
 
-    infom = info.melt(good_cols, value_vars=get_true_interaction_cols(
+    infom = info.melt(good_cols, value_vars=get_true_interaction_cols2(
         info, 'energies'), var_name='idx', value_name='energies')
     dfm = info.melt(good_cols, value_vars=num_group_cols,
                     var_name='num_groups_idx', value_name='num_groups')
@@ -98,36 +100,36 @@ def melt(info, num_group_cols, num_bs_cols, numerical_cols, key_cols, mutation_l
     infom['num_bs'] = dfm['num_bs']
 
 
-    mutation_cols = [c for c in numerical_cols + key_cols if c not in get_true_interaction_cols(mutation_log, 'energies') +
-                    get_true_interaction_cols(mutation_log, 'binding_rates_dissociation') +
-                    get_true_interaction_cols(mutation_log, 'eqconstants') +
-                    get_true_interaction_cols(mutation_log, 'binding_sites_groups')]
-    infom['energies' + '_logm'] = mutation_log.melt(mutation_cols, value_vars=get_true_interaction_cols(
+    mutation_cols = [c for c in numerical_cols + key_cols if c not in get_true_interaction_cols2(mutation_log, 'energies') +
+                    get_true_interaction_cols2(mutation_log, 'binding_rates_dissociation') +
+                    get_true_interaction_cols2(mutation_log, 'eqconstants') +
+                    get_true_interaction_cols2(mutation_log, 'binding_sites_groups')]
+    infom['energies' + '_logm'] = mutation_log.melt(mutation_cols, value_vars=get_true_interaction_cols2(
         mutation_log, 'energies'), var_name='energies_idx', value_name='energies')['energies']
 
     for k in ['binding_sites', 'binding_rates_dissociation', 'eqconstants']:
-        infom[k] = info.melt(good_cols, value_vars=get_true_interaction_cols(
+        infom[k] = info.melt(good_cols, value_vars=get_true_interaction_cols2(
             info, k), var_name=f'{k}_idx', value_name=k)[k]
         if k != 'binding_sites':
-            infom[k + '_logm'] = mutation_log.melt(mutation_cols, value_vars=get_true_interaction_cols(
+            infom[k + '_logm'] = mutation_log.melt(mutation_cols, value_vars=get_true_interaction_cols2(
                 mutation_log, k), var_name=f'{k}_idx', value_name=k)[k]
 
 
     # Energy diffs:
 
     for k in ['binding_rates_dissociation', 'eqconstants', 'energies']:
-        infom[f'{k}_diffs'] = info.groupby(['circuit_name'])[get_true_interaction_cols(info, k)].apply(
-            lambda x: x - x.iloc[0]).melt(value_vars=get_true_interaction_cols(info, k), var_name='idx', value_name=f'{k}_diffs')[f'{k}_diffs']
-        infom[f'{k}_diffs' + '_logm'] = mutation_log.groupby(['circuit_name'])[get_true_interaction_cols(mutation_log, k)].apply(
-            lambda x: x - x.iloc[0]).melt(value_vars=get_true_interaction_cols(mutation_log, k), var_name='idx', value_name=f'{k}_diffs')[f'{k}_diffs']
+        infom[f'{k}_diffs'] = info.groupby(['circuit_name'])[get_true_interaction_cols2(info, k)].apply(
+            lambda x: x - x.iloc[0]).melt(value_vars=get_true_interaction_cols2(info, k), var_name='idx', value_name=f'{k}_diffs')[f'{k}_diffs']
+        infom[f'{k}_diffs' + '_logm'] = mutation_log.groupby(['circuit_name'])[get_true_interaction_cols2(mutation_log, k)].apply(
+            lambda x: x - x.iloc[0]).melt(value_vars=get_true_interaction_cols2(mutation_log, k), var_name='idx', value_name=f'{k}_diffs')[f'{k}_diffs']
     
 
     info_e = info.explode(column=['mutation_type', 'mutation_positions'])
 
     mut_in_bs_cols = [e.replace('energies', 'is_mutation_in_binding_site')
-                    for e in get_true_interaction_cols(info, 'energies')]
+                    for e in get_true_interaction_cols2(info, 'energies')]
     mut_in_edge_cols = [e.replace('energies', 'is_mutation_on_edge')
-                        for e in get_true_interaction_cols(info, 'energies')]
+                        for e in get_true_interaction_cols2(info, 'energies')]
 
     for isb, r in zip(mut_in_bs_cols, bs_range_cols):
         info_e[isb] = [any([is_within_range(m, r) for r in range_tuples])

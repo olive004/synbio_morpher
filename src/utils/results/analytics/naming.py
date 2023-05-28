@@ -80,11 +80,13 @@ def get_true_names_analytics(candidate_cols: List[str]) -> List[str]:
     return true_names
 
 
-def get_true_interaction_cols(data: pd.DataFrame, interaction_attr, remove_symmetrical=False, num_species=3) -> list:
-    if 'sample_name' in data:
+def get_true_interaction_cols(data: pd.DataFrame, interaction_attr, remove_symmetrical=False, num_species=None) -> list:
+    if num_species is None and ('sample_name' in data):
         num_species = len(data['sample_name'].unique())
-    else:
+    elif num_species is None:
+        num_species = 3
         logging.warning(f'Assuming that the number of species is {num_species}')
+
     names = []
     for i in range(num_species):
         for ii in range(num_species):
