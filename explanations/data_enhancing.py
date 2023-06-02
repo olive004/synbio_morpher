@@ -139,7 +139,7 @@ def melt(info, num_group_cols, num_bs_cols, numerical_cols, key_cols, mutation_l
                     for m, range_tuples in zip(info_e['mutation_positions'], info_e[r])]
 
 
-    infom['frac_muts_in_binding_site'] = info_e.groupby(['circuit_name', 'mutation_name', 'sample_name'], as_index=False).agg({isb: lambda x: sum(x) / np.max([1, len(x)]) for isb in mut_in_bs_cols}).melt(
+    infom['frac_muts_in_binding_site'] = info_e.groupby(['circuit_name', 'mutation_num', 'mutation_name', 'sample_name'], as_index=False).agg({isb: lambda x: sum(x) / np.max([1, len(x)]) for isb in mut_in_bs_cols}).melt(
         id_vars=['circuit_name', 'mutation_name', 'sample_name'], value_vars=mut_in_bs_cols, var_name='idx', value_name='frac_muts_in_binding_site')['frac_muts_in_binding_site']
 
     return infom
