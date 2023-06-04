@@ -1,6 +1,7 @@
 from functools import partial
 import os
 from fire import Fire
+import numpy as np
 
 from src.srv.io.manage.script_manager import script_preamble
 from src.utils.common.setup_new import construct_circuit_from_cfg, prepare_config
@@ -31,10 +32,36 @@ def sub_dir(data_writer, dirname):
     data_writer.update_ensemble(dirname)
 
 
+def batch_circuits(circuit_cfgs: list, config_file: dict, data_writer, max_circuits=1e4):
+    for b in range(0, len(circuit_cfgs), int(max_circuits)):
+        bf = int(min([b + max_circuits, len(circuit_cfgs)]))
+        curr_circuit_cfgs = circuit_cfgs[b:bf]
+        curr_circuits = [None] * len(curr_circuit_cfgs)
+        for i, c in enumerate(curr_circuit_cfgs):
+            circuit = construct_circuit_from_cfg(
+                prev_configs=c, config_file=config_file)
+            circuit = Evolver(data_writer=data_writer, sequence_type=config_file.get('system_type'),
+                              seed=config_file.get('mutations_args', {}).get('seed', np.random.randint(1000))).mutate(
+                circuit=circuit,
+                write_to_subsystem=True,
+                algorithm=config_file.get('mutations_args', {}).get('algorithm'))
+            curr_circuits[i] = circuit
+
+        curr_circuits = CircuitModeller(result_writer=data_writer, config=config_file).batch_circuits(
+            circuits=curr_circuits, write_to_subsystem=True,
+            batch_size=config_file['simulation'].get('batch_size', 100),
+            methods={
+                "compute_interactions": {}
+                # "init_circuits": {'batch': True},
+                # "write_results": {'no_visualisations': config_file['experiment'].get('no_visualisations', True),
+                #                   'no_numerical': config_file['experiment'].get('no_numerical', False)}
+            })
+
+
 def main(config=None, data_writer=None):
     # set configs
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
-        "scripts", "generate_seqs_flexible", "configs", "base_config.json"))
+        "scripts", "generate_seqs_flexible", "configs", "randoms.json"))
     config_file = load_json_as_dict(config)
     config_file = prepare_config(config_file)
     exp_configs = config_file["circuit_generation"]
@@ -52,36 +79,14 @@ def main(config=None, data_writer=None):
             partial(sub_dir,
                     data_writer=data_writer, dirname='simulated_circuits')
         ),
-        [
-            Protocol(
-                partial(construct_circuit_from_cfg,
-                        config_file=config_file),
-                req_input=True,
-                req_output=True,
-                name="making_circuit"
-            )
-        ],
-        [
-            Protocol(
-                partial(Evolver(data_writer=data_writer, sequence_type=config_file.get('system_type')).mutate,
-                        write_to_subsystem=True,
-                        algorithm=config_file.get('mutations', {}).get('algorithm')),
-                req_input=True,
-                req_output=True,
-                name="generate_mutations"
-            )
-        ],
-        Protocol(partial(CircuitModeller(result_writer=data_writer, config=config_file).batch_circuits,
-                         write_to_subsystem=True, batch_size=config_file['simulation'].get('batch_size', 100),
-                         methods={
-            "compute_interactions": {}
-            # "init_circuits": {'batch': True},
-            # "write_results": {'no_visualisations': config_file['experiment'].get('no_visualisations', True),
-            #                   'no_numerical': config_file['experiment'].get('no_numerical', False)}
-        }),
-            req_input=True,
-            name="simulate_visualisations"
-        )
+        Protocol(
+            partial(
+                batch_circuits,
+                config_file=config_file,
+                data_writer=data_writer,
+                max_circuits=1e4
+            ),
+            req_input=True)
     ]
     experiment = Experiment(config=config, config_file=config_file, protocols=protocols,
                             data_writer=data_writer)

@@ -19,6 +19,39 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
+def hist3d(data, x, y, log_scale=[False, False, False]):
+    import plotly.graph_objects as go
+
+    if type(x) == str and type(y) == str:
+        xv = data[x]
+        yv = data[y]
+    else:
+        xv, yv = x, y
+    h = np.histogram2d(xv, yv, bins=50)
+
+
+    def bin_centers(bins):
+        centers = (bins + (bins[1]-bins[0])/2)[:-1]
+        return centers
+
+
+    x_bins_centers = bin_centers(h[1])
+    y_bins_centers = bin_centers(h[2])
+
+    if log_scale[2]:
+        d = np.log(h[0])
+    else:
+        d = h[0]
+    df = pd.DataFrame(d, index=x_bins_centers, columns=y_bins_centers)
+    fig = go.Figure(data=[go.Surface(z=df)])
+    
+    if log_scale[0]:
+        fig.update_xaxes(type="log")
+    if log_scale[1]:
+        fig.update_yaxes(type="log")
+    return fig
+
+
 def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
                    cols_x: list = None, cols_y: list = None,
                    groupby: str = None,

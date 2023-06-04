@@ -74,7 +74,8 @@ def main(config=None, data_writer=None):
                         selection_conditions=selection_conditions,
                         log_axis=log_opt,
                         use_sns=True,
-                        title=f'{prettify_keys_for_label(interaction_type)} {units_text}for {m} mutation{plot_grammar_m}'
+                        title=f'{prettify_keys_for_label(interaction_type)} {units_text}for {m} mutation{plot_grammar_m}',
+                        misc_histplot_kwargs={'element': 'step'}
                     )
 
     protocols.append(

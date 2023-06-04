@@ -37,7 +37,7 @@ class Circuit():
     time_axis = 1
 
     def __init__(self, config: dict, as_mutation=False):
-
+        
         if as_mutation:
             self.init_mutation()
         else:
@@ -45,12 +45,12 @@ class Circuit():
 
     def init_refcircuit(self, config: dict):
         self.name = config.get("name")
-        self.subname = 'ref_circuit'
+        self.subname = config.get('subname', 'ref_circuit')
 
         self.result_collector = ResultCollector()
-        self.include_prod_deg = config.get('include_prod_deg', True)
+        self.use_prod_and_deg = config.get('include_prod_deg', True)
         self.model = construct_bioreaction_model(
-            config.get('data'), config.get('molecular_params'), include_prod_deg=self.include_prod_deg)
+            config.get('data'), config.get('molecular_params'), include_prod_deg=self.use_prod_and_deg)
         self.circuit_size = len(self.model.species)
         self.data: DataManager = config.get('data')
         self.qreactions = self.init_reactions(self.model, config)
@@ -61,15 +61,16 @@ class Circuit():
         if config.get('interactions_loaded') is not None or config.get('interactions') is not None:
             assert self.interactions_state != 'uninitialised', f'The interactions should have been initialised from {config.get("interactions")}'
         self.signal: Signal = None
+        self.mutations_args: dict = config.get('mutations_args', {})
         self.mutations = {}
-        self.mutations_args: dict = config.get('mutations', {})
 
-        self = update_species_simulated_rates(self, self.interactions)
+        self.update_species_simulated_rates(self.interactions)
 
     def init_mutation(self):
         self.name: str = None
         self.subname = None
         self.result_collector = ResultCollector()
+        self.use_prod_and_deg = True
         self.model = None
         self.circuit_size = None
         self.qreactions = None
@@ -78,14 +79,18 @@ class Circuit():
         self.signal: Signal = None
 
     def init_reactions(self, model: BasicModel, config: dict) -> QuantifiedReactions:
+        import jax
+        from jax.lib import xla_bridge
+        # jax.config.update('jax_platform_name', 'cpu')
+        jax.config.update('jax_platform_name', str(xla_bridge.get_backend().platform))
+        
         qreactions = QuantifiedReactions()
         qreactions.init_properties(model, config)
         return qreactions
 
     def init_interactions(self, interaction_cfg: dict = None, interactions_loaded: dict = None) -> MolecularInteractions:
         if interaction_cfg is None and interactions_loaded is None:
-            num_in_species = len(get_unique(flatten_listlike(
-                [r.input for r in self.model.reactions])))
+            num_in_species = len(self.get_input_species())
             nans = np.zeros((num_in_species, num_in_species)) * np.nan
             self.interactions = MolecularInteractions(
                 binding_rates_association=nans,
@@ -99,6 +104,9 @@ class Circuit():
             self.interactions = InteractionMatrix(
                 matrix_paths=interaction_cfg, interactions_kwargs=interactions_loaded).interactions
 
+    def get_input_species(self):
+        return sorted(get_unique(flatten_listlike([r.input for r in self.model.reactions if r.output])))
+
     def reset_to_initial_state(self):
         self.result_collector.reset()
         self.interactions_state = 'uninitialised'
@@ -107,6 +115,21 @@ class Circuit():
         del self.data
         del self.mutations
         del self.mutations_args
+
+    def update_species_simulated_rates(self, interactions: MolecularInteractions):
+        ordered_species = self.get_input_species()
+        for i, r in enumerate(self.model.reactions):
+            if len(r.input) == 2:
+                si = r.input[0]
+                sj = r.input[1]
+                interaction_idx_si = ordered_species.index(si)
+                interaction_idx_sj = ordered_species.index(sj)
+                self.model.reactions[i].forward_rate = interactions.binding_rates_association[
+                    interaction_idx_si, interaction_idx_sj]
+                self.model.reactions[i].reverse_rate = interactions.binding_rates_dissociation[
+                    interaction_idx_si, interaction_idx_sj]
+        self.qreactions.reactions = self.qreactions.init_reactions(
+            self.model)
 
     @property
     def signal(self):
@@ -122,22 +145,3 @@ class Circuit():
     @signal.setter
     def signal(self, value):
         self._signal = value
-
-
-def update_species_simulated_rates(circuit: Circuit,
-                                   interactions: MolecularInteractions) -> Circuit:
-    ordered_species = sorted(get_unique(flatten_listlike(
-        [r.input for r in circuit.model.reactions if r.output])))
-    for i, r in enumerate(circuit.model.reactions):
-        if len(r.input) == 2:
-            si = r.input[0]
-            sj = r.input[1]
-            interaction_idx_si = ordered_species.index(si)
-            interaction_idx_sj = ordered_species.index(sj)
-            circuit.model.reactions[i].forward_rate = interactions.binding_rates_association[
-                interaction_idx_si, interaction_idx_sj]
-            circuit.model.reactions[i].reverse_rate = interactions.binding_rates_dissociation[
-                interaction_idx_si, interaction_idx_sj]
-    circuit.qreactions.reactions = circuit.qreactions.init_reactions(
-        circuit.model)
-    return circuit

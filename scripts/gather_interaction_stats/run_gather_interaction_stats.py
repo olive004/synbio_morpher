@@ -40,7 +40,7 @@ def main(config=None, data_writer=None):
     if not any([os.path.isdir(os.path.join(search_dirs, i)) for i in INTERACTION_FIELDS_TO_WRITE]):
         search_dirs = [f.path for f in os.scandir(search_dirs) if f.is_dir()] + \
             flatten_listlike([[ff.path for ff in os.scandir(os.path.join(
-                f.path, 'mutations'))] for f in os.scandir(search_dirs) if f.is_dir()])
+                f.path, 'mutations'))] for f in os.scandir(search_dirs) if f.is_dir() and os.path.isdir(os.path.join(f.path, 'mutations'))])
     else:
         search_dirs = [search_dirs]
 

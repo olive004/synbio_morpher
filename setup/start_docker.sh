@@ -3,7 +3,8 @@
 
 docker pull docker/dockerfile:1
 docker pull quay.io/biocontainers/intarna:3.3.2--pl5321h7ff8a90_0
-docker pull nvidia/cuda:12.0.0-base-ubuntu22.04
+# docker pull nvidia/cuda:12.1.0-devel-ubuntu22.04
+docker pull nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
 
 # If image not built yet
 docker build -t genetic_glitch:latest docker_unix
@@ -13,6 +14,8 @@ docker build -t genetic_glitch:latest docker_unix
 #     --env NVIDIA_VISIBLE_DEVICES=all \
 #     docker.io/nvidia/cuda:11.6.2-base-ubuntu20.04 \
 #     cuda-11.6.2-base-ubuntu20.04 nvidia-smi
+cp ./requirements.txt ./docker_unix
+
 docker create -it \
 --rm \
 --gpus all \

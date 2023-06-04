@@ -15,7 +15,7 @@
         "postprocess": true
     },
     "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
-    "mutations": {
+    "mutations_args": {
         "mutation_counts": 10,
         "mutation_nums_within_sequence": 1,
         "algorithm": "random"

@@ -58,7 +58,7 @@
                 "min_num_interacting": 0,
                 "max_self_interacting": 3
             },
-            "mutations": {
+            "mutations_args": {
                 "algorithm": "all",
                 "mutation_counts": 2,
                 "mutation_nums_within_sequence": 0,

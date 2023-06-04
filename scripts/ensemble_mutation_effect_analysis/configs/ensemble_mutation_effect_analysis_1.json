@@ -58,7 +58,7 @@
                 "min_num_interacting": 0,
                 "max_self_interacting": 3
             },
-            "mutations": {
+            "mutations_args": {
                 "mutation_counts": 6,
                 "mutation_nums_within_sequence": 1,
                 "concurrent_species_to_mutate": "single_species_at_a_time"

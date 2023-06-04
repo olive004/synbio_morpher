@@ -8,6 +8,23 @@ from tests_local.shared import create_test_inputs, CONFIG, TEST_CONFIG
 # from tests.shared import TEST_CONFIG as CONFIG
 from src.srv.sequence_exploration.sequence_analysis import load_tabulated_info
 from src.utils.results.analytics.naming import get_true_names_analytics, DIFF_KEY, RATIO_KEY
+from src.utils.misc.type_handling import flatten_listlike
+
+
+def fake_binding_site(energy):
+    """ Let's say -100 kcal corresponds to the entire sequence binding """
+    SEQ_LENGTH = 20
+    if energy == 0:
+        return [], 0, 0
+    num_bs = np.min([SEQ_LENGTH, int(100 / np.abs(energy))])
+    num_groups = np.random.randint(int(SEQ_LENGTH/num_bs)) + 1
+
+    starting_bind = [np.max([1, np.random.randint(0, np.max([1, SEQ_LENGTH - num_bs - num_groups]))])]
+    [starting_bind.append(starting_bind[-1] + np.random.randint(int(num_bs / num_groups), SEQ_LENGTH - starting_bind[-1] - int(num_bs / num_groups))) for i in range(num_groups - 1)]
+
+    fwd_bind = [np.arange(sb, sb+np.floor(num_bs/len(starting_bind)), 1) for sb in starting_bind]
+    rev_bind = [SEQ_LENGTH - fb for fb in fwd_bind]
+    return flatten_listlike([[(f, r) for f, r in zip(fwd, rev)] for fwd, rev in zip(fwd_bind, rev_bind)]), num_groups, num_bs
 
 
 class TestCircuit(unittest.TestCase):

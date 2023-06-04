@@ -22,7 +22,7 @@ def main(config=None, data_writer=None):
         Protocol(
             partial(RNAGenerator(data_writer=data_writer).generate_circuits,
                     iter_count=exp_configs.get("repetitions", 1),
-                    count=exp_configs.get("species_count", 3), slength=exp_configs["sequence_length"],
+                    num_components=exp_configs.get("species_count", 3), slength=exp_configs["sequence_length"],
                     proportion_to_mutate=exp_configs.get(
                         "proportion_to_mutate", 0.3),
                     protocol=exp_configs["generator_protocol"]),

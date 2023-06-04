@@ -19,7 +19,7 @@ ESSENTIAL_KWARGS = [
     # "interactions",
     "interaction_simulator",
     "molecular_params",
-    # "mutations",
+    # "mutations_args",
     "system_type",
 ]
 
@@ -37,12 +37,14 @@ def expand_model_config(in_config: dict, out_config: dict, sample_names: List[st
     return out_config
 
 
-def process_molecular_params(params: dict) -> dict:
+def process_molecular_params(params: dict, factor=1) -> dict:
     new_params = {}
     for k, v in params.items():
         if 'rate' in k and '_per_molecule' not in k:
             new_params[k + '_per_molecule'] = per_mol_to_per_molecule(v)
     params.update(new_params)
+    params['creation_rate'] = params['creation_rate'] * factor
+    params['degradation_rate'] = params['degradation_rate'] * factor
     return params
 
 
@@ -51,7 +53,7 @@ def compose_kwargs(prev_configs: dict = None, config: dict = None) -> dict:
 
     if prev_configs is not None:
         for kwarg, c in prev_configs.items():
-            if kwarg not in ['experiment', 'mutations', 'signal', 'simulation']:
+            if kwarg not in ['experiment', 'mutations_args', 'signal', 'simulation']:
                 config[kwarg] = c
 
     data_manager = DataManager(filepath=make_filename_safely(config.get("data_path", None)),
@@ -63,11 +65,12 @@ def compose_kwargs(prev_configs: dict = None, config: dict = None) -> dict:
         "data": data_manager.data,
         "data_path": data_manager.source,
         # For pre-loading interactions
+        "include_prod_deg": config["include_prod_deg"],
         "interactions": config["interactions"],
         "interactions_loaded": config["interactions_loaded"],
         "interaction_simulator": config["interaction_simulator"],
         "molecular_params": config["molecular_params"],
-        "mutations": cast_all_values_as_list(config["mutations"]),
+        "mutations_args": cast_all_values_as_list(config["mutations_args"]),
         "name": isolate_filename(data_manager.data.source),
         "signal": config["signal"],
         "simulation": config["simulation"],
@@ -80,11 +83,12 @@ def compose_kwargs(prev_configs: dict = None, config: dict = None) -> dict:
 
 
 def expand_config(config: dict) -> dict:
+    config["include_prod_deg"] = config.get("include_prod_deg", True)
     config["interactions"] = config.get("interactions")
     config["interactions_loaded"] = config.get("interactions_loaded")
     config["interaction_simulator"] = config.get("interaction_simulator", {"name": "IntaRNA"})
-    config["molecular_params"] = process_molecular_params(deepcopy(load_json_as_dict(config.get("molecular_params"))))
-    config["mutations"] = config.get("mutations", {})
+    config["molecular_params"] = process_molecular_params(deepcopy(load_json_as_dict(config.get("molecular_params"))), config.get("molecular_params_factor", 1))
+    config["mutations_args"] = config.get("mutations_args", {})
     config["signal"] = load_json_as_dict(config.get("signal"))
     config["simulation"] = config.get("simulation", {})
     config["simulation_steady_state"] = config.get("simulation_steady_state", {})

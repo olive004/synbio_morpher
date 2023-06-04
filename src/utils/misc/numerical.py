@@ -57,6 +57,52 @@ def calculate_num_decimals(floatlike):
     return int(np.log10(float(str(floatlike)[::-1]))) + 1
 
 
+def find_monotonic_group_idxs(lst, increasing=True):
+    """
+    Returns the number of groups of integers in lst that are monotonically increasing or decreasing without a gap.
+    GC 50%
+
+    Args:
+        lst (list): A list of integers.
+        increasing (bool): If True, counts groups that are monotonically increasing. If False, counts groups that are
+            monotonically decreasing.
+
+    Returns:
+        int: The number of groups that match the specified condition.
+    """
+    
+    if not lst:
+        return []
+
+    if increasing:
+        sign = 1
+    else:
+        sign = -1
+
+    all_l = []
+    current_group = [lst[0]]
+
+    if len(lst) > 1: 
+
+        for i in range(1, len(lst)):
+            if sign * (lst[i] - lst[i-1]) == 1:
+                current_group.append(lst[i])
+            else:
+                all_l.append(current_group)
+                current_group = [lst[i]]
+        all_l.append(current_group)
+
+    elif len(lst) == 1:
+        all_l.append(current_group)
+
+    return all_l
+
+
+def count_monotonic_group_lengths(lst, increasing=True):
+    all_l = find_monotonic_group_idxs(lst, increasing)
+    return [len(l) for l in all_l]
+
+
 def expand_matrix_triangle_idx(flat_triangle_idx):
     """ Computes the indices of a triangle, or the lower half
     of a symmetrical square matrix. Assuming that 1D index 
@@ -98,6 +144,26 @@ def make_dynamic_indexer(desired_axis_index_pairs: dict) -> tuple:
     return tuple(idxs)
 
 
+def nan_to_replacement_string(obj, replacement_string=''):
+    """ GC """
+    if isinstance(obj, str):
+        return obj
+    elif isinstance(obj, (list, tuple)):
+        return type(obj)(nan_to_replacement_string(x) for x in obj)
+    elif isinstance(obj, dict):
+        return {k: nan_to_replacement_string(v) for k, v in obj.items()}
+    elif isinstance(obj, np.ndarray):
+        return np.where(np.isnan(obj), replacement_string, obj).tolist()
+    elif isinstance(obj, pd.DataFrame):
+        return obj.applymap(nan_to_replacement_string)
+    elif isinstance(obj, pd.Series):
+        return obj.apply(nan_to_replacement_string)
+    elif np.isnan(obj):
+        return replacement_string
+    else:
+        return obj
+
+
 def init_matrices(self, uniform_vals, ndims=2, init_type="rand") -> List[np.array]:
     matrices = (self.init_matrix(ndims, init_type, val)
                 for val in uniform_vals)
@@ -125,6 +191,10 @@ def init_matrix(self, ndims=2, init_type="rand", uniform_val=1) -> np.array:
 
 def invert_onehot(onehot):
     return (onehot == 0).astype(onehot.dtype)
+
+
+def is_within_range(number, range_tuple):
+    return np.logical_and(range_tuple[0] <= number, number <= range_tuple[-1])
 
 
 def make_symmetrical_matrix_from_sequence(arr, side_length: int, total_dimensions: int = 2, sequence: str = 'triangular'):

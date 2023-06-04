@@ -10,11 +10,11 @@ from src.srv.io.manage.script_manager import script_preamble
 from src.utils.misc.io import get_pathnames_from_mult_dirs
 from src.utils.misc.scripts_io import get_search_dir
 from src.utils.misc.string_handling import prettify_keys_for_label
+from src.utils.misc.database_handling import expand_df_cols_lists
 from src.utils.results.analytics.naming import get_true_names_analytics
 
 from src.utils.results.experiments import Experiment, Protocol
-from src.utils.results.result_writer import ResultWriter
-from src.utils.results.visualisation import visualise_data, expand_df_cols_lists
+from src.utils.results.visualisation import visualise_data
 from src.utils.data.data_format_tools.common import load_json_as_dict, load_csv_mult
 
 

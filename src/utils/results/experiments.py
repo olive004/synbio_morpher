@@ -85,7 +85,6 @@ class Experiment():
     def collect_experiment(self):
         return {
             "total_time": str(self.total_time),
-            "protocols": make_attribute_list(self.protocols, Protocol, 'name'),
             "purpose": self.data_writer.purpose,
             "config_filepath": self.config,
             "config_params": self.config_file,
