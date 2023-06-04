@@ -139,8 +139,14 @@ def melt(info, num_group_cols, num_bs_cols, numerical_cols, key_cols, mutation_l
                     for m, range_tuples in zip(info_e['mutation_positions'], info_e[r])]
 
 
-    infom['frac_muts_in_binding_site'] = info_e.groupby(['circuit_name', 'mutation_num', 'mutation_name', 'sample_name'], as_index=False).agg({isb: lambda x: sum(x) / np.max([1, len(x)]) for isb in mut_in_bs_cols}).melt(
-        id_vars=['circuit_name', 'mutation_name', 'sample_name'], value_vars=mut_in_bs_cols, var_name='idx', value_name='frac_muts_in_binding_site')['frac_muts_in_binding_site']
+    infom['num_muts_in_binding_site'] = info_e.reset_index().groupby(['index', 'circuit_name', 'mutation_name'], as_index=False).agg({isb: 'sum' for isb in mut_in_bs_cols}).melt(
+        id_vars=['circuit_name', 'mutation_name'], value_vars=mut_in_bs_cols, var_name='idx', value_name='num_muts_in_binding_site')['num_muts_in_binding_site']
+    infom['num_muts_in_binding_site_edge'] = info_e.reset_index().groupby(['index', 'circuit_name', 'mutation_name'], as_index=False).agg({ise: 'sum' for ise in mut_in_edge_cols}).melt(
+        id_vars=['circuit_name', 'mutation_name'], value_vars=mut_in_edge_cols, var_name='idx', value_name='num_muts_in_binding_site_edge')['num_muts_in_binding_site_edge']
+    # infom['frac_muts_in_binding_site'] = info_e.groupby(['circuit_name', 'mutation_num', 'mutation_name', 'sample_name'], as_index=False).agg({isb: lambda x: sum(x) / np.max([1, len(x)]) for isb in mut_in_bs_cols}).melt(
+    #     id_vars=['circuit_name', 'mutation_name', 'sample_name'], value_vars=mut_in_bs_cols, var_name='idx', value_name='frac_muts_in_binding_site')['frac_muts_in_binding_site']
+    infom['frac_muts_in_binding_site'] = infom['num_muts_in_binding_site'] / (infom['mutation_num'].to_numpy() + (infom['mutation_num'] == 0).to_numpy())
+    infom['frac_muts_in_binding_site_edge'] = infom['num_muts_in_binding_site_edge'] / (infom['mutation_num'].to_numpy() + (infom['mutation_num'] == 0).to_numpy())
 
     return infom
 
