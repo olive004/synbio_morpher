@@ -12,6 +12,7 @@ from src.srv.io.loaders.experiment_loading import INTERACTION_FILE_ADDONS, load_
 from src.srv.io.loaders.misc import load_csv
 from src.srv.io.manage.sys_interface import PACKAGE_DIR
 from src.utils.data.data_format_tools.common import determine_file_format
+from src.utils.misc.string_handling import string_to_tuple_list
 
 
 INTERACTION_TYPES = sorted(INTERACTION_FILE_ADDONS.keys())
@@ -81,6 +82,9 @@ class InteractionMatrix():
                     loaded_matrix = loaded_matrix.to_numpy()
                     self.interactions.__setattr__(matrix_type, loaded_matrix)
                     self.interactions.units = self.units
+                elif isinstance(matrix_path, np.ndarray):
+                    self.interactions.__setattr__(matrix_type, matrix_path)
+                    self.interactions.units = self.units
             if 'binding_rates_association' in matrix_paths:
                 self.interactions.binding_rates_association = matrix_paths['binding_rates_association'] * np.ones_like(
                     self.interactions.binding_rates_dissociation)
@@ -133,7 +137,7 @@ class InteractionMatrix():
         return [idx for idx in idxs_interacting if len(set(idx)) == 1]
 
     def get_unique_interacting_idxs(self):
-        idxs_interacting = np.argwhere(self.interactions.eqconstants != 1)
+        idxs_interacting = np.argwhere(self.interactions.energies < 0)
         # Assuming symmetry in interactions
         idxs_interacting = sorted([tuple(sorted(i)) for i in idxs_interacting])
         return list(set(idxs_interacting))
@@ -142,15 +146,12 @@ class InteractionMatrix():
 class InteractionDataHandler():
 
     def __init__(self, simulation_handler: RawSimulationHandling,
-                 data: dict = None,
-                 test_mode=False):
+                 quantities: np.array):
         self.sample_processor = simulation_handler.get_sim_interpretation_protocol()
-        self.sample_postproc = simulation_handler.get_postprocessing()
-        if data is not None:
-            self.init_data(data, test_mode)
+        self.sample_postproc = simulation_handler.get_postprocessing(initial=quantities)
         self.units = simulation_handler.units
 
-    def init_data(self, data, test_mode: bool = False):
+    def init_data(self, data: dict, test_mode: bool = False):
         if not test_mode:
             interactions = self.parse(data)
         else:
@@ -176,7 +177,7 @@ class InteractionDataHandler():
 
     def make_matrix(self, data: dict) -> Tuple[np.ndarray, np.ndarray]:
         energies = np.zeros((len(data), len(data)))
-        binding = np.zeros((len(data), len(data)))
+        binding = np.array([[''] * len(data)] * len(data)).astype(object)
         for i, (name_i, sample) in enumerate(data.items()):
             for j, (name_j, raw_sample) in enumerate(sample.items()):
                 fields = self.sample_processor(raw_sample)
@@ -190,14 +191,14 @@ class InteractionSimulator():
     def __init__(self, sim_args: dict = None, allow_self_interaction: bool = True):
 
         self.simulation_handler = RawSimulationHandling(sim_args)
-        self.data_handler = InteractionDataHandler(
-            simulation_handler=self.simulation_handler)
         self.simulator = self.simulation_handler.get_simulator(
             allow_self_interaction)
 
-    def run(self, input: Union[dict, Tuple[str, dict]], compute_by_filename: bool):
+    def run(self, input: Union[dict, Tuple[str, dict]], quantities, compute_by_filename: bool):
         """ Makes nested dictionary for querying interactions as 
         {sample1: {sample2: interaction}} """
+        self.data_handler = InteractionDataHandler(
+            simulation_handler=self.simulation_handler, quantities=quantities)
         data = self.simulator(input, compute_by_filename=compute_by_filename)
         data = self.data_handler.init_data(data)
         return data
@@ -209,9 +210,9 @@ def b_get_stats(interactions_mxs: List[InteractionMatrix]):
         b_interaction_attrs[interaction_attr] = np.concatenate([np.expand_dims(
             im.interactions.__getattribute__(interaction_attr), axis=0) for im in interactions_mxs], axis=0)
     
-    batch_dim = b_interaction_attrs['eqconstants'].ndim - 2 - 1
+    batch_dim = b_interaction_attrs['energies'].ndim - 2 - 1
     idxs_interacting = get_unique_interacting_idxs(
-        b_interaction_attrs['eqconstants'], batch_dim)
+        b_interaction_attrs['energies'], batch_dim)
 
     idxs_other_interacting = get_interacting_species(idxs_interacting)
     idxs_self_interacting = get_selfinteracting_species(idxs_interacting)
@@ -233,13 +234,12 @@ def b_get_stats(interactions_mxs: List[InteractionMatrix]):
     for interaction_attr in INTERACTION_FIELDS_TO_WRITE:
         for i, s in enumerate(interactions_mxs[0].sample_names):
             for ii, s in enumerate(interactions_mxs[0].sample_names):
+                attr = b_interaction_attrs[interaction_attr][:, i, ii]
+                if interaction_attr == 'binding_sites' and (type(attr) == str):
+                    if type(attr) == np.ndarray and len(attr) == 1:
+                        string_to_tuple_list(attr[0])
                 stats[interaction_attr + '_' + str(i) + '-' + str(
-                    ii)] = b_interaction_attrs[interaction_attr][:, i, ii]
-        # stats[interaction_attr + '_' + 'max_interaction'] = np.max(
-        #     np.max(b_interaction_attrs[interaction_attr], axis=1), axis=1)
-        # stats[interaction_attr + '_' + 'min_interaction'] = np.min(
-        #     np.min(b_interaction_attrs[interaction_attr], axis=1), axis=1)
-    # stats = {k: [v] for k, v in stats.items()}
+                    ii)] = attr
     stats = pd.DataFrame.from_dict(stats, dtype=object)
     return stats
 
@@ -255,7 +255,7 @@ def get_selfinteracting_species(idxs_interacting: np.ndarray):
 
 
 def get_unique_interacting_idxs(interaction_attr: np.ndarray, batch_dim: int):
-    idxs_interacting = np.argwhere(interaction_attr > 1)
+    idxs_interacting = np.argwhere(interaction_attr < 0)
     samples = idxs_interacting[:, batch_dim+1:]
     samples.sort(axis=1)  # In-place sorting of idxs_interacting
     # idxs_interacting = np.concatenate(

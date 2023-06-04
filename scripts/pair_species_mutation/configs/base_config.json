@@ -23,7 +23,7 @@
         "copynumbers": 5,
         "degradation_rates": 20
     },
-    "mutations": {
+    "mutations_args": {
         "mutation_counts": 10,
         "mutation_nums_within_sequence": 1,
         "algorithm": "random"

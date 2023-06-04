@@ -48,7 +48,6 @@ def load_tabulated_info(source_dirs: list):
 
 def generate_interaction_stats(path_name: dict, writer: DataWriter = None, experiment_dir: str = None, **stat_addons) -> pd.DataFrame:
 
-    interactions = 1
     interactions = InteractionMatrix(
         matrix_paths=path_name, experiment_dir=experiment_dir)
 
@@ -78,12 +77,20 @@ def filter_data(data: pd.DataFrame, filters: dict = {}):
     if filters.get("max_self_interacting") is not None:
         filt_stats = filt_stats[filt_stats['num_self_interacting'] <= filters.get(
             "max_self_interacting", data["num_self_interacting"].iloc[0])]
+    if filters.get("min_num_self_interacting") is not None:
+        filt_stats = filt_stats[filt_stats['num_self_interacting']
+                          >= filters["min_num_self_interacting"]]
+    if filters.get("not_in_dirs") is not None:
+        if 'name' in filt_stats.columns:
+            assert type(filters['not_in_dirs']) == list, f'The used directories should be in a list, not {filters["filt_stats"]}'
+            used_circuits = flatten_nested_listlike([os.listdir(f) for f in filters['not_in_dirs']])
+            filt_stats = filt_stats[~filt_stats['name'].isin(used_circuits)]
     filt_stats = filt_stats.iloc[:min(filters.get(
         'max_total', len(filt_stats)), len(filt_stats))]
     return filt_stats
 
 
-def pull_circuits_from_stats(stats_pathname: Union[pd.DataFrame, str], filters: dict, write_key='data_path') -> List[Dict]:
+def pull_circuits_from_stats(stats_pathname: Union[pd.DataFrame, str], filters: dict, write_key='data_path', ignore_interactions=False) -> List[Dict]:
 
     stats = GeneCircuitLoader().load_data(stats_pathname).data
     filt_stats = filter_data(stats, filters)
@@ -103,15 +110,18 @@ def pull_circuits_from_stats(stats_pathname: Union[pd.DataFrame, str], filters: 
 
     extra_configs = []
     for index, row in filt_stats.iterrows():
+        if filters.get('max_circuits') is not None and (index > filters.get('max_circuits')):
+            break
         extra_config = load_experiment_config(experiment_folder)
         extra_config.update({write_key: get_path_from_output_summary(
             name=row["name"], output_summary=experiment_summary)})
-        extra_config["interactions"] = {
-            k: row[path_key] for k, path_key in interaction_path_keys.items()
-        }
+        if not ignore_interactions:
+            extra_config["interactions"] = {
+                k: row[path_key] for k, path_key in interaction_path_keys.items()
+            }
         extra_configs.append(extra_config)
-    if filters.get('max_circuits') is not None:
-        extra_configs = extra_configs[:filters.get('max_circuits')]
+    # if filters.get('max_circuits') is not None:
+    #     extra_configs = extra_configs[:filters.get('max_circuits')]
 
     return extra_configs
 

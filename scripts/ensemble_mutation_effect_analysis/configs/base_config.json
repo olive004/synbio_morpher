@@ -1,6 +1,8 @@
 {
     "experiment": {
-        "purpose": "ensemble_mutation_effect_analysis"
+        "purpose": "ensemble_mutation_effect_analysis",
+        "no_visualisations": true,
+        "no_numerical": true
     },
     "base_configs_ensemble": {
         "generate_species_templates": {
@@ -17,7 +19,9 @@
                 "species_count": 3,
                 "sequence_length": 20,
                 "generator_protocol": "template_mutate",
-                "proportion_to_mutate": 0.5
+                "proportion_to_mutate": 0.5,
+                "template": null,
+                "seed": 1
             },
             "system_type": "RNA"
         },
@@ -57,7 +61,7 @@
                 "min_num_interacting": 0,
                 "max_self_interacting": 3
             },
-            "mutations": {
+            "mutations_args": {
                 "algorithm": "all",
                 "mutation_counts": 2,
                 "mutation_nums_within_sequence": 0,
@@ -74,6 +78,19 @@
                 "total_time": 4,
                 "magnitude": 100,
                 "time_interval": 0.01
+            },
+            "simulation": {
+                "dt": 0.1,
+                "t0": 0,
+                "t1": 150,
+                "tmax": 120000,
+                "solver": "diffrax",
+                "use_batch_mutations": true,
+                "batch_size": 1000,
+                "max_circuits": 5000,
+                "device": "cpu",
+                "threshold_steady_states": 0.1, 
+                "use_rate_scaling": true
             },
             "source_of_interaction_stats": {
                 "is_source_dir_incomplete": true,

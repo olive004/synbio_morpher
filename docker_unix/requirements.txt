@@ -3,8 +3,8 @@ biopython
 celluloid
 chex
 fire
-jax[cuda]==0.4.1 -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
-jaxlib==0.4.1 -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+jax==0.4.8 -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+jaxlib==0.4.7 -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 jupyter
 diffrax
 matplotlib==3.6.0
@@ -22,5 +22,6 @@ tensorflow-probability==0.16.0
 torch
 torchvision
 tqdm
+umap-learn
 wandb
 wheel

@@ -12,7 +12,7 @@
         "input": "RNA_0",
         "output": "RNA_2"
     },
-    "mutations": {
+    "mutations_args": {
         "mutation_counts": 100,
         "mutation_nums_within_sequence": 1,
         "concurrent_species_to_mutate": "single_species_at_a_time"

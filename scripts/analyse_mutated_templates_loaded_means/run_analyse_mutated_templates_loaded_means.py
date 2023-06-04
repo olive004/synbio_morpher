@@ -106,7 +106,8 @@ def main(config=None, data_writer=None):
                                     xlabel=(
                                         f'{prettify_keys_for_label(c)}', f'{s}'),
                                     title=f'{prettify_keys_for_label(s)} of {prettify_keys_for_label(c)}\n for {m} mutations{thresh_text}{extra_text}',
-                                    misc_histplot_kwargs={'stat': 'probability' if normalise else 'count'
+                                    misc_histplot_kwargs={'stat': 'probability' if normalise else 'count',
+                                                          'element': 'step'
                                                           # 'hue_norm': [0, 1] if normalise else None
                                                           }
                                 )

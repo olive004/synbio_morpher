@@ -74,7 +74,7 @@ def main(config=None, data_writer=None):
                                     title=f'{prettify_keys_for_label(interaction_type)} for {m} mutation{plot_grammar_m}{thresh_text}',
                                     xlabel=prettify_keys_for_label(
                                         interaction_type),
-                                    misc_histplot_kwargs={'stat': 'probability' if normalise else 'count'}
+                                    misc_histplot_kwargs={'stat': 'probability' if normalise else 'count', 'element': 'step'}
                                 )
 
     # Protocols

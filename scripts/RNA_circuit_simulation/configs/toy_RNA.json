@@ -12,7 +12,7 @@
         "output": "RNA_2"
     },
     "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
-    "mutations": {
+    "mutations_args": {
         "mutation_counts": 0,
         "mutation_nums_within_sequence": 0,
         "algorithm": "random"

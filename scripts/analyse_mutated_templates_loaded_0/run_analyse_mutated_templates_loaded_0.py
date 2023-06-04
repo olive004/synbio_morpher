@@ -70,7 +70,8 @@ def main(config=None, data_writer: ResultWriter = None):
                             hue=hue,
                             title=f'{prettify_keys_for_label(analytics_type)}: circuit\nand mutated counterparts, {m} mutation{plot_grammar_m}' +
                             signal_text,
-                            xlabel=prettify_keys_for_label(analytics_type)
+                            xlabel=prettify_keys_for_label(analytics_type),
+                            misc_histplot_kwargs={'element': 'step'}
                         )
 
     protocols.append(

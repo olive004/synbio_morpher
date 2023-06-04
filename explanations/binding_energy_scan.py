@@ -358,7 +358,7 @@ if __name__ == '__main__':
     starting_state = BasicSimState(concentrations=s0)
 
     # K_eqs_range = np.array([0.02, 0.8, 1.2, 4, 30, 60, 110])
-    K_eqs_range = np.array([0.01, 0.5, 1.0, 5, 40, 100])
+    K_eqs_range = np.array([0.0001, 0.4, 1.0, 5, 40])
     # K_eqs_range = np.array([0.01, 0.5, 1.0, 5, 40])
     num_Keqs = np.size(K_eqs_range)
     num_unique_interactions = np.math.factorial(num_species)

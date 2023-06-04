@@ -3,26 +3,9 @@
         "purpose": "ensemble_mutation_effect_analysis"
     },
     "base_configs_ensemble": {
-        "gather_interaction_stats": {
-            "interaction_simulator": {
-                "name": "IntaRNA",
-                "postprocess": true
-            },
-            "interaction_file_keyword": ["eqconstants", "binding_rates_dissociation"],
-            "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
-            "experiment": {
-                "purpose": "gather_interaction_stats"
-            },    
-            "system_type": "RNA",
-            "source_of_interactions": {
-                "is_source_dir_incomplete": false,
-                "source_dir": "./data/ensemble_mutation_effect_analysis/2022_12_21_235045/generate_species_templates",
-                "purpose_to_get_source_dir_from": null,
-                "source_dir_actually_used_POSTERITY": null
-            }
-        },
         "mutation_effect_on_interactions_signal": {
             "system_type": "RNA",
+            "include_prod_deg": false,
             "data_path": null,
             "experiment": {
                 "purpose": "mutation_effect_on_interactions_signal",
@@ -36,42 +19,50 @@
             },
             "filters": {
                 "min_num_interacting": 2,
+                "min_num_self_interacting": 1,
                 "max_self_interacting": null,
-                "max_total": null
+                "max_total": 1000,
+                "not_in_dirs": ["data/ensemble_mutation_effect_analysis/2023_05_09_220322/mutation_effect_on_interactions_signal"]
             },
-            "mutations": {
+            "mutations_args": {
                 "algorithm": "random",
                 "mutation_counts": 10,
-                "mutation_nums_within_sequence": [1, 2, 3, 5, 7, 10, 15],
+                "mutation_nums_within_sequence": [1, 2, 3, 5, 10, 15],
                 "mutation_nums_per_position": 1,
-                "concurrent_species_to_mutate": "single_species_at_a_time"
+                "concurrent_species_to_mutate": "single_species_at_a_time",
+                "seed": 0
             },
             "signal": {
                 "inputs": ["RNA_0"],
                 "outputs": ["RNA_1"],
                 "function_name": "step_function",
                 "function_kwargs": {
-                    "impulse_center": 400, 
+                    "impulse_center": 1, 
                     "impulse_halfwidth": 5, 
-                    "target": 10
+                    "target": 2
                 }
             },
             "simulation": {
                 "dt": 0.1,
                 "t0": 0,
-                "t1": 1200,
+                "t1": 500,
+                "tmax": 120000,
                 "solver": "diffrax",
                 "use_batch_mutations": true,
-                "batch_size": 10000,
-                "max_circuits": 10000,
-                "device": "cpu"
+                "interaction_factor": 1,
+                "batch_size": 4000,
+                "max_circuits": 7000,
+                "device": "gpu",
+                "threshold_steady_states": 0.01, 
+                "use_rate_scaling": true
             },
             "source_of_interaction_stats": {
-                "is_source_dir_incomplete": true,
-                "source_dir": "./data/ensemble_mutation_effect_analysis",
+                "is_source_dir_incomplete": false,
+                "source_dir": "data/generate_seqs_flexible/2023_04_17_205800",
                 "purpose_to_get_source_dir_from": "gather_interaction_stats",
                 "source_dir_actually_used_POSTERITY": null
             },
+            "molecular_params_factor": 1,
             "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json"
         },
         "summarise_simulation": {
@@ -132,37 +123,6 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "analyse_mutated_templates_loaded_2": {
-            "experiment": {
-                "purpose": "analyse_mutated_templates_loaded_2"
-            },
-            "source_dirs": {
-                "is_source_dir_incomplete": true,
-                "source_dir": "./data/ensemble_mutation_effect_analysis",
-                "purpose_to_get_source_dir_from": "summarise_simulation",
-                "source_dir_actually_used_POSTERITY": null
-            },
-            "tabulated_info_differentiator": "mutation_num",
-            "preprocessing_func": null,
-            "only_visualise_circuits": false
-        },
-        "analyse_mutated_templates_loaded_2_nosig": {
-            "experiment": {
-                "purpose": "analyse_mutated_templates_loaded_2_nosig"
-            },
-            "source_dirs": {
-                "is_source_dir_incomplete": true,
-                "source_dir": "./data/ensemble_mutation_effect_analysis",
-                "purpose_to_get_source_dir_from": "summarise_simulation",
-                "source_dir_actually_used_POSTERITY": null
-            },
-            "tabulated_info_differentiator": "mutation_num",
-            "preprocessing_func": null,
-            "only_visualise_circuits": false,
-            "signal": {
-                "inputs": ["RNA_0"]
-            }
-        },
         "analyse_mutated_templates_loaded_3": {
             "experiment": {
                 "purpose": "analyse_mutated_templates_loaded_3"
@@ -217,6 +177,37 @@
             },
             "preprocessing_func": null,
             "only_visualise_circuits": false
+        },
+        "xanalyse_mutated_templates_loaded_2": {
+            "experiment": {
+                "purpose": "analyse_mutated_templates_loaded_2"
+            },
+            "source_dirs": {
+                "is_source_dir_incomplete": true,
+                "source_dir": "./data/ensemble_mutation_effect_analysis",
+                "purpose_to_get_source_dir_from": "summarise_simulation",
+                "source_dir_actually_used_POSTERITY": null
+            },
+            "tabulated_info_differentiator": "mutation_num",
+            "preprocessing_func": null,
+            "only_visualise_circuits": false
+        },
+        "xanalyse_mutated_templates_loaded_2_nosig": {
+            "experiment": {
+                "purpose": "analyse_mutated_templates_loaded_2_nosig"
+            },
+            "source_dirs": {
+                "is_source_dir_incomplete": true,
+                "source_dir": "./data/ensemble_mutation_effect_analysis",
+                "purpose_to_get_source_dir_from": "summarise_simulation",
+                "source_dir_actually_used_POSTERITY": null
+            },
+            "tabulated_info_differentiator": "mutation_num",
+            "preprocessing_func": null,
+            "only_visualise_circuits": false,
+            "signal": {
+                "inputs": ["RNA_0"]
+            }
         }
     }
 }

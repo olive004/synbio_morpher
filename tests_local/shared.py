@@ -53,7 +53,7 @@ ENSEMBLE_CONFIG = {
                 "purpose": "mutation_effect_on_interactions_signal",
                 "test_mode": False
             },
-            "mutations": {
+            "mutations_args": {
                 "algorithm": "random",
                 "mutation_counts": 0,
                 "mutation_nums_within_sequence": [1],
@@ -74,18 +74,21 @@ ENSEMBLE_CONFIG = {
                 "function_kwargs": {
                     "impulse_center": 5,
                     # "impulse_halfwidth": 1,
-                    "target": 5
+                    "target": 4
                 }
             },
             "simulation": {
                 "dt": 0.1,
                 "t0": 0,
-                "t1": 1500,
+                "t1": 100,
+                "tmax": 20000,
                 "solver": "diffrax",
                 "use_batch_mutations": True,
+                "interaction_factor": 1,
                 "batch_size": 100,
                 "max_circuits": 1000,
                 "device": "cpu",
+                "threshold_steady_states": 0.001,
                 "use_rate_scaling": True
             },
             "source_of_interaction_stats": {
@@ -131,7 +134,7 @@ def five_circuits(config: dict, data_writer=None):
     ]
 
     interaction_paths = []
-    for inter in ['binding_rates_dissociation', 'eqconstants']:
+    for inter in ['binding_rates_dissociation', 'eqconstants', 'energies', 'binding_sites']:
         interaction_paths.append([
             # toy_mRNA_circuit_0
             os.path.join(PACKAGE_DIR, 'tests_local', 'configs',
@@ -153,9 +156,12 @@ def five_circuits(config: dict, data_writer=None):
     # interactions = np.expand_dims(np.expand_dims(np.arange(
     #     len(paths)), axis=1), axis=2) * np.ones((len(paths), species_num, species_num)) * default_interaction
     interactions_cfg = [
-        {'binding_rates_association': config['molecular_params']
-            ['association_binding_rate' + '_per_molecule'], 'binding_rates_dissociation': bp, 'eqconstants': ep}
-        for bp, ep in zip(interaction_paths[0], interaction_paths[1])]
+        {'binding_rates_association': config['molecular_params']['association_binding_rate' + '_per_molecule'],
+         'binding_rates_dissociation': bp,
+         'eqconstants': ep,
+         'energies': eg,
+         'binding_sites': bs}
+        for bp, ep, eg, bs in zip(interaction_paths[0], interaction_paths[1], interaction_paths[2], interaction_paths[3])]
 
     return [construct_circuit_from_cfg(
         {'data_path': p,
@@ -168,10 +174,10 @@ def mutate(circuits, config, data_writer):
     for c in circuits:
         c = Evolver(data_writer=data_writer,
                     sequence_type=config.get('system_type'),
-                    seed=config.get('mutations', {}).get('seed')).mutate(
+                    seed=config.get("mutations_args", {}).get('seed')).mutate(
             c,
             write_to_subsystem=True,
-            algorithm=config.get('mutations', {}).get('algorithm', 'random'))
+            algorithm=config.get("mutations_args", {}).get('algorithm', 'random'))
     return circuits, config, data_writer
 
 
