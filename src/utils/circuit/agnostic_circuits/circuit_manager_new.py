@@ -294,7 +294,7 @@ class CircuitModeller():
             b_steady_states = [None] * len(circuits)
             b_reverse_rates = [None] * len(circuits)
 
-            use_single = True
+            use_initial = True
             species_chosen = circuits[0].model.species[np.argmax(
                 signal.onehot)]
             other_species = flatten_listlike(
@@ -303,7 +303,7 @@ class CircuitModeller():
                                else 0 for s in circuits[0].model.species])
             for i, c in enumerate(circuits):
                 if not c.use_prod_and_deg:
-                    if use_single:
+                    if use_initial:
                         b_steady_states[i] = c.result_collector.get_result(
                             'steady_states').analytics['steady_states'].flatten() * ((signal.onehot == 0) * 1) + \
                             (c.result_collector.get_result(
