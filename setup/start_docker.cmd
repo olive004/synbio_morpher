@@ -1,17 +1,21 @@
 @REM # See README.md in the root project directory for docker setup instructions
 docker pull docker/dockerfile:1
-docker pull quay.io/biocontainers/intarna:3.3.1--pl5321h7ff8a90_1
+docker pull quay.io/biocontainers/intarna:3.3.2--pl5321h7ff8a90_0
+docker pull nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
 
 @REM # If image not built yet
 docker build -t genetic_glitch:latest .\docker_windows
 
+@REM # cp ./requirements.txt ./docker_windows
+
 docker create -it ^
 --rm ^
---name gcg_test ^
+--gpus all ^
+--name gcg ^
 --mount=type=bind,source=%cd%,target=/workdir ^
 genetic_glitch:latest
-docker container start gcg_test
-docker exec -it gcg_test /bin/bash 
+docker container start gcg
+docker exec -it gcg /bin/bash 
 @REM # docker container stop gcg
 
 
