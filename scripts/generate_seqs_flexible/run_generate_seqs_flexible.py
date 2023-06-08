@@ -4,7 +4,7 @@ from fire import Fire
 import numpy as np
 
 from src.srv.io.manage.script_manager import script_preamble
-from src.utils.common.setup_new import construct_circuit_from_cfg, prepare_config
+from src.utils.common.setup import construct_circuit_from_cfg, prepare_config
 from src.utils.circuit.agnostic_circuits.circuit_manager import CircuitModeller
 from src.utils.evolution.evolver import Evolver
 from src.utils.data.data_format_tools.common import load_json_as_dict

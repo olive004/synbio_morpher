@@ -5,7 +5,7 @@ from src.srv.io.manage.script_manager import script_preamble
 from src.srv.io.manage.sys_interface import PACKAGE_DIR
 from src.srv.sequence_exploration.sequence_analysis import b_tabulate_mutation_info
 from src.utils.circuit.agnostic_circuits.circuit_manager import CircuitModeller
-from src.utils.common.setup_new import construct_circuit_from_cfg, prepare_config
+from src.utils.common.setup import construct_circuit_from_cfg, prepare_config
 from src.utils.evolution.evolver import Evolver
 from src.utils.misc.type_handling import merge_dicts, replace_value
 
