@@ -4,7 +4,7 @@ import numpy as np
 from typing import List
 # from src.utils.signal.signals import Signal, AdaptationTarget, OscillatingSignal
 from src.utils.signal.signals_new import Signal
-from src.utils.circuit.agnostic_circuits.circuit_manager_new import Circuit
+from src.utils.circuit.agnostic_circuits.circuit_manager import Circuit
 
 
 # TODO: Delete

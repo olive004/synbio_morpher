@@ -13,7 +13,7 @@ from src.utils.evolution.evolver import Evolver
 from src.utils.misc.io import get_pathnames
 from src.utils.misc.scripts_io import get_search_dir
 from src.utils.common.setup_new import expand_config
-from src.utils.circuit.agnostic_circuits.circuit_manager_new import CircuitModeller
+from src.utils.circuit.agnostic_circuits.circuit_manager import CircuitModeller
 
 
 def main(config=None, data_writer=None):

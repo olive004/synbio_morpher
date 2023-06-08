@@ -13,7 +13,7 @@
 # from src.utils.misc.io import convert_pathname_to_module, get_pathnames, get_subdirectories
 # from src.utils.misc.numerical import make_symmetrical_matrix_from_sequence, triangular_sequence
 # from src.utils.common.setup_new import construct_circuit_from_cfg, prepare_config
-# from src.utils.circuit.agnostic_circuits.circuit_manager_new import CircuitModeller
+# from src.utils.circuit.agnostic_circuits.circuit_manager import CircuitModeller
 
 
 # SCRIPT_DIR = 'scripts'

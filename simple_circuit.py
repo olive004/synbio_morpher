@@ -5,7 +5,7 @@ from src.utils.common.setup_new import construct_circuit_from_cfg, prepare_confi
 from src.srv.io.manage.script_manager import script_preamble
 from src.utils.circuit.agnostic_circuits.circuit_new import Circuit
 from src.utils.evolution.evolver import Evolver
-from src.utils.circuit.agnostic_circuits.circuit_manager_new import CircuitModeller
+from src.utils.circuit.agnostic_circuits.circuit_manager import CircuitModeller
 
 
 def five_circuits():
