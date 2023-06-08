@@ -19,7 +19,7 @@ from bioreaction.simulation.manager import simulate_steady_states
 
 from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
 from src.srv.parameter_prediction.interactions import InteractionDataHandler, InteractionSimulator, INTERACTION_FIELDS_TO_WRITE
-from src.utils.circuit.agnostic_circuits.circuit_new import Circuit, interactions_to_df
+from src.utils.circuit.agnostic_circuits.circuit import Circuit, interactions_to_df
 from src.utils.misc.helper import vanilla_return
 from src.utils.misc.numerical import invert_onehot, zero_out_negs
 from src.utils.misc.runtime import clear_caches

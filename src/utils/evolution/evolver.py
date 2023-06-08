@@ -11,7 +11,7 @@ from src.utils.results.writer import DataWriter, kwargs_from_table
 from src.utils.misc.string_handling import add_outtype
 
 
-from src.utils.circuit.agnostic_circuits.circuit_new import Circuit
+from src.utils.circuit.agnostic_circuits.circuit import Circuit
 
 
 class Evolver():
