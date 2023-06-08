@@ -2,7 +2,7 @@ from functools import partial
 import os
 
 from fire import Fire
-from src.utils.circuit.agnostic_circuits.circuit_manager_new import CircuitModeller
+from src.utils.circuit.agnostic_circuits.circuit_manager import CircuitModeller
 from src.utils.results.experiments import Experiment, Protocol
 from src.utils.results.result_writer import ResultWriter
 from src.utils.data.data_format_tools.common import load_json_as_dict

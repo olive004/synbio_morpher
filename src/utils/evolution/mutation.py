@@ -3,7 +3,7 @@
 from typing import List
 from copy import deepcopy
 from bioreaction.model.data_containers import Species
-from src.utils.circuit.agnostic_circuits.circuit_new import Circuit
+from src.utils.circuit.agnostic_circuits.circuit import Circuit
 from src.utils.results.writer import Tabulated
 
 
