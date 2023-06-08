@@ -1,11 +1,11 @@
 import numpy as np
 import pandas as pd
 import os
-from src.utils.common.setup_new import construct_circuit_from_cfg, prepare_config
+from src.utils.common.setup import construct_circuit_from_cfg, prepare_config
 from src.srv.io.manage.script_manager import script_preamble
-from src.utils.circuit.agnostic_circuits.circuit_new import Circuit
+from src.utils.circuit.agnostic_circuits.circuit import Circuit
 from src.utils.evolution.evolver import Evolver
-from src.utils.circuit.agnostic_circuits.circuit_manager_new import CircuitModeller
+from src.utils.circuit.agnostic_circuits.circuit_manager import CircuitModeller
 
 
 def five_circuits():

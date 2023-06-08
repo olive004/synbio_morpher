@@ -19,7 +19,6 @@ from src.utils.misc.string_handling import string_to_tuple_list
 from src.utils.misc.type_handling import get_first_elements
 from src.utils.results.analytics.naming import get_true_interaction_cols
 
-# config = load_json_as_dict('../tests_local/configs/simple_circuit.json')
 SEQ_LENGTH = 20
 
 
