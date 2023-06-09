@@ -17,7 +17,7 @@ pyvis
 scipy
 seaborn
 six
-tensorflow
+tensorflow==2.11.0
 tensorflow-probability==0.16.0
 torch
 torchvision
