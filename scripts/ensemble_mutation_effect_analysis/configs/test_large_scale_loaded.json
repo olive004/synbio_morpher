@@ -21,7 +21,7 @@
                 "min_num_interacting": 0,
                 "min_num_self_interacting": 0,
                 "max_self_interacting": null,
-                "max_total": 2000,
+                "max_total": 1000,
                 "not_in_dirs": ["data/ensemble_mutation_effect_analysis/2023_05_09_220322/mutation_effect_on_interactions_signal"]
             },
             "mutations_args": {
@@ -39,7 +39,7 @@
                 "function_kwargs": {
                     "impulse_center": 1, 
                     "impulse_halfwidth": 5, 
-                    "target": 2
+                    "target": 0.005
                 }
             },
             "simulation": {
