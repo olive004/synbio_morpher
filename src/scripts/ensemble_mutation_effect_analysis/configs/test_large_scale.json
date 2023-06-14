@@ -20,7 +20,7 @@
                 "generator_protocol": "random",
                 "proportion_to_mutate": 0.5,
                 "template": null,
-                "seed": 5
+                "seed": 6
             },
             "system_type": "RNA"
         },
@@ -44,6 +44,7 @@
         },
         "mutation_effect_on_interactions_signal": {
             "system_type": "RNA",
+            "include_prod_deg": false,
             "data_path": null,
             "experiment": {
                 "purpose": "mutation_effect_on_interactions_signal",
@@ -56,38 +57,42 @@
                 "postprocess": true
             },
             "filters": {
-                "min_num_interacting": 2,
+                "min_num_interacting": 0,
+                "min_num_self_interacting": 0,
                 "max_self_interacting": null,
-                "max_total": 1000
+                "max_total": 2000,
+                "not_in_dirs": ["data/ensemble_mutation_effect_analysis/2023_05_09_220322/mutation_effect_on_interactions_signal"]
             },
             "mutations_args": {
                 "algorithm": "random",
-                "mutation_counts": 8,
-                "mutation_nums_within_sequence": [1, 3, 5, 10, 15],
+                "mutation_counts": 10,
+                "mutation_nums_within_sequence": [1, 2, 3, 5, 10, 15],
                 "mutation_nums_per_position": 1,
-                "concurrent_species_to_mutate": "single_species_at_a_time"
+                "concurrent_species_to_mutate": "single_species_at_a_time",
+                "seed": 1
             },
             "signal": {
                 "inputs": ["RNA_0"],
                 "outputs": ["RNA_1"],
                 "function_name": "step_function",
                 "function_kwargs": {
-                    "impulse_center": 400, 
+                    "impulse_center": 1, 
                     "impulse_halfwidth": 5, 
-                    "target": 10
+                    "target": 0.005
                 }
             },
             "simulation": {
                 "dt": 0.1,
                 "t0": 0,
-                "t1": 150,
+                "t1": 600,
                 "tmax": 120000,
                 "solver": "diffrax",
                 "use_batch_mutations": true,
-                "batch_size": 1000,
-                "max_circuits": 5000,
-                "device": "cpu",
-                "threshold_steady_states": 0.1, 
+                "interaction_factor": 1,
+                "batch_size": 8000,
+                "max_circuits": 10000,
+                "device": "gpu",
+                "threshold_steady_states": 0.01, 
                 "use_rate_scaling": true
             },
             "source_of_interaction_stats": {
@@ -96,6 +101,7 @@
                 "purpose_to_get_source_dir_from": "gather_interaction_stats",
                 "source_dir_actually_used_POSTERITY": null
             },
+            "molecular_params_factor": 1,
             "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json"
         },
         "summarise_simulation": {
