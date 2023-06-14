@@ -16,7 +16,7 @@
 # from src.utils.circuit.agnostic_circuits.circuit_manager import CircuitModeller
 
 
-# SCRIPT_DIR = 'scripts'
+# SCRIPT_DIR = 'src', 'scripts'
 
 
 # def get_all_config_files(config_dir):

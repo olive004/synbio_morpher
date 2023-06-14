@@ -2,7 +2,7 @@ from copy import deepcopy
 from functools import partial
 import logging
 import os
-from scripts.parameter_grid_analysis.run_parameter_grid_analysis import main as parameter_grid_analysis
+from src.scripts.parameter_grid_analysis.run_parameter_grid_analysis import main as parameter_grid_analysis
 from src.srv.io.manage.script_manager import script_preamble
 from src.utils.data.data_format_tools.common import load_json_as_dict
 from src.utils.misc.type_handling import inverse_dict
@@ -13,7 +13,7 @@ from src.utils.results.experiments import Experiment, Protocol
 def main(config=None, data_writer=None):
 
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
-        'scripts', 'parameter_grid_analysis', 'configs', 'testing.json'))
+        'src', 'scripts', 'parameter_grid_analysis', 'configs', 'testing.json'))
     config_file = load_json_as_dict(config)
 
     def hash_species_in_cfg(config):

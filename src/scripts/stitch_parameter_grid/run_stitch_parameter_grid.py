@@ -18,7 +18,7 @@ def main(config=None, data_writer=None):
 
     if config is None:
         config = os.path.join(
-            'scripts', 'stitch_parameter_grid', 'configs', 'base_config.json')
+            'src', 'scripts', 'stitch_parameter_grid', 'configs', 'base_config.json')
     config_file = load_json_as_dict(config)
     if data_writer is None:
         data_writer = ResultWriter(purpose=config_file[

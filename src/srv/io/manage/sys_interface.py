@@ -24,7 +24,7 @@ else:
         f'Package name {package_name} not found in current working directory {os.getcwd()}')
 
 
-SCRIPT_DIR = os.path.join(PACKAGE_DIR, 'scripts')
+SCRIPT_DIR = os.path.join(PACKAGE_DIR, 'src', 'scripts')
 DATA_DIR = os.path.join(PACKAGE_DIR, 'data')
 
 

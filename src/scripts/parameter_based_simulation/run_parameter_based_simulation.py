@@ -19,7 +19,7 @@ from src.utils.circuit.agnostic_circuits.circuit_manager import CircuitModeller
 def main(config=None, data_writer=None):
 
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
-        'scripts', 'parameter_based_simulation', 'configs', 'testing.json'))
+        'src', 'scripts', 'parameter_based_simulation', 'configs', 'testing.json'))
     config_file = load_json_as_dict(config)
     config_file = prepare_config(config_file)
 

@@ -16,7 +16,7 @@ from src.utils.data.data_format_tools.common import load_json_as_dict, load_mult
 def main(config=None, data_writer=None):
     # Set configs
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
-            # "scripts", "summarise_simulation", "configs", "analyse_mutated_templates_20_highmag.json"))
+            # "src", "scripts", "summarise_simulation", "configs", "analyse_mutated_templates_20_highmag.json"))
             "scripts", "summarise_simulation", "configs", "base_config.json"))
     config_file = load_json_as_dict(config)
 
