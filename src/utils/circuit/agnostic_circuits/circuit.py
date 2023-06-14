@@ -19,14 +19,6 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-# def interactions_to_dict(interactions: np.ndarray, labels: list):
-#     interactions_dict = {}
-#     for i, sample in enumerate(labels):
-#         interactions_dict[sample] = {s: interactions[i][j]
-#                                      for j, s in enumerate(labels)}
-#     return interactions_dict
-
-
 def interactions_to_df(interactions: Union[np.ndarray, list], labels: list):
     return pd.DataFrame(data=interactions, columns=labels, index=labels)
 

@@ -4,7 +4,7 @@ from subprocess import PIPE, run
 import numpy as np
 from functools import partial
 from src.utils.misc.helper import vanilla_return, processor
-from src.utils.modelling.physical import equilibrium_constant_reparameterisation
+from src.utils.modelling.physical import equilibrium_constant_reparameterisation, eqconstant_to_rates
 from src.srv.parameter_prediction.IntaRNA.bin.copomus.IntaRNA import IntaRNA
 
 
@@ -51,19 +51,8 @@ class RawSimulationHandling():
 
     def get_postprocessing(self, **processor_kwrgs):
 
-        def eqconstant_to_rates(eqconstants):
-            """ Translate the equilibrium rate of binding to
-            the rate of binding (either association or dissociation
-            rate - in this case dissociation). Input in mol, output in molecules:
-            k_a: binding rate per Ms
-            eqconstants: unitless but in terms of mol
-            k_d: unbinding rate per s"""
-            k_a = self.fixed_rate_k_a
-            k_d = np.divide(k_a, eqconstants)
-            return k_a*np.ones_like(k_d), k_d
-
         def return_both_eqconstants_and_rates(eqconstants):
-            return eqconstants, eqconstant_to_rates(eqconstants)
+            return eqconstants, eqconstant_to_rates(eqconstants, self.fixed_rate_k_a)
 
         if self.simulator_name == "IntaRNA":
             if self.postprocess:

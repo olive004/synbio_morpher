@@ -38,3 +38,15 @@ def gibbs_K_cal(E):
     """
     K = np.exp(np.divide(-E, SCIENTIFIC['RT_cal']))
     return K
+
+
+def eqconstant_to_rates(eqconstants, k_a):
+    """ Translate the equilibrium rate of binding to
+    the rate of binding (either association or dissociation
+    rate - in this case dissociation). Input in mol, output in molecules:
+    k_a: binding rate per Ms
+    eqconstants: unitless but in terms of mol
+    k_d: unbinding rate per s"""
+    
+    k_d = np.divide(k_a, eqconstants)
+    return k_a*np.ones_like(k_d), k_d
