@@ -19,5 +19,5 @@ explanations/output
 lib/*
 Miniconda3*
 !requirements.txt
-src/srv/parameter_prediction/IntaRNA/*
-src/srv/parameter_prediction/RNAstructure/*
+src/srv/parameter_prediction/IntaRNA
+src/srv/parameter_prediction/RNAstructure
