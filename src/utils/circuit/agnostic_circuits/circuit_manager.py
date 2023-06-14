@@ -553,6 +553,8 @@ class CircuitModeller():
                 return copynumbers, ts
 
             self.sim_func = b_ivp
+        else:
+            raise ValueError(f'The simulation function could not be specified with solver option {self.simulation_args["solver"]}. Try `diffrax` or `ivp`.')
 
     def batch_circuits(self,
                        circuits: List[Circuit],

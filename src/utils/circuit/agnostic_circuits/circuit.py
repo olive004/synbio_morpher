@@ -49,7 +49,7 @@ class Circuit():
         self.interactions_state: str = config.get(
             'interactions_state', 'uninitialised')
         self.init_interactions(config.get('interactions'),
-                               config.get('interactions_loaded'))
+                               config.get('interactions_loaded'), config)
         if config.get('interactions_loaded') is not None or config.get('interactions') is not None:
             assert self.interactions_state != 'uninitialised', f'The interactions should have been initialised from {config.get("interactions")}'
         self.signal: Signal = None
@@ -80,7 +80,7 @@ class Circuit():
         qreactions.init_properties(model, config)
         return qreactions
 
-    def init_interactions(self, interaction_cfg: dict = None, interactions_loaded: dict = None) -> MolecularInteractions:
+    def init_interactions(self, interaction_cfg: dict = None, interactions_loaded: dict = None, config: dict = None) -> MolecularInteractions:
         if interaction_cfg is None and interactions_loaded is None:
             num_in_species = len(self.get_input_species())
             nans = np.zeros((num_in_species, num_in_species)) * np.nan
@@ -94,7 +94,7 @@ class Circuit():
             )
         else:
             self.interactions = InteractionMatrix(
-                matrix_paths=interaction_cfg, interactions_kwargs=interactions_loaded).interactions
+                matrix_paths=interaction_cfg, interactions_loaded=interactions_loaded, experiment_config=config).interactions
 
     def get_input_species(self):
         return sorted(get_unique(flatten_listlike([r.input for r in self.model.reactions if r.output])))

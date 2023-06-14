@@ -21,7 +21,7 @@ def load_param(filepath, param, experiment_config: dict = None) -> dict:
         experiment_config = load_experiment_config(
             experiment_folder=get_root_experiment_folder(filepath))
     return per_mol_to_per_molecule(load_json_as_dict(
-        experiment_config.get('molecular_params'))[param])
+        experiment_config['molecular_params'])[param])
 
 
 def load_units(filepath, experiment_config: dict = None):

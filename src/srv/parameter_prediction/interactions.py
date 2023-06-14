@@ -52,7 +52,7 @@ class InteractionMatrix():
                  num_nodes: int = None,
                  units: str = '',
                  experiment_config: dict = None,
-                 interactions_kwargs: dict = None):
+                 interactions_loaded: dict = None):
 
         self.name = None
         self.sample_names = None
@@ -71,8 +71,8 @@ class InteractionMatrix():
             units='test'
         )
 
-        if interactions_kwargs is not None:
-            self.interactions = MolecularInteractions(**interactions_kwargs)
+        if interactions_loaded is not None:
+            self.interactions = MolecularInteractions(**interactions_loaded)
 
         elif matrix_paths is not None:
             for matrix_type, matrix_path in matrix_paths.items():
@@ -89,6 +89,8 @@ class InteractionMatrix():
                 self.interactions.binding_rates_association = matrix_paths['binding_rates_association'] * np.ones_like(
                     self.interactions.binding_rates_dissociation)
             else:
+                assert experiment_config is not None, f'Please either provide the parameter for `association_binding_rate` as '
+                '`binding_rates_association` in the `interactions` field in the config, or provide the entire config.'
                 self.interactions.binding_rates_association = load_param(
                     list(matrix_paths.values())[0], 'association_binding_rate', experiment_config=experiment_config
                 ) * np.ones_like(self.interactions.binding_rates_dissociation)
