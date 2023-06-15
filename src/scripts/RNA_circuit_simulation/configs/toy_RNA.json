@@ -17,6 +17,6 @@
         "mutation_nums_within_sequence": 0,
         "algorithm": "random"
     },
-    "signal": "./scripts/RNA_circuit_simulation/configs/in_signal.json",
+    "signal": "./src/scripts/RNA_circuit_simulation/configs/in_signal.json",
     "system_type": "RNA"
 }

@@ -95,7 +95,7 @@
 
 #     def test_parameter_based_simulation(self):
 #         config = {
-#             "data_path": make_filename_safely("./scripts/parameter_based_simulation/configs/empty_circuit.fasta"),
+#             "data_path": make_filename_safely("./src/scripts/parameter_based_simulation/configs/empty_circuit.fasta"),
 #             "experiment": {
 #                 "purpose": "parameter_based_simulation"
 #             },
