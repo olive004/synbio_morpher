@@ -14,7 +14,7 @@ def main(config=None, data_writer=None):
     # set configs
     if config is None:
         config = os.path.join(
-            "scripts", "pair_species_mutation", "configs", "RNA_pair_species_mutation.json")
+            "src", "scripts", "pair_species_mutation", "configs", "RNA_pair_species_mutation.json")
     config_file = load_json_as_dict(config)
     config_file = prepare_config(config_file)
     exp_configs = config_file.get("circuit_generation", {})

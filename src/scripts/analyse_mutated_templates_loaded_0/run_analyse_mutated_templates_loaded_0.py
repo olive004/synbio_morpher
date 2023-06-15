@@ -18,7 +18,7 @@ from src.utils.results.visualisation import visualise_data
 def main(config=None, data_writer: ResultWriter = None):
     # Set configs
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
-        "scripts", "analyse_mutated_templates_loaded_0", "configs", "base_config.json"))
+        "src", "scripts", "analyse_mutated_templates_loaded_0", "configs", "base_config.json"))
     config_file = load_json_as_dict(config)
 
     config_file, source_dirs = get_search_dir(

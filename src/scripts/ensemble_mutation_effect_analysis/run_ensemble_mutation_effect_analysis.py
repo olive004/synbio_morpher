@@ -12,7 +12,7 @@ def main(config=None, data_writer=None):
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
         # "src", "scripts", "ensemble_mutation_effect_analysis", "configs", "test_ensemble.json"))
         # "src", "scripts", "ensemble_mutation_effect_analysis", "configs", "test_large_scale.json"))
-        "scripts", "ensemble_mutation_effect_analysis", "configs", "test_large_scale_loaded.json"))
+        "src", "scripts", "ensemble_mutation_effect_analysis", "configs", "test_large_scale_loaded.json"))
         # "src", "scripts", "ensemble_mutation_effect_analysis", "configs", "distribution_of_energies.json"))
         # "src", "scripts", "ensemble_mutation_effect_analysis", "configs", "distribution_of_energies_loaded.json"))
 

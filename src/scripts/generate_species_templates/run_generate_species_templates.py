@@ -13,7 +13,7 @@ from src.utils.circuit.agnostic_circuits.circuit_manager import CircuitModeller
 def main(config=None, data_writer=None):
     # set configs
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
-            "scripts", "generate_species_templates", "configs", "base_config.json"))
+            "src", "scripts", "generate_species_templates", "configs", "base_config.json"))
     config_file = load_json_as_dict(config)
     config_file = prepare_config(config_file)
     exp_configs = config_file.get("circuit_generation")
