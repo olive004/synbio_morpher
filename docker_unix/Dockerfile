@@ -12,6 +12,7 @@ WORKDIR /usr/lib
 COPY ./requirements.txt /usr/lib/install_requirements/requirements.txt
 RUN apt-get update && \
     yes | apt-get install python3-pip
+RUN yes | apt install git
 RUN cd /usr/lib/install_requirements && \
     pip install -r ./requirements.txt 
 RUN pip install --upgrade "jax[cuda11_pip]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html

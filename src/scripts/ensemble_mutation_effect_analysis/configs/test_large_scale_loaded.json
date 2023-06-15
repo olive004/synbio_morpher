@@ -58,7 +58,7 @@
             },
             "source_of_interaction_stats": {
                 "is_source_dir_incomplete": false,
-                "source_dir": "data/ensemble_mutation_effect_analysis/2023_06_14_095407/gather_interaction_stats",
+                "source_dir": "data/generate_seqs_flexible/2023_04_17_205800",
                 "purpose_to_get_source_dir_from": "gather_interaction_stats",
                 "source_dir_actually_used_POSTERITY": null
             },
