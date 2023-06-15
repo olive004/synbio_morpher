@@ -18,5 +18,5 @@ classifiers = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/olive004/gene-circuit-glitch-prediction"
-"Bug Tracker" = "https://github.com/olive004/gene-circuit-glitch-prediction/issues"
+"Homepage" = "https://github.com/olive004/synbio_morpher"
+"Bug Tracker" = "https://github.com/olive004/synbio_morpher/issues"
