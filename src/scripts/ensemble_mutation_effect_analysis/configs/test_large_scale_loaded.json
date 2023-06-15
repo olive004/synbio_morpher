@@ -50,8 +50,8 @@
                 "solver": "diffrax",
                 "use_batch_mutations": true,
                 "interaction_factor": 1,
-                "batch_size": 8000,
-                "max_circuits": 16000,
+                "batch_size": 800,
+                "max_circuits": 1600,
                 "device": "gpu",
                 "threshold_steady_states": 0.01, 
                 "use_rate_scaling": true

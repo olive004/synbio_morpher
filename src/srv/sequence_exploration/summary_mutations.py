@@ -1,4 +1,11 @@
 
+# Copyright (c) 2023, Olivia Gallup
+# All rights reserved.
+
+# This source code is licensed under the MIT-style license found in the
+# LICENSE file in the root directory of this source tree. 
+    
+
 
 import pandas as pd
 from src.utils.results.analytics.naming import get_true_names_analytics

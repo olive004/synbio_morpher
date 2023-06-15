@@ -1,4 +1,11 @@
 
+# Copyright (c) 2023, Olivia Gallup
+# All rights reserved.
+
+# This source code is licensed under the MIT-style license found in the
+# LICENSE file in the root directory of this source tree. 
+    
+
 
 import os
 from src.scripts.generate_species_templates.run_generate_species_templates import main as generate_species_templates
