@@ -1,6 +1,6 @@
-# Gene circuit failure
+# Gene circuit evolutionary stability
 
-Predicting alternative steady states that may arise in a heterologous gene circuit from perturbations.
+Build, simulate, and analyse genetic circuits and the effect of mutations.
 
 ## Usage
 
