@@ -31,7 +31,7 @@ def readout(var_obj):
 def main(config=None, data_writer=None):
     # set configs
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
-        "src", "scripts", "gather_interaction_stats", "configs", "base_config.json"))
+        "synbio_morpher", "scripts", "gather_interaction_stats", "configs", "base_config.json"))
     config_file = load_json_as_dict(config)
 
     # start_experiment

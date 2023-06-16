@@ -38,7 +38,7 @@ def create_argparse_from_dict(dict_args: Dict):
 
 
 def get_simulator_names() -> List:
-    simulator_dir = os.path.join(PACKAGE_DIR, "src", "srv", "parameter_prediction")
+    simulator_dir = os.path.join(PACKAGE_DIR, "synbio_morpher", "srv", "parameter_prediction")
     simulators = remove_special_py_functions(os.listdir(simulator_dir))
     from synbio_morpher.srv.parameter_prediction.simulator_loading import extra_simulators
     simulators = simulators + extra_simulators
@@ -51,7 +51,7 @@ def handle_simulator_cfgs(simulator, simulator_cfg_path):
     if any([os.sep in v for v in simulator_cfg.values() if type(v) == str]):
         for k, v in simulator_cfg.items():
             if type(v) == str:
-                simulator_cfg[k] = os.path.join(PACKAGE_DIR, v) if ('src' in v) and (os.sep in v) and (PACKAGE_DIR not in v) else v
+                simulator_cfg[k] = os.path.join(PACKAGE_DIR, v) if ('synbio_morpher' in v) and (os.sep in v) and (PACKAGE_DIR not in v) else v
     return cfg_protocol(simulator_cfg)
 
 
@@ -85,7 +85,7 @@ def load_simulator_kwargs(default_args: dict, config_args: str = None) -> Dict:
 
 def retrieve_default_args() -> Dict:
     fn = get_pathnames(file_key='default_args', search_dir=os.path.join(
-        PACKAGE_DIR, 'src', 'utils', 'common', 'configs', 'simulators'), first_only=True)
+        PACKAGE_DIR, 'synbio_morpher', 'utils', 'common', 'configs', 'simulators'), first_only=True)
     default_args = load_json_as_dict(fn)
     return default_args
 

@@ -25,7 +25,7 @@ def main(config=None, data_writer=None):
 
     if config is None:
         config = os.path.join(
-            'src', 'scripts', 'stitch_parameter_grid', 'configs', 'base_config.json')
+            'synbio_morpher', 'scripts', 'stitch_parameter_grid', 'configs', 'base_config.json')
     config_file = load_json_as_dict(config)
     if data_writer is None:
         data_writer = ResultWriter(purpose=config_file[

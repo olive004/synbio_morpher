@@ -12,7 +12,7 @@
 # import logging
 
 
-# from src.utils.misc.numerical import square_matrix_rand
+# from synbio_morpher.utils.misc.numerical import square_matrix_rand
 # import bioreaction
 
 

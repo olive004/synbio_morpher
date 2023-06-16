@@ -87,7 +87,7 @@ class RawSimulationHandling():
                            simulator=IntaRNA())
 
         if self.simulator_name == "CopomuS":
-            # from src.utils.parameter_prediction.IntaRNA.bin.CopomuS import CopomuS
+            # from synbio_morpher.utils.parameter_prediction.IntaRNA.bin.CopomuS import CopomuS
             raise NotImplementedError
 
         else:

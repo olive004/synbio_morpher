@@ -9,7 +9,7 @@ import inspect
 import logging
 import numpy as np
 from typing import List
-# from src.utils.signal.signals import Signal, AdaptationTarget, OscillatingSignal
+# from synbio_morpher.utils.signal.signals import Signal, AdaptationTarget, OscillatingSignal
 from synbio_morpher.utils.signal.signals_new import Signal
 from synbio_morpher.utils.circuit.agnostic_circuits.circuit_manager import Circuit
 

@@ -6,17 +6,17 @@
 # import inspect
 
 # import numpy as np
-# from src.srv.io.manage.sys_interface import make_filename_safely
-# from src.utils.results.result_writer import ResultWriter
-# from src.utils.common.setup import ESSENTIAL_KWARGS
-# from src.utils.data.data_format_tools.common import load_json_as_dict
-# from src.utils.misc.io import convert_pathname_to_module, get_pathnames, get_subdirectories
-# from src.utils.misc.numerical import make_symmetrical_matrix_from_sequence, triangular_sequence
-# from src.utils.common.setup import construct_circuit_from_cfg, prepare_config
-# from src.utils.circuit.agnostic_circuits.circuit_manager import CircuitModeller
+# from synbio_morpher.srv.io.manage.sys_interface import make_filename_safely
+# from synbio_morpher.utils.results.result_writer import ResultWriter
+# from synbio_morpher.utils.common.setup import ESSENTIAL_KWARGS
+# from synbio_morpher.utils.data.data_format_tools.common import load_json_as_dict
+# from synbio_morpher.utils.misc.io import convert_pathname_to_module, get_pathnames, get_subdirectories
+# from synbio_morpher.utils.misc.numerical import make_symmetrical_matrix_from_sequence, triangular_sequence
+# from synbio_morpher.utils.common.setup import construct_circuit_from_cfg, prepare_config
+# from synbio_morpher.utils.circuit.agnostic_circuits.circuit_manager import CircuitModeller
 
 
-# SCRIPT_DIR = 'src', 'scripts'
+# SCRIPT_DIR = 'synbio_morpher', 'scripts'
 
 
 # def get_all_config_files(config_dir):

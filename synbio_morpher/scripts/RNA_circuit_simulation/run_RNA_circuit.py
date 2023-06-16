@@ -23,7 +23,7 @@ from synbio_morpher.utils.circuit.agnostic_circuits.circuit_manager import Circu
 def main(config=None, data_writer=None):
 
     config, data_writer = script_preamble(config=config, data_writer=data_writer, alt_cfg_filepath=os.path.join(
-        "src", "scripts", "RNA_circuit_simulation", "configs", "toy_RNA.json"))
+        "synbio_morpher", "scripts", "RNA_circuit_simulation", "configs", "toy_RNA.json"))
     config_file = load_json_as_dict(config)
     config_file = prepare_config(config_file)
     logging.info(config)

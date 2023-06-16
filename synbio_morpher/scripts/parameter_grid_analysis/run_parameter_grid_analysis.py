@@ -30,8 +30,8 @@ from synbio_morpher.utils.results.visualisation import VisODE
 def main(config=None, data_writer: ResultWriter = None):
 
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
-        # 'src', 'scripts', 'parameter_grid_analysis', 'configs', 'heatmap_cfg.json'))
-        'src', 'scripts', 'parameter_grid_analysis', 'configs', 'testing.json'))
+        # 'synbio_morpher', 'scripts', 'parameter_grid_analysis', 'configs', 'heatmap_cfg.json'))
+        'synbio_morpher', 'scripts', 'parameter_grid_analysis', 'configs', 'testing.json'))
 
     # Load in parameter grid
     config_file = load_json_as_dict(config)

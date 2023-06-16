@@ -29,7 +29,7 @@ def add_license_to_files(directory, license_text):
 
 # Example usage
 if __name__ == '__main__':
-    directory_path = 'src'
+    directory_path = 'synbio_morpher'
     license_header = '''
 # Copyright (c) 2023, Olivia Gallup
 # All rights reserved.

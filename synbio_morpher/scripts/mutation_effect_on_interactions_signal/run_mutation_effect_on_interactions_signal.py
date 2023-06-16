@@ -26,7 +26,7 @@ from synbio_morpher.utils.circuit.agnostic_circuits.circuit_manager import Circu
 def main(config=None, data_writer=None):
     # Set configs
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
-        "src", "scripts", "mutation_effect_on_interactions_signal", "configs", "base_config.json"))
+        "synbio_morpher", "scripts", "mutation_effect_on_interactions_signal", "configs", "base_config.json"))
     config_file = load_json_as_dict(config)
 
     # Start_experiment

@@ -20,7 +20,7 @@ from synbio_morpher.utils.results.experiments import Experiment, Protocol
 def main(config=None, data_writer=None):
 
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
-        'src', 'scripts', 'parameter_grid_analysis', 'configs', 'testing.json'))
+        'synbio_morpher', 'scripts', 'parameter_grid_analysis', 'configs', 'testing.json'))
     config_file = load_json_as_dict(config)
 
     def hash_species_in_cfg(config):
