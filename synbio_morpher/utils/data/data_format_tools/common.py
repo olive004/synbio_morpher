@@ -11,8 +11,9 @@ from typing import Union
 import numpy as np
 import pandas as pd
 import jaxlib
+import importlib
 
-from synbio_morpher.srv.io.manage.sys_interface import PACKAGE_DIR
+from synbio_morpher.srv.io.manage.sys_interface import PACKAGE_NAME
 from synbio_morpher.utils.misc.type_handling import inverse_dict
 
 
@@ -48,8 +49,12 @@ def load_json_as_dict(json_pathname: str, process=True) -> dict:
     elif type(json_pathname) == dict:
         jdict = json_pathname
     elif type(json_pathname) == str:
-        if PACKAGE_DIR not in json_pathname:
-            full_json_pathname = os.path.join(PACKAGE_DIR, json_pathname)
+        if PACKAGE_NAME in json_pathname:
+            stripped = json_pathname.strip(f'..{os.sep}').strip(f'.{os.sep}')
+            as_module = '.'.join(stripped.split(os.sep)[:-1])
+            full_json_pathname = os.path.join(
+                importlib.import_module(as_module).__path__[0],
+                os.path.basename(json_pathname))
         else: 
             full_json_pathname = json_pathname
         if os.stat(full_json_pathname).st_size == 0:

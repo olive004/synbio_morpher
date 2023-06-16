@@ -1,8 +1,10 @@
 import numpy as np
 import pandas as pd
+import importlib
 import os
 from synbio_morpher.utils.common.setup import construct_circuit_from_cfg, prepare_config
 from synbio_morpher.srv.io.manage.script_manager import script_preamble
+from synbio_morpher.srv.io.manage.sys_interface import PACKAGE_NAME
 from synbio_morpher.utils.evolution.evolver import Evolver
 from synbio_morpher.utils.circuit.agnostic_circuits.circuit_manager import CircuitModeller
 
@@ -66,21 +68,22 @@ def five_circuits():
     default_interaction = 0.0015
     species_num = 9
     
-    cfg_dir = os.path.join('utils', 'common', 'testing', 'configs')
+    cfg_dir = os.path.join(PACKAGE_NAME, 'utils', 'common', 'testing', 'configs')
+    cfg_dir = importlib.import_module(cfg_dir.replace(os.sep, '.')).__path__[0]
 
     paths = [
         # toy_mRNA_circuit_1890
         os.path.join(cfg_dir, 'circuits', '0_weak.fasta'),
         # toy_mRNA_circuit_1916
-        os.path.join(cfg_dir, '1_med_weak.fasta'),
+        os.path.join(cfg_dir, 'circuits', '1_med_weak.fasta'),
         # toy_mRNA_circuit_1598
-        os.path.join(cfg_dir, '2_medium.fasta'),
+        os.path.join(cfg_dir, 'circuits', '2_medium.fasta'),
         # toy_mRNA_circuit_1196
-        os.path.join(cfg_dir, '3_med_strong.fasta'),
+        os.path.join(cfg_dir, 'circuits', '3_med_strong.fasta'),
         # toy_mRNA_circuit_1491
-        os.path.join(cfg_dir, '4_strong.fasta')
+        os.path.join(cfg_dir, 'circuits', '4_strong.fasta')
     ]
-
+    
     interaction_paths = []
     for inter in ['binding_rates_dissociation', 'eqconstants']:
         interaction_paths.append([
