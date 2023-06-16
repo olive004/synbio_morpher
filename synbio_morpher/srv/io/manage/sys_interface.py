@@ -29,7 +29,7 @@ elif PACKAGE_NAME in os.getcwd():
 else:
     PACKAGE_DIR = '.'
     logging.warning(
-        f'Package name {PACKAGE_NAME} not found in current working directory {os.getcwd()}. Creating dirs instead.')
+        f'Package name {PACKAGE_NAME} not found in current working directory {os.getcwd()} - will create dirs in cwd when necessary.')
 
 
 SCRIPT_DIR = 'scripts'

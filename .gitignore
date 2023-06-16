@@ -7,7 +7,7 @@
 *.png
 *.pyc
 *.pysave
-*.egg.info
+*.egg-info
 *.tar.gz
 *.txt
 *.vscode
