@@ -13,9 +13,10 @@ import logging
 import os
 from functools import partial
 import pandas as pd
+import importlib
 
 
-from synbio_morpher.srv.io.manage.sys_interface import SCRIPT_DIR
+from synbio_morpher.srv.io.manage.sys_interface import SCRIPT_DIR, PACKAGE_NAME
 from synbio_morpher.utils.results.writer import DataWriter
 from synbio_morpher.utils.results.result_writer import ResultWriter
 from synbio_morpher.utils.misc.io import convert_pathname_to_module, get_pathnames_from_mult_dirs
@@ -24,12 +25,15 @@ from synbio_morpher.utils.data.data_format_tools.common import load_json_as_dict
 
 
 def import_script_func(script_name):
-    script_filepath = os.path.join(
-        SCRIPT_DIR, script_name, f'run_{script_name}.py')
-    if not os.path.isfile(script_filepath):
-        return None
-    script_module = __import__(
-        convert_pathname_to_module(script_filepath), fromlist=[''])
+    # importlib
+    # submodule = importlib.import_module('.'+submodule_name, module.__name__)
+    # script_filepath = os.path.join(
+    #     SCRIPT_DIR, script_name, f'run_{script_name}.py')
+    # if not os.path.isfile(script_filepath):
+    #     return None
+    # script_module = __import__(
+    #     convert_pathname_to_module(script_filepath), fromlist=[''])
+    script_module = __import__('.'.join([PACKAGE_NAME, SCRIPT_DIR, script_name, f'run_{script_name}']), fromlist=[''])
     return getattr(script_module, 'main')
 
 

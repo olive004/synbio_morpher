@@ -12,11 +12,11 @@
         "input": "RNA_0",
         "output": "RNA_2"
     },
-    "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
+    "molecular_params": "./synbio_morpher/utils/common/configs/RNA_circuit/molecular_params.json",
     "mutations_args": {
         "mutation_counts": 0,
         "mutation_nums_within_sequence": 0,
         "algorithm": "random"
     },
-    "signal": "./src/scripts/RNA_circuit_simulation/configs/in_signal.json"
+    "signal": "./synbio_morpher/scripts/RNA_circuit_simulation/configs/in_signal.json"
 }

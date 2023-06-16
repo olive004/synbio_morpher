@@ -9,7 +9,7 @@
                 "postprocess": true
             },
             "interaction_file_keyword": ["eqconstants", "binding_rates_dissociation"],
-            "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
+            "molecular_params": "./synbio_morpher/utils/common/configs/RNA_circuit/molecular_params.json",
             "experiment": {
                 "purpose": "gather_interaction_stats"
             },    
@@ -72,7 +72,7 @@
                 "purpose_to_get_source_dir_from": "gather_interaction_stats",
                 "source_dir_actually_used_POSTERITY": null
             },
-            "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json"
+            "molecular_params": "./synbio_morpher/utils/common/configs/RNA_circuit/molecular_params.json"
         },
         "summarise_simulation": {
             "experiment": {

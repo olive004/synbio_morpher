@@ -18,7 +18,7 @@
             "experiment": {
                 "purpose": "generate_species_templates"
             },
-            "molecular_params": "./src/utils/circuit/specific_circuits/RNA/configs/RNA_system.json",
+            "molecular_params": "./synbio_morpher/utils/circuit/specific_circuits/RNA/configs/RNA_system.json",
             "circuit_generation": {
                 "repetitions": 3,
                 "species_count": 3,

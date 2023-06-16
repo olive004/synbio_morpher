@@ -12,7 +12,7 @@
                 "purpose": "generate_species_templates",
                 "test_mode": false
             },
-            "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
+            "molecular_params": "./synbio_morpher/utils/common/configs/RNA_circuit/molecular_params.json",
             "circuit_generation": {
                 "repetitions": 100000,
                 "species_count": 3,
@@ -30,7 +30,7 @@
                 "postprocess": true
             },
             "interaction_file_keyword": ["energies", "eqconstants", "binding_rates_dissociation"],
-            "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
+            "molecular_params": "./synbio_morpher/utils/common/configs/RNA_circuit/molecular_params.json",
             "experiment": {
                 "purpose": "gather_interaction_stats"
             },    
@@ -102,7 +102,7 @@
                 "source_dir_actually_used_POSTERITY": null
             },
             "molecular_params_factor": 1,
-            "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json"
+            "molecular_params": "./synbio_morpher/utils/common/configs/RNA_circuit/molecular_params.json"
         },
         "summarise_simulation": {
             "experiment": {

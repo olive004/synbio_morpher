@@ -8,7 +8,7 @@
             "test_mode": false,
             "no_visualisations": true
         },
-        "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
+        "molecular_params": "./synbio_morpher/utils/common/configs/RNA_circuit/molecular_params.json",
         "circuit_generation": {
             "repetitions": [
                 10000,

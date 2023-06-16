@@ -18,12 +18,12 @@
         "input": "RNA_0",
         "output": "RNA_2"
     },
-    "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
+    "molecular_params": "./synbio_morpher/utils/common/configs/RNA_circuit/molecular_params.json",
     "mutations_args": {
         "mutation_counts": 10,
         "mutation_nums_within_sequence": 1,
         "algorithm": "random"
     },
-    "signal": "./src/scripts/pair_species_mutation/configs/params/in_signal.json",
+    "signal": "./synbio_morpher/scripts/pair_species_mutation/configs/params/in_signal.json",
     "system_type": "RNA"
 }

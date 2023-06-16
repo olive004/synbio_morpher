@@ -18,7 +18,7 @@ def five_circuits():
             "purpose": "tests",
             "test_mode": True
         },
-        "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
+        "molecular_params": "./synbio_morpher/utils/common/configs/RNA_circuit/molecular_params.json",
         "circuit_generation": {
             "repetitions": 2000,
             "species_count": 3,
@@ -65,34 +65,36 @@ def five_circuits():
 
     default_interaction = 0.0015
     species_num = 9
+    
+    cfg_dir = os.path.join('utils', 'common', 'testing', 'configs')
 
     paths = [
         # toy_mRNA_circuit_1890
-        os.path.join('tests', 'configs', 'circuits', '0_weak.fasta'),
+        os.path.join(cfg_dir, 'circuits', '0_weak.fasta'),
         # toy_mRNA_circuit_1916
-        os.path.join('tests', 'configs', 'circuits', '1_med_weak.fasta'),
+        os.path.join(cfg_dir, '1_med_weak.fasta'),
         # toy_mRNA_circuit_1598
-        os.path.join('tests', 'configs', 'circuits', '2_medium.fasta'),
+        os.path.join(cfg_dir, '2_medium.fasta'),
         # toy_mRNA_circuit_1196
-        os.path.join('tests', 'configs', 'circuits', '3_med_strong.fasta'),
+        os.path.join(cfg_dir, '3_med_strong.fasta'),
         # toy_mRNA_circuit_1491
-        os.path.join('tests', 'configs', 'circuits', '4_strong.fasta')
+        os.path.join(cfg_dir, '4_strong.fasta')
     ]
 
     interaction_paths = []
     for inter in ['binding_rates_dissociation', 'eqconstants']:
         interaction_paths.append([
             # toy_mRNA_circuit_1890
-            os.path.join('tests', 'configs', inter, f'0_weak_{inter}.csv'),
+            os.path.join(cfg_dir, inter, f'0_weak_{inter}.csv'),
             # toy_mRNA_circuit_1916
-            os.path.join('tests', 'configs', inter, f'1_med_weak_{inter}.csv'),
+            os.path.join(cfg_dir, inter, f'1_med_weak_{inter}.csv'),
             # toy_mRNA_circuit_1598
-            os.path.join('tests', 'configs', inter, f'2_medium_{inter}.csv'),
+            os.path.join(cfg_dir, inter, f'2_medium_{inter}.csv'),
             # toy_mRNA_circuit_1196
-            os.path.join('tests', 'configs', inter,
+            os.path.join(cfg_dir, inter,
                          f'3_med_strong_{inter}.csv'),
             # toy_mRNA_circuit_1491
-            os.path.join('tests', 'configs', inter, f'4_strong_{inter}.csv')
+            os.path.join(cfg_dir, inter, f'4_strong_{inter}.csv')
         ])
 
     # interactions = np.expand_dims(np.expand_dims(np.arange(

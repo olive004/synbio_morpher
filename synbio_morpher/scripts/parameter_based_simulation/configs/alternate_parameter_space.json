@@ -1,5 +1,5 @@
 {
-    "data_path": "./src/scripts/parameter_based_simulation/configs/empty_circuit.fasta",
+    "data_path": "./synbio_morpher/scripts/parameter_based_simulation/configs/empty_circuit.fasta",
     "experiment": {
         "purpose": "parameter_based_simulation",
         "parallelise": true,
@@ -13,7 +13,7 @@
         "name": "IntaRNA",
         "postprocess": "True"
     },
-    "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
+    "molecular_params": "./synbio_morpher/utils/common/configs/RNA_circuit/molecular_params.json",
     "parameter_based_simulation": {
         "interaction_min": 0.05,
         "interaction_max": 1,

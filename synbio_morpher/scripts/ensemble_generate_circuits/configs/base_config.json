@@ -12,7 +12,7 @@
                 "purpose": "generate_species_templates",
                 "test_mode": false
             },
-            "molecular_params": "./src/utils/common/configs/RNA_circuit/molecular_params.json",
+            "molecular_params": "./synbio_morpher/utils/common/configs/RNA_circuit/molecular_params.json",
             "circuit_generation": {
                 "repetitions": 200000,
                 "species_count": 3,

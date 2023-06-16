@@ -11,9 +11,10 @@ from abc import ABC, abstractmethod
 import os
 import pandas as pd
 import inspect
+import importlib
 
 
-from synbio_morpher.srv.io.manage.sys_interface import SCRIPT_DIR, DATA_DIR
+from synbio_morpher.srv.io.manage.sys_interface import PACKAGE_NAME, SCRIPT_DIR, DATA_DIR
 from synbio_morpher.utils.data.data_format_tools.common import write_csv, write_json, write_np
 from synbio_morpher.utils.data.data_format_tools.manipulate_fasta import write_fasta_file
 from synbio_morpher.utils.misc.io import create_location, get_subdirectories
@@ -105,15 +106,16 @@ class DataWriter():
             f'No write function available for output of type {out_type}')
 
     def make_location_from_purpose(self, purpose: str):
-
-        if purpose in get_subdirectories(self.script_dir, only_basedir=True) or purpose in self.exception_dirs:
-            location = os.path.join(self.root_output_dir,
-                                    purpose,
-                                    self.generate_location_instance())
-            create_location(location)
-            return location
-        raise ValueError(
-            f'Unrecognised purpose {purpose} for writing data to - make sure directory of this name exists in ./scripts')
+        try: 
+            if purpose in importlib.import_module('.' +purpose, '.'.join([PACKAGE_NAME, SCRIPT_DIR])).__name__ or purpose in self.exception_dirs:
+                location = os.path.join(self.root_output_dir,
+                                        purpose,
+                                        self.generate_location_instance())
+                create_location(location)
+                return location
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError(
+                f'Unrecognised purpose {purpose} for writing data to - make sure directory of this name exists in {".".join([PACKAGE_NAME, SCRIPT_DIR])}')
 
     def generate_location_instance(self):
         return make_time_str()

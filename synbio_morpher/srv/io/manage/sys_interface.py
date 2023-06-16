@@ -14,24 +14,25 @@ import logging
 
 
 # Relative imports
-package_name = 'gene-circuit-glitch-prediction'
-if package_name not in os.getcwd():
-    if 'workdir' in os.getcwd():
-        package_name = 'workdir'
+PACKAGE_NAME = 'synbio_morpher'
+# if PACKAGE_NAME not in os.getcwd():
+#     if 'workdir' in os.getcwd():
+#         PACKAGE_NAME = 'workdir'
 
-if os.path.basename(os.getcwd()) == package_name:
+if os.path.basename(os.getcwd()) == PACKAGE_NAME:
     PACKAGE_DIR = '.'
-elif os.getcwd().split(os.sep)[-2] == package_name:
+elif os.getcwd().split(os.sep)[-2] == PACKAGE_NAME:
     PACKAGE_DIR = '..'
-elif package_name in os.getcwd():
+elif PACKAGE_NAME in os.getcwd():
     PACKAGE_DIR = os.path.join(*os.getcwd().split(os.sep)[
-                               :os.getcwd().split(os.sep).index(package_name)+1])
+                               :os.getcwd().split(os.sep).index(PACKAGE_NAME)+1])
 else:
+    PACKAGE_DIR = '.'
     logging.warning(
-        f'Package name {package_name} not found in current working directory {os.getcwd()}')
+        f'Package name {PACKAGE_NAME} not found in current working directory {os.getcwd()}. Creating dirs instead.')
 
 
-SCRIPT_DIR = os.path.join(PACKAGE_DIR, 'synbio_morpher', 'scripts')
+SCRIPT_DIR = 'scripts'
 DATA_DIR = os.path.join(PACKAGE_DIR, 'data')
 
 
