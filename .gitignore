@@ -7,9 +7,11 @@
 *.png
 *.pyc
 *.pysave
-*tar.gz
+*.egg.info
+*.tar.gz
 *.txt
 *.vscode
+*.whl
 __pycache__
 __pycache__/*
 bioreaction
