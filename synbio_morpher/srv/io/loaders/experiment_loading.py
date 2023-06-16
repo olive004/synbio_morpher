@@ -8,11 +8,11 @@
 
 
 import logging
-from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
-from src.utils.data.data_format_tools.common import load_json_as_dict
-from src.utils.misc.errors import ExperimentError
-from src.utils.misc.scripts_io import get_root_experiment_folder, load_experiment_config
-from src.utils.misc.units import per_mol_to_per_molecule
+from synbio_morpher.srv.parameter_prediction.simulator import SIMULATOR_UNITS
+from synbio_morpher.utils.data.data_format_tools.common import load_json_as_dict
+from synbio_morpher.utils.misc.errors import ExperimentError
+from synbio_morpher.utils.misc.scripts_io import get_root_experiment_folder, load_experiment_config
+from synbio_morpher.utils.misc.units import per_mol_to_per_molecule
 
 
 INTERACTION_FILE_ADDONS = {

@@ -1,14 +1,12 @@
 import unittest
 import numpy as np
-import pandas as pd
 import logging
 
 
-from src.utils.common.testing.shared import create_test_inputs, CONFIG, TEST_CONFIG
-# from tests.shared import TEST_CONFIG as CONFIG
-from src.srv.sequence_exploration.sequence_analysis import load_tabulated_info
-from src.utils.results.analytics.naming import get_true_names_analytics, DIFF_KEY, RATIO_KEY
-from src.utils.misc.type_handling import flatten_listlike
+from synbio_morpher.utils.common.testing.shared import create_test_inputs, CONFIG, TEST_CONFIG
+from synbio_morpher.srv.sequence_exploration.sequence_analysis import load_tabulated_info
+from synbio_morpher.utils.results.analytics.naming import get_true_names_analytics, DIFF_KEY, RATIO_KEY
+from synbio_morpher.utils.misc.type_handling import flatten_listlike
 
 
 def fake_binding_site(energy):

@@ -11,10 +11,10 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import logging
-from src.utils.misc.type_handling import merge_dicts
-from src.utils.results.writer import DataWriter
-from src.utils.misc.string_handling import add_outtype, make_time_str, prettify_keys_for_label
-from src.utils.misc.database_handling import select_rows_by_conditional_cols
+from synbio_morpher.utils.misc.type_handling import merge_dicts
+from synbio_morpher.utils.results.writer import DataWriter
+from synbio_morpher.utils.misc.string_handling import add_outtype, make_time_str, prettify_keys_for_label
+from synbio_morpher.utils.misc.database_handling import select_rows_by_conditional_cols
 import seaborn as sns
 # import matplotlib
 # matplotlib.use('TkAgg',force=True)
@@ -276,7 +276,7 @@ def visualise_graph_pyvis(graph: nx.DiGraph,
                           out_type='html'):
     import webbrowser
     import os
-    from src.utils.results.graph import NetworkCustom
+    from synbio_morpher.utils.results.graph import NetworkCustom
 
     if new_vis:
         out_path = f'{out_path}_{make_time_str()}'

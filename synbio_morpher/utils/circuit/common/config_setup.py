@@ -6,17 +6,16 @@
 # LICENSE file in the root directory of this source tree. 
     
 import argparse
-import logging
 import os
 from typing import Dict, List
 
-from src.srv.parameter_prediction.simulator_loading import find_simulator_loader
-from src.srv.io.manage.sys_interface import PACKAGE_DIR
-from src.utils.misc.io import get_pathnames
-from src.utils.misc.string_handling import remove_special_py_functions
-from src.utils.data.data_format_tools.common import load_json_as_dict
-from src.srv.io.manage.sys_interface import make_filename_safely
-from src.utils.data.data_format_tools.common import load_json_as_dict
+from synbio_morpher.srv.parameter_prediction.simulator_loading import find_simulator_loader
+from synbio_morpher.srv.io.manage.sys_interface import PACKAGE_DIR
+from synbio_morpher.utils.misc.io import get_pathnames
+from synbio_morpher.utils.misc.string_handling import remove_special_py_functions
+from synbio_morpher.utils.data.data_format_tools.common import load_json_as_dict
+from synbio_morpher.srv.io.manage.sys_interface import make_filename_safely
+from synbio_morpher.utils.data.data_format_tools.common import load_json_as_dict
 
 
 def get_configs(config_file, config_filepath):
@@ -41,7 +40,7 @@ def create_argparse_from_dict(dict_args: Dict):
 def get_simulator_names() -> List:
     simulator_dir = os.path.join(PACKAGE_DIR, "src", "srv", "parameter_prediction")
     simulators = remove_special_py_functions(os.listdir(simulator_dir))
-    from src.srv.parameter_prediction.simulator_loading import extra_simulators
+    from synbio_morpher.srv.parameter_prediction.simulator_loading import extra_simulators
     simulators = simulators + extra_simulators
     return simulators
 

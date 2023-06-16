@@ -8,7 +8,7 @@
 
 
 import os
-from src.srv.io.manage.script_manager import script_preamble, ensemble_func
+from synbio_morpher.srv.io.manage.script_manager import script_preamble, ensemble_func
 
 
 def main(config=None, data_writer=None):

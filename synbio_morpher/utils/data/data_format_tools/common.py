@@ -12,8 +12,8 @@ import numpy as np
 import pandas as pd
 import jaxlib
 
-from src.srv.io.manage.sys_interface import PACKAGE_DIR
-from src.utils.misc.type_handling import inverse_dict
+from synbio_morpher.srv.io.manage.sys_interface import PACKAGE_DIR
+from synbio_morpher.utils.misc.type_handling import inverse_dict
 
 
 FORMAT_EXTS = {

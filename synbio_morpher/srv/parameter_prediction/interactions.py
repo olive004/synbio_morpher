@@ -11,15 +11,14 @@ import logging
 import numpy as np
 import os
 import pandas as pd
-from functools import partial
 from typing import Tuple, List, Union
 
-from src.srv.parameter_prediction.simulator import RawSimulationHandling
-from src.srv.io.loaders.experiment_loading import INTERACTION_FILE_ADDONS, load_param, load_units
-from src.srv.io.loaders.misc import load_csv
-from src.srv.io.manage.sys_interface import PACKAGE_DIR
-from src.utils.data.data_format_tools.common import determine_file_format
-from src.utils.misc.string_handling import string_to_tuple_list
+from synbio_morpher.srv.parameter_prediction.simulator import RawSimulationHandling
+from synbio_morpher.srv.io.loaders.experiment_loading import INTERACTION_FILE_ADDONS, load_param, load_units
+from synbio_morpher.srv.io.loaders.misc import load_csv
+from synbio_morpher.srv.io.manage.sys_interface import PACKAGE_DIR
+from synbio_morpher.utils.data.data_format_tools.common import determine_file_format
+from synbio_morpher.utils.misc.string_handling import string_to_tuple_list
 
 
 INTERACTION_TYPES = sorted(INTERACTION_FILE_ADDONS.keys())

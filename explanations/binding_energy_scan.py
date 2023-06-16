@@ -1,6 +1,6 @@
 from bioreaction.model.data_tools import construct_model_fromnames
 from bioreaction.simulation.simfuncs.basic_de import bioreaction_sim_expanded
-from bioreaction.simulation.basic_sim import basic_de_sim, convert_model, BasicSimParams, BasicSimState
+from bioreaction.simulation.basic_sim import convert_model, BasicSimParams, BasicSimState
 from bioreaction.simulation.manager import simulate_steady_states
 from bioreaction.simulation.med_sim import MedSimParams
 
@@ -34,11 +34,11 @@ if __package__ is None or (__package__ == ''):
     __package__ = os.path.basename(module_path)
 
 
-from src.utils.results.analytics.timeseries import get_sensitivity_simp, get_precision_simp, get_step_response_times, get_overshoot, get_peaks
-from src.utils.misc.units import per_mol_to_per_molecule
-from src.utils.misc.type_handling import flatten_listlike
-from src.utils.misc.numerical import make_symmetrical_matrix_from_sequence
-from src.utils.modelling.deterministic import bioreaction_sim_dfx_expanded
+from synbio_morpher.utils.results.analytics.timeseries import get_sensitivity_simp, get_precision_simp, get_step_response_times, get_overshoot, get_peaks
+from synbio_morpher.utils.misc.units import per_mol_to_per_molecule
+from synbio_morpher.utils.misc.type_handling import flatten_listlike
+from synbio_morpher.utils.misc.numerical import make_symmetrical_matrix_from_sequence
+from synbio_morpher.utils.modelling.deterministic import bioreaction_sim_dfx_expanded
 
 
 def scale_rates(sim_model, reverse_rates):

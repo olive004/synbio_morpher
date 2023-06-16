@@ -7,12 +7,12 @@
     
 from bioreaction.model.data_tools import construct_model_fromnames
 from bioreaction.model.data_containers import BasicModel
-from src.utils.data.common import Data
+from synbio_morpher.utils.data.common import Data
 
 
 def get_system_type(sys_type):
     if sys_type == "RNA":
-        from src.utils.circuit.agnostic_circuits.circuit import Circuit
+        from synbio_morpher.utils.circuit.agnostic_circuits.circuit import Circuit
         return Circuit
     else:
         raise NotImplementedError(

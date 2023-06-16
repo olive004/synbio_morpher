@@ -13,10 +13,10 @@ import jax.random as jr
 import random
 from Bio.Seq import Seq
 
-from src.utils.results.writer import DataWriter
-from src.utils.misc.helper import next_wrapper
-from src.utils.misc.numerical import generate_mixed_binary
-from src.utils.misc.string_handling import ordered_merge, list_to_str
+from synbio_morpher.utils.results.writer import DataWriter
+from synbio_morpher.utils.misc.helper import next_wrapper
+from synbio_morpher.utils.misc.numerical import generate_mixed_binary
+from synbio_morpher.utils.misc.string_handling import ordered_merge, list_to_str
 
 
 class SeqGenerator():

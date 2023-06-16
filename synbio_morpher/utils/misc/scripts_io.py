@@ -14,12 +14,12 @@ from typing import Tuple
 import numpy as np
 import pandas as pd
 
-from src.srv.io.manage.sys_interface import SCRIPT_DIR, DATA_DIR, PACKAGE_DIR
-from src.srv.io.loaders.misc import load_csv
-from src.utils.data.data_format_tools.common import load_json_as_dict, make_iterable_like
-from src.utils.misc.errors import ConfigError, ExperimentError
-from src.utils.misc.io import get_pathnames, get_subdirectories
-from src.utils.misc.type_handling import flatten_listlike
+from synbio_morpher.srv.io.manage.sys_interface import SCRIPT_DIR, DATA_DIR, PACKAGE_DIR
+from synbio_morpher.srv.io.loaders.misc import load_csv
+from synbio_morpher.utils.data.data_format_tools.common import load_json_as_dict, make_iterable_like
+from synbio_morpher.utils.misc.errors import ConfigError, ExperimentError
+from synbio_morpher.utils.misc.io import get_pathnames, get_subdirectories
+from synbio_morpher.utils.misc.type_handling import flatten_listlike
 
 
 def get_purposes(script_dir=None):

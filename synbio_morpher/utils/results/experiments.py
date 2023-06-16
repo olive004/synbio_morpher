@@ -8,10 +8,10 @@
 from datetime import datetime
 import logging
 from typing import Any, List, Union
-from src.utils.data.data_format_tools.common import load_json_as_dict
+from synbio_morpher.utils.data.data_format_tools.common import load_json_as_dict
 
-from src.utils.results.writer import DataWriter
-from src.utils.misc.type_handling import make_attribute_list
+from synbio_morpher.utils.results.writer import DataWriter
+from synbio_morpher.utils.misc.type_handling import make_attribute_list
 
 
 class Protocol():

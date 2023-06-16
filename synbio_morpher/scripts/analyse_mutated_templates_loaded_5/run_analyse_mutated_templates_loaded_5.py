@@ -7,20 +7,19 @@
     
 import operator
 import os
-from copy import deepcopy
 import pandas as pd
 from fire import Fire
 
 
-from src.srv.io.manage.script_manager import script_preamble, visualisation_script_protocol_preamble
-from src.utils.misc.database_handling import thresh_func
-from src.utils.misc.scripts_io import get_search_dir
-from src.utils.misc.string_handling import prettify_keys_for_label
-from src.srv.parameter_prediction.interactions import INTERACTION_TYPES
-from src.utils.results.experiments import Experiment, Protocol
-from src.utils.results.analytics.naming import get_true_interaction_cols
-from src.utils.results.visualisation import visualise_data
-from src.utils.data.data_format_tools.common import load_json_as_dict
+from synbio_morpher.srv.io.manage.script_manager import script_preamble, visualisation_script_protocol_preamble
+from synbio_morpher.utils.misc.database_handling import thresh_func
+from synbio_morpher.utils.misc.scripts_io import get_search_dir
+from synbio_morpher.utils.misc.string_handling import prettify_keys_for_label
+from synbio_morpher.srv.parameter_prediction.interactions import INTERACTION_TYPES
+from synbio_morpher.utils.results.experiments import Experiment, Protocol
+from synbio_morpher.utils.results.analytics.naming import get_true_interaction_cols
+from synbio_morpher.utils.results.visualisation import visualise_data
+from synbio_morpher.utils.data.data_format_tools.common import load_json_as_dict
 
 
 def main(config=None, data_writer=None):

@@ -11,14 +11,14 @@ import os
 from typing import Tuple, List
 import numpy as np
 from bioreaction.model.data_containers import Species
-from src.srv.io.loaders.misc import load_csv
-from src.utils.evolution.mutation import get_mutation_type_mapping, Mutations
-from src.utils.misc.type_handling import flatten_listlike, flatten_nested_dict
-from src.utils.results.writer import DataWriter, kwargs_from_table
-from src.utils.misc.string_handling import add_outtype
+from synbio_morpher.srv.io.loaders.misc import load_csv
+from synbio_morpher.utils.evolution.mutation import get_mutation_type_mapping, Mutations
+from synbio_morpher.utils.misc.type_handling import flatten_listlike, flatten_nested_dict
+from synbio_morpher.utils.results.writer import DataWriter, kwargs_from_table
+from synbio_morpher.utils.misc.string_handling import add_outtype
 
 
-from src.utils.circuit.agnostic_circuits.circuit import Circuit
+from synbio_morpher.utils.circuit.agnostic_circuits.circuit import Circuit
 
 
 class Evolver():

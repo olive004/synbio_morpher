@@ -11,12 +11,12 @@ from functools import partial
 import logging
 import os
 from fire import Fire
-from src.srv.io.manage.script_manager import script_preamble
-from src.utils.common.setup import construct_circuit_from_cfg, prepare_config
-from src.utils.data.data_format_tools.common import load_json_as_dict
-from src.utils.misc.decorators import time_it
-from src.utils.results.experiments import Experiment, Protocol
-from src.utils.circuit.agnostic_circuits.circuit_manager import CircuitModeller
+from synbio_morpher.srv.io.manage.script_manager import script_preamble
+from synbio_morpher.utils.common.setup import construct_circuit_from_cfg, prepare_config
+from synbio_morpher.utils.data.data_format_tools.common import load_json_as_dict
+from synbio_morpher.utils.misc.decorators import time_it
+from synbio_morpher.utils.results.experiments import Experiment, Protocol
+from synbio_morpher.utils.circuit.agnostic_circuits.circuit_manager import CircuitModeller
 
 
 @time_it

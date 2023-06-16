@@ -5,10 +5,10 @@ from functools import partial
 from copy import deepcopy
 
 
-from src.utils.common.testing.shared import create_test_inputs, CONFIG, TEST_CONFIG
-from src.utils.results.analytics.naming import get_true_names_analytics, RATIO_KEY
-from src.utils.results.analytics.timeseries import generate_analytics
-from src.utils.signal.signals_new import SignalFuncs
+from synbio_morpher.utils.common.testing.shared import create_test_inputs, CONFIG, TEST_CONFIG
+from synbio_morpher.utils.results.analytics.naming import get_true_names_analytics, RATIO_KEY
+from synbio_morpher.utils.results.analytics.timeseries import generate_analytics
+from synbio_morpher.utils.signal.signals_new import SignalFuncs
 
 
 class TestAnalytics(unittest.TestCase):

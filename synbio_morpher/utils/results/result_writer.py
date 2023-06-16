@@ -12,13 +12,13 @@ from typing import Dict
 import os
 import numpy as np
 
-from src.utils.results.analytics.naming import get_analytics_types_all
-from src.utils.results.results import Result
-from src.utils.results.writer import DataWriter
-from src.utils.misc.numerical import transpose_arraylike
-from src.utils.misc.string_handling import make_time_str
-from src.utils.misc.type_handling import flatten_listlike
-from src.utils.circuit.agnostic_circuits.circuit import Circuit
+from synbio_morpher.utils.results.analytics.naming import get_analytics_types_all
+from synbio_morpher.utils.results.results import Result
+from synbio_morpher.utils.results.writer import DataWriter
+from synbio_morpher.utils.misc.numerical import transpose_arraylike
+from synbio_morpher.utils.misc.string_handling import make_time_str
+from synbio_morpher.utils.misc.type_handling import flatten_listlike
+from synbio_morpher.utils.circuit.agnostic_circuits.circuit import Circuit
 
 
 class ResultWriter(DataWriter):

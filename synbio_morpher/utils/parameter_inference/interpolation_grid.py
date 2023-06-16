@@ -11,8 +11,8 @@ import logging
 from typing import Union
 import numpy as np
 
-from src.utils.misc.numerical import calculate_num_decimals, expand_matrix_triangle_idx, triangular_sequence
-from src.utils.misc.type_handling import merge_dicts
+from synbio_morpher.utils.misc.numerical import calculate_num_decimals, expand_matrix_triangle_idx, triangular_sequence
+from synbio_morpher.utils.misc.type_handling import merge_dicts
 
 
 def parameter_range_creation(range_min, range_max, range_step, is_logscale=False) -> np.ndarray:

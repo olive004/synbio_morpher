@@ -11,14 +11,14 @@ import logging
 import os
 
 import numpy as np
-from src.srv.io.loaders.data_loader import DataLoader
-from src.utils.results.result_writer import ResultWriter
-from src.utils.data.data_format_tools.common import load_json_as_dict
-from src.utils.misc.io import get_pathnames, isolate_filename
-from src.utils.misc.numerical import triangular_sequence
-from src.utils.results.experiments import Experiment, Protocol
-from src.utils.misc.scripts_io import get_search_dir, get_subprocesses_dirnames, load_experiment_config
-from src.utils.misc.string_handling import sort_by_ordinal_number
+from synbio_morpher.srv.io.loaders.data_loader import DataLoader
+from synbio_morpher.utils.results.result_writer import ResultWriter
+from synbio_morpher.utils.data.data_format_tools.common import load_json_as_dict
+from synbio_morpher.utils.misc.io import get_pathnames, isolate_filename
+from synbio_morpher.utils.misc.numerical import triangular_sequence
+from synbio_morpher.utils.results.experiments import Experiment, Protocol
+from synbio_morpher.utils.misc.scripts_io import get_search_dir, get_subprocesses_dirnames, load_experiment_config
+from synbio_morpher.utils.misc.string_handling import sort_by_ordinal_number
 
 
 def main(config=None, data_writer=None):

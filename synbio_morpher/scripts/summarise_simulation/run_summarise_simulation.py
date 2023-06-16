@@ -6,18 +6,17 @@
 # LICENSE file in the root directory of this source tree. 
     
 from functools import partial
-import logging
 import os
 import pandas as pd
 
 from fire import Fire
-from src.srv.io.manage.script_manager import script_preamble
-from src.utils.misc.scripts_io import get_search_dir
+from synbio_morpher.srv.io.manage.script_manager import script_preamble
+from synbio_morpher.utils.misc.scripts_io import get_search_dir
 
-from src.utils.results.experiments import Experiment, Protocol
-from src.utils.results.result_writer import ResultWriter
-from src.srv.sequence_exploration.sequence_analysis import b_tabulate_mutation_info
-from src.utils.data.data_format_tools.common import load_json_as_dict, load_multiple_as_list
+from synbio_morpher.utils.results.experiments import Experiment, Protocol
+from synbio_morpher.utils.results.result_writer import ResultWriter
+from synbio_morpher.srv.sequence_exploration.sequence_analysis import b_tabulate_mutation_info
+from synbio_morpher.utils.data.data_format_tools.common import load_json_as_dict, load_multiple_as_list
 
 
 def main(config=None, data_writer=None):

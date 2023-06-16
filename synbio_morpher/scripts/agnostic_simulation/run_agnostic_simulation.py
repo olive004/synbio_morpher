@@ -7,13 +7,13 @@
     
 from fire import Fire
 
-from src.utils.misc.decorators import time_it
-from src.utils.circuit.agnostic_circuits.base_circuit import BaseCircuit
+from synbio_morpher.utils.misc.decorators import time_it
+from synbio_morpher.utils.circuit.agnostic_circuits.circuit import Circuit
 
 
 @time_it
 def main(config_args=None):
-    circuit = BaseCircuit(config_args)
+    circuit = Circuit(config_args)
     circuit.visualise()
 
 if __name__ == "__main__":

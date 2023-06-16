@@ -6,7 +6,7 @@
 # LICENSE file in the root directory of this source tree. 
     
 import numpy as np
-from src.utils.misc.units import SCIENTIFIC
+from synbio_morpher.utils.misc.units import SCIENTIFIC
 
 
 def F(E):

@@ -10,17 +10,16 @@ from multiprocessing import Process
 import os
 from typing import List
 import numpy as np
-from src.srv.io.manage.script_manager import script_preamble
-from src.srv.io.manage.sys_interface import make_filename_safely
-from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
-from src.utils.circuit.agnostic_circuits.circuit_manager import construct_circuit_from_cfg, prepare_config
-from src.utils.misc.decorators import time_it
-from src.utils.results.analytics.naming import get_analytics_types_all
-from src.utils.results.experiments import Experiment, Protocol
-from src.utils.data.data_format_tools.common import load_json_as_dict
-from src.utils.misc.numerical import make_symmetrical_matrix_from_sequence, triangular_sequence
-from src.utils.parameter_inference.interpolation_grid import create_parameter_range
-from src.utils.circuit.agnostic_circuits.circuit_manager import CircuitModeller
+from synbio_morpher.srv.io.manage.script_manager import script_preamble
+from synbio_morpher.srv.io.manage.sys_interface import make_filename_safely
+from synbio_morpher.srv.parameter_prediction.simulator import SIMULATOR_UNITS
+from synbio_morpher.utils.circuit.agnostic_circuits.circuit_manager import construct_circuit_from_cfg, prepare_config
+from synbio_morpher.utils.results.analytics.naming import get_analytics_types_all
+from synbio_morpher.utils.results.experiments import Experiment, Protocol
+from synbio_morpher.utils.data.data_format_tools.common import load_json_as_dict
+from synbio_morpher.utils.misc.numerical import make_symmetrical_matrix_from_sequence, triangular_sequence
+from synbio_morpher.utils.parameter_inference.interpolation_grid import create_parameter_range
+from synbio_morpher.utils.circuit.agnostic_circuits.circuit_manager import CircuitModeller
 
 
 def main(config=None, data_writer=None):
@@ -58,7 +57,7 @@ def main_subprocess(config, config_file, data_writer, sub_process, total_process
 
         # Load data names
         def load_local_data(config_file):
-            from src.utils.data.data_format_tools.manipulate_fasta import load_seq_from_FASTA
+            from synbio_morpher.utils.data.data_format_tools.manipulate_fasta import load_seq_from_FASTA
             sample_names = load_seq_from_FASTA(
                 make_filename_safely(config_file.get("data_path")), as_type='dict')
             num_species = len(sample_names)

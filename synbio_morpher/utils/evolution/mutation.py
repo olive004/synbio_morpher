@@ -10,8 +10,8 @@
 from typing import List
 from copy import deepcopy
 from bioreaction.model.data_containers import Species
-from src.utils.circuit.agnostic_circuits.circuit import Circuit
-from src.utils.results.writer import Tabulated
+from synbio_morpher.utils.circuit.agnostic_circuits.circuit import Circuit
+from synbio_morpher.utils.results.writer import Tabulated
 
 
 mutation_type_mapping_RNA = {

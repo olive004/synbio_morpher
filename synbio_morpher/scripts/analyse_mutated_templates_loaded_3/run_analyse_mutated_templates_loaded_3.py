@@ -6,22 +6,21 @@
 # LICENSE file in the root directory of this source tree. 
     
 from functools import partial
-import logging
 import os
 
 import pandas as pd
 
 from fire import Fire
-from src.srv.io.manage.script_manager import script_preamble
-from src.utils.misc.io import get_pathnames_from_mult_dirs
-from src.utils.misc.scripts_io import get_search_dir, load_experiment_config_original
-from src.utils.misc.string_handling import prettify_keys_for_label
-from src.utils.misc.database_handling import expand_df_cols_lists
+from synbio_morpher.srv.io.manage.script_manager import script_preamble
+from synbio_morpher.utils.misc.io import get_pathnames_from_mult_dirs
+from synbio_morpher.utils.misc.scripts_io import get_search_dir, load_experiment_config_original
+from synbio_morpher.utils.misc.string_handling import prettify_keys_for_label
+from synbio_morpher.utils.misc.database_handling import expand_df_cols_lists
 
-from src.utils.results.analytics.naming import get_true_names_analytics, get_signal_dependent_analytics
-from src.utils.results.experiments import Experiment, Protocol
-from src.utils.results.visualisation import visualise_data
-from src.utils.data.data_format_tools.common import load_json_as_dict, load_csv_mult
+from synbio_morpher.utils.results.analytics.naming import get_true_names_analytics
+from synbio_morpher.utils.results.experiments import Experiment, Protocol
+from synbio_morpher.utils.results.visualisation import visualise_data
+from synbio_morpher.utils.data.data_format_tools.common import load_json_as_dict, load_csv_mult
 
 
 def main(config=None, data_writer=None):

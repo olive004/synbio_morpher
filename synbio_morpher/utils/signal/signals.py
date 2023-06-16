@@ -76,7 +76,7 @@ class Signal():
         return np.arange(0, self.total_time, self.time_interval)
 
     def show(self, out_path='input_signal_plot'):
-        from src.utils.results.visualisation import VisODE
+        from synbio_morpher.utils.results.visualisation import VisODE
         VisODE().plot(data=self.time, y=self.real_signal, out_path=out_path)
 
 

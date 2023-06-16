@@ -121,6 +121,6 @@ class Signal():
         return jax.lax.vmap(self.func)(np.arange(0, total_time, self.time_interval))
 
     def show(self, total_time, out_path='input_signal_plot'):
-        from src.utils.results.visualisation import VisODE
+        from synbio_morpher.utils.results.visualisation import VisODE
         VisODE().plot(data=np.arange(0, total_time, self.time_interval),
                       y=self.real_signal, out_path=out_path)

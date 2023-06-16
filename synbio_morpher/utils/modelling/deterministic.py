@@ -13,7 +13,7 @@ import jax.numpy as jnp
 import diffrax as dfx
 from bioreaction.simulation.simfuncs.basic_de import bioreaction_sim, bioreaction_sim_expanded
 from bioreaction.model.data_containers import QuantifiedReactions
-from src.utils.modelling.base import Modeller
+from synbio_morpher.utils.modelling.base import Modeller
 
 
 class Deterministic(Modeller):

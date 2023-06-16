@@ -10,12 +10,12 @@ import pandas as pd
 import numpy as np
 import logging
 
-from src.srv.parameter_prediction.interactions import MolecularInteractions, InteractionMatrix
-from src.srv.io.manage.data_manager import DataManager
-from src.utils.circuit.common.system_setup import construct_bioreaction_model
-from src.utils.misc.type_handling import flatten_listlike, get_unique
-from src.utils.results.results import ResultCollector
-from src.utils.signal.signals_new import Signal
+from synbio_morpher.srv.parameter_prediction.interactions import MolecularInteractions, InteractionMatrix
+from synbio_morpher.srv.io.manage.data_manager import DataManager
+from synbio_morpher.utils.circuit.common.system_setup import construct_bioreaction_model
+from synbio_morpher.utils.misc.type_handling import flatten_listlike, get_unique
+from synbio_morpher.utils.results.results import ResultCollector
+from synbio_morpher.utils.signal.signals_new import Signal
 from bioreaction.model.data_containers import BasicModel, QuantifiedReactions
 
 

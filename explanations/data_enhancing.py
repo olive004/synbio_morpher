@@ -14,10 +14,10 @@ if __package__ is None or (__package__ == ''):
     __package__ = os.path.basename(module_path)
 
 
-from src.utils.misc.numerical import count_monotonic_group_lengths, find_monotonic_group_idxs, is_within_range
-from src.utils.misc.string_handling import string_to_tuple_list
-from src.utils.misc.type_handling import get_first_elements
-from src.utils.results.analytics.naming import get_true_interaction_cols
+from synbio_morpher.utils.misc.numerical import count_monotonic_group_lengths, find_monotonic_group_idxs, is_within_range
+from synbio_morpher.utils.misc.string_handling import string_to_tuple_list
+from synbio_morpher.utils.misc.type_handling import get_first_elements
+from synbio_morpher.utils.results.analytics.naming import get_true_interaction_cols
 
 SEQ_LENGTH = 20
 

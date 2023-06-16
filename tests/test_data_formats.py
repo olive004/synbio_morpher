@@ -1,7 +1,6 @@
 import os
 import unittest
-import numpy as np
-from src.utils.data.data_format_tools.manipulate_fasta import load_seq_from_FASTA
+from synbio_morpher.utils.data.data_format_tools.manipulate_fasta import load_seq_from_FASTA
 
 
 class TestDataFormatting(unittest.TestCase):

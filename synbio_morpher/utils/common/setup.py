@@ -9,17 +9,17 @@ import logging
 from copy import deepcopy
 from typing import List
 from bioreaction.model.data_containers import BasicModel
-from src.utils.data.common import Data
-from src.srv.io.manage.sys_interface import make_filename_safely
-from src.utils.data.data_format_tools.common import load_json_as_dict
-from src.srv.io.manage.data_manager import DataManager
-from src.utils.misc.units import per_mol_to_per_molecule
-from src.utils.misc.io import isolate_filename
-from src.utils.misc.type_handling import cast_all_values_as_list
-from src.utils.signal.configs import get_signal_type, parse_sig_args
-from src.utils.signal.signals import Signal
-from src.utils.circuit.common.config_setup import parse_cfg_args, get_configs
-from src.utils.circuit.common.system_setup import get_system_type
+from synbio_morpher.utils.data.common import Data
+from synbio_morpher.srv.io.manage.sys_interface import make_filename_safely
+from synbio_morpher.utils.data.data_format_tools.common import load_json_as_dict
+from synbio_morpher.srv.io.manage.data_manager import DataManager
+from synbio_morpher.utils.misc.units import per_mol_to_per_molecule
+from synbio_morpher.utils.misc.io import isolate_filename
+from synbio_morpher.utils.misc.type_handling import cast_all_values_as_list
+from synbio_morpher.utils.signal.configs import get_signal_type, parse_sig_args
+from synbio_morpher.utils.signal.signals import Signal
+from synbio_morpher.utils.circuit.common.config_setup import parse_cfg_args, get_configs
+from synbio_morpher.utils.circuit.common.system_setup import get_system_type
 
 
 ESSENTIAL_KWARGS = [

@@ -8,11 +8,11 @@
 from typing import List, Union
 import glob
 import os
-from src.utils.misc.string_handling import remove_file_extension
-from src.utils.misc.type_handling import nest_list_dict
-from src.utils.misc.helper import vanilla_return
-from src.utils.misc.errors import ExperimentError
-from src.utils.data.data_format_tools.common import load_multiple_as_list
+from synbio_morpher.utils.misc.string_handling import remove_file_extension
+from synbio_morpher.utils.misc.type_handling import nest_list_dict
+from synbio_morpher.utils.misc.helper import vanilla_return
+from synbio_morpher.utils.misc.errors import ExperimentError
+from synbio_morpher.utils.data.data_format_tools.common import load_multiple_as_list
 
 
 def isolate_filename(filepath: str):

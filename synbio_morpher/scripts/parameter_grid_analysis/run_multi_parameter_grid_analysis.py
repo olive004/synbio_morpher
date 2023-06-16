@@ -9,12 +9,12 @@ from copy import deepcopy
 from functools import partial
 import logging
 import os
-from src.scripts.parameter_grid_analysis.run_parameter_grid_analysis import main as parameter_grid_analysis
-from src.srv.io.manage.script_manager import script_preamble
-from src.utils.data.data_format_tools.common import load_json_as_dict
-from src.utils.misc.type_handling import inverse_dict
-from src.utils.parameter_inference.interpolation_grid import create_parameter_range
-from src.utils.results.experiments import Experiment, Protocol
+from synbio_morpher.scripts.parameter_grid_analysis.run_parameter_grid_analysis import main as parameter_grid_analysis
+from synbio_morpher.srv.io.manage.script_manager import script_preamble
+from synbio_morpher.utils.data.data_format_tools.common import load_json_as_dict
+from synbio_morpher.utils.misc.type_handling import inverse_dict
+from synbio_morpher.utils.parameter_inference.interpolation_grid import create_parameter_range
+from synbio_morpher.utils.results.experiments import Experiment, Protocol
 
 
 def main(config=None, data_writer=None):

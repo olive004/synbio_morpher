@@ -8,11 +8,10 @@
 
 import logging
 from subprocess import PIPE, run
-import numpy as np
 from functools import partial
-from src.utils.misc.helper import vanilla_return, processor
-from src.utils.modelling.physical import equilibrium_constant_reparameterisation, eqconstant_to_rates
-from src.srv.parameter_prediction.IntaRNA.bin.copomus.IntaRNA import IntaRNA
+from synbio_morpher.utils.misc.helper import vanilla_return, processor
+from synbio_morpher.utils.modelling.physical import equilibrium_constant_reparameterisation, eqconstant_to_rates
+from synbio_morpher.srv.parameter_prediction.IntaRNA.bin.copomus.IntaRNA import IntaRNA
 
 
 SIMULATOR_UNITS = {
@@ -92,7 +91,7 @@ class RawSimulationHandling():
             raise NotImplementedError
 
         else:
-            from src.srv.parameter_prediction.simulator import simulate_vanilla
+            from synbio_morpher.srv.parameter_prediction.simulator import simulate_vanilla
             return simulate_vanilla
 
 

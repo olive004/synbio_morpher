@@ -11,15 +11,15 @@ import os
 
 from fire import Fire
 
-from src.srv.io.manage.script_manager import script_preamble
-from src.srv.parameter_prediction.interactions import INTERACTION_FIELDS_TO_WRITE
-from src.srv.sequence_exploration.sequence_analysis import generate_interaction_stats
-from src.utils.data.data_format_tools.common import load_json_as_dict
-from src.utils.misc.io import get_pathnames
-from src.utils.misc.scripts_io import get_search_dir
-from src.utils.misc.type_handling import flatten_listlike
-from src.utils.results.experiments import Experiment, Protocol
-from src.utils.results.writer import DataWriter
+from synbio_morpher.srv.io.manage.script_manager import script_preamble
+from synbio_morpher.srv.parameter_prediction.interactions import INTERACTION_FIELDS_TO_WRITE
+from synbio_morpher.srv.sequence_exploration.sequence_analysis import generate_interaction_stats
+from synbio_morpher.utils.data.data_format_tools.common import load_json_as_dict
+from synbio_morpher.utils.misc.io import get_pathnames
+from synbio_morpher.utils.misc.scripts_io import get_search_dir
+from synbio_morpher.utils.misc.type_handling import flatten_listlike
+from synbio_morpher.utils.results.experiments import Experiment, Protocol
+from synbio_morpher.utils.results.writer import DataWriter
 
 
 def readout(var_obj):

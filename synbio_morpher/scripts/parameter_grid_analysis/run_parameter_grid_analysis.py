@@ -8,24 +8,23 @@
 
 
 from functools import partial
-import logging
 import os
 import numpy as np
 import pandas as pd
 
-from src.srv.io.loaders.data_loader import DataLoader, GeneCircuitLoader
-from src.srv.io.manage.script_manager import script_preamble
-from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
-from src.utils.misc.type_handling import flatten_listlike
-from src.utils.results.analytics.naming import get_analytics_types_all
-from src.utils.results.experiments import Experiment, Protocol
-from src.utils.results.result_writer import ResultWriter
-from src.utils.data.data_format_tools.common import load_json_as_dict
-from src.utils.misc.io import get_pathnames, isolate_filename
-from src.utils.misc.scripts_io import get_search_dir, load_experiment_config_original
-from src.utils.parameter_inference.interpolation_grid import make_slice, make_species_interaction_summary
-from src.utils.results.results import ResultCollector
-from src.utils.results.visualisation import VisODE
+from synbio_morpher.srv.io.loaders.data_loader import DataLoader, GeneCircuitLoader
+from synbio_morpher.srv.io.manage.script_manager import script_preamble
+from synbio_morpher.srv.parameter_prediction.simulator import SIMULATOR_UNITS
+from synbio_morpher.utils.misc.type_handling import flatten_listlike
+from synbio_morpher.utils.results.analytics.naming import get_analytics_types_all
+from synbio_morpher.utils.results.experiments import Experiment, Protocol
+from synbio_morpher.utils.results.result_writer import ResultWriter
+from synbio_morpher.utils.data.data_format_tools.common import load_json_as_dict
+from synbio_morpher.utils.misc.io import get_pathnames, isolate_filename
+from synbio_morpher.utils.misc.scripts_io import get_search_dir, load_experiment_config_original
+from synbio_morpher.utils.parameter_inference.interpolation_grid import make_slice, make_species_interaction_summary
+from synbio_morpher.utils.results.results import ResultCollector
+from synbio_morpher.utils.results.visualisation import VisODE
 
 
 def main(config=None, data_writer: ResultWriter = None):

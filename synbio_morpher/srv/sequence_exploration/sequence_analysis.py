@@ -15,17 +15,17 @@ import pandas as pd
 from bioreaction.model.data_tools import construct_model_fromnames
 
 
-from src.srv.io.loaders.data_loader import GeneCircuitLoader
-from src.utils.data.data_format_tools.common import load_csv_mult
-from src.utils.misc.numerical import NUMERICAL, cast_astype
-from src.utils.misc.io import get_pathnames, get_subdirectories, get_pathnames_from_mult_dirs
-from src.utils.misc.scripts_io import get_path_from_output_summary, get_root_experiment_folder, \
+from synbio_morpher.srv.io.loaders.data_loader import GeneCircuitLoader
+from synbio_morpher.utils.data.data_format_tools.common import load_csv_mult
+from synbio_morpher.utils.misc.numerical import cast_astype
+from synbio_morpher.utils.misc.io import get_pathnames, get_subdirectories, get_pathnames_from_mult_dirs
+from synbio_morpher.utils.misc.scripts_io import get_path_from_output_summary, get_root_experiment_folder, \
     load_experiment_config, load_experiment_output_summary, load_result_report
-from src.utils.misc.type_handling import flatten_nested_listlike
-from src.utils.results.analytics.naming import get_analytics_types_all, DIFF_KEY, RATIO_KEY
-from src.utils.misc.database_handling import expand_data_by_col
-from src.utils.results.writer import DataWriter
-from src.srv.parameter_prediction.interactions import InteractionMatrix, b_get_stats, INTERACTION_TYPES, INTERACTION_FIELDS_TO_WRITE
+from synbio_morpher.utils.misc.type_handling import flatten_nested_listlike
+from synbio_morpher.utils.results.analytics.naming import get_analytics_types_all, DIFF_KEY, RATIO_KEY
+from synbio_morpher.utils.misc.database_handling import expand_data_by_col
+from synbio_morpher.utils.results.writer import DataWriter
+from synbio_morpher.srv.parameter_prediction.interactions import InteractionMatrix, b_get_stats, INTERACTION_TYPES, INTERACTION_FIELDS_TO_WRITE
 
 
 INTERACTION_STATS = ['max_interaction',

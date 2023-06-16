@@ -6,7 +6,7 @@
 # LICENSE file in the root directory of this source tree. 
     
 import logging
-from src.utils.circuit.agnostic_circuits.base_circuit import BaseCircuit, BaseSpecies
+from synbio_morpher.utils.circuit.agnostic_circuits.circuit import Circuit
 
 FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
 FORMAT = "%(filename)s:%(funcName)s():%(lineno)i: %(message)s %(levelname)s"
@@ -42,21 +42,3 @@ logger.setLevel(logging.INFO)
 
 #     def process_species(self):
 #         self.node_labels = self.species.data.sample_names
-
-
-class RNASpecies(BaseSpecies):
-    def __init__(self, config_args):
-        super().__init__(config_args)
-
-        molecular_params = config_args.get("molecular_params")
-        if molecular_params is None:
-            raise ValueError(
-                f'Could not find molecular parameters in config for RNA species. \nArgs: \n{config_args}')
-
-        self.degradation_rates = self.init_matrix(ndims=1, init_type="uniform",
-                                                  uniform_val=molecular_params.get("degradation_rate", 1))
-        self.creation_rates = self.init_matrix(ndims=1, init_type="uniform",
-                                               uniform_val=molecular_params.get("creation_rate", 1))
-        # self.copynumbers = self.init_matrix(ndims=1, init_type="uniform",
-        #                                     uniform_val=5)
-        self.copynumbers = None  # For modelling

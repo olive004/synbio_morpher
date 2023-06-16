@@ -8,8 +8,8 @@
 
 
 import logging
-from src.srv.io.loaders.data_loader import GeneCircuitLoader
-from src.utils.data.common import Data
+from synbio_morpher.srv.io.loaders.data_loader import GeneCircuitLoader
+from synbio_morpher.utils.data.common import Data
 
 
 class DataManager():

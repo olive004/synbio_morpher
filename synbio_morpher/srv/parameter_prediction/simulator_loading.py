@@ -5,7 +5,7 @@
 # This source code is licensed under the MIT-style license found in the
 # LICENSE file in the root directory of this source tree. 
     
-from src.utils.data.data_format_tools.manipulate_fasta import load_seq_from_FASTA
+from synbio_morpher.utils.data.data_format_tools.manipulate_fasta import load_seq_from_FASTA
 
 
 extra_simulators = [

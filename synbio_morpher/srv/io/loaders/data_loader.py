@@ -9,8 +9,8 @@
 
 from functools import partial
 
-from src.utils.data.common import Data
-from src.utils.misc.helper import none_func
+from synbio_morpher.utils.data.common import Data
+from synbio_morpher.utils.misc.helper import none_func
 
 
 class DataLoader():
@@ -19,7 +19,7 @@ class DataLoader():
         pass
 
     def get_loader(self, filepath: str):
-        from src.utils.data.data_format_tools.common import determine_file_format
+        from synbio_morpher.utils.data.data_format_tools.common import determine_file_format
         data_type = determine_file_format(filepath)
         loader = self.get_loader_by_dtype(data_type)
         return loader
@@ -27,11 +27,11 @@ class DataLoader():
     @staticmethod
     def get_loader_by_dtype(data_type):
         if data_type == 'fasta':
-            from src.utils.data.data_format_tools.manipulate_fasta \
+            from synbio_morpher.utils.data.data_format_tools.manipulate_fasta \
                 import load_seq_from_FASTA
             return partial(load_seq_from_FASTA, as_type='dict')
         elif data_type == 'csv':
-            from src.srv.io.loaders.misc import load_csv
+            from synbio_morpher.srv.io.loaders.misc import load_csv
             return load_csv
         elif data_type == 'numpy':
             import numpy as np

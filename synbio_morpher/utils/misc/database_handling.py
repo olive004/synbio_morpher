@@ -8,14 +8,14 @@
 
 from functools import partial
 import logging
-from src.utils.misc.type_handling import get_unique
+from synbio_morpher.utils.misc.type_handling import get_unique
 import pandas as pd
 from typing import List, Union
 import operator
 from copy import deepcopy
-from src.utils.misc.type_handling import flatten_listlike, merge_dicts
-from src.utils.misc.numerical import cast_astype
-from src.utils.misc.string_handling import get_all_similar
+from synbio_morpher.utils.misc.type_handling import flatten_listlike, merge_dicts
+from synbio_morpher.utils.misc.numerical import cast_astype
+from synbio_morpher.utils.misc.string_handling import get_all_similar
 
 
 def thresh_func(thresh: bool, range_df, mode,

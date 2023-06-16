@@ -24,20 +24,20 @@ from bioreaction.model.data_containers import Species
 from bioreaction.simulation.simfuncs.basic_de import bioreaction_sim, bioreaction_sim_expanded
 from bioreaction.simulation.manager import simulate_steady_states
 
-from src.srv.parameter_prediction.simulator import SIMULATOR_UNITS
-from src.srv.parameter_prediction.interactions import InteractionDataHandler, InteractionSimulator, INTERACTION_FIELDS_TO_WRITE
-from src.utils.circuit.agnostic_circuits.circuit import Circuit, interactions_to_df
-from src.utils.misc.helper import vanilla_return
-from src.utils.misc.numerical import invert_onehot, zero_out_negs
-from src.utils.misc.runtime import clear_caches
-from src.utils.misc.type_handling import flatten_nested_dict, flatten_listlike, get_unique
-from src.utils.results.visualisation import VisODE
-from src.utils.modelling.base import Modeller
-from src.utils.modelling.deterministic import Deterministic, bioreaction_sim_wrapper, bioreaction_sim_dfx_expanded
-from src.utils.evolution.mutation import implement_mutation
-from src.utils.results.analytics.timeseries import generate_analytics
-from src.utils.results.result_writer import ResultWriter
-from src.utils.signal.signals_new import Signal
+from synbio_morpher.srv.parameter_prediction.simulator import SIMULATOR_UNITS
+from synbio_morpher.srv.parameter_prediction.interactions import InteractionDataHandler, InteractionSimulator, INTERACTION_FIELDS_TO_WRITE
+from synbio_morpher.utils.circuit.agnostic_circuits.circuit import Circuit, interactions_to_df
+from synbio_morpher.utils.misc.helper import vanilla_return
+from synbio_morpher.utils.misc.numerical import invert_onehot, zero_out_negs
+from synbio_morpher.utils.misc.runtime import clear_caches
+from synbio_morpher.utils.misc.type_handling import flatten_nested_dict, flatten_listlike
+from synbio_morpher.utils.results.visualisation import VisODE
+from synbio_morpher.utils.modelling.base import Modeller
+from synbio_morpher.utils.modelling.deterministic import Deterministic, bioreaction_sim_dfx_expanded
+from synbio_morpher.utils.evolution.mutation import implement_mutation
+from synbio_morpher.utils.results.analytics.timeseries import generate_analytics
+from synbio_morpher.utils.results.result_writer import ResultWriter
+from synbio_morpher.utils.signal.signals_new import Signal
 
 
 class CircuitModeller():

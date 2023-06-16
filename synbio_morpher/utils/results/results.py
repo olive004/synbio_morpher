@@ -11,7 +11,7 @@ from copy import deepcopy
 from typing import Dict
 import logging
 import numpy as np
-from src.utils.misc.type_handling import assert_uniform_type
+from synbio_morpher.utils.misc.type_handling import assert_uniform_type
 
 
 class Result():
@@ -27,7 +27,7 @@ class Result():
         self.analytics = analytics
         self.no_write = no_write
         if category == 'time_series' and analytics is None:
-            from src.utils.results.analytics.timeseries import generate_analytics
+            from synbio_morpher.utils.results.analytics.timeseries import generate_analytics
             analytics_kwargs = analytics_kwargs if analytics_kwargs is not None else {}
             self.analytics = generate_analytics(
                 result_data, time, **analytics_kwargs)

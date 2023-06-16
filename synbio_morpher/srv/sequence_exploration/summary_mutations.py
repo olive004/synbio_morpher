@@ -8,8 +8,8 @@
 
 
 import pandas as pd
-from src.utils.results.analytics.naming import get_true_names_analytics
-from src.utils.results.writer import DataWriter
+from synbio_morpher.utils.results.analytics.naming import get_true_names_analytics
+from synbio_morpher.utils.results.writer import DataWriter
 
 
 def summarise_mutation_groups(data: pd.DataFrame, data_writer: DataWriter = None):
