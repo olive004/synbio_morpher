@@ -33,9 +33,9 @@ def proc_info(info):
                                                         <= 10), 'sp_distance'] = np.absolute(info['precision_wrt_species-6'] - 10)
 
     info['mutation_type'] = info['mutation_type'].str.strip(
-        '[]').str.split(',').apply(lambda x: [int(xx) for xx in x if xx])
+        '[]').str.split(',').apply(lambda x: [int(xx) for xx in x if xx != ''])
     info['mutation_positions'] = info['mutation_positions'].str.strip(
-        '[]').str.split(',').apply(lambda x: [int(xx) for xx in x if xx])
+        '[]').str.split(',').apply(lambda x: [int(xx) for xx in x if xx != ''])
 
 
     #  Binding sites
