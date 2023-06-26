@@ -57,10 +57,11 @@ def proc_info(info):
         # fbs = [string_to_tuple_list(bb) for bb in info[b]]
         fbs = jax.tree_util.tree_map(lambda bb: string_to_tuple_list(bb), info[b].to_list())
         first = get_first_elements(fbs, empty_replacement=[])
-        info[bs] = [count_monotonic_group_lengths(bb) for bb in first]
-        info[bsi] = [find_monotonic_group_idxs(bb) for bb in first]
+        info[bs] = list(map(count_monotonic_group_lengths, first))
+        info[bsi] = list(map(find_monotonic_group_idxs, first))
         info[g] = info[bs].apply(len)
-        info[r] = [[(bb[0], bb[-1]) for bb in b] for b in info[bsi]]
+        # info[r] = [[(bb[0], bb[-1]) for bb in b] for b in info[bsi]]
+        info[r] = list(map(lambda b: list(map(lambda x: (x[0], x[-1]), b)), info[bsi]))
 
 
     # Mutation number ratiometric change
@@ -83,7 +84,7 @@ def proc_info(info):
 
 # Melt energies
 
-def melt(info, num_group_cols, num_bs_cols, numerical_cols, key_cols, mutation_log, bs_range_cols, num_species=3):
+def melt(info, num_group_cols, num_bs_cols, numerical_cols, key_cols, mutation_log, bs_range_cols, num_species=3, include_log=False):
     get_true_interaction_cols2 = partial(get_true_interaction_cols, num_species=num_species)
     good_cols = list(info.columns)
     [good_cols.remove(x) for x in get_true_interaction_cols2(info, 'binding_rates_dissociation') + get_true_interaction_cols2(info, 'eqconstants') +
@@ -108,13 +109,14 @@ def melt(info, num_group_cols, num_bs_cols, numerical_cols, key_cols, mutation_l
                     get_true_interaction_cols2(mutation_log, 'binding_rates_dissociation') +
                     get_true_interaction_cols2(mutation_log, 'eqconstants') +
                     get_true_interaction_cols2(mutation_log, 'binding_sites_groups')]
-    infom['energies' + '_logm'] = mutation_log.melt(mutation_cols, value_vars=get_true_interaction_cols2(
-        mutation_log, 'energies'), var_name='energies_idx', value_name='energies')['energies']
+    if include_log:
+        infom['energies' + '_logm'] = mutation_log.melt(mutation_cols, value_vars=get_true_interaction_cols2(
+            mutation_log, 'energies'), var_name='energies_idx', value_name='energies')['energies']
 
     for k in ['binding_sites', 'binding_rates_dissociation', 'eqconstants']:
         infom[k] = info.melt(good_cols, value_vars=get_true_interaction_cols2(
             info, k), var_name=f'{k}_idx', value_name=k)[k]
-        if k != 'binding_sites':
+        if include_log and (k != 'binding_sites'):
             infom[k + '_logm'] = mutation_log.melt(mutation_cols, value_vars=get_true_interaction_cols2(
                 mutation_log, k), var_name=f'{k}_idx', value_name=k)[k]
 
@@ -124,9 +126,9 @@ def melt(info, num_group_cols, num_bs_cols, numerical_cols, key_cols, mutation_l
     for k in ['binding_rates_dissociation', 'eqconstants', 'energies']:
         infom[f'{k}_diffs'] = info.groupby(['circuit_name'])[get_true_interaction_cols2(info, k)].apply(
             lambda x: x - x.iloc[0]).melt(value_vars=get_true_interaction_cols2(info, k), var_name='idx', value_name=f'{k}_diffs')[f'{k}_diffs']
-        infom[f'{k}_diffs' + '_logm'] = mutation_log.groupby(['circuit_name'])[get_true_interaction_cols2(mutation_log, k)].apply(
-            lambda x: x - x.iloc[0]).melt(value_vars=get_true_interaction_cols2(mutation_log, k), var_name='idx', value_name=f'{k}_diffs')[f'{k}_diffs']
-    
+        if include_log:
+            infom[f'{k}_diffs' + '_logm'] = mutation_log.groupby(['circuit_name'])[get_true_interaction_cols2(mutation_log, k)].apply(
+                lambda x: x - x.iloc[0]).melt(value_vars=get_true_interaction_cols2(mutation_log, k), var_name='idx', value_name=f'{k}_diffs')[f'{k}_diffs']
 
     info_e = info.explode(column=['mutation_type', 'mutation_positions'])
 
