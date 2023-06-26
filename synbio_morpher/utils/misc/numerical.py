@@ -64,7 +64,7 @@ def calculate_num_decimals(floatlike):
     return int(np.log10(float(str(floatlike)[::-1]))) + 1
 
 
-def find_monotonic_group_idxs(lst, increasing=True):
+def find_monotonic_group_idxs(lst: list, increasing=True) -> list:
     """
     Returns the number of groups of integers in lst that are monotonically increasing or decreasing without a gap.
     GC 50%
@@ -105,7 +105,7 @@ def find_monotonic_group_idxs(lst, increasing=True):
     return all_l
 
 
-def count_monotonic_group_lengths(lst, increasing=True):
+def count_monotonic_group_lengths(lst, increasing=True) -> list:
     all_l = find_monotonic_group_idxs(lst, increasing)
     return [len(l) for l in all_l]
 

@@ -3,6 +3,8 @@ import numpy as np
 import os
 import sys
 import pandas as pd
+import jax
+from typing import List, Tuple
 
 
 if __package__ is None or (__package__ == ''):
@@ -32,10 +34,12 @@ def proc_info(info):
     info.loc[(info['sensitivity_wrt_species-6'] > 1) & (info['precision_wrt_species-6']
                                                         <= 10), 'sp_distance'] = np.absolute(info['precision_wrt_species-6'] - 10)
 
-    info['mutation_type'] = info['mutation_type'].str.strip(
-        '[]').str.split(',').apply(lambda x: [int(xx) for xx in x if xx != ''])
-    info['mutation_positions'] = info['mutation_positions'].str.strip(
-        '[]').str.split(',').apply(lambda x: [int(xx) for xx in x if xx != ''])
+    if type(info['mutation_type'].iloc[0]) == str:
+        info['mutation_type'] = info['mutation_type'].str.strip(
+            '[]').str.split(',').apply(lambda x: [int(xx) for xx in x if xx != ''])
+    if type(info['mutation_positions'].iloc[0]) == str:
+        info['mutation_positions'] = info['mutation_positions'].str.strip(
+            '[]').str.split(',').apply(lambda x: [int(xx) for xx in x if xx != ''])
 
 
     #  Binding sites
@@ -50,7 +54,8 @@ def proc_info(info):
                     for e in get_true_interaction_cols(info, 'energies')]
 
     for b, g, bs, bsi, r in zip(get_true_interaction_cols(info, 'binding_sites'), num_group_cols, num_bs_cols, bs_idxs_cols, bs_range_cols):
-        fbs = [string_to_tuple_list(bb) for bb in info[b]]
+        # fbs = [string_to_tuple_list(bb) for bb in info[b]]
+        fbs = jax.tree_util.tree_map(lambda bb: string_to_tuple_list(bb), info[b].to_list())
         first = get_first_elements(fbs, empty_replacement=[])
         info[bs] = [count_monotonic_group_lengths(bb) for bb in first]
         info[bsi] = [find_monotonic_group_idxs(bb) for bb in first]
