@@ -58,7 +58,9 @@ class InteractionMatrix():
                  num_nodes: int = None,
                  units: str = '',
                  experiment_config: dict = None,
-                 interactions_loaded: dict = None):
+                 interactions_loaded: dict = None,
+                 allow_empty=False
+                 ):
 
         self.name = None
         self.sample_names = None
@@ -94,14 +96,14 @@ class InteractionMatrix():
             if 'binding_rates_association' in matrix_paths:
                 self.interactions.binding_rates_association = matrix_paths['binding_rates_association'] * np.ones_like(
                     self.interactions.binding_rates_dissociation)
-            else:
+            elif not allow_empty:
                 assert experiment_config is not None, f'Please either provide the parameter for `association_binding_rate` as '
                 '`binding_rates_association` in the `interactions` field in the config, or provide the entire config.'
                 self.interactions.binding_rates_association = load_param(
                     list(matrix_paths.values())[0], 'association_binding_rate', experiment_config=experiment_config
                 ) * np.ones_like(self.interactions.binding_rates_dissociation)
 
-    def load(self, filepath):
+    def load(self, filepath, quiet=True):
         filetype = determine_file_format(filepath)
 
         self.name = self.isolate_circuit_name(filepath, filetype)
@@ -118,7 +120,7 @@ class InteractionMatrix():
         else:
             raise TypeError(
                 f'Unsupported filetype {filetype} for loading {filepath}')
-        units = load_units(filepath, experiment_config=self.experiment_config)
+        units = load_units(filepath, experiment_config=self.experiment_config, quiet=quiet)
         return matrix, units, sample_names
 
     def isolate_circuit_name(self, circuit_filepath, filetype):

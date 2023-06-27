@@ -16,6 +16,7 @@ if __package__ is None or (__package__ == ''):
     __package__ = os.path.basename(module_path)
 
 
+from synbio_morpher.utils.data.data_format_tools.manipulate_fasta import load_seq_from_FASTA
 from synbio_morpher.utils.misc.numerical import count_monotonic_group_lengths, find_monotonic_group_idxs, is_within_range
 from synbio_morpher.utils.misc.string_handling import string_to_tuple_list
 from synbio_morpher.utils.misc.type_handling import get_first_elements
@@ -223,7 +224,7 @@ def summ(infom):
     
     return info_summ
 
-def enhance_data(info: pd.DataFrame):
+def enhance_data(info: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     # Add / process columns
     
     info, num_group_cols, num_bs_cols, numerical_cols, key_cols, mutation_log, bs_range_cols = proc_info(info)
@@ -231,3 +232,16 @@ def enhance_data(info: pd.DataFrame):
     info_summ = summ(infom)
 
     return info, infom, info_summ
+
+
+def load_circuits(data: pd.DataFrame, root_dir: str='.'):
+    if 'mutation_species' not in data.columns:
+        data['mutation_species'] = data['mutation_names'].str[:4]
+        
+    mutation_species = data['mutation_species'].unique()
+    circuit_name = data['circuit_name'].unique()
+    path_to_template_circuit = list(data[data['mutation_num'] > 0]['path_to_template_circuit'].unique())
+    circuit_paths = jax.tree_util.tree_map(lambda x: os.path.join(root_dir, 'data', 'raw', str(x.split('data/')[-1])), path_to_template_circuit)
+    fastas = jax.tree_util.tree_map(lambda cp: load_seq_from_FASTA(cp, as_type='dict'), circuit_paths)
+    fasta_d = dict(zip(circuit_name, fastas))
+    

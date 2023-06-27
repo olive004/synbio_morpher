@@ -190,7 +190,8 @@ def b_tabulate_mutation_info(source_dir: str, data_writer: DataWriter, experimen
                                               as_dict=True, first_only=True, allow_empty=True))
             interaction_matrices[i] = InteractionMatrix(
                 matrix_paths=matrix_paths,
-                experiment_config=experiment_config
+                experiment_config=experiment_config,
+                allow_empty=True
             )
         return b_get_stats(interaction_matrices), interaction_matrices[0].sample_names
 
@@ -274,7 +275,7 @@ def b_tabulate_mutation_info(source_dir: str, data_writer: DataWriter, experimen
         write_table(info_table)
 
     info_table = init_info_table()
-    circuit_dirs = get_subdirectories(source_dir, min_condition=3)
+    circuit_dirs = get_subdirectories(source_dir, min_content_in_dir=3)
     for circ_idx, circuit_dir in enumerate(circuit_dirs):
         circuit_name = os.path.basename(circuit_dir)
 
@@ -293,16 +294,13 @@ def b_tabulate_mutation_info(source_dir: str, data_writer: DataWriter, experimen
         }
         current_og_table = pd.DataFrame.from_dict(
             {k: [v] for k, v in current_og_table.items()})
-        # Expand the interaction keys in the table
-        info_table = update_info_table(info_table, curr_table=current_og_table, int_stats=interaction_stats_og,
-                                       ref_stats=interaction_stats_og, result_source_dirs=[
-                                           circuit_dir],
-                                       all_sample_names=all_sample_names, chosen_sample_names=sample_names)
 
         mutations_pathname = get_pathnames(
             first_only=True, file_key='mutations', search_dir=circuit_dir, allow_empty=True)
         if mutations_pathname:
             mutations = GeneCircuitLoader().load_data(mutations_pathname).data
+            # HAVE TO SORT THIS SINCE MUTATION DIRECTORIES ARE SORTED 
+            mutations = mutations.sort_values('mutation_name')
             if os.path.isdir(os.path.join(circuit_dir, 'mutations')):
                 mutation_dirs = sorted(get_subdirectories(
                     os.path.join(circuit_dir, 'mutations')))
@@ -321,6 +319,15 @@ def b_tabulate_mutation_info(source_dir: str, data_writer: DataWriter, experimen
                 'mutation_positions': cast_astype(mutations['positions'], int),
                 'path_to_template_circuit': mutations['template_file']
             })
+            current_og_table['path_to_template_circuit'] = mutations['template_file']
+            
+        # Expand the interaction keys in the table
+        info_table = update_info_table(info_table, curr_table=current_og_table, int_stats=interaction_stats_og,
+                                       ref_stats=interaction_stats_og, result_source_dirs=[
+                                           circuit_dir],
+                                       all_sample_names=all_sample_names, chosen_sample_names=sample_names)
+        
+        if mutations_pathname:
             # Expand the interaction keys in the table
             info_table = update_info_table(info_table, curr_table=mutation_table,
                                            int_stats=interaction_stats,

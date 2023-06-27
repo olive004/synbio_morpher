@@ -31,7 +31,7 @@ def load_param(filepath, param, experiment_config: dict = None) -> dict:
         experiment_config['molecular_params'])[param])
 
 
-def load_units(filepath, experiment_config: dict = None):
+def load_units(filepath, experiment_config: dict = None, quiet: bool = False):
 
     if experiment_config is None:
         try:
@@ -39,8 +39,9 @@ def load_units(filepath, experiment_config: dict = None):
                 experiment_folder=get_root_experiment_folder(filepath))
 
         except (FileNotFoundError, ExperimentError):
-            logging.warning(
-                f'Units unknown - supply a valid experiment directory instead of {filepath}')
+            if not quiet:
+                logging.warning(
+                    f'Units unknown - supply a valid experiment directory instead of {filepath}')
             return 'unknown'
 
     simulator_cfgs = experiment_config.get('interaction_simulator')
