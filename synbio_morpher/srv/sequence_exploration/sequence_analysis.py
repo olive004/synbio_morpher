@@ -241,7 +241,7 @@ def b_tabulate_mutation_info(source_dir: str, data_writer: DataWriter, experimen
             )
         result_table = pd.concat(result_reports, axis=0)
 
-        def process_results(table):
+        def process_results(table: pd.DataFrame) -> pd.DataFrame:
             """ Contracts the columns of the table into list (reverse of explode) """
             table = table.groupby('result_source_dir').agg(
                 {c: lambda x: x.tolist() for c in table.columns})
@@ -253,7 +253,7 @@ def b_tabulate_mutation_info(source_dir: str, data_writer: DataWriter, experimen
         result_table = process_results(result_table)
 
         new_table = pd.concat([pd.DataFrame.from_dict(
-            curr_table), int_stats, diff_interactions, ratio_interactions, result_table], axis=1)
+            curr_table).reset_index(), int_stats, diff_interactions, ratio_interactions, result_table], axis=1)
         new_table = new_table.explode(list(result_table.columns))
         if check_coherent:
             check_coherency(new_table)
@@ -319,7 +319,7 @@ def b_tabulate_mutation_info(source_dir: str, data_writer: DataWriter, experimen
                 'mutation_positions': cast_astype(mutations['positions'], int),
                 'path_to_template_circuit': mutations['template_file']
             })
-            current_og_table['path_to_template_circuit'] = mutations['template_file']
+            current_og_table['path_to_template_circuit'] = mutations['template_file'].iloc[0]
             
         # Expand the interaction keys in the table
         info_table = update_info_table(info_table, curr_table=current_og_table, int_stats=interaction_stats_og,
