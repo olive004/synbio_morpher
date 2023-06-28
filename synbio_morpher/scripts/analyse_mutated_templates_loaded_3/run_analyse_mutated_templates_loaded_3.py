@@ -33,13 +33,13 @@ def main(config=None, data_writer=None):
         config_searchdir_key='source_dirs', config_file=config_file)
     if type(source_dirs) != list:
         source_dirs = [source_dirs]
-    source_dir = source_dirs[0]
-    source_config = load_experiment_config_original(
-        source_dir, 'mutation_effect_on_interactions_signal')
+    # source_dir = source_dirs[0]
+    # source_config = load_experiment_config_original(
+    #     source_dir, 'mutation_effect_on_interactions_signal')
 
     # binding_rates_threshold_upper = np.power(10, 6)
-    binding_rates_threshold_upper = None
-    binding_rates_threshold_upper_text = f', with cutoff at {binding_rates_threshold_upper}' if binding_rates_threshold_upper else ''
+    # binding_rates_threshold_upper = None
+    # binding_rates_threshold_upper_text = f', with cutoff at {binding_rates_threshold_upper}' if binding_rates_threshold_upper else ''
 
     protocols = [
         Protocol(
