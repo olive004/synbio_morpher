@@ -158,7 +158,7 @@ def melt(info, num_group_cols, num_bs_cols, numerical_cols, key_cols, mutation_l
     return infom
 
 
-def summ(infom):
+def get_named_aggs(info: pd.DataFrame, include_log: bool = False) -> pd.DataFrame:
     # Standard Deviations
 
     relevant_cols = [
@@ -191,6 +191,8 @@ def summ(infom):
         # 'RMSE_ratio_from_mutation_to_base',
         'steady_states_ratio_from_mutation_to_base',
         # 'num_groups',
+    ]
+    energy_cols = [
         'energies',
         'binding_rates_dissociation',
         'eqconstants',
@@ -198,18 +200,31 @@ def summ(infom):
         'binding_rates_dissociation_diffs',
         'eqconstants_diffs'
     ]
+    [relevant_cols.append(c) for c in energy_cols if c in info.columns]
 
     named_aggs = {}
     for c in relevant_cols:
-        for cc in [c, c + '_logm']:
+        col_iter = [c, c + '_logm'] if include_log else [c]
+        for cc in col_iter:
             named_aggs.update({cc + '_std': pd.NamedAgg(column=cc, aggfunc="std")})
             named_aggs.update({cc + '_mean': pd.NamedAgg(column=cc, aggfunc="mean")})
             named_aggs.update({cc + '_std_normed_by_mean': pd.NamedAgg(column=cc,
                             aggfunc=lambda x: np.std(x) / np.max([1, np.mean(x)]))})
+    return named_aggs
+
+
+def summ(info: pd.DataFrame) -> pd.DataFrame:
+    named_aggs = get_named_aggs(info, include_log=False)
+    info_summ = info.groupby(
+        ['circuit_name', 'mutation_num', 'sample_name'], as_index=False).agg(**named_aggs)
+    return info_summ
+
+
+def summ_energies(infom: pd.DataFrame, include_log: bool = True) -> pd.DataFrame:
+    # Mutations within binding
+    named_aggs = get_named_aggs(infom, include_log=include_log)
     info_summ = infom.groupby(
         ['circuit_name', 'mutation_num', 'sample_name'], as_index=False).agg(**named_aggs)
-
-    # Mutations within binding
 
     v = infom.groupby(['circuit_name', 'mutation_num', 'sample_name'], as_index=False).agg(
         **{'frac_muts_in_binding_site' + '_std': pd.NamedAgg(column='frac_muts_in_binding_site', aggfunc='std'),
