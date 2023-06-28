@@ -34,7 +34,7 @@ ENSEMBLE_CONFIG = {
                 "name": "IntaRNA",
                 "postprocess": True
             },
-            "molecular_params": "src/utils/common/configs/RNA_circuit/molecular_params.json",
+            "molecular_params": "synbio_morpher/utils/common/configs/RNA_circuit/molecular_params.json",
             "system_type": "RNA"
         },
         "gather_interaction_stats": {
@@ -47,7 +47,7 @@ ENSEMBLE_CONFIG = {
                 "postprocess": True
             },
             "interaction_file_keyword": ["eqconstants", "binding_rates_dissociation"],
-            "molecular_params": "src/utils/common/configs/RNA_circuit/molecular_params.json",
+            "molecular_params": "synbio_morpher/utils/common/configs/RNA_circuit/molecular_params.json",
             "source_of_interactions": {
                 "is_source_dir_incomplete": True,
                 "source_dir": "data/tests",

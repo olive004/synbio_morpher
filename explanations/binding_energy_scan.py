@@ -335,7 +335,7 @@ if __name__ == '__main__':
          [1, 1, 1],
          [1, 1, 1]]
     )
-    # From src/utils/common/configs/RNA_circuit/molecular_params.json
+    # From synbio_morpher/utils/common/configs/RNA_circuit/molecular_params.json
     a = np.ones(num_species) * 0.08333
     # a[1] = a[1] * 1.2
     # a[2] = a[2] * 0.8
