@@ -30,7 +30,7 @@ from synbio_morpher.utils.circuit.agnostic_circuits.circuit import Circuit, inte
 from synbio_morpher.utils.misc.helper import vanilla_return
 from synbio_morpher.utils.misc.numerical import invert_onehot, zero_out_negs
 from synbio_morpher.utils.misc.runtime import clear_caches
-from synbio_morpher.utils.misc.type_handling import flatten_nested_dict, flatten_listlike
+from synbio_morpher.utils.misc.type_handling import flatten_nested_dict, flatten_listlike, append_nest_dicts
 from synbio_morpher.utils.results.visualisation import VisODE
 from synbio_morpher.utils.modelling.base import Modeller
 from synbio_morpher.utils.modelling.deterministic import Deterministic, bioreaction_sim_dfx_expanded
@@ -362,13 +362,6 @@ class CircuitModeller():
                 b_new_copynumbers[i, :, :] = np.concatenate([np.expand_dims(b_og_states[i, :], axis=1), b_new_copynumbers[i, :, 1:]], axis=1)
 
         # Get analytics batched too
-        def append_nest_dicts(l: list, i1: int, d: dict) -> list:
-            for i in range(i1):
-                b_analytics_k = {}
-                for k, v in d.items():
-                    b_analytics_k[k] = v[i]
-                l.append(b_analytics_k)
-            return l
 
         ref_circuits = [s for s in circuits if s.subname == 'ref_circuit']
         ref_idxs = [circuits.index(s) for s in ref_circuits]

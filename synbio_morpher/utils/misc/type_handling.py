@@ -13,6 +13,15 @@ import typing
 from copy import deepcopy
 
 
+def append_nest_dicts(l: list, i1: int, d: dict) -> list:
+    for i in range(i1):
+        b_analytics_k = {}
+        for k, v in d.items():
+            b_analytics_k[k] = v[i]
+        l.append(b_analytics_k)
+    return l
+
+
 def assert_uniform_type(list_like, target_type):
     assert all(type(list_like) == target_type)
 
