@@ -2,7 +2,7 @@
 
 # FROM intarna_docker
 # https://quay.io/repository/biocontainers/intarna
-FROM quay.io/biocontainers/intarna:3.3.2--pl5321h7ff8a90_0
+FROM quay.io/biocontainers/intarna:3.3.2--pl5321h7ff8a90_0 AS intarna_build
 FROM nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04 AS workdir_build
 
 
@@ -32,8 +32,8 @@ WORKDIR /workdir
 ################################################################################
 #  Copy IntaRNA dependencies
 ################################################################################
-COPY --from=IntaRNA_build /usr/local/bin/IntaRNA /usr/local/bin/
-COPY --from=IntaRNA_build /usr/local/include/IntaRNA /usr/local/include/
-COPY --from=IntaRNA_build /usr/local/lib/* /usr/local/lib/
+COPY --from=intarna_build /usr/local/bin/IntaRNA /usr/local/bin/
+COPY --from=intarna_build /usr/local/include/IntaRNA /usr/local/include/
+COPY --from=intarna_build /usr/local/lib/* /usr/local/lib/
 
 
