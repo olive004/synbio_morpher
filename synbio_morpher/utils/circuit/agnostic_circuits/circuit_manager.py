@@ -335,11 +335,11 @@ class CircuitModeller():
                 b_reverse_rates[i] = c.qreactions.reactions.reverse_rates
             b_steady_states = np.asarray(b_steady_states)
             b_reverse_rates = np.asarray(b_reverse_rates)
-            # b_og_states = np.array([c.result_collector.get_result('steady_states').analytics['initial_steady_states'].flatten() * onehots + b_steady_states[i] * ((onehots == 0) * 1) for i, c in enumerate(circuits)])
+            b_og_states = np.array([c.result_collector.get_result('steady_states').analytics['steady_states'].flatten() * onehots + b_steady_states[i] * ((onehots == 0) * 1) for i, c in enumerate(circuits)])
 
-            return b_steady_states, b_reverse_rates, # b_og_states
+            return b_steady_states, b_reverse_rates, b_og_states
 
-        b_steady_states, b_reverse_rates = prepare_batch_params(circuits)
+        b_steady_states, b_reverse_rates, b_og_states = prepare_batch_params(circuits)
 
         s_time = datetime.now()
         b_new_copynumbers, t = simulate_steady_states(
@@ -356,10 +356,10 @@ class CircuitModeller():
         if np.shape(b_new_copynumbers)[1] != ref_circuit.circuit_size and np.shape(b_new_copynumbers)[-1] == ref_circuit.circuit_size:
             b_new_copynumbers = np.swapaxes(b_new_copynumbers, 1, 2)
         
-        # Fix first entry for signal species
-        # for i, c in enumerate(circuits): 
-        #     if not c.use_prod_and_deg:
-        #         b_new_copynumbers[i, :, :] = np.concatenate([np.expand_dims(b_og_states[i, :], axis=1), b_new_copynumbers[i, :, 1:]], axis=1)
+        Fix first entry for signal species
+        for i, c in enumerate(circuits): 
+            if not c.use_prod_and_deg:
+                b_new_copynumbers[i, :, :] = np.concatenate([np.expand_dims(b_og_states[i, :], axis=1), b_new_copynumbers[i, :, 1:]], axis=1)
 
         # Get analytics batched too
 
