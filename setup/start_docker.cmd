@@ -7,6 +7,7 @@ docker pull nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
 docker build -t genetic_glitch:latest .\docker_windows
 
 @REM # cp ./requirements.txt ./docker_windows
+cp .\requirements.txt .\docker_unix
 
 docker create -it ^
 --rm ^
