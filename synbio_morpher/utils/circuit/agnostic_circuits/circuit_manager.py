@@ -356,7 +356,7 @@ class CircuitModeller():
         if np.shape(b_new_copynumbers)[1] != ref_circuit.circuit_size and np.shape(b_new_copynumbers)[-1] == ref_circuit.circuit_size:
             b_new_copynumbers = np.swapaxes(b_new_copynumbers, 1, 2)
         
-        Fix first entry for signal species
+        # Fix first entry for signal species
         for i, c in enumerate(circuits): 
             if not c.use_prod_and_deg:
                 b_new_copynumbers[i, :, :] = np.concatenate([np.expand_dims(b_og_states[i, :], axis=1), b_new_copynumbers[i, :, 1:]], axis=1)

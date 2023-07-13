@@ -52,12 +52,7 @@ def calculate_precision(output_diff, starting_states, signal_diff, signal_0) -> 
     return jnp.divide(1, precision)
 
 
-def get_precision(signal_idx: int, starting_states, steady_states):
-    if signal_idx is None:
-        return None
-    signal_0 = starting_states[signal_idx]
-    signal_1 = steady_states[signal_idx]
-
+def get_precision(starting_states, steady_states, signal_0, signal_1):
     signal_diff = signal_1 - signal_0
     output_diff = steady_states - starting_states
 
@@ -195,9 +190,10 @@ def generate_base_analytics(data: jnp.ndarray, time: jnp.ndarray, labels: List[s
         for s, s_idx in zip(signal_labels, signal_idxs):
 
             analytics[f'precision_wrt_species-{s_idx}'] = get_precision(
-                signal_idx=s_idx,
                 starting_states=analytics['initial_steady_states'],
-                steady_states=analytics['steady_states']
+                steady_states=analytics['steady_states'],
+                signal_0=analytics['initial_steady_states'][s_idx],
+                signal_1=data[s_idx, 1]
             )
             # t axis : 1
             t_end = np.min([len(time), data.shape[1]])
