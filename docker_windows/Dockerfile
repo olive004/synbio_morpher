@@ -3,22 +3,37 @@
 # FROM intarna_docker
 # https://quay.io/repository/biocontainers/intarna
 FROM quay.io/biocontainers/intarna:3.3.2--pl5321h7ff8a90_0
+FROM nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04 AS workdir_build
+
 
 ################################################################################
 #  Install python dependencies
 ################################################################################
 WORKDIR /usr/lib
 COPY requirements.txt /usr/lib/install_requirements/requirements.txt
+RUN apt-get update && \
+    yes | apt-get install python3-pip
+RUN yes | apt install git
 RUN cd /usr/lib/install_requirements && \
-    pip install -r requirements.txt
+    pip install -r ./requirements.txt 
+RUN pip install --upgrade "jax[cuda11_pip]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+RUN export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/cuda/lib64:/
 
 ################################################################################
 #  setup environment
 ################################################################################
 ENV ROOT_DIR /workdir
 ENV PYTHONPATH /workdir
+ENV NVIDIA_VISIBLE_DEVICES all
+ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
 ENV MNT ..
 WORKDIR /workdir
-# ENTRYPOINT ["/bin/bash"]
+
+################################################################################
+#  Copy IntaRNA dependencies
+################################################################################
+COPY --from=IntaRNA_build /usr/local/bin/IntaRNA /usr/local/bin/
+COPY --from=IntaRNA_build /usr/local/include/IntaRNA /usr/local/include/
+COPY --from=IntaRNA_build /usr/local/lib/* /usr/local/lib/
 
 
