@@ -26,4 +26,4 @@ torchvision
 tqdm
 umap-learn
 wandb
-wheel
+# wheel

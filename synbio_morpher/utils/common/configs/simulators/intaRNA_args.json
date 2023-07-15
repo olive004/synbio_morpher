@@ -4,5 +4,5 @@
     "outcsvcols": "id1, id2, E, bpList",
     "threads": 0,
     "n": 1,
-    "param_file": "src/utils/common/configs/simulators/intaRNA_parameterFile.sh"
+    "param_file": "synbio_morpher/utils/common/configs/simulators/intaRNA_parameterFile.sh"
 }
