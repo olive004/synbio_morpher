@@ -20,7 +20,7 @@
                 "generator_protocol": "random",
                 "proportion_to_mutate": 0.5,
                 "template": null,
-                "seed": 6
+                "seed": 7
             },
             "system_type": "RNA"
         },
@@ -60,8 +60,8 @@
                 "min_num_interacting": 0,
                 "min_num_self_interacting": 0,
                 "max_self_interacting": null,
-                "max_total": 2000,
-                "not_in_dirs": ["data/ensemble_mutation_effect_analysis/2023_05_09_220322/mutation_effect_on_interactions_signal"]
+                "max_total": 3000,
+                "not_in_dirs": []
             },
             "mutations_args": {
                 "algorithm": "random",
@@ -69,7 +69,7 @@
                 "mutation_nums_within_sequence": [1, 2, 3, 5, 10, 15],
                 "mutation_nums_per_position": 1,
                 "concurrent_species_to_mutate": "single_species_at_a_time",
-                "seed": 1
+                "seed": 2
             },
             "signal": {
                 "inputs": ["RNA_0"],
@@ -78,7 +78,7 @@
                 "function_kwargs": {
                     "impulse_center": 1, 
                     "impulse_halfwidth": 5, 
-                    "target": 0.005
+                    "target": 2
                 }
             },
             "simulation": {
@@ -89,10 +89,10 @@
                 "solver": "diffrax",
                 "use_batch_mutations": true,
                 "interaction_factor": 1,
-                "batch_size": 8000,
-                "max_circuits": 10000,
+                "batch_size": 20000,
+                "max_circuits": 60000,
                 "device": "gpu",
-                "threshold_steady_states": 0.01, 
+                "threshold_steady_states": 0.05, 
                 "use_rate_scaling": true
             },
             "source_of_interaction_stats": {

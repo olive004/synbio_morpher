@@ -3,6 +3,7 @@
 
 sudo docker pull docker/dockerfile:1
 sudo docker pull quay.io/biocontainers/intarna:3.3.2--pl5321h7ff8a90_0
+# sudo docker run --rm -it --entrypoint bash quay.io/biocontainers/intarna:3.3.2--pl5321h7ff8a90_0
 # sudo docker pull nvidia/cuda:12.1.0-devel-ubuntu22.04
 sudo docker pull nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
 
