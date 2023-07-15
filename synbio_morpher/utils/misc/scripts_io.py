@@ -14,7 +14,7 @@ from typing import Tuple
 import numpy as np
 import pandas as pd
 
-from synbio_morpher.srv.io.manage.sys_interface import SCRIPT_DIR, DATA_DIR, PACKAGE_DIR
+from synbio_morpher.srv.io.manage.sys_interface import SCRIPT_DIR, DATA_DIR, PACKAGE_DIR, PACKAGE_NAME
 from synbio_morpher.srv.io.loaders.misc import load_csv
 from synbio_morpher.utils.data.data_format_tools.common import load_json_as_dict, make_iterable_like
 from synbio_morpher.utils.misc.errors import ConfigError, ExperimentError
@@ -23,7 +23,8 @@ from synbio_morpher.utils.misc.type_handling import flatten_listlike
 
 
 def get_purposes(script_dir=None):
-    script_dir = SCRIPT_DIR if script_dir is None else script_dir
+    script_module = __import__('.'.join([PACKAGE_NAME, SCRIPT_DIR]), fromlist=[''])
+    script_dir = script_module.__path__[0] if script_dir is None else script_dir
     return get_subdirectories(script_dir, only_basedir=True)
 
 

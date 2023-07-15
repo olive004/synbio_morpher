@@ -10,7 +10,7 @@
     "system_type": "RNA",
     "source_of_interactions": {
         "is_source_dir_incomplete": false,
-        "source_dir": "./data/generate_seqs_flexible/2023_04_17_205800/simulated_circuits",
+        "source_dir": "./data/ensemble_mutation_effect_analysis/2023_07_15_192831/generate_species_templates",
         "purpose_to_get_source_dir_from": null,
         "source_dir_actually_used_POSTERITY": null
     }
