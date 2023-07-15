@@ -21,5 +21,5 @@ explanations/output
 lib/*
 Miniconda3*
 !requirements.txt
-synbio_morpher/srv/parameter_prediction/IntaRNA
+synbio_morpher/srv/parameter_prediction/IntaRNA2
 synbio_morpher/srv/parameter_prediction/RNAstructure
