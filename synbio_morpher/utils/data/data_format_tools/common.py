@@ -7,7 +7,7 @@
     
 import json
 import os
-from typing import Union
+from typing import Union, Optional
 import numpy as np
 import pandas as pd
 import jaxlib
@@ -41,20 +41,34 @@ def determine_file_format(filepath: str) -> str:
         else:
             raise ValueError(
                 f'Attempted to determine file format of an object that is not a file: {filepath}')
+            
+            
+def is_file_within_package(json_pathname: str) -> bool:
+    return PACKAGE_NAME in json_pathname and (PACKAGE_NAME not in json_pathname.split(PACKAGE_NAME)[-1])
 
 
-def load_json_as_dict(json_pathname: str, process=True) -> dict:
+def get_filename_from_within_package(json_pathname: str) -> str:
+    """ This function is likely redundant """
+    stripped = json_pathname.strip(f'..{os.sep}').strip(f'.{os.sep}')
+    as_module = '.'.join(stripped.split(os.sep)[:-1])
+    full_json_pathname = os.path.join(
+        importlib.import_module(as_module).__path__[0],
+        os.path.basename(json_pathname))
+    return full_json_pathname
+
+
+def load_json_as_dict(json_pathname: Union[str, dict], process=True) -> dict:
     if not json_pathname:
         return {}
     elif type(json_pathname) == dict:
         jdict = json_pathname
     elif type(json_pathname) == str:
-        if PACKAGE_NAME in json_pathname:
-            stripped = json_pathname.strip(f'..{os.sep}').strip(f'.{os.sep}')
-            as_module = '.'.join(stripped.split(os.sep)[:-1])
-            full_json_pathname = os.path.join(
-                importlib.import_module(as_module).__path__[0],
-                os.path.basename(json_pathname))
+        if is_file_within_package(json_pathname):
+            full_json_pathname = json_pathname
+            if not os.path.isfile(full_json_pathname):
+                full_json_pathname = get_filename_from_within_package(json_pathname)
+                if not os.path.isfile(full_json_pathname):
+                    raise ValueError(f'Could not find file {json_pathname}')
         else: 
             full_json_pathname = json_pathname
         if os.stat(full_json_pathname).st_size == 0:

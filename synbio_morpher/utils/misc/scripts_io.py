@@ -145,7 +145,10 @@ def get_subprocesses_dirnames(source_dir):
 
 
 def load_experiment_output_summary(experiment_folder) -> pd.DataFrame:
-    experiment_folder = os.path.join(PACKAGE_DIR, experiment_folder) if PACKAGE_DIR not in experiment_folder else experiment_folder
+    if not os.path.isdir(experiment_folder):
+        experiment_folder = os.path.join(PACKAGE_DIR, experiment_folder) if PACKAGE_DIR not in experiment_folder else experiment_folder
+        if not os.path.isdir(experiment_folder):
+            raise ValueError(f'Invalid experiment folder {experiment_folder} loaded. Check for spelling errors in pathnames supplied in config.')
     summary_path = os.path.join(experiment_folder, 'output_summary.csv')
 
     return load_csv(summary_path)

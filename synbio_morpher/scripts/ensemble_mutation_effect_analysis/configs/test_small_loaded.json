@@ -9,8 +9,8 @@
             "data_path": null,
             "experiment": {
                 "purpose": "mutation_effect_on_interactions_signal",
-                "no_visualisations": false,
-                "no_numerical": false,
+                "no_visualisations": true,
+                "no_numerical": true,
                 "test_mode": false
             },
             "interaction_simulator": {
@@ -27,10 +27,10 @@
             "mutations_args": {
                 "algorithm": "random",
                 "mutation_counts": 2,
-                "mutation_nums_within_sequence": [1, 2, 3, 5, 10, 15],
+                "mutation_nums_within_sequence": [1, 2, 10],
                 "mutation_nums_per_position": 1,
                 "concurrent_species_to_mutate": "single_species_at_a_time",
-                "seed": 2
+                "seed": 0
             },
             "signal": {
                 "inputs": ["RNA_0"],
