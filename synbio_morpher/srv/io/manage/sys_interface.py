@@ -18,9 +18,9 @@ PACKAGE_NAME = 'synbio_morpher'
 DATA_TOP_DIR = '.'
 
 if os.path.basename(os.getcwd()) == PACKAGE_NAME or (PACKAGE_NAME in os.listdir('.')):
-    PACKAGE_DIR = '.'
+    PACKAGE_DIR = os.path.join('.', PACKAGE_NAME)
 if os.getcwd().split(os.sep)[-2] == PACKAGE_NAME or (PACKAGE_NAME in os.listdir('..')):
-    PACKAGE_DIR = '..'
+    PACKAGE_DIR = os.path.join('..', PACKAGE_NAME)
     DATA_TOP_DIR = PACKAGE_DIR
 elif PACKAGE_NAME in os.getcwd():
     PACKAGE_DIR = os.path.join(*os.getcwd().split(os.sep)[

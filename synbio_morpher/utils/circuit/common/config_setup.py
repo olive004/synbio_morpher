@@ -55,7 +55,7 @@ def handle_simulator_cfgs(simulator, simulator_cfg_path):
                 if os.path.isfile(v):
                     simulator_cfg[k] = v
                 elif not os.path.isfile(v) and (PACKAGE_NAME in v):
-                    simulator_cfg[k] = os.path.join(PACKAGE_DIR, v.split(PACKAGE_NAME)[-1])
+                    simulator_cfg[k] = os.path.join(PACKAGE_DIR, v.split(PACKAGE_NAME)[-1].strip(os.sep))
                     # simulator_cfg[k] = os.path.join(PACKAGE_DIR, v) if (PACKAGE_NAME in v) and (os.sep in v) and (PACKAGE_DIR not in v) else v
                 if not os.path.isfile(simulator_cfg[k]):
                     raise ValueError(f'Could not find simulator file {simulator_cfg[k]}. Check that the package directory is correct.')
