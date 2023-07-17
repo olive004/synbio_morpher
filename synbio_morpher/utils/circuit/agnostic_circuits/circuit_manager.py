@@ -203,6 +203,7 @@ class CircuitModeller():
 
             starting_states = np.asarray(
                 [c.qreactions.quantities for c in circuits])
+            
             b_copynumbers, t = simulate_steady_states(
                 y0=starting_states, total_time=self.tmax, sim_func=sim_func,
                 t0=self.t0, t1=self.t1,
@@ -287,17 +288,6 @@ class CircuitModeller():
 
         def prepare_batch_params(circuits: List[Circuit]):
 
-            # Batch
-            # signal_species = [ref_circuit.model.species[ii] for ii in np.where(
-            #     signal.onehot * np.arange(len(ref_circuit.model.species)) != 0)[0]]
-            # untranslated_species = {s: [s] for s in ref_circuit.model.species if s not in flatten_listlike(
-            #     [r.output for r in ref_circuit.model.reactions])}
-            # untranslated_species.update(
-            #     {r.output[0]: r.input for r in ref_circuit.model.reactions if r.output and len(
-            #         r.output) == 1})
-            # signal_factor = np.array(
-            #     [[untranslated_species[s].count(sigs) for s in ref_circuit.model.species] for sigs in signal_species])
-
             b_steady_states = [None] * len(circuits)
             b_reverse_rates = [None] * len(circuits)
 
@@ -323,12 +313,6 @@ class CircuitModeller():
                                 'steady_states').analytics['steady_states'].flatten() *
                              signal.func.keywords['target']) * onehots
 
-                    # b_steady_states[i] = c.result_collector.get_result(
-                    #     'steady_states').analytics['steady_states'].flatten() * ((signal.onehot == 0) * 1) + \
-                    #     (c.result_collector.get_result(
-                    #         'steady_states').analytics['initial_steady_states'].flatten() *
-                    #      signal.func.keywords['target'] + c.result_collector.get_result(
-                    #         'steady_states').analytics['steady_states'].flatten()) * signal.onehot
                 else:
                     b_steady_states[i] = c.result_collector.get_result(
                         'steady_states').analytics['steady_states'].flatten()

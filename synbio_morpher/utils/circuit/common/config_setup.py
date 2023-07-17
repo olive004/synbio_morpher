@@ -10,7 +10,7 @@ import os
 from typing import Dict, List
 
 from synbio_morpher.srv.parameter_prediction.simulator_loading import find_simulator_loader
-from synbio_morpher.srv.io.manage.sys_interface import PACKAGE_DIR
+from synbio_morpher.srv.io.manage.sys_interface import PACKAGE_DIR, PACKAGE_NAME
 from synbio_morpher.utils.misc.io import get_pathnames
 from synbio_morpher.utils.misc.string_handling import remove_special_py_functions
 from synbio_morpher.utils.data.data_format_tools.common import load_json_as_dict
@@ -38,7 +38,7 @@ def create_argparse_from_dict(dict_args: Dict):
 
 
 def get_simulator_names() -> List:
-    simulator_dir = os.path.join(PACKAGE_DIR, "synbio_morpher", "srv", "parameter_prediction")
+    simulator_dir = os.path.join(PACKAGE_DIR, "srv", "parameter_prediction")
     simulators = remove_special_py_functions(os.listdir(simulator_dir))
     from synbio_morpher.srv.parameter_prediction.simulator_loading import extra_simulators
     simulators = simulators + extra_simulators
@@ -50,8 +50,15 @@ def handle_simulator_cfgs(simulator, simulator_cfg_path):
     cfg_protocol = find_simulator_loader(simulator)
     if any([os.sep in v for v in simulator_cfg.values() if type(v) == str]):
         for k, v in simulator_cfg.items():
-            if type(v) == str:
-                simulator_cfg[k] = os.path.join(PACKAGE_DIR, v) if ('synbio_morpher' in v) and (os.sep in v) and (PACKAGE_DIR not in v) else v
+            # Make into file
+            if type(v) == str and (os.sep in v):
+                if os.path.isfile(v):
+                    simulator_cfg[k] = v
+                elif not os.path.isfile(v) and (PACKAGE_NAME in v):
+                    simulator_cfg[k] = os.path.join(PACKAGE_DIR, v.split(PACKAGE_NAME)[-1])
+                    # simulator_cfg[k] = os.path.join(PACKAGE_DIR, v) if (PACKAGE_NAME in v) and (os.sep in v) and (PACKAGE_DIR not in v) else v
+                if not os.path.isfile(simulator_cfg[k]):
+                    raise ValueError(f'Could not find simulator file {simulator_cfg[k]}. Check that the package directory is correct.')
     return cfg_protocol(simulator_cfg)
 
 
@@ -85,7 +92,7 @@ def load_simulator_kwargs(default_args: dict, config_args: str = None) -> Dict:
 
 def retrieve_default_args() -> Dict:
     fn = get_pathnames(file_key='default_args', search_dir=os.path.join(
-        PACKAGE_DIR, 'synbio_morpher', 'utils', 'common', 'configs', 'simulators'), first_only=True)
+        PACKAGE_DIR, 'utils', 'common', 'configs', 'simulators'), first_only=True)
     default_args = load_json_as_dict(fn)
     return default_args
 
