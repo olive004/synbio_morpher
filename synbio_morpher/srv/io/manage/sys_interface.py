@@ -19,7 +19,7 @@ DATA_TOP_DIR = '.'
 
 if os.path.basename(os.getcwd()) == PACKAGE_NAME or (PACKAGE_NAME in os.listdir('.')):
     PACKAGE_DIR = os.path.join('.', PACKAGE_NAME)
-if os.getcwd().split(os.sep)[-2] == PACKAGE_NAME or (PACKAGE_NAME in os.listdir('..')):
+elif os.getcwd().split(os.sep)[-2] == PACKAGE_NAME or (PACKAGE_NAME in os.listdir('..')):
     PACKAGE_DIR = os.path.join('..', PACKAGE_NAME)
     DATA_TOP_DIR = '..'
 elif PACKAGE_NAME in os.getcwd():
