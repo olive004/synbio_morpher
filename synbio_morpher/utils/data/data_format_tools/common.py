@@ -13,7 +13,7 @@ import pandas as pd
 import jaxlib
 import importlib
 
-from synbio_morpher.srv.io.manage.sys_interface import PACKAGE_NAME
+from synbio_morpher.srv.io.manage.sys_interface import PACKAGE_NAME, DATA_DIR
 from synbio_morpher.utils.misc.type_handling import inverse_dict
 
 
@@ -44,7 +44,9 @@ def determine_file_format(filepath: str) -> str:
             
             
 def is_file_within_package(json_pathname: str) -> bool:
-    return PACKAGE_NAME in json_pathname and (PACKAGE_NAME not in json_pathname.split(PACKAGE_NAME)[-1])
+    return PACKAGE_NAME in json_pathname and (PACKAGE_NAME not in json_pathname.split(PACKAGE_NAME)[-1]) and (
+        os.path.basename(DATA_DIR) not in json_pathname
+    )
 
 
 def get_filename_from_within_package(json_pathname: str) -> str:
