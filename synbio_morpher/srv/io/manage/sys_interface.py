@@ -42,7 +42,7 @@ def make_filename_safely(filename: Union[str, list]):
         assert os.path.isfile(filename), f'Filename {filename} is not a file - specify in config '\
             'either as list of path constituents or absolute path.'
     elif type(filename) == str:
-        if DATA_DIR not in filename or (os.path.abspath(DATA_DIR) not in filename):
+        if DATA_DIR not in filename or (os.path.abspath(DATA_DIR) not in os.path.abspath(filename)):
             filename = os.path.join(DATA_DIR, filename)
         filename = str(Path(filename))
     return filename
