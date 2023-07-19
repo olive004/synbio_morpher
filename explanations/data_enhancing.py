@@ -75,10 +75,9 @@ def proc_info(info):
     grouped = info.groupby(['circuit_name', 'sample_name'], as_index=False)
     mutation_log = grouped[numerical_cols].apply(
         lambda x: np.log(x / x.loc[x['mutation_num'] == 0].squeeze()))
-    for c in key_cols:
-        mutation_log[c] = info[c]
-    for c in numerical_cols:
-        info[c + '_logm'] = mutation_log[c]
+    mutation_log = mutation_log.reset_index()
+    mutation_log[numerical_cols] = info[numerical_cols]
+    info[[c + '_logm' for c in numerical_cols]] = mutation_log[numerical_cols]
         
     return info, num_group_cols, num_bs_cols, numerical_cols, key_cols, mutation_log, bs_range_cols
 
