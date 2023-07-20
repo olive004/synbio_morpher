@@ -3,8 +3,8 @@
 # All rights reserved.
 
 # This source code is licensed under the MIT-style license found in the
-# LICENSE file in the root directory of this source tree. 
-    
+# LICENSE file in the root directory of this source tree.
+
 import argparse
 import os
 from typing import Dict, List
@@ -55,10 +55,12 @@ def handle_simulator_cfgs(simulator, simulator_cfg_path):
                 if os.path.isfile(v):
                     simulator_cfg[k] = v
                 elif not os.path.isfile(v) and (PACKAGE_NAME in v):
-                    simulator_cfg[k] = os.path.join(PACKAGE_DIR, v.split(PACKAGE_NAME)[-1].strip(os.sep))
+                    simulator_cfg[k] = os.path.join(
+                        PACKAGE_DIR, v.split(PACKAGE_NAME)[-1].strip(os.sep))
                     # simulator_cfg[k] = os.path.join(PACKAGE_DIR, v) if (PACKAGE_NAME in v) and (os.sep in v) and (PACKAGE_DIR not in v) else v
                 if not os.path.isfile(simulator_cfg[k]):
-                    raise ValueError(f'Could not find simulator file {simulator_cfg[k]}. Check that the package directory is correct.')
+                    raise ValueError(
+                        f'Could not find simulator file {simulator_cfg[k]}. Check that the package directory is correct.')
     return cfg_protocol(simulator_cfg)
 
 
@@ -69,7 +71,8 @@ def parse_cfg_args(config: dict = None, default_args: Dict = None) -> Dict:
     simulator_kwargs = load_simulator_kwargs(default_args, config)
     config['interaction_simulator']['simulator_kwargs'] = simulator_kwargs
     config['interaction_simulator']['molecular_params'] = config['molecular_params']
-    config['interaction_simulator']['compute_by_filename'] = config['interaction_simulator'].get('compute_by_filename', False)
+    config['interaction_simulator']['compute_by_filename'] = config['interaction_simulator'].get(
+        'compute_by_filename', False)
     config['simulation_steady_state'] = default_args['simulation_steady_state']
 
     return config
