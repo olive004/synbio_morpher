@@ -53,7 +53,7 @@ class Evolver():
     #     assert all([mutations_args == c.mutations_args for c in circuits]
     #                ), 'Cannot batch with varying mutation args.'
 
-    def get_batch_mutator(self, algorithm):
+    def get_batch_mutator(self, algorithm: str):
 
         def mutation_sampler(sequence_length, num_mutations, batch_size=1):
             if sequence_length < num_mutations:
