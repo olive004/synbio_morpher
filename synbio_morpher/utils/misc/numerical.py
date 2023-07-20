@@ -20,6 +20,15 @@ NUMERICAL = {
 }
 
 
+def add_recursively(starting: list):
+    if len(starting) <= 1:
+        return starting
+    elif len(starting) == 2:
+        return np.add(starting[0], starting[1])
+    else:
+        return np.add(starting[0], add_recursively(starting[1:]))
+
+
 def cast_astype(list_like, dtypes):
     if type(dtypes) == list:
         dtype = dtypes[0]
