@@ -53,6 +53,7 @@ class CircuitModeller():
             'interaction_factor', 1)
         self.discard_numerical_mutations = config['experiment'].get(
             'no_numerical', False)
+        self.use_initial_for_signal = config.get('simulation', {}).get('use_initial_for_signal', True)
         self.dt = config.get('simulation', {}).get('dt', 1)
         self.t0 = config.get('simulation', {}).get('t0', 0)
         self.t1 = config.get('simulation', {}).get('t1', 10)
@@ -291,7 +292,6 @@ class CircuitModeller():
             b_steady_states = [None] * len(circuits)
             b_reverse_rates = [None] * len(circuits)
 
-            use_initial = True
             species_chosen = circuits[0].model.species[np.argmax(
                 signal.onehot)]
             other_species = flatten_listlike(
@@ -300,7 +300,7 @@ class CircuitModeller():
                                else 0 for s in circuits[0].model.species])
             for i, c in enumerate(circuits):
                 if not c.use_prod_and_deg:
-                    if use_initial:
+                    if self.use_initial_for_signal:
                         b_steady_states[i] = c.result_collector.get_result(
                             'steady_states').analytics['steady_states'].flatten() * ((signal.onehot == 0) * 1) + \
                             (c.result_collector.get_result(
