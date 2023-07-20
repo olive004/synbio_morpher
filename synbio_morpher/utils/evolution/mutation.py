@@ -9,6 +9,7 @@
 
 from typing import List
 from copy import deepcopy
+import numpy as np
 from bioreaction.model.data_containers import Species
 from synbio_morpher.utils.circuit.agnostic_circuits.circuit import Circuit
 from synbio_morpher.utils.results.writer import Tabulated
@@ -128,3 +129,18 @@ def implement_mutation(circuit: Circuit, mutation: Mutations):
     circuit.qreactions.update_reactants(circuit.model)
     circuit.qreactions.update_reactions(circuit.model)
     return circuit
+
+
+def reverse_mut_mapping(mut_encoding: int, sequence_type: str = 'RNA'):
+    for k, v in get_mutation_type_mapping(sequence_type).items():
+        if mut_encoding in list(v.values()):
+            for mut, enc in v.items():
+                if enc == mut_encoding:
+                    return mut
+    raise ValueError(
+        f'Could not find mutation for mapping key {mut_encoding}.')
+
+
+def apply_mutation_to_sequence(sequence: str, mutation_positions: List[int], mutation_types: List[str]) -> List[str]:
+    return ''.join(np.put(np.asarray(sequence), mutation_positions, mutation_types))
+

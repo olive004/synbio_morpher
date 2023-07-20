@@ -54,7 +54,7 @@
                 "max_circuits": 60000,
                 "device": "gpu",
                 "threshold_steady_states": 0.05, 
-                "use_initial_for_signal": false,
+                "use_initial_to_add_signal": false,
                 "use_rate_scaling": true
             },
             "source_of_interaction_stats": {
