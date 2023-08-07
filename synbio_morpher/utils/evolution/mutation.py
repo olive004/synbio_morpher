@@ -142,5 +142,7 @@ def reverse_mut_mapping(mut_encoding: int, sequence_type: str = 'RNA'):
 
 
 def apply_mutation_to_sequence(sequence: str, mutation_positions: List[int], mutation_types: List[str]) -> List[str]:
-    return ''.join(np.put(np.asarray(sequence), mutation_positions, mutation_types))
+    sequence = np.array([*sequence])
+    sequence[mutation_positions] = mutation_types
+    return ''.join(sequence)
 

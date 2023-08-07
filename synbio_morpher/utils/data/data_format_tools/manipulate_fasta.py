@@ -27,7 +27,7 @@ def load_seq_from_FASTA(filename, as_type="list") -> Union[Dict,List]:
         raise ValueError(f"Desired type {as_type} not supported.")
 
 
-def write_fasta_file(seq_generator, stype: str, count: int, out_path: str, data=None, byseq=False) -> None:
+def write_fasta_file(out_path: str, seq_generator = None, stype: str = None, count: int = None, data=None, byseq=False) -> None:
     if byseq:
         write_fasta_file_byseq(seqs=data, stype=stype, out_path=out_path)
     else:
