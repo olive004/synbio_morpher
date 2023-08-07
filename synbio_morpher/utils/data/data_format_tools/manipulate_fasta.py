@@ -32,7 +32,7 @@ def write_fasta_file(out_path: str, seq_generator = None, stype: str = None, cou
         if type(data) == list:
             write_fasta_file_byseq(seqs=data, stype=stype, out_path=out_path)
         elif type(data) == dict:
-            write_fasta_file_byseqdict(seqs=data, stype=stype, out_path=out_path)
+            write_fasta_file_byseqdict(seqs=data, out_path=out_path)
     else:
         f = open(out_path, 'w+')
         for i in range(count):
