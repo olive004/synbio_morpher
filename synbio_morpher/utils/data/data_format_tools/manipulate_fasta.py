@@ -29,7 +29,10 @@ def load_seq_from_FASTA(filename, as_type="list") -> Union[Dict,List]:
 
 def write_fasta_file(out_path: str, seq_generator = None, stype: str = None, count: int = None, data=None, byseq=False) -> None:
     if byseq:
-        write_fasta_file_byseq(seqs=data, stype=stype, out_path=out_path)
+        if type(data) == list:
+            write_fasta_file_byseq(seqs=data, stype=stype, out_path=out_path)
+        elif type(data) == dict:
+            write_fasta_file_byseqdict(seqs=data, stype=stype, out_path=out_path)
     else:
         f = open(out_path, 'w+')
         for i in range(count):
@@ -38,10 +41,20 @@ def write_fasta_file(out_path: str, seq_generator = None, stype: str = None, cou
             f.write(seq_generator() + '\n')
         f.close()
 
+
 def write_fasta_file_byseq(seqs: list, stype: str, out_path: str) -> None:
     f = open(out_path, 'w+')
     for i, s in enumerate(seqs):
         seq_name = '>' + stype + '_' + str(i) + '\n'
+        f.write(seq_name)
+        f.write(s + '\n')
+    f.close()
+    
+    
+def write_fasta_file_byseqdict(seqs: dict, out_path: str) -> None:
+    f = open(out_path, 'w+')
+    for n, s in seqs.items():
+        seq_name = '>' + n + '\n'
         f.write(seq_name)
         f.write(s + '\n')
     f.close()
