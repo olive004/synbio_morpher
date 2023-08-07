@@ -100,8 +100,11 @@ class CircuitModeller():
             circuit.interactions_state = 'computed'
         elif circuit.interactions_state == 'loaded' or (circuit.interactions_state == 'computed'):
             pass
+        elif self.test_mode:
+            circuit.init_interactions(init_dummy=True)
         else:
             circuit.init_interactions()
+            
         circuit.interactions.binding_rates_association = circuit.interactions.binding_rates_association * \
             self.interaction_factor
         circuit.interactions.binding_rates_dissociation = circuit.interactions.binding_rates_dissociation * \

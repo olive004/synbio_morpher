@@ -87,16 +87,19 @@ class Circuit():
         qreactions.init_properties(model, config)
         return qreactions
 
-    def init_interactions(self, interaction_cfg: dict = None, interactions_loaded: dict = None, config: dict = None) -> MolecularInteractions:
+    def init_interactions(self, interaction_cfg: dict = None, interactions_loaded: dict = None, config: dict = None, 
+                          init_dummy=False) -> MolecularInteractions:
         if interaction_cfg is None and interactions_loaded is None:
             num_in_species = len(self.get_input_species())
-            nans = np.zeros((num_in_species, num_in_species)) * np.nan
+            dummy_inters = np.zeros((5, num_in_species, num_in_species)) * np.nan
+            if init_dummy:
+                dummy_inters = np.random.rand(*(5, num_in_species, num_in_species))
             self.interactions = MolecularInteractions(
-                binding_rates_association=nans,
-                binding_rates_dissociation=nans,
-                energies=nans,
-                eqconstants=nans,
-                binding_sites=nans,
+                binding_rates_association=dummy_inters[0],
+                binding_rates_dissociation=dummy_inters[1],
+                energies=dummy_inters[2],
+                eqconstants=dummy_inters[3],
+                binding_sites=dummy_inters[4],
                 units='test'
             )
         else:
