@@ -498,7 +498,8 @@ class CircuitModeller():
                 ref_circuit.qreactions.reactions.forward_rates * \
                 signal.reactions_onehot * signal.func.keywords['target']
 
-            self.sim_func = jax.jit(jax.vmap(
+            # self.sim_func = jax.jit(
+            self.sim_func = jax.vmap(
                 partial(bioreaction_sim_dfx_expanded,
                         t0=self.t0, t1=self.t1, dt0=self.dt,
                         signal=signal_f, signal_onehot=signal_onehot,
@@ -507,8 +508,9 @@ class CircuitModeller():
                         outputs=ref_circuit.qreactions.reactions.outputs,
                         solver=dfx.Tsit5(),
                         saveat=dfx.SaveAt(
-                            ts=np.linspace(self.t0, self.t1, 500))  # int(np.min([500, self.t1-self.t0]))))
-                        )))
+                            t0=True, t1=True)
+                            # ts=np.linspace(self.t0, self.t1, 500))  # int(np.min([500, self.t1-self.t0]))))
+                        )) #)
 
         elif self.simulation_args['solver'] == 'ivp':
             # way slower

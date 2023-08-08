@@ -15,7 +15,7 @@ from synbio_morpher.utils.evolution.evolver import load_mutations
 def load_results(top_circuit_dir, circuit):
     """ Load a circuit's results that have been simulated and written """
     
-    numericals = [fn for fn in os.listdir(top_circuit_dir) if fn.endswith(inverse_dict(FORMAT_EXTS)['numpy'])]
+    numericals = [fn for fn in os.listdir(top_circuit_dir) if fn.endswith(inverse_dict(FORMAT_EXTS)['numpy']) or fn.endswith(inverse_dict(FORMAT_EXTS)['csv'])]
     
     for result_name in ['steady_states', 'signal']:
         bn = 'report_' + result_name + '.json'
