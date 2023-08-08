@@ -55,8 +55,9 @@ class Circuit():
         self.qreactions = self.init_reactions(self.model, config)
         self.interactions_state: str = config.get(
             'interactions_state', 'uninitialised')
-        self.init_interactions(config.get('interactions'),
-                               config.get('interactions_loaded'), config)
+        self.init_interactions(interaction_cfg=config.get('interactions'),
+                               interactions_loaded=config.get('interactions_loaded'), 
+                               config=config)
         if config.get('interactions_loaded') is not None or config.get('interactions') is not None:
             assert self.interactions_state != 'uninitialised', f'The interactions should have been initialised from {config.get("interactions")}'
         self.signal: Signal = None

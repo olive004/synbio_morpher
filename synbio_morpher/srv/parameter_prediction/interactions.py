@@ -111,12 +111,12 @@ class InteractionMatrix():
             try:
                 matrix, sample_names = load_csv(
                     filepath, load_as='pd', return_header=True)
-            except FileNotFoundError:
+            except FileNotFoundError as ee:
                 try:
                     matrix, sample_names = load_csv(
                         os.path.join(PACKAGE_DIR, filepath), load_as='pd', return_header=True)
                 except FileNotFoundError as e:
-                    raise FileNotFoundError(e)
+                    raise FileNotFoundError(ee)
         else:
             raise TypeError(
                 f'Unsupported filetype {filetype} for loading {filepath}')
