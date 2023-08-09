@@ -55,7 +55,8 @@ class CircuitModeller():
             'no_numerical', False)
         self.use_initial_to_add_signal = config.get('simulation', {}).get('use_initial_to_add_signal', True)
         self.dt0 = config.get('simulation', {}).get('dt0', 1)
-        self.dt1 = config.get('simulation', {}).get('dt1', 100*self.dt0)
+        self.dt1_factor = config.get('simulation', {}).get('dt1_factor', 5)
+        self.dt1 = config.get('simulation', {}).get('dt1', self.dt1_factor*self.dt0)
         self.t0 = config.get('simulation', {}).get('t0', 0)
         self.t1 = config.get('simulation', {}).get('t1', 10)
         self.threshold_steady_states = config.get('simulation', {}).get(
@@ -204,7 +205,7 @@ class CircuitModeller():
                                         solver=dfx.Tsit5(),
                                         saveat=dfx.SaveAt(
                                             ts=np.linspace(self.t0, self.t1, int(np.min([200, self.t1-self.t0])))),
-                                        stepsize_controller=self.make_stepsize_controller()
+                                        stepsize_controller=self.make_stepsize_controller(choice='piecewise')
                                         )))
 
             starting_states = np.asarray(
@@ -282,6 +283,7 @@ class CircuitModeller():
         #     circuits[i].qreactions.reactions.reverse_rates = circuits[i].qreactions.reactions.reverse_rates / rate_max
 
         self.dt0 = 1 / (2 * rate_max)
+        self.dt1 = self.dt1_factor * self.dt0
         
         return circuits
 
@@ -477,13 +479,43 @@ class CircuitModeller():
         self.result_writer.unsubdivide()
         return circuit
     
-    def make_stepsize_controller(self):
-        num = 100
-        x = np.interp(np.logspace(0, 2, num=num), [self.t0, self.t1], [self.dt0, self.dt1])
+    def make_stepsize_controller(self, choice: str, **kwargs):
+        """ The choice can be either log or piecewise """
+        if choice == 'log':
+            return self.make_log_stepcontrol(**kwargs)
+        elif choice == 'piecewise':
+            return self.make_piecewise_stepcontrol(**kwargs)
+        else:
+            raise ValueError(f'The stepsize controller option `{choice}` is not available.')
+        
+    def make_log_stepcontrol(self, upper_log: int = 3):
+        num = 1000
+        x = np.interp(np.logspace(0, upper_log, num=num), [0, np.power(10, upper_log)], [self.dt0, self.dt1])
         while np.cumsum(x)[-1] < self.t1:
-            x = np.interp(np.logspace(0, 2, num=num), [self.t0, self.t1], [self.dt0, self.dt1])
+            x = np.interp(np.logspace(0, upper_log, num=num), [0, np.power(10, upper_log)], [self.dt0, self.dt1])
             num += 1
         ts = np.cumsum(x)
+        ts[0] = self.t0
+        ts[-1] = self.t1
+        return dfx.StepTo(ts)
+        
+    def make_piecewise_stepcontrol(self, split: int = 3):
+        tdiff = (self.t1 - self.t0) / split
+        dts = np.interp(np.arange(split), [0, split-1], [self.dt0, self.dt1])
+
+        i = 0
+        ts = np.arange(
+                self.t0 + tdiff * i, 
+                self.t0 + tdiff * i + tdiff, 
+                dts[i])
+        for i in range(i+1, split):
+            nx = np.arange(
+                self.t0 + tdiff * i, 
+                self.t0 + tdiff * i + tdiff, 
+                dts[i])
+            ts = np.concatenate([ts, nx])
+        ts[0] = self.t0
+        ts[-1] = self.t1
         return dfx.StepTo(ts)
 
     def prepare_internal_funcs(self, circuits: List[Circuit]):
@@ -520,7 +552,7 @@ class CircuitModeller():
                         saveat=dfx.SaveAt(
                             # t0=True, t1=True)
                             ts=np.linspace(self.t0, self.t1, 500)),  # int(np.min([500, self.t1-self.t0]))))
-                        stepsize_controller=self.make_stepsize_controller()
+                        stepsize_controller=self.make_stepsize_controller(choice='piecewise')
                         )))
 
         elif self.simulation_args['solver'] == 'ivp':
