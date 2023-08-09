@@ -78,7 +78,7 @@
                 }
             },
             "simulation": {
-                "dt": 0.1,
+                "dt0": 0.1,
                 "t0": 0,
                 "t1": 1000,
                 "solver": "diffrax",

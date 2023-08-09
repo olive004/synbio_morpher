@@ -85,7 +85,7 @@ ENSEMBLE_CONFIG = {
                 }
             },
             "simulation": {
-                "dt": 0.1,
+                "dt0": 0.1,
                 "t0": 0,
                 "t1": 100,
                 "tmax": 20000,

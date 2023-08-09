@@ -108,7 +108,8 @@ def bioreaction_sim_dfx_expanded(y0, t0, t1, dt0,
                                      t0=True, t1=True, steps=True),
                                  max_steps=16**5,
                                  stepsize_controller=dfx.ConstantStepSize()):
-
+    if type(stepsize_controller) == dfx.StepTo:
+        dt0 = None
     term = dfx.ODETerm(
         partial(bioreaction_sim_expanded,
                 inputs=inputs, outputs=outputs,

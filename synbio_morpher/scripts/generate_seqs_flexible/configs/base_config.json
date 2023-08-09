@@ -96,7 +96,7 @@
             "concurrent_species_to_mutate": "single_species_at_a_time"
         },
         "simulation": {
-            "dt": 0.1,
+            "dt0": 0.1,
             "t0": 0,
             "t1": 200,
             "tmax": 120000,

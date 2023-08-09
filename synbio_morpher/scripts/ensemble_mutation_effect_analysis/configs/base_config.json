@@ -80,7 +80,7 @@
                 "time_interval": 0.01
             },
             "simulation": {
-                "dt": 0.1,
+                "dt0": 0.1,
                 "t0": 0,
                 "t1": 150,
                 "tmax": 120000,

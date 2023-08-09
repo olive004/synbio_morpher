@@ -45,7 +45,7 @@ def parse_sig_args(kwargs: dict, circuit: Circuit, SignalType = Signal):
     reactions_onehot = np.ones_like(circuit.qreactions.reactions.forward_rates) * reaction_has_signal
     sig_kwargs['reactions_onehot'] = reactions_onehot
 
-    sig_kwargs['time_interval'] = kwargs.get('simulation', {}).get('dt', 1)
+    sig_kwargs['time_interval'] = kwargs.get('simulation', {}).get('dt0', 1)
     for k, v in kwargs["signal"].items():
         if k in signal_init_args:
             sig_kwargs[k] = v

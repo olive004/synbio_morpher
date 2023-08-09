@@ -51,7 +51,7 @@ def five_circuits():
             }
         },
         "simulation": {
-            "dt": 0.1,
+            "dt0": 0.1,
             "t0": 0,
             "t1": 1200,
             "solver": "diffrax",
