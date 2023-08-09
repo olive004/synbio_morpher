@@ -498,8 +498,7 @@ class CircuitModeller():
                 ref_circuit.qreactions.reactions.forward_rates * \
                 signal.reactions_onehot * signal.func.keywords['target']
 
-            # self.sim_func = jax.jit(
-            self.sim_func = jax.vmap(
+            self.sim_func = jax.jit(jax.vmap(
                 partial(bioreaction_sim_dfx_expanded,
                         t0=self.t0, t1=self.t1, dt0=self.dt,
                         signal=signal_f, signal_onehot=signal_onehot,
@@ -508,17 +507,16 @@ class CircuitModeller():
                         outputs=ref_circuit.qreactions.reactions.outputs,
                         solver=dfx.Tsit5(),
                         saveat=dfx.SaveAt(
-                            t0=True, t1=True)
-                            # ts=np.linspace(self.t0, self.t1, 500))  # int(np.min([500, self.t1-self.t0]))))
-                        )) #)
+                            # t0=True, t1=True)
+                            ts=np.linspace(self.t0, self.t1, 500))  # int(np.min([500, self.t1-self.t0]))))
+                        )))
 
         elif self.simulation_args['solver'] == 'ivp':
             # way slower
 
             def b_ivp(y0: np.ndarray, forward_rates: np.ndarray, reverse_rates: np.ndarray):
 
-                forward_rates = forward_rates  # + \
-                # signal.reactions_onehot * signal.func.keywords['target']
+                forward_rates = forward_rates
                 copynumbers = [None] * y0.shape[0]
                 ts = [None] * y0.shape[0]
                 for i, (y0i, forward_rates_i, reverse_rates_i) in enumerate(zip(y0, forward_rates, reverse_rates)):
