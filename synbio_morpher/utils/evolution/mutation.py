@@ -120,7 +120,7 @@ def implement_mutation(circuit: Circuit, mutation: Mutations):
 
     if mutation.template_name in [s.name for s in circuit.model.species]:
         sidx = [s.name for s in circuit.model.species].index(mutation.template_name)
-        circuit.model.species[sidx].name = mutation.mutation_name
+        # circuit.model.species[sidx].name = mutation.mutation_name
         circuit.model.species[sidx].physical_data = mutation.get_sequence()
     else:
         raise KeyError(

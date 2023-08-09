@@ -516,7 +516,6 @@ class CircuitModeller():
 
             def b_ivp(y0: np.ndarray, forward_rates: np.ndarray, reverse_rates: np.ndarray):
 
-                forward_rates = forward_rates
                 copynumbers = [None] * y0.shape[0]
                 ts = [None] * y0.shape[0]
                 for i, (y0i, forward_rates_i, reverse_rates_i) in enumerate(zip(y0, forward_rates, reverse_rates)):
