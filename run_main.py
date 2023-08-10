@@ -22,13 +22,14 @@ from fire import Fire
 # from synbio_morpher.scripts.analyse_mutated_templates_loaded_4.run_analyse_mutated_templates_loaded_4 import main
 # from synbio_morpher.scripts.analyse_mutated_templates_loaded_5.run_analyse_mutated_templates_loaded_5 import main
 # from synbio_morpher.scripts.analyse_mutated_templates_loaded_means.run_analyse_mutated_templates_loaded_means import main
-from synbio_morpher.scripts.ensemble_mutation_effect_analysis.run_ensemble_mutation_effect_analysis import main
+# from synbio_morpher.scripts.ensemble_mutation_effect_analysis.run_ensemble_mutation_effect_analysis import main
 # from synbio_morpher.scripts.ensemble_visualisation.run_ensemble_visualisation import main
 # from synbio_morpher.scripts.parameter_based_simulation.run_parameter_based_simulation import main
 # from synbio_morpher.scripts.stitch_parameter_grid.run_stitch_parameter_grid import main
 # from synbio_morpher.scripts.parameter_grid_analysis.run_parameter_grid_analysis import main
 # from synbio_morpher.scripts.parameter_grid_analysis.run_multi_parameter_grid_analysis import main
 # from synbio_morpher.scripts.ensemble_parameter_grid_analysis.run_ensemble_parameter_grid_analysis import main
+from synbio_morpher.scripts.mc_evolution.run_mc_evolution import main
 
 
 FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"

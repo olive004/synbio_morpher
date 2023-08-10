@@ -1,7 +1,7 @@
 {
     "experiment": {
-        "purpose": "generate_species_templates",
+        "purpose": "mc_evolution",
         "test_mode": false
     },
-    "info_path": "../data/ensemble_mutation_effect_analysis/2023_07_17_105328/summarise_simulation/tabulated_mutation_info.csv"
+    "info_path": "data/ensemble_mutation_effect_analysis/2023_07_17_105328/summarise_simulation/tabulated_mutation_info.csv"
 }

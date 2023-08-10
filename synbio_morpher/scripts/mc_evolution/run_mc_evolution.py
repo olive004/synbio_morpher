@@ -48,10 +48,10 @@ def pick_circuits(config: dict, data) -> pd.DataFrame:
     return starting_circ_rows
 
 
-def tweak_cfg(config: dict) -> dict:
-    config['experiment']['purpose'] = 'tests'
-    config['simulation']['device'] = 'gpu'
-    config['mutations_args'] = {
+def tweak_cfg(config_og: dict, config: dict) -> dict:
+    config_og['experiment']['purpose'] = config['experiment']['purpose']
+    config_og['simulation']['device'] = 'gpu'
+    config_og['mutations_args'] = {
         'algorithm': 'random',
         'mutation_counts': 2,
         'mutation_nums_within_sequence': [1],
@@ -59,13 +59,13 @@ def tweak_cfg(config: dict) -> dict:
         'concurrent_species_to_mutate': 'single_species_at_a_time',
         'seed': 0
     }
-    config['simulation']['threshold_steady_states'] = 0.1
-    config['experiment']['no_numerical'] = False
-    config['experiment']['no_visualisations'] = True
-    return config
+    config_og['simulation']['threshold_steady_states'] = 0.1
+    config_og['experiment']['no_numerical'] = False
+    config_og['experiment']['no_visualisations'] = True
+    return config_og
 
 
-def plot_starting_circuits(data, starting_circ_rows, filt, save: bool = True):
+def plot_starting_circuits(data, starting_circ_rows, filt, data_writer, save: bool = True):
     data['Starting circuit'] = (data['circuit_name'].isin(starting_circ_rows['circuit_name'])) & \
         (data['mutation_name'].isin(starting_circ_rows['mutation_name'])) & filt
 
@@ -78,7 +78,8 @@ def plot_starting_circuits(data, starting_circ_rows, filt, save: bool = True):
     plt.xlabel('Sensitivity')
     plt.ylabel('Precision')
     
-    # plt.savefig('')
+    fig_path = os.path.join(data_writer.top_write_dir, 'chosen_circuits.svg')
+    plt.savefig(fig_path)
     
 
 ## Simulation functions
@@ -162,8 +163,6 @@ def choose_next(batch: list, data_writer, choose_max: int = 4, target_species: L
 
     batch_analytics = [load_json_as_dict(os.path.join(data_writer.top_write_dir, c.name, 'report_signal.json')) for c in batch]
     batch_analytics = jax.tree_util.tree_map(lambda x: np.float32(x), batch_analytics)
-    # starting_analytics = [circuit.result_collector.get_result('signal').analytics for circuit in starting]
-    # batch_analytics = [circuit.result_collector.get_result('signal').analytics for circuit in batch]
     data_1 = make_data(batch, batch_analytics, target_species)
     
     rs = data_1[data_1['Subname'] == 'ref_circuit']
@@ -250,20 +249,19 @@ def make_starting_circuits(starting_circuits: pd.DataFrame, config: dict, data_w
 
 def loop(config, data_writer, modeller, evolver, starting_circ_rows):
     target_species = -1
-    choose_max = 3
-    total_steps = 2
+    choose_max = 20
+    total_steps = 100
 
     starting = make_starting_circuits(starting_circ_rows.iloc[:choose_max], config, data_writer)
     starting = simulate(starting, modeller, config)
     
-
     summary = {}
     summary_batch = {}
     summary_datas = {}
     summary[0] = starting
     for step in range(total_steps):
         
-        print('\n\nStarting new batch\n\n')
+        print(f'\n\nStarting batch {step+1} out of {total_steps}\n\n')
 
         batch = mutate(starting, evolver, algorithm='random')
         batch = simulate(batch, modeller, config)
@@ -305,33 +303,40 @@ def visualise_step_plot(summary_datas: pd.DataFrame, data_writer):
 
 def main(config=None, data_writer=None):
     
-    config, data_writer = script_preamble(prepare_config(config))
-
-    modeller = CircuitModeller(data_writer, config)
-    evolver = Evolver(data_writer, mutation_type='random', sequence_type='RNA', seed=0)
+    config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
+        "synbio_morpher", "scripts", "mc_evolution", "configs", "base_config.json"))
     
     fn = config['info_path']
     data = pd.read_csv(fn)
     data['mutation_type'] = data['mutation_type'].str.strip('[]').str.split(',').apply(lambda x: [int(xx) for xx in x if xx])
     data['mutation_positions'] = data['mutation_positions'].str.strip('[]').str.split(',').apply(lambda x: [int(xx) for xx in x if xx])
 
-
-    config = load_json_as_dict(os.path.join(fn.split('summarise')[
+    config_og = load_json_as_dict(os.path.join(fn.split('summarise')[
                             0], 'mutation_effect_on_interactions_signal', 'experiment.json'))
+    config_og = config_og['config_filepath']
+    config_og = prepare_config(config_file=config_og)
+    config_og = tweak_cfg(config_og, config)
 
-    config = config['config_filepath']
-    config = tweak_cfg(config)
+    modeller = CircuitModeller(data_writer, config_og)
+    evolver = Evolver(data_writer, mutation_type='random', sequence_type='RNA', seed=0)
 
-    signal_species = config['signal']['inputs']
+    signal_species = config_og['signal']['inputs']
     filt = (
         (data[get_true_interaction_cols(data, 'energies')].sum(axis=1) != 0) &
         (data['sample_name'].isin(signal_species) != True) &
         (data['overshoot'] > 0)
     )
 
-    starting_circ_rows = pick_circuits(config, data[filt])
+    starting_circ_rows = pick_circuits(config_og, data[filt])
 
-    plot_starting_circuits(data, starting_circ_rows, filt)
+    plot_starting_circuits(data, starting_circ_rows, filt, data_writer)
     
-    summary_datas = loop(config, data_writer, modeller, evolver, starting_circ_rows)
+    summary_datas = loop(config_og, data_writer, modeller, evolver, starting_circ_rows)
+    
+    data_writer.subdivide_writing('summary_datas')
+    for step, sdata in summary_datas.items():
+        data_writer.output('csv', out_name=step, write_master=False, data=sdata)
+    
+    data_writer.unsubdivide()
+    visualise_step_plot(summary_datas, data_writer)
 
