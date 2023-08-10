@@ -42,7 +42,7 @@ class DataWriter():
         self.write_dir = deepcopy(self.ensemble_write_dir)
 
     def output(self, out_type: str = None, out_name: str = None, overwrite: bool = False, return_path: bool = False,
-               new_file: bool = False, filename_addon: str = None, subfolder: str = None, write_master: bool = True,
+               new_file: bool = False, filename_addon: str = None, subfolder: str = None, write_master: bool = False,
                write_func=None, write_to_top_dir=False, **writer_kwargs):
 
         if out_type is None:

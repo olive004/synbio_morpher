@@ -204,7 +204,10 @@ class CircuitModeller():
                                         forward_rates=forward_rates,
                                         solver=dfx.Tsit5(),
                                         saveat=dfx.SaveAt(
+                                            # t0=False, t1=True),
                                             ts=np.linspace(self.t0, self.t1, int(np.min([200, self.t1-self.t0])))),
+                                            # ts=np.interp(np.logspace(0, 2, num=100), [1, np.power(10, 2)], [self.t0, self.t1])),  # Save more points early in the sim
+                                            # steps=True),
                                         stepsize_controller=self.make_stepsize_controller(choice='piecewise')
                                         )))
 
@@ -490,9 +493,9 @@ class CircuitModeller():
         
     def make_log_stepcontrol(self, upper_log: int = 3):
         num = 1000
-        x = np.interp(np.logspace(0, upper_log, num=num), [0, np.power(10, upper_log)], [self.dt0, self.dt1])
+        x = np.interp(np.logspace(0, upper_log, num=num), [1, np.power(10, upper_log)], [self.dt0, self.dt1])
         while np.cumsum(x)[-1] < self.t1:
-            x = np.interp(np.logspace(0, upper_log, num=num), [0, np.power(10, upper_log)], [self.dt0, self.dt1])
+            x = np.interp(np.logspace(0, upper_log, num=num), [1, np.power(10, upper_log)], [self.dt0, self.dt1])
             num += 1
         ts = np.cumsum(x)
         ts[0] = self.t0
@@ -550,8 +553,9 @@ class CircuitModeller():
                         outputs=ref_circuit.qreactions.reactions.outputs,
                         solver=dfx.Tsit5(),
                         saveat=dfx.SaveAt(
-                            # t0=True, t1=True)
+                            # t0=True, t1=True),
                             ts=np.linspace(self.t0, self.t1, 500)),  # int(np.min([500, self.t1-self.t0]))))
+                            # ts=np.interp(np.logspace(0, 2, num=500), [1, np.power(10, 2)], [self.t0, self.t1])),  # Save more points early in the sim
                         stepsize_controller=self.make_stepsize_controller(choice='piecewise')
                         )))
 
