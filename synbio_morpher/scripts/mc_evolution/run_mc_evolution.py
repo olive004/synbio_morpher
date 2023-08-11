@@ -151,6 +151,8 @@ def choose_next(batch: list, data_writer, choose_max: int = 4, target_species: L
             columns=['Name', 'Subname']
         )
         d['Circuit Obj'] = batch
+        assert type(batch[0].model.species) == list, 'Species should be list'
+        assert type(batch[0].model.species[0].name) == str, f'Species {batch[0].model.species[0]} should have a string name'
         t_idxs = {s.name: batch[0].model.species.index(s.name) for s in batch[0].model.species if s.name in target_species}
         for t in target_species:
             t_idx = t_idxs[t]
