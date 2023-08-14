@@ -136,7 +136,7 @@ def make_next_name(name: str):
 
 # Choose next
 
-def choose_next(batch: list, data_writer, choose_max: int = 4, target_species: List[str] = [-1]):
+def choose_next(batch: list, data_writer, choose_max: int = 4, target_species: List[str] = ['RNA_1', 'RNA_2']):
     
     def make_data(batch, batch_analytics, target_species: List[str]):
         # mutated_species = [[(c.name, jax.tree_util.tree_flatten(v.keys())) for k, v in c.mutations.items()] for c in batch]
@@ -151,8 +151,6 @@ def choose_next(batch: list, data_writer, choose_max: int = 4, target_species: L
             columns=['Name', 'Subname']
         )
         d['Circuit Obj'] = batch
-        assert type(batch[0].model.species) == list, 'Species should be list'
-        assert type(batch[0].model.species[0].name) == str, f'Species {batch[0].model.species[0]} should have a string name'
         t_idxs = {s.name: batch[0].model.species.index(s.name) for s in batch[0].model.species if s.name in target_species}
         for t in target_species:
             t_idx = t_idxs[t]
@@ -165,6 +163,8 @@ def choose_next(batch: list, data_writer, choose_max: int = 4, target_species: L
 
     batch_analytics = [load_json_as_dict(os.path.join(data_writer.top_write_dir, c.name, 'report_signal.json')) for c in batch]
     batch_analytics = jax.tree_util.tree_map(lambda x: np.float32(x), batch_analytics)
+    # starting_analytics = [circuit.result_collector.get_result('signal').analytics for circuit in starting]
+    # batch_analytics = [circuit.result_collector.get_result('signal').analytics for circuit in batch]
     data_1 = make_data(batch, batch_analytics, target_species)
     
     rs = data_1[data_1['Subname'] == 'ref_circuit']
@@ -250,7 +250,7 @@ def make_starting_circuits(starting_circuits: pd.DataFrame, config: dict, data_w
 
 
 def loop(config, data_writer, modeller, evolver, starting_circ_rows):
-    target_species = -1
+    target_species = ['RNA_1', 'RNA_2']
     choose_max = 20
     total_steps = 100
 
