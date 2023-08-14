@@ -54,7 +54,7 @@ class CircuitModeller():
         self.discard_numerical_mutations = config['experiment'].get(
             'no_numerical', False)
         self.use_initial_to_add_signal = config.get('simulation', {}).get('use_initial_to_add_signal', True)
-        self.dt0 = config.get('simulation', {}).get('dt0', 1)
+        self.dt0 = config.get('simulation', {}).get('dt0', 0.3)
         self.dt1_factor = config.get('simulation', {}).get('dt1_factor', 5)
         self.dt1 = config.get('simulation', {}).get('dt1', self.dt1_factor*self.dt0)
         self.t0 = config.get('simulation', {}).get('t0', 0)
@@ -220,10 +220,11 @@ class CircuitModeller():
             b_copynumbers, t = simulate_steady_states(
                 y0=starting_states, total_time=self.tmax, sim_func=self.sim_func_nsig,
                 t0=self.t0, t1=self.t1,
-                dt0=np.repeat(self.dt0, repeats=reverse_rates.shape[0]),
+                dt0=np.repeat(self.dt0, repeats=len(circuits)),
                 threshold=self.threshold_steady_states, 
                 reverse_rates=reverse_rates,
-                forward_rates=forward_rates
+                forward_rates=forward_rates,
+                stepsize_controller=[self.make_stepsize_controller(choice='piecewise') for b in range(len(circuits))]
                 )
 
             b_copynumbers = np.swapaxes(b_copynumbers, 1, 2)
@@ -354,7 +355,9 @@ class CircuitModeller():
             threshold=self.threshold_steady_states,
             reverse_rates=b_reverse_rates,
             forward_rates=b_forward_rates,
-            dt0=np.repeat(self.dt0, repeats=b_reverse_rates.shape[0]))
+            dt0=np.repeat(self.dt0, repeats=len(circuits)), 
+            stepsize_controller=[self.make_stepsize_controller(choice='piecewise') for b in range(len(circuits))]
+            )
 
         s_time = datetime.now() - s_time
         logging.warning(
@@ -559,7 +562,7 @@ class CircuitModeller():
 
             self.sim_func_sig = jax.jit(jax.vmap(
                 partial(bioreaction_sim_dfx_expanded,
-                        t0=self.t0, t1=self.t1, dt0=self.dt0,
+                        t0=self.t0, t1=self.t1, # dt0=self.dt0,
                         signal=signal_f, signal_onehot=signal_onehot,
                         # forward_rates=forward_rates,
                         inputs=ref_circuit.qreactions.reactions.inputs,
@@ -569,13 +572,13 @@ class CircuitModeller():
                             # t0=True, t1=True),
                             ts=np.linspace(self.t0, self.t1, 500)),  # int(np.min([500, self.t1-self.t0]))))
                             # ts=np.interp(np.logspace(0, 2, num=500), [1, np.power(10, 2)], [self.t0, self.t1])),  # Save more points early in the sim
-                        stepsize_controller=self.make_stepsize_controller(choice='piecewise')
+                        # stepsize_controller=self.make_stepsize_controller(choice='piecewise')
                         )))
             
             signal_onehot = np.zeros_like(ref_circuit.signal.reactions_onehot) if ref_circuit.use_prod_and_deg else np.zeros_like(ref_circuit.signal.onehot)
             self.sim_func_nsig = jax.jit(jax.vmap(
                 partial(bioreaction_sim_dfx_expanded,
-                        t0=self.t0, t1=self.t1, dt0=self.dt0,
+                        t0=self.t0, t1=self.t1, # dt0=self.dt0,
                         signal=vanilla_return, signal_onehot=signal_onehot,
                         inputs=ref_circuit.qreactions.reactions.inputs,
                         outputs=ref_circuit.qreactions.reactions.outputs,
@@ -586,7 +589,7 @@ class CircuitModeller():
                             ts=np.linspace(self.t0, self.t1, int(np.min([200, self.t1-self.t0])))),
                             # ts=np.interp(np.logspace(0, 2, num=100), [1, np.power(10, 2)], [self.t0, self.t1])),  # Save more points early in the sim
                             # steps=True),
-                        stepsize_controller=self.make_stepsize_controller(choice='piecewise')
+                        # stepsize_controller=self.make_stepsize_controller(choice='piecewise')
                         )))
 
         elif self.simulation_args['solver'] == 'ivp':
