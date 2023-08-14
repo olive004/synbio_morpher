@@ -59,7 +59,7 @@ def tweak_cfg(config_og: dict, config: dict) -> dict:
         'concurrent_species_to_mutate': 'single_species_at_a_time',
         'seed': 0
     }
-    config['simulation']['dt0'] = config['simulation']['dt']
+    config_og['simulation']['dt0'] = config_og['simulation']['dt']
     config_og['simulation']['threshold_steady_states'] = 0.1
     config_og['experiment']['no_numerical'] = False
     config_og['experiment']['no_visualisations'] = True
@@ -132,7 +132,7 @@ def load_all_analytics(circuit_dirs):
 
 def make_next_name(name: str):
     special_char = '_N_'
-    return name.split(special_char)[0] + special_char + ''.join(str(datetime.now()).replace('.', '').split(':')[1:])
+    return name.split(special_char)[0] + special_char + ''.join(str(datetime.now()).replace('.', '').replace(':', '').split(' ')[1:])
 
 
 # Choose next
@@ -292,16 +292,16 @@ def loop(config, data_writer, modeller, evolver, starting_circ_rows):
 
 # Visualise circuit trajectory
 
-def visualise_step_plot(summary_datas: pd.DataFrame, data_writer):
+def visualise_step_plot(summary_datas: pd.DataFrame, data_writer, species: str):
     plt.figure(figsize=(len(summary_datas) * 7, 7))
     for step, sdata in summary_datas.items():
         ax = plt.subplot(1,len(summary_datas), step+1)
-        sns.scatterplot(sdata.sort_values(by=['Next selected']), x='Sensitivity', y='Precision', hue='Next selected', alpha=0.1)
+        sns.scatterplot(sdata.sort_values(by=['Next selected']), x=f'Sensitivity species-{species}', y=f'Precision species-{species}', hue='Next selected', alpha=0.1)
         plt.xscale('log')
         plt.yscale('log')
         plt.title(f'Step {step}')
     
-    fig_path = os.path.join(data_writer.top_write_dir, 'step_change.svg')
+    fig_path = os.path.join(data_writer.top_write_dir, f'step_change_{species}.svg')
     plt.savefig(fig_path)
 
 
@@ -340,8 +340,9 @@ def main(config=None, data_writer=None):
     
     data_writer.subdivide_writing('summary_datas')
     for step, sdata in summary_datas.items():
-        data_writer.output('csv', out_name=step, write_master=False, data=sdata)
+        data_writer.output('csv', out_name='sdata_' + str(step), write_master=False, data=sdata)
     
     data_writer.unsubdivide()
-    visualise_step_plot(summary_datas, data_writer)
+    visualise_step_plot(summary_datas, data_writer, species='RNA_1')
+    visualise_step_plot(summary_datas, data_writer, species='RNA_2')
 
