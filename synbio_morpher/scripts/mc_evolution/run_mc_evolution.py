@@ -59,6 +59,7 @@ def tweak_cfg(config_og: dict, config: dict) -> dict:
         'concurrent_species_to_mutate': 'single_species_at_a_time',
         'seed': 0
     }
+    config['simulation']['dt0'] = config['simulation']['dt']
     config_og['simulation']['threshold_steady_states'] = 0.1
     config_og['experiment']['no_numerical'] = False
     config_og['experiment']['no_visualisations'] = True
@@ -151,7 +152,8 @@ def choose_next(batch: list, data_writer, choose_max: int = 4, target_species: L
             columns=['Name', 'Subname']
         )
         d['Circuit Obj'] = batch
-        t_idxs = {s.name: batch[0].model.species.index(s.name) for s in batch[0].model.species if s.name in target_species}
+        species_names = [s.name for s in batch[0].model.species]
+        t_idxs = {s: species_names.index(s) for s in species_names if s in target_species}
         for t in target_species:
             t_idx = t_idxs[t]
             d[f'Sensitivity species-{t}'] = np.asarray([b['sensitivity_wrt_species-6'][t_idx] for b in batch_analytics])
@@ -160,7 +162,6 @@ def choose_next(batch: list, data_writer, choose_max: int = 4, target_species: L
         
     scale_sensitivity = 1
     scale_precision = 1
-
     batch_analytics = [load_json_as_dict(os.path.join(data_writer.top_write_dir, c.name, 'report_signal.json')) for c in batch]
     batch_analytics = jax.tree_util.tree_map(lambda x: np.float32(x), batch_analytics)
     # starting_analytics = [circuit.result_collector.get_result('signal').analytics for circuit in starting]
@@ -168,13 +169,15 @@ def choose_next(batch: list, data_writer, choose_max: int = 4, target_species: L
     data_1 = make_data(batch, batch_analytics, target_species)
     
     rs = data_1[data_1['Subname'] == 'ref_circuit']
-    data_1['Parent Sensitivity'] = jax.tree_util.tree_map(lambda n: rs[rs['Name'] == n]['Sensitivity'].iloc[0], data_1['Name'].to_list())
-    data_1['Parent Precision'] = jax.tree_util.tree_map(lambda n: rs[rs['Name'] == n]['Precision'].iloc[0], data_1['Name'].to_list())
+    for t in target_species:
+        data_1[f'Parent Sensitivity species-{t}'] = jax.tree_util.tree_map(lambda n: rs[rs['Name'] == n][f'Sensitivity species-{t}'].iloc[0], data_1['Name'].to_list())
+        data_1[f'Parent Precision species-{t}'] = jax.tree_util.tree_map(lambda n: rs[rs['Name'] == n][f'Precision species-{t}'].iloc[0], data_1['Name'].to_list())
     
-    data_1['dS'] = data_1['Sensitivity'] - data_1['Parent Sensitivity']
-    data_1['dP'] = data_1['Precision'] - data_1['Parent Precision']
+        data_1[f'dS species-{t}'] = data_1[f'Sensitivity species-{t}'] - data_1[f'Parent Sensitivity species-{t}']
+        data_1[f'dP species-{t}'] = data_1[f'Precision species-{t}'] - data_1[f'Parent Precision species-{t}']
     
-    circuits_chosen = data_1[(data_1['dS'] >= 0) & (data_1['dP'] >= 0)].sort_values(by=['Sensitivity', 'Precision'], ascending=False)['Circuit Obj'].iloc[:choose_max].to_list()
+    t = target_species[0]
+    circuits_chosen = data_1[(data_1[f'dS species-{t}'] >= 0) & (data_1[f'dP species-{t}'] >= 0)].sort_values(by=[f'Sensitivity species-{t}', f'Precision species-{t}'], ascending=False)['Circuit Obj'].iloc[:choose_max].to_list()
     data_1['Next selected'] = data_1['Circuit Obj'].isin(circuits_chosen)
     return circuits_chosen, data_1
 
@@ -275,7 +278,7 @@ def loop(config, data_writer, modeller, evolver, starting_circ_rows):
                 name=b.name, config=config, load_mutations_as_circuits=True))
         expanded_batchs = flatten_listlike(expanded_batchs, safe=True)
         starting, summary_data = choose_next(batch=expanded_batchs, data_writer=data_writer, choose_max=choose_max, target_species=target_species)
-        starting = process_for_next_run(starting, data_writer=data_writer, run=step)
+        starting = process_for_next_run(starting, data_writer=data_writer)
         
         summary[step+1] = starting
         summary_batch[step] = expanded_batchs
