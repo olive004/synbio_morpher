@@ -4,6 +4,7 @@
 from bioreaction.simulation.manager import simulate_steady_states
 from functools import partial
 from typing import Optional, Tuple, List
+from fire import Fire
 from datetime import datetime
 import os
 import sys
@@ -30,6 +31,7 @@ from synbio_morpher.utils.misc.helper import vanilla_return
 from synbio_morpher.utils.modelling.deterministic import bioreaction_sim_dfx_expanded
 from synbio_morpher.utils.results.analytics.naming import get_analytics_types_all, get_true_names_analytics, get_true_interaction_cols
 from synbio_morpher.utils.results.analytics.timeseries import generate_analytics
+from synbio_morpher.utils.results.experiments import Experiment, Protocol
 from synbio_morpher.utils.results.writer import DataWriter
 from synbio_morpher.srv.io.loaders.circuit_loader import load_circuit
 from synbio_morpher.srv.io.manage.script_manager import script_preamble
@@ -66,7 +68,7 @@ def tweak_cfg(config_og: dict, config: dict) -> dict:
     return config_og
 
 
-def plot_starting_circuits(data, starting_circ_rows, filt, data_writer, save: bool = True):
+def plot_starting_circuits(starting_circ_rows, data, filt, data_writer, save: bool = True):
     data['Starting circuit'] = (data['circuit_name'].isin(starting_circ_rows['circuit_name'])) & \
         (data['mutation_name'].isin(starting_circ_rows['mutation_name'])) & filt
 
@@ -79,7 +81,7 @@ def plot_starting_circuits(data, starting_circ_rows, filt, data_writer, save: bo
     plt.xlabel('Sensitivity')
     plt.ylabel('Precision')
     
-    fig_path = os.path.join(data_writer.top_write_dir, 'chosen_circuits.svg')
+    fig_path = os.path.join(data_writer.top_write_dir, 'chosen_circuits.png')
     plt.savefig(fig_path)
     
 
@@ -334,15 +336,43 @@ def main(config=None, data_writer=None):
 
     starting_circ_rows = pick_circuits(config_og, data[filt])
 
-    plot_starting_circuits(data, starting_circ_rows, filt, data_writer)
+    plot_starting_circuits(starting_circ_rows, data, filt, data_writer)
     
-    summary_datas = loop(config_og, data_writer, modeller, evolver, starting_circ_rows)
+    # summary_datas = loop(config_og, data_writer, modeller, evolver, starting_circ_rows)
     
-    data_writer.subdivide_writing('summary_datas')
-    for step, sdata in summary_datas.items():
-        data_writer.output('csv', out_name='sdata_' + str(step), write_master=False, data=sdata)
+    def write(summary_datas, data_writer):
+        data_writer.subdivide_writing('summary_datas')
+        for step, sdata in summary_datas.items():
+            data_writer.output('csv', out_name='sdata_' + str(step), write_master=False, data=sdata)
+        data_writer.unsubdivide()
+        
+    # visualise_step_plot(summary_datas, data_writer, species='RNA_1')
+    # visualise_step_plot(summary_datas, data_writer, species='RNA_2')
     
-    data_writer.unsubdivide()
-    visualise_step_plot(summary_datas, data_writer, species='RNA_1')
-    visualise_step_plot(summary_datas, data_writer, species='RNA_2')
+    protocols = [
+        Protocol(
+            partial(loop, config=config_og, data_writer=data_writer, modeller=modeller, evolver=evolver, starting_circ_rows=starting_circ_rows),
+            req_output=True
+        ),
+        Protocol(
+            partial(write, data_writer=data_writer),
+            req_input=True
+        ),
+        Protocol(
+            partial(visualise_step_plot, data_writer=data_writer, species='RNA_1'),
+            req_input=True
+        ),
+        Protocol(
+            partial(visualise_step_plot, data_writer=data_writer, species='RNA_2'),
+            req_input=True
+        )
+    ]
+    
+    experiment = Experiment(config=config, config_file=config, protocols=protocols,
+                            data_writer=data_writer)
+    experiment.run_experiment()
+
+
+if __name__ == "__main__":
+    Fire(main)
 
