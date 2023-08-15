@@ -37,6 +37,8 @@ from synbio_morpher.srv.io.loaders.circuit_loader import load_circuit
 from synbio_morpher.srv.io.manage.script_manager import script_preamble
 
 
+# Init
+
 def pick_circuits(config: dict, data) -> pd.DataFrame:
 
     percentile = 0.9
@@ -83,6 +85,41 @@ def plot_starting_circuits(starting_circ_rows, data, filt, data_writer, save: bo
     
     fig_path = os.path.join(data_writer.top_write_dir, 'chosen_circuits.png')
     plt.savefig(fig_path)
+    
+    
+# Optimisation funcs
+
+def mag(vec, **kwargs):
+    return np.linalg.norm(vec, **kwargs)
+
+
+def lin_distance(s, p, d):
+    """ First row of each direction vector are the x's, second row are the y's """
+    P = np.array([s, p]).T
+    sp_rep = np.repeat(d[:, 0][:, None], repeats=len(s), axis=-1).T[:, :, None]
+    AP = np.concatenate([sp_rep, P[:, :, None]], axis=-1)
+    area = mag(np.cross(AP, d[None, :, :], axis=-1), axis=-1)
+    D = area / mag(d)
+    return D
+    
+
+def make_distance_func(data):
+    sp_min = data[(
+        data['sensitivity_wrt_species-6'] <= 1/data['precision_wrt_species-6']) | (
+            data['precision_wrt_species-6'] <= 1/data['sensitivity_wrt_species-6'])][['sensitivity_wrt_species-6', 'precision_wrt_species-6']].min().to_numpy()
+    sp_max = data[(
+        data['sensitivity_wrt_species-6'] <= 1/data['precision_wrt_species-6']) | (
+            data['precision_wrt_species-6'] <= 1/data['sensitivity_wrt_species-6'])][['sensitivity_wrt_species-6', 'precision_wrt_species-6']].max().to_numpy()
+    sp_left = np.array([sp_min[0], sp_max[1]])
+    sp_right = np.array([sp_max[0], sp_min[1]])
+
+    d = np.array([sp_left, sp_right]).T
+    return partial(lin_distance, d=d)
+
+
+def sp_prod(s, p, sp_factor=1, s_weight=0):
+    return s * (p * sp_factor + s_weight)
+
     
 
 ## Simulation functions
@@ -139,16 +176,14 @@ def make_next_name(name: str):
 
 # Choose next
 
-def choose_next(batch: list, data_writer, choose_max: int = 4, target_species: List[str] = ['RNA_1', 'RNA_2']):
+def choose_next(batch: list, data_writer, distance_func, choose_max: int = 4, target_species: List[str] = ['RNA_1', 'RNA_2'], s_weight=1):
     
     def make_data(batch, batch_analytics, target_species: List[str]):
-        # mutated_species = [[(c.name, jax.tree_util.tree_flatten(v.keys())) for k, v in c.mutations.items()] for c in batch]
         d = pd.DataFrame(
             data=np.concatenate(
                 [
                     np.asarray([c.name for c in batch])[:, None],
                     np.asarray([c.subname for c in batch])[:, None]
-                    # np.asarray(flatten_listlike([[m.template_name for m in jax.tree_util.tree_flatten(c.mutations)[0]] for c in batch]))[:, None]
                 ], axis=1
             ),
             columns=['Name', 'Subname']
@@ -160,28 +195,38 @@ def choose_next(batch: list, data_writer, choose_max: int = 4, target_species: L
             t_idx = t_idxs[t]
             d[f'Sensitivity species-{t}'] = np.asarray([b['sensitivity_wrt_species-6'][t_idx] for b in batch_analytics])
             d[f'Precision species-{t}'] = np.asarray([b['precision_wrt_species-6'][t_idx] for b in batch_analytics])
+            d[f'Overshoot species-{t}'] = np.asarray([b['overshoot'][t_idx] for b in batch_analytics])
+            
+            rs = d[d['Subname'] == 'ref_circuit']
+            d[f'Parent Sensitivity species-{t}'] = jax.tree_util.tree_map(lambda n: rs[rs['Name'] == n][f'Sensitivity species-{t}'].iloc[0], d['Name'].to_list())
+            d[f'Parent Precision species-{t}'] = jax.tree_util.tree_map(lambda n: rs[rs['Name'] == n][f'Precision species-{t}'].iloc[0], d['Name'].to_list())
+        
+            d[f'dS species-{t}'] = np.asarray([b['sensitivity_wrt_species-6_diff_to_base_circuit'][t_idx] for b in batch_analytics])
+            d[f'dP species-{t}'] = np.asarray([b['precision_wrt_species-6_diff_to_base_circuit'][t_idx] for b in batch_analytics])
+            # d[f'dS species-{t}'] = d[f'Sensitivity species-{t}'] - d[f'Parent Sensitivity species-{t}']
+            # d[f'dP species-{t}'] = d[f'Precision species-{t}'] - d[f'Parent Precision species-{t}']
+            
+            d[f'Diag Distance species-{t}'] = distance_func(s=d[f'Sensitivity species-{t}'].to_numpy(), p=d[f'Precision species-{t}'].to_numpy())
+            d[f'SP Prod species-{t}'] = sp_prod(s=d[f'Sensitivity species-{t}'].to_numpy(), p=d[f'Precision species-{t}'].to_numpy(), 
+                                                sp_factor=(d[f'Precision species-{t}'] / d[f'Sensitivity species-{t}']).max(),
+                                                s_weight=s_weight)
         return d
         
-    scale_sensitivity = 1
-    scale_precision = 1
     batch_analytics = [load_json_as_dict(os.path.join(data_writer.top_write_dir, c.name, 'report_signal.json')) for c in batch]
-    batch_analytics = jax.tree_util.tree_map(lambda x: np.float32(x), batch_analytics)
-    # starting_analytics = [circuit.result_collector.get_result('signal').analytics for circuit in starting]
-    # batch_analytics = [circuit.result_collector.get_result('signal').analytics for circuit in batch]
+    batch_analytics = jax.tree_util.tree_map(lambda x: np.float64(x), batch_analytics)
+    
     data_1 = make_data(batch, batch_analytics, target_species)
     
-    rs = data_1[data_1['Subname'] == 'ref_circuit']
-    for t in target_species:
-        data_1[f'Parent Sensitivity species-{t}'] = jax.tree_util.tree_map(lambda n: rs[rs['Name'] == n][f'Sensitivity species-{t}'].iloc[0], data_1['Name'].to_list())
-        data_1[f'Parent Precision species-{t}'] = jax.tree_util.tree_map(lambda n: rs[rs['Name'] == n][f'Precision species-{t}'].iloc[0], data_1['Name'].to_list())
-    
-        data_1[f'dS species-{t}'] = data_1[f'Sensitivity species-{t}'] - data_1[f'Parent Sensitivity species-{t}']
-        data_1[f'dP species-{t}'] = data_1[f'Precision species-{t}'] - data_1[f'Parent Precision species-{t}']
-    
     t = target_species[0]
-    circuits_chosen = data_1[(data_1[f'dS species-{t}'] >= 0) & (data_1[f'dP species-{t}'] >= 0)].sort_values(by=[f'Sensitivity species-{t}', f'Precision species-{t}'], ascending=False)['Circuit Obj'].iloc[:choose_max].to_list()
+    # circuits_chosen = data_1[(data_1[f'dS species-{t}'] >= 0) & (data_1[f'dP species-{t}'] >= 0)].sort_values(by=[f'Sensitivity species-{t}', f'Precision species-{t}'], ascending=False)['Circuit Obj'].iloc[:choose_max].to_list()
+    circuits_chosen = data_1[
+        (data_1[f'dS species-{t}'] >= 0) & 
+        (data_1[f'dP species-{t}'] >= 0) &
+        (data_1[f'Sensitivity species-{t}'] >= data_1[data_1['Subname'] == 'ref_circuit'][f'Sensitivity species-{t}'].min()) &
+        (data_1[f'Precision species-{t}'] >= data_1[data_1['Subname'] == 'ref_circuit'][f'Precision species-{t}'].min())].sort_values(by=[f'SP Prod species-{t}', f'Diag Distance species-{t}', 'Name', 'Subname'], ascending=False)['Circuit Obj'].iloc[:choose_max].to_list()
     data_1['Next selected'] = data_1['Circuit Obj'].isin(circuits_chosen)
     return circuits_chosen, data_1
+
 
 
 # Process mutations between runs
@@ -254,7 +299,7 @@ def make_starting_circuits(starting_circuits: pd.DataFrame, config: dict, data_w
     return circuits
 
 
-def loop(config, data_writer, modeller, evolver, starting_circ_rows):
+def loop(config, data_writer, modeller, evolver, starting_circ_rows, distance_func):
     target_species = ['RNA_1', 'RNA_2']
     choose_max = 20
     total_steps = 100
@@ -279,7 +324,8 @@ def loop(config, data_writer, modeller, evolver, starting_circ_rows):
                 os.path.join(data_writer.top_write_dir, b.name), 
                 name=b.name, config=config, load_mutations_as_circuits=True))
         expanded_batchs = flatten_listlike(expanded_batchs, safe=True)
-        starting, summary_data = choose_next(batch=expanded_batchs, data_writer=data_writer, choose_max=choose_max, target_species=target_species)
+        starting, summary_data = choose_next(batch=expanded_batchs, data_writer=data_writer, distance_func=distance_func, 
+                                            choose_max=choose_max, target_species=target_species, s_weight=1)
         starting = process_for_next_run(starting, data_writer=data_writer)
         
         summary[step+1] = starting
@@ -295,9 +341,11 @@ def loop(config, data_writer, modeller, evolver, starting_circ_rows):
 # Visualise circuit trajectory
 
 def visualise_step_plot(summary_datas: pd.DataFrame, data_writer, species: str):
-    plt.figure(figsize=(len(summary_datas) * 7, 7))
+    n_rows = int(np.ceil(np.sqrt(len(summary_datas))))
+    n_cols = int(np.ceil(np.sqrt(len(summary_datas))))
+    plt.figure(figsize=(7 * n_rows, 7 * n_cols))
     for step, sdata in summary_datas.items():
-        ax = plt.subplot(1,len(summary_datas), step+1)
+        ax = plt.subplot(n_rows, n_cols, step+1)
         sns.scatterplot(sdata.sort_values(by=['Next selected']), x=f'Sensitivity species-{species}', y=f'Precision species-{species}', hue='Next selected', alpha=0.1)
         plt.xscale('log')
         plt.yscale('log')
@@ -351,7 +399,8 @@ def main(config=None, data_writer=None):
     
     protocols = [
         Protocol(
-            partial(loop, config=config_og, data_writer=data_writer, modeller=modeller, evolver=evolver, starting_circ_rows=starting_circ_rows),
+            partial(loop, config=config_og, data_writer=data_writer, modeller=modeller, evolver=evolver, 
+                    starting_circ_rows=starting_circ_rows, distance_func=make_distance_func(data)),
             req_output=True
         ),
         Protocol(

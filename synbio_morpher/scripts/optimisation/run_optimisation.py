@@ -21,6 +21,7 @@ from synbio_morpher.utils.modelling.deterministic import bioreaction_sim_dfx_exp
 from synbio_morpher.utils.misc.helper import vanilla_return
 from synbio_morpher.utils.results.analytics.timeseries import generate_analytics
 from synbio_morpher.utils.results.analytics.naming import get_true_interaction_cols
+from synbio_morpher.utils.results.experiments import Experiment, Protocol
 from bioreaction.simulation.manager import simulate_steady_states
 from synbio_morpher.srv.io.manage.script_manager import script_preamble
 
@@ -152,18 +153,32 @@ def ptform(u):
 def main(config=None, data_writer=None):
     
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
-        "synbio_morpher", "scripts", "mc_evolution", "configs", "base_config.json"))
+        "synbio_morpher", "scripts", "optimisation", "configs", "base_config.json"))
 
-    ndim = 6
-
-    sampler = dynesty.NestedSampler(loglike, ptform, ndim)
-    sampler.run_nested(maxiter=1000)
-    sresults = sampler.results
+    def sample(ndim=6, maxiter: int = 1000):
+        sampler = dynesty.NestedSampler(loglike, ptform, ndim)
+        sampler.run_nested(maxiter=maxiter)
+        sresults = sampler.results
+        return sresults
     
-    rfig, raxes = dyplot.runplot(sresults)
-    tfig, taxes = dyplot.traceplot(sresults)
-    cfig, caxes = dyplot.cornerplot(sresults)
-    rfig.savefig(os.path.join(data_writer.top_write_dir, 'rfig.png'))
-    tfig.savefig(os.path.join(data_writer.top_write_dir, 'tfig.png'))
-    cfig.savefig(os.path.join(data_writer.top_write_dir, 'cfig.png'))
+    def visualise(sresults, data_writer):
+        rfig, raxes = dyplot.runplot(sresults)
+        tfig, taxes = dyplot.traceplot(sresults)
+        cfig, caxes = dyplot.cornerplot(sresults)
+        rfig.savefig(os.path.join(data_writer.top_write_dir, 'rfig.png'))
+        tfig.savefig(os.path.join(data_writer.top_write_dir, 'tfig.png'))
+        cfig.savefig(os.path.join(data_writer.top_write_dir, 'cfig.png'))
+    
+    protocols = [
+        Protocol(
+            partial(sample, maxiter=config['maxiter'])
+        ),
+        Protocol(
+            partial(visualise, data_writer=data_writer), req_input=True
+        )
+    ]
+    
+    experiment = Experiment(config=config, config_file=config, protocols=protocols,
+                            data_writer=data_writer)
+    experiment.run_experiment()
     

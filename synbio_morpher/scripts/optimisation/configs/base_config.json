@@ -1,0 +1,6 @@
+{
+    "experiment": {
+        "purpose": "optimisation"
+    },
+    "maxiter": 2000
+}
