@@ -72,7 +72,7 @@ class ResultWriter(DataWriter):
 
     def write_numerical(self, data, out_name: str):
         self.output(out_type='csv', out_name=out_name,
-                    data=transpose_arraylike(data))
+                    data=transpose_arraylike(data), overwrite=True)
 
     def write_analytics(self, result: Result, new_report=False):
         analytics = result.analytics

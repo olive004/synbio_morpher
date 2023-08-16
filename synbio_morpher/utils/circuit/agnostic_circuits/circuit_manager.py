@@ -93,11 +93,12 @@ class CircuitModeller():
                 filename = circuit.data.source
             else:
                 filename = None
-            input_species = sorted(circuit.get_input_species())
+            input_species = circuit.get_input_species()
+            reactant_species = [r.species for r in circuit.qreactions.reactants]
             interactions = self.run_interaction_simulator(
                 species=input_species,
                 filename=filename,
-                quantities=sorted([r.quantity for r in circuit.qreactions.reactants if r.species in input_species]))
+                quantities=[circuit.qreactions.reactants[reactant_species.index(s)].quantity for s in input_species])
             circuit.interactions = interactions
             circuit.interactions_state = 'computed'
         elif circuit.interactions_state == 'loaded' or (circuit.interactions_state == 'computed'):

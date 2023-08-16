@@ -158,20 +158,22 @@ def frequency(data):
 
 def generate_base_analytics(data: jnp.ndarray, time: jnp.ndarray, labels: List[str],
                             signal_onehot: jnp.ndarray, signal_time,
-                            ref_circuit_data: jnp.ndarray) -> dict:
+                            ref_circuit_data: jnp.ndarray, include_deriv: bool = False) -> dict:
     """ Assuming [species, time] for data """
     signal_idxs = None if signal_onehot is None else [int(i) for i in (np.where(signal_onehot == 1)[0])]
     if data is None:
         return {}
 
     analytics = {
-        'first_derivative': get_derivative(data),
         'initial_steady_states': jnp.expand_dims(data[:, 0], axis=1),
         'max_amount': jnp.expand_dims(jnp.max(data, axis=-1), axis=1),
         'min_amount': jnp.expand_dims(jnp.min(data, axis=-1), axis=1),
         'RMSE': get_rmse(data, ref_circuit_data),
         'steady_states': jnp.expand_dims(data[:, -1], axis=1)
     }
+    first_derivative = get_derivative(data)
+    if include_deriv:
+        analytics['first_derivative'] = first_derivative
     analytics['fold_change'] = get_fold_change(
         starting_states=analytics['initial_steady_states'],
         steady_states=analytics['steady_states']
@@ -199,7 +201,7 @@ def generate_base_analytics(data: jnp.ndarray, time: jnp.ndarray, labels: List[s
             t_end = np.min([len(time), data.shape[1]])
             analytics[f'response_time_wrt_species-{s_idx}'] = get_step_response_times(
                 data=data[:, :t_end], t=time[:t_end], steady_states=analytics['steady_states'][:, :t_end],
-                deriv=analytics['first_derivative'][:, :t_end], signal_time=signal_time)
+                deriv=first_derivative[:, :t_end], signal_time=signal_time)
             analytics[f'sensitivity_wrt_species-{s_idx}'] = get_sensitivity(
                 signal_idx=s_idx, peaks=peaks, starting_states=analytics['initial_steady_states']
             )

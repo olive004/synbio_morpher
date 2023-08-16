@@ -54,7 +54,7 @@ def pick_circuits(config: dict, data) -> pd.DataFrame:
 
 def tweak_cfg(config_og: dict, config: dict) -> dict:
     config_og['experiment']['purpose'] = config['experiment']['purpose']
-    config_og['simulation']['device'] = 'gpu'
+    config_og['simulation']['device'] = config['simulation']['device']
     config_og['mutations_args'] = {
         'algorithm': 'random',
         'mutation_counts': 2,
@@ -63,6 +63,7 @@ def tweak_cfg(config_og: dict, config: dict) -> dict:
         'concurrent_species_to_mutate': 'single_species_at_a_time',
         'seed': 0
     }
+    config_og['mutations_args'].update(config['mutation_args'])
     config_og['simulation']['dt0'] = config_og['simulation']['dt']
     config_og['simulation']['threshold_steady_states'] = 0.1
     config_og['experiment']['no_numerical'] = False
@@ -301,8 +302,8 @@ def make_starting_circuits(starting_circuits: pd.DataFrame, config: dict, data_w
 
 def loop(config, data_writer, modeller, evolver, starting_circ_rows, distance_func):
     target_species = ['RNA_1', 'RNA_2']
-    choose_max = 20
-    total_steps = 100
+    choose_max = config['choose_max']
+    total_steps = config['total_steps']
 
     starting = make_starting_circuits(starting_circ_rows.iloc[:choose_max], config, data_writer)
     starting = simulate(starting, modeller, config)
@@ -325,7 +326,7 @@ def loop(config, data_writer, modeller, evolver, starting_circ_rows, distance_fu
                 name=b.name, config=config, load_mutations_as_circuits=True))
         expanded_batchs = flatten_listlike(expanded_batchs, safe=True)
         starting, summary_data = choose_next(batch=expanded_batchs, data_writer=data_writer, distance_func=distance_func, 
-                                            choose_max=choose_max, target_species=target_species, s_weight=1)
+                                            choose_max=choose_max, target_species=target_species, s_weight=config['s_weight'])
         starting = process_for_next_run(starting, data_writer=data_writer)
         
         summary[step+1] = starting
