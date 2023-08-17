@@ -63,11 +63,15 @@ def tweak_cfg(config_og: dict, config: dict) -> dict:
         'concurrent_species_to_mutate': 'single_species_at_a_time',
         'seed': 0
     }
-    config_og['mutations_args'].update(config['mutation_args'])
-    config_og['simulation']['dt0'] = config_og['simulation']['dt']
+    config_og['simulation']['dt0'] = config_og['simulation'].get('dt', 0.1)
     config_og['simulation']['threshold_steady_states'] = 0.1
     config_og['experiment']['no_numerical'] = False
     config_og['experiment']['no_visualisations'] = True
+    for k, v in config.items():
+        if k in config_og and type(config_og[k]) == dict:
+            config_og[k].update(v)
+        else:
+            config_og[k] = v
     return config_og
 
 
@@ -89,17 +93,17 @@ def plot_starting_circuits(starting_circ_rows, data, filt, data_writer, save: bo
     
     
 # Optimisation funcs
-
 def mag(vec, **kwargs):
-    return np.linalg.norm(vec, **kwargs)
+    return jnp.linalg.norm(vec, **kwargs)
 
 
-def lin_distance(s, p, d):
+def vec_distance(s, p, d):
     """ First row of each direction vector are the x's, second row are the y's """
-    P = np.array([s, p]).T
+    P = jnp.array([s, p]).T
+    # P = [s.T, p.T]
     sp_rep = np.repeat(d[:, 0][:, None], repeats=len(s), axis=-1).T[:, :, None]
-    AP = np.concatenate([sp_rep, P[:, :, None]], axis=-1)
-    area = mag(np.cross(AP, d[None, :, :], axis=-1), axis=-1)
+    AP = jnp.concatenate([sp_rep, P[:, :, None]], axis=-1)
+    area = mag(jnp.cross(AP, d[None, :, :], axis=-1), axis=-1)
     D = area / mag(d)
     return D
     
@@ -115,13 +119,17 @@ def make_distance_func(data):
     sp_right = np.array([sp_max[0], sp_min[1]])
 
     d = np.array([sp_left, sp_right]).T
-    return partial(lin_distance, d=d)
+    return partial(vec_distance, d=d)
 
 
 def sp_prod(s, p, sp_factor=1, s_weight=0):
     return s * (p * sp_factor + s_weight)
 
-    
+
+def log_distance(s, p):
+    lin = np.array([np.logspace(6, -3, 2), np.logspace(-6, 3, 2)])
+    return vec_distance(s, p, lin)
+
 
 ## Simulation functions
 
@@ -177,7 +185,7 @@ def make_next_name(name: str):
 
 # Choose next
 
-def choose_next(batch: list, data_writer, distance_func, choose_max: int = 4, target_species: List[str] = ['RNA_1', 'RNA_2'], s_weight=1):
+def choose_next(batch: list, data_writer, distance_func, choose_max: int = 4, target_species: List[str] = ['RNA_1', 'RNA_2'], dist_weight=1):
     
     def make_data(batch, batch_analytics, target_species: List[str]):
         d = pd.DataFrame(
@@ -207,25 +215,45 @@ def choose_next(batch: list, data_writer, distance_func, choose_max: int = 4, ta
             # d[f'dS species-{t}'] = d[f'Sensitivity species-{t}'] - d[f'Parent Sensitivity species-{t}']
             # d[f'dP species-{t}'] = d[f'Precision species-{t}'] - d[f'Parent Precision species-{t}']
             
-            d[f'Diag Distance species-{t}'] = distance_func(s=d[f'Sensitivity species-{t}'].to_numpy(), p=d[f'Precision species-{t}'].to_numpy())
+            # d[f'Diag Distance species-{t}'] = distance_func(s=d[f'Sensitivity species-{t}'].to_numpy(), p=d[f'Precision species-{t}'].to_numpy())
             d[f'SP Prod species-{t}'] = sp_prod(s=d[f'Sensitivity species-{t}'].to_numpy(), p=d[f'Precision species-{t}'].to_numpy(), 
-                                                sp_factor=(d[f'Precision species-{t}'] / d[f'Sensitivity species-{t}']).max(),
-                                                s_weight=s_weight)
+                                                sp_factor=1, #(d[f'Precision species-{t}'] / d[f'Sensitivity species-{t}']).max(), 
+                                                s_weight=1) #np.log(d[f'Precision species-{t}']) / d[f'Sensitivity species-{t}'])
+            d[f'Log Distance species-{t}'] = np.array(log_distance(s=d[f'Sensitivity species-{t}'].to_numpy(), p=d[f'Precision species-{t}'].to_numpy()))
+            d[f'SP and distance species-{t}'] = np.log( np.power(d[f'Log Distance species-{t}'], dist_weight) * np.log(d[f'SP Prod species-{t}']))
+            
         return d
-        
-    batch_analytics = [load_json_as_dict(os.path.join(data_writer.top_write_dir, c.name, 'report_signal.json')) for c in batch]
-    batch_analytics = jax.tree_util.tree_map(lambda x: np.float64(x), batch_analytics)
     
+    def select_next(data_1, choose_max, t):
+        filt = (data_1[f'dS species-{t}'] >= 0) & (data_1[f'dP species-{t}'] >= 0) & (
+            data_1[f'Sensitivity species-{t}'] >= data_1[data_1['Subname'] == 'ref_circuit'][f'Sensitivity species-{t}'].min()) & (
+                data_1[f'Precision species-{t}'] >= data_1[data_1['Subname'] == 'ref_circuit'][f'Precision species-{t}'].min())
+        
+        circuits_chosen = data_1[filt].sort_values(
+            by=[f'SP and distance species-{t}', f'Log Distance species-{t}', f'SP Prod species-{t}', 'Name', 'Subname'], ascending=False)['Circuit Obj'].iloc[:choose_max].to_list()
+        
+        data_1['Next selected'] = data_1['Circuit Obj'].isin(circuits_chosen)
+        return data_1, circuits_chosen
+        
+    def get_batch_analytics(batch, data_writer):
+        batch_analytics = []
+        for c in batch:
+            if c.subname == 'ref_circuit':
+                batch_analytics.append(
+                    load_json_as_dict(os.path.join(data_writer.top_write_dir, c.name, 'report_signal.json')))
+            else:
+                batch_analytics.append(
+                    load_json_as_dict(os.path.join(data_writer.top_write_dir, c.name, 'mutations', c.subname, 'report_signal.json'))
+                )
+        batch_analytics = jax.tree_util.tree_map(lambda x: np.float64(x), batch_analytics)
+        return batch_analytics
+    
+    batch_analytics = get_batch_analytics(batch, data_writer)
     data_1 = make_data(batch, batch_analytics, target_species)
     
     t = target_species[0]
     # circuits_chosen = data_1[(data_1[f'dS species-{t}'] >= 0) & (data_1[f'dP species-{t}'] >= 0)].sort_values(by=[f'Sensitivity species-{t}', f'Precision species-{t}'], ascending=False)['Circuit Obj'].iloc[:choose_max].to_list()
-    circuits_chosen = data_1[
-        (data_1[f'dS species-{t}'] >= 0) & 
-        (data_1[f'dP species-{t}'] >= 0) &
-        (data_1[f'Sensitivity species-{t}'] >= data_1[data_1['Subname'] == 'ref_circuit'][f'Sensitivity species-{t}'].min()) &
-        (data_1[f'Precision species-{t}'] >= data_1[data_1['Subname'] == 'ref_circuit'][f'Precision species-{t}'].min())].sort_values(by=[f'SP Prod species-{t}', f'Diag Distance species-{t}', 'Name', 'Subname'], ascending=False)['Circuit Obj'].iloc[:choose_max].to_list()
-    data_1['Next selected'] = data_1['Circuit Obj'].isin(circuits_chosen)
+    data_1, circuits_chosen = select_next(data_1, choose_max, t)
     return circuits_chosen, data_1
 
 
@@ -284,7 +312,7 @@ def make_starting_circuits(starting_circuits: pd.DataFrame, config: dict, data_w
     mutation_type_mapping_rev = jax.tree_util.tree_map(lambda x: reverse_mut_mapping(x), d)
 
     circuits = []
-    for _, circ_row in starting_circuits.iterrows():
+    for i, circ_row in starting_circuits.iterrows():
         curr_config = config
         sequences = get_mutated_sequences(circ_row['path_to_template_circuit'], circ_row, mutation_type_mapping_rev)
         path = write_mutated_circuit(
@@ -293,12 +321,16 @@ def make_starting_circuits(starting_circuits: pd.DataFrame, config: dict, data_w
             sequences=sequences,
             data_writer=data_writer)
         curr_config['data_path'] = path
+        curr_config['interactions_loaded'] = None
+        curr_config['interactions'] = None
         circuit = construct_circuit_from_cfg(prev_configs=None, config_file=curr_config) 
         circuit.name = make_next_name(circ_row['circuit_name'])
         circuits.append(circuit)
         
     return circuits
 
+
+# Start loop
 
 def loop(config, data_writer, modeller, evolver, starting_circ_rows, distance_func):
     target_species = ['RNA_1', 'RNA_2']
@@ -326,7 +358,7 @@ def loop(config, data_writer, modeller, evolver, starting_circ_rows, distance_fu
                 name=b.name, config=config, load_mutations_as_circuits=True))
         expanded_batchs = flatten_listlike(expanded_batchs, safe=True)
         starting, summary_data = choose_next(batch=expanded_batchs, data_writer=data_writer, distance_func=distance_func, 
-                                            choose_max=choose_max, target_species=target_species, s_weight=config['s_weight'])
+                                             choose_max=choose_max, target_species=target_species, dist_weight=config['dist_weight'])
         starting = process_for_next_run(starting, data_writer=data_writer)
         
         summary[step+1] = starting
@@ -337,7 +369,7 @@ def loop(config, data_writer, modeller, evolver, starting_circ_rows, distance_fu
             starting[i].subname = 'ref_circuit'
             
     return summary_datas
-            
+
 
 # Visualise circuit trajectory
 
