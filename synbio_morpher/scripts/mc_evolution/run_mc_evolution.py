@@ -123,7 +123,9 @@ def make_distance_func(data):
 
 
 def sp_prod(s, p, sp_factor=1, s_weight=0):
-    return s * (p * sp_factor + s_weight)
+    """ Log product of s and p """
+    s_lin = 1/p
+    return s * (p * (s - s_lin)) # * sp_factor + s_weight)
 
 
 def log_distance(s, p):
@@ -184,7 +186,6 @@ def make_next_name(name: str):
 
 
 # Choose next
-
 def choose_next(batch: list, data_writer, distance_func, choose_max: int = 4, target_species: List[str] = ['RNA_1', 'RNA_2'], dist_weight=1):
     
     def make_data(batch, batch_analytics, target_species: List[str]):
@@ -218,18 +219,19 @@ def choose_next(batch: list, data_writer, distance_func, choose_max: int = 4, ta
             # d[f'Diag Distance species-{t}'] = distance_func(s=d[f'Sensitivity species-{t}'].to_numpy(), p=d[f'Precision species-{t}'].to_numpy())
             d[f'SP Prod species-{t}'] = sp_prod(s=d[f'Sensitivity species-{t}'].to_numpy(), p=d[f'Precision species-{t}'].to_numpy(), 
                                                 sp_factor=1, #(d[f'Precision species-{t}'] / d[f'Sensitivity species-{t}']).max(), 
-                                                s_weight=1) #np.log(d[f'Precision species-{t}']) / d[f'Sensitivity species-{t}'])
+                                                s_weight=0) #np.log(d[f'Precision species-{t}']) / d[f'Sensitivity species-{t}'])
             d[f'Log Distance species-{t}'] = np.array(log_distance(s=d[f'Sensitivity species-{t}'].to_numpy(), p=d[f'Precision species-{t}'].to_numpy()))
-            d[f'SP and distance species-{t}'] = np.log( np.power(d[f'Log Distance species-{t}'], dist_weight) * np.log(d[f'SP Prod species-{t}']))
+            # d[f'SP and distance species-{t}'] = np.log( np.power(d[f'Log Distance species-{t}'], dist_weight) * np.log(d[f'SP Prod species-{t}']))
+            d[f'SP and distance species-{t}'] = d[f'SP Prod species-{t}'] * d[f'Log Distance species-{t}']
             
         return d
     
     def select_next(data_1, choose_max, t):
-        filt = (data_1[f'dS species-{t}'] >= 0) & (data_1[f'dP species-{t}'] >= 0) & (
-            data_1[f'Sensitivity species-{t}'] >= data_1[data_1['Subname'] == 'ref_circuit'][f'Sensitivity species-{t}'].min()) & (
-                data_1[f'Precision species-{t}'] >= data_1[data_1['Subname'] == 'ref_circuit'][f'Precision species-{t}'].min())
+        # filt = (data_1[f'dS species-{t}'] >= 0) & (data_1[f'dP species-{t}'] >= 0) & (
+        #     data_1[f'Sensitivity species-{t}'] >= data_1[data_1['Subname'] == 'ref_circuit'][f'Sensitivity species-{t}'].min()) & (
+        #         data_1[f'Precision species-{t}'] >= data_1[data_1['Subname'] == 'ref_circuit'][f'Precision species-{t}'].min())
         
-        circuits_chosen = data_1[filt].sort_values(
+        circuits_chosen = data_1.sort_values(
             by=[f'SP and distance species-{t}', f'Log Distance species-{t}', f'SP Prod species-{t}', 'Name', 'Subname'], ascending=False)['Circuit Obj'].iloc[:choose_max].to_list()
         
         data_1['Next selected'] = data_1['Circuit Obj'].isin(circuits_chosen)
