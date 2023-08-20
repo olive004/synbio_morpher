@@ -350,7 +350,7 @@ def loop(config, data_writer, modeller, evolver, starting_circ_rows, distance_fu
         
         print(f'\n\nStarting batch {step+1} out of {total_steps}\n\n')
 
-        batch = mutate(starting, evolver, algorithm='random')
+        batch = mutate(starting, evolver, algorithm='all')
         batch = simulate(batch, modeller, config)
         expanded_batchs = []
         for b in batch:
