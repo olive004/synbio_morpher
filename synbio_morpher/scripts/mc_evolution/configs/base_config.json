@@ -11,6 +11,7 @@
     },
     "info_path": "data/ensemble_mutation_effect_analysis/2023_07_17_105328/summarise_simulation/tabulated_mutation_info.csv",
     "dist_weight": 1, 
-    "choose_max": 30,
-    "total_steps": 50
+    "choose_max": 100,
+    "total_steps": 50,
+    "use_diversity": false
 }

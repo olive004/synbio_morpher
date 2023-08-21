@@ -7,6 +7,7 @@
     
 import logging
 import numpy as np
+from datetime import datetime
 import jax.numpy as jnp
 from typing import List, Tuple
 from synbio_morpher.utils.misc.type_handling import merge_dicts
@@ -95,12 +96,11 @@ def get_sensitivity_simp(starting_states, peaks, signal_factor):
         numer, signal_factor))
 
 
-def get_rmse(data, ref_circuit_data):
+def get_rmse(data: np.ndarray, ref_circuit_data: np.ndarray):
     if ref_circuit_data is None:
         return jnp.zeros(shape=(jnp.shape(data)[0], 1))
-    t_max = min([jnp.shape(data)[-1], jnp.shape(ref_circuit_data)[-1]]) 
     rmse = jnp.sqrt(
-        jnp.sum(jnp.divide(jnp.power(data[:, :t_max] - ref_circuit_data[:, :t_max], 2), jnp.shape(data)[1]), axis=1))
+        jnp.mean(jnp.power(data - ref_circuit_data, 2), axis=1))
     return jnp.expand_dims(rmse, axis=1)
 
 
@@ -164,6 +164,7 @@ def generate_base_analytics(data: jnp.ndarray, time: jnp.ndarray, labels: List[s
     if data is None:
         return {}
 
+    rtime = datetime.now()
     analytics = {
         'initial_steady_states': jnp.expand_dims(data[:, 0], axis=1),
         'max_amount': jnp.expand_dims(jnp.max(data, axis=-1), axis=1),
@@ -171,40 +172,76 @@ def generate_base_analytics(data: jnp.ndarray, time: jnp.ndarray, labels: List[s
         'RMSE': get_rmse(data, ref_circuit_data),
         'steady_states': jnp.expand_dims(data[:, -1], axis=1)
     }
+    rtime = datetime.now() - rtime
+    logging.warning(
+        f'\t\t\tAnalytics 1 took {rtime.total_seconds()}s')
+
+    rtime = datetime.now()
     first_derivative = get_derivative(data)
     if include_deriv:
         analytics['first_derivative'] = first_derivative
+    rtime = datetime.now() - rtime
+    logging.warning(
+        f'\t\t\tAnalytics 2 (deriv) took {rtime.total_seconds()}s')
+    
+    
+    rtime = datetime.now()
     analytics['fold_change'] = get_fold_change(
         starting_states=analytics['initial_steady_states'],
         steady_states=analytics['steady_states']
     )
+    rtime = datetime.now() - rtime
+    logging.warning(
+        f'\t\t\tAnalytics 3 took {rtime.total_seconds()}s')
 
+    rtime = datetime.now()
     peaks = get_peaks(analytics['initial_steady_states'], analytics['steady_states'],
                       analytics['max_amount'], analytics['min_amount']) 
+    rtime = datetime.now() - rtime
+    logging.warning(
+        f'\t\t\tAnalytics 4 (peaks) took {rtime.total_seconds()}s')
 
+    rtime = datetime.now()
     analytics['overshoot'] = get_overshoot(
         steady_states=analytics['steady_states'],
         peaks=peaks
     )
+    rtime = datetime.now() - rtime
+    logging.warning(
+        f'\t\t\tAnalytics 5 (overshoot) took {rtime.total_seconds()}s')
 
     if signal_idxs is not None:
         signal_labels = list(map(labels.__getitem__, signal_idxs))
         for s, s_idx in zip(signal_labels, signal_idxs):
 
+            rtime = datetime.now()
             analytics[f'precision_wrt_species-{s_idx}'] = get_precision(
                 starting_states=analytics['initial_steady_states'],
                 steady_states=analytics['steady_states'],
                 signal_0=analytics['initial_steady_states'][s_idx],
                 signal_1=data[s_idx, 1]
             )
-            # t axis : 1
+            rtime = datetime.now() - rtime
+            logging.warning(
+                f'\t\t\tAnalytics 6 (precision) took {rtime.total_seconds()}s')
+            
+            # t axis: 1
+            rtime = datetime.now()
             t_end = np.min([len(time), data.shape[1]])
             analytics[f'response_time_wrt_species-{s_idx}'] = get_step_response_times(
                 data=data[:, :t_end], t=time[:t_end], steady_states=analytics['steady_states'][:, :t_end],
                 deriv=first_derivative[:, :t_end], signal_time=signal_time)
+            rtime = datetime.now() - rtime
+            logging.warning(
+                f'\t\t\tAnalytics 7 (response time) took {rtime.total_seconds()}s')
+            
+            rtime = datetime.now()
             analytics[f'sensitivity_wrt_species-{s_idx}'] = get_sensitivity(
                 signal_idx=s_idx, peaks=peaks, starting_states=analytics['initial_steady_states']
             )
+            rtime = datetime.now() - rtime
+            logging.warning(
+                f'\t\t\tAnalytics 8 (sensitivity) took {rtime.total_seconds()}s')
     return analytics
 
 

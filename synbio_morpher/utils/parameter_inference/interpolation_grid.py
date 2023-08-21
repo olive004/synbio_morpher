@@ -31,6 +31,7 @@ def parameter_range_creation(range_min, range_max, range_step, is_logscale=False
 
 
 def create_parameter_range(range_configs: dict) -> np.ndarray:
+    """ Creates parameter range 1D """
     logging.info('create_parameter_range')
     logging.info(range_configs)
     min_key = [k for k in range_configs.keys(

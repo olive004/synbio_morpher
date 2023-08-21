@@ -6,6 +6,7 @@
 # LICENSE file in the root directory of this source tree. 
     
 import logging
+from fire import Fire
 from multiprocessing import Process
 import os
 from typing import List
@@ -22,25 +23,50 @@ from synbio_morpher.utils.parameter_inference.interpolation_grid import create_p
 from synbio_morpher.utils.circuit.agnostic_circuits.circuit_manager import CircuitModeller
 
 
-def main(config=None, data_writer=None):
+# Create matrices
+def define_matrices(num_species, size_interaction_array, num_unique_interactions, analytic_types) -> List[np.ndarray]:
+    matrix_dimensions = tuple(
+        [len(analytic_types), num_species] + [size_interaction_array]*num_unique_interactions)
+    matrix_size = num_species * \
+        np.power(size_interaction_array, num_unique_interactions)
+    assert matrix_size == np.prod(list(
+        matrix_dimensions)), 'Something is off about the intended size of the matrix'
 
-    config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
-        'synbio_morpher', 'scripts', 'parameter_based_simulation', 'configs', 'testing.json'))
-    config_file = load_json_as_dict(config)
-    config_file = prepare_config(config_file)
+    all_analytic_matrices = np.zeros(matrix_dimensions, dtype=np.float32)
+    return all_analytic_matrices
 
-    if config_file.get('experiment').get('parallelise'):
-        num_subprocesses = config_file.get(
-            'experiment').get('num_subprocesses', 1)
-    else:
-        num_subprocesses = 1
 
-    for subprocess in range(num_subprocesses):
-        if num_subprocesses != 1:
-            data_writer.update_ensemble('subprocess_' + str(subprocess+1))
-        p = Process(target=main_subprocess, args=(
-            config, config_file, data_writer, subprocess, num_subprocesses))
-        p.start()
+def create_circuits(config: dict, batch_size: int, batch_i: int, interaction_strengths: np.ndarray):
+    
+    interaction_strengths = create_parameter_range(
+        config['parameter_based_simulation'])
+    num_species = 3
+    num_unique_interactions = np.sum(np.triu(num_species))
+    analytic_types = get_analytics_types_all()
+    size_interaction_array = np.size(interaction_strengths)
+    
+    all_analytic_matrices = define_matrices(
+        num_species, size_interaction_array, num_unique_interactions, analytic_types)
+
+
+    # Set loop vars
+    total_iterations = np.power(
+        size_interaction_array, num_unique_interactions)
+    logging.info(total_iterations)
+    logging.info(np.size(all_analytic_matrices) / len(analytic_types))
+    logging.info(np.shape(all_analytic_matrices))
+    num_iterations = int(total_iterations / batch_size)
+    starting_iteration = int(num_iterations * batch_i)
+    end_iteration = int(num_iterations * (batch_i + 1))
+    
+    for i in range(starting_iteration, end_iteration):
+        interaction_strength_choices = [int(np.mod(i / np.power(size_interaction_array, unique_interaction),
+                                                size_interaction_array)) for unique_interaction in range(num_unique_interactions)]
+        flat_triangle = interaction_strengths[list(interaction_strength_choices)]
+        interaction_matrix = make_symmetrical_matrix_from_sequence(
+            flat_triangle, num_species)
+    
+    
 
 
 def main_subprocess(config, config_file, data_writer, sub_process, total_processes):
@@ -170,3 +196,28 @@ def main_subprocess(config, config_file, data_writer, sub_process, total_process
                             data_writer=data_writer)
     experiment.run_experiment()
     return config, data_writer
+
+
+def main(config=None, data_writer=None):
+
+    config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
+        'synbio_morpher', 'scripts', 'parameter_based_simulation', 'configs', 'testing.json'))
+    config_file = load_json_as_dict(config)
+    config_file = prepare_config(config_file)
+
+    if config_file.get('experiment').get('parallelise'):
+        num_subprocesses = config_file.get(
+            'experiment').get('num_subprocesses', 1)
+    else:
+        num_subprocesses = 1
+
+    for subprocess in range(num_subprocesses):
+        if num_subprocesses != 1:
+            data_writer.update_ensemble('subprocess_' + str(subprocess+1))
+        p = Process(target=main_subprocess, args=(
+            config, config_file, data_writer, subprocess, num_subprocesses))
+        p.start()
+        
+        
+if __name__ == "__main__":
+    Fire(main)
