@@ -65,7 +65,7 @@ class CircuitModeller():
 
         self.max_circuits = config.get('simulation', {}).get(
             'max_circuits', 10000)  # Maximum number of circuits to hold in memory
-        self.test_mode = config.get('experiment', {}).get('test_mode', False)
+        self.debug_mode = config.get('experiment', {}).get('debug_mode', False)
         self.sim_func = None
 
         # os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
@@ -88,7 +88,7 @@ class CircuitModeller():
 
     # @time_it
     def compute_interactions(self, circuit: Circuit):
-        if circuit.interactions_state == 'uninitialised' and not self.test_mode:
+        if circuit.interactions_state == 'uninitialised' and not self.debug_mode:
             if self.simulator_args['compute_by_filename'] and circuit.subname == "ref_circuit" and os.path.exists(circuit.data.source):
                 filename = circuit.data.source
             else:
@@ -103,7 +103,7 @@ class CircuitModeller():
             circuit.interactions_state = 'computed'
         elif circuit.interactions_state == 'loaded' or (circuit.interactions_state == 'computed'):
             pass
-        elif self.test_mode:
+        elif self.debug_mode:
             circuit.init_interactions(init_dummy=True)
         else:
             circuit.init_interactions()

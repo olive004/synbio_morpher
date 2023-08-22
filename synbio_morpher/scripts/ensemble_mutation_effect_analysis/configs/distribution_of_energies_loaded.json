@@ -28,7 +28,7 @@
                 "purpose": "mutation_effect_on_interactions_signal",
                 "no_visualisations": true,
                 "no_numerical": true,
-                "test_mode": false
+                "debug_mode": false
             },
             "interaction_simulator": {
                 "name": "IntaRNA",

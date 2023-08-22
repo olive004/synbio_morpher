@@ -20,7 +20,7 @@ from synbio_morpher.utils.misc.type_handling import merge_dicts, replace_value
 ENSEMBLE_CONFIG = {
     "experiment": {
         "purpose": "tests",
-        "test_mode": False,
+        "debug_mode": False,
         "no_visualisations": False,
         "no_numerical": False
     },
@@ -28,7 +28,7 @@ ENSEMBLE_CONFIG = {
         "generate_species_templates": {
             "experiment": {
                 "purpose": "generate_species_templates",
-                "test_mode": False
+                "debug_mode": False
             },
             "interaction_simulator": {
                 "name": "IntaRNA",
@@ -40,7 +40,7 @@ ENSEMBLE_CONFIG = {
         "gather_interaction_stats": {
             "experiment": {
                 "purpose": "gather_interaction_stats",
-                "test_mode": False
+                "debug_mode": False
             },
             "interaction_simulator": {
                 "name": "IntaRNA",
@@ -58,7 +58,7 @@ ENSEMBLE_CONFIG = {
         "mutation_effect_on_interactions_signal": {
             "experiment": {
                 "purpose": "mutation_effect_on_interactions_signal",
-                "test_mode": False
+                "debug_mode": False
             },
             "mutations_args": {
                 "algorithm": "random",
@@ -111,7 +111,7 @@ ENSEMBLE_CONFIG = {
 
 CONFIG = merge_dicts(*list(ENSEMBLE_CONFIG["base_configs_ensemble"].values()) + [
                      {k: v for k, v in ENSEMBLE_CONFIG.items() if k == 'experiment'}])
-TEST_CONFIG = replace_value(CONFIG, 'test_mode', True)
+TEST_CONFIG = replace_value(CONFIG, 'debug_mode', True)
 
 
 def five_circuits(config: dict, data_writer=None):

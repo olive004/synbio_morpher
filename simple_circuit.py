@@ -18,7 +18,7 @@ def five_circuits():
         },
         "experiment": {
             "purpose": "tests",
-            "test_mode": True
+            "debug_mode": True
         },
         "molecular_params": "./synbio_morpher/utils/common/configs/RNA_circuit/molecular_params.json",
         "circuit_generation": {

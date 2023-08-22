@@ -94,7 +94,7 @@ class TestCircuit(unittest.TestCase):
 
         for c, d in zip(
             [TEST_CONFIG, CONFIG],
-            [{'test_mode': 1},
+            [{'debug_mode': 1},
              {'normal_mode': 1}]
         ):
             circuits, config, data_writer, info = create_test_inputs(c)

@@ -161,8 +161,8 @@ class InteractionDataHandler():
         self.sample_postproc = simulation_handler.get_postprocessing(initial=quantities)
         self.units = simulation_handler.units
 
-    def init_data(self, data: dict, test_mode: bool = False):
-        if not test_mode:
+    def init_data(self, data: dict, debug_mode: bool = False):
+        if not debug_mode:
             interactions = self.parse(data)
         else:
             nans = np.ones((len(data), len(data))) * np.nan

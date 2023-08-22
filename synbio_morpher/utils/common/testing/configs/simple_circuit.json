@@ -1,7 +1,7 @@
 {
     "experiment": {
         "purpose": "tests",
-        "test_mode": false,
+        "debug_mode": false,
         "no_visualisations": false,
         "no_numerical": false
     },
