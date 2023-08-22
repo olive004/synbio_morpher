@@ -125,7 +125,7 @@ def main(config: dict = None, data_writer=None):
         interaction_strengths = create_parameter_range(
             config['parameter_based_simulation'])
 
-        num_species = config['parameter_based_simulation'].get('num_species', 3).astype(int)
+        num_species = int(config['parameter_based_simulation'].get('num_species', 3))
         num_unique_interactions = np.sum(np.triu(np.ones((num_species, num_species)))).astype(int)
         analytic_types = get_analytics_types_all()
 
