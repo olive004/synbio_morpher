@@ -118,7 +118,7 @@ def run_batch(batch_i: int,
 def main(config: dict, data_writer, batch_size: int):
 
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
-        'synbio_morpher', 'scripts', 'parameter_based_simulation', 'configs', 'testing.json'))
+        'synbio_morpher', 'scripts', 'parameter_based_simulation', 'configs', 'base_config.json'))
     config = load_json_as_dict(config)
     config = prepare_config(config)
 
