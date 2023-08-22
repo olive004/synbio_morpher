@@ -121,12 +121,12 @@ def main(config: dict = None, data_writer=None):
     config = prepare_config(config)
 
     def core_func(config):
-        batch_size = config['batch_size']
+        batch_size = int(config['batch_size'])
         interaction_strengths = create_parameter_range(
             config['parameter_based_simulation'])
 
-        num_species = config['parameter_based_simulation'].get('num_species', 3)
-        num_unique_interactions = np.sum(np.triu(np.ones((num_species, num_species))))
+        num_species = config['parameter_based_simulation'].get('num_species', 3).astype(int)
+        num_unique_interactions = np.sum(np.triu(np.ones((num_species, num_species)))).astype(int)
         analytic_types = get_analytics_types_all()
 
         all_analytic_matrices = define_matrices(num_species=num_species,
@@ -136,7 +136,7 @@ def main(config: dict = None, data_writer=None):
 
         # Set loop vars
         total_iterations = np.power(
-            np.size(interaction_strengths), num_unique_interactions)
+            np.size(interaction_strengths), num_unique_interactions).astype(int)
         num_iterations = int(total_iterations / batch_size)
         
         logging.info(total_iterations)
