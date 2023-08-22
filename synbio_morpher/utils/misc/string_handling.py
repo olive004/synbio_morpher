@@ -21,7 +21,7 @@ def add_outtype(filepath, out_type):
     return filepath + '.' + out_type
 
 
-def convert_liststr_to_list(str_list: List(str)):
+def convert_liststr_to_list(str_list: List[str]):
     """ Convert lists of ints that have been turned into strings
     back into lists. """
     return str_list.strip('[]').str.split(',').apply(lambda x: [int(xx) for xx in x if xx != ''])
