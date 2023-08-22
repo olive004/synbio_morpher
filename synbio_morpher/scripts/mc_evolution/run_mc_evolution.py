@@ -186,7 +186,7 @@ def make_next_name(name: str):
 
 
 # Choose next
-def choose_next(batch: list, data_writer, distance_func, choose_max: int = 4, target_species: List[str] = ['RNA_1', 'RNA_2'], dist_weight=1):
+def choose_next(batch: list, data_writer, distance_func, choose_max: int = 4, target_species: List[str] = ['RNA_1', 'RNA_2'], use_diversity: bool = False):
     
     def make_data(batch, batch_analytics, target_species: List[str]):
         d = pd.DataFrame(
@@ -222,11 +222,11 @@ def choose_next(batch: list, data_writer, distance_func, choose_max: int = 4, ta
                                                 s_weight=0) #np.log(d[f'Precision species-{t}']) / d[f'Sensitivity species-{t}'])
             d[f'Log Distance species-{t}'] = np.array(log_distance(s=d[f'Sensitivity species-{t}'].to_numpy(), p=d[f'Precision species-{t}'].to_numpy()))
             # d[f'SP and distance species-{t}'] = np.log( np.power(d[f'Log Distance species-{t}'], dist_weight) * np.log(d[f'SP Prod species-{t}']))
-            d[f'SP and distance species-{t}'] = d[f'SP Prod species-{t}'] * d[f'Log Distance species-{t}']
+            d[f'SP and distance species-{t}'] = d[f'Sensitivity species-{t}'] * d[f'Log Distance species-{t}']
             
         return d
     
-    def select_next(data_1, choose_max, t, config):
+    def select_next(data_1, choose_max, t, use_diversity: bool):
         # filt = (data_1[f'dS species-{t}'] >= 0) & (data_1[f'dP species-{t}'] >= 0) & (
         #     data_1[f'Sensitivity species-{t}'] >= data_1[data_1['Subname'] == 'ref_circuit'][f'Sensitivity species-{t}'].min()) & (
         #         data_1[f'Precision species-{t}'] >= data_1[data_1['Subname'] == 'ref_circuit'][f'Precision species-{t}'].min())
@@ -236,7 +236,7 @@ def choose_next(batch: list, data_writer, distance_func, choose_max: int = 4, ta
             by=[f'SP and distance species-{t}', f'Log Distance species-{t}', f'SP Prod species-{t}', 'Name', 'Subname'], ascending=False)['Circuit Obj'].iloc[:choose_max].to_list()
         prev_circuits = data_1[data_1['Subname'] == 'ref_circuit']
         keep_n = int(0.7 * choose_max)
-        if config.get('use_diversity', True) and all([c in prev_circuits for c in circuits_chosen]) and (len(data_1) >= keep_n):
+        if use_diversity and all([c in prev_circuits for c in circuits_chosen]) and (len(data_1) >= keep_n):
             _, circuits_chosen = select_next(data_1[data_1['Circuit Obj'].isin(prev_circuits[:keep_n])], choose_max, t)
             data_1['Diversity selection'] = data_1['Circuit Obj'].isin(circuits_chosen)
         
@@ -261,7 +261,7 @@ def choose_next(batch: list, data_writer, distance_func, choose_max: int = 4, ta
     
     t = target_species[0]
     # circuits_chosen = data_1[(data_1[f'dS species-{t}'] >= 0) & (data_1[f'dP species-{t}'] >= 0)].sort_values(by=[f'Sensitivity species-{t}', f'Precision species-{t}'], ascending=False)['Circuit Obj'].iloc[:choose_max].to_list()
-    data_1, circuits_chosen = select_next(data_1, choose_max, t)
+    data_1, circuits_chosen = select_next(data_1, choose_max, t, use_diversity)
     return circuits_chosen, data_1
 
 
@@ -365,7 +365,7 @@ def loop(config, data_writer, modeller, evolver, starting_circ_rows, distance_fu
                 name=b.name, config=config, load_mutations_as_circuits=True))
         expanded_batchs = flatten_listlike(expanded_batchs, safe=True)
         starting, summary_data = choose_next(batch=expanded_batchs, data_writer=data_writer, distance_func=distance_func, 
-                                             choose_max=choose_max, target_species=target_species, dist_weight=config['dist_weight'])
+                                             choose_max=choose_max, target_species=target_species, use_diversity=config.get('use_diversity', False))
         starting = process_for_next_run(starting, data_writer=data_writer)
         
         summary[step+1] = starting

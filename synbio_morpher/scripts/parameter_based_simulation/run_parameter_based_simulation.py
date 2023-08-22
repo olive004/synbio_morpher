@@ -59,6 +59,12 @@ def create_circuits(config: dict, batch_size: int, batch_i: int, interaction_str
     starting_iteration = int(num_iterations * batch_i)
     end_iteration = int(num_iterations * (batch_i + 1))
     
+    def idx_sampler(i, size_interaction_array, unique_interaction):
+        int(np.mod(i / np.power(size_interaction_array, unique_interaction), size_interaction_array))
+        
+    np.arange(num_unique_interactions)[:, None]
+    np.arange(starting_iteration, end_iteration)[None, :]
+
     for i in range(starting_iteration, end_iteration):
         interaction_strength_choices = [int(np.mod(i / np.power(size_interaction_array, unique_interaction),
                                                 size_interaction_array)) for unique_interaction in range(num_unique_interactions)]
