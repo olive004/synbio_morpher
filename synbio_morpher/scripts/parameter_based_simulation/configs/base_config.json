@@ -32,5 +32,20 @@
             "target": 2
         }
     },
-    "system_type": "RNA"
+    "simulation": {
+        "dt0": 0.1,
+        "t0": 0,
+        "t1": 100,
+        "tmax": 120000,
+        "solver": "diffrax",
+        "use_batch_mutations": true,
+        "batch_size": 10000,
+        "max_circuits": 20000,
+        "device": "gpu",
+        "threshold_steady_states": 0.05, 
+        "use_rate_scaling": true
+    },
+    "include_prod_deg": false,
+    "system_type": "RNA",
+    "batch_size": 10
 }

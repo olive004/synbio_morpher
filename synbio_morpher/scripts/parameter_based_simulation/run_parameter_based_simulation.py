@@ -163,7 +163,7 @@ def main(config: dict = None, data_writer=None):
                 # if np.mod(i, 100) == 0:
                 write_all(all_analytic_matrices, analytic_types, data_writer)
 
-    experiment = Experiment(config=config,
+    experiment = Experiment(config=config, config_file=config,
                             protocols=[Protocol(partial(core_func, config=config))],
                             data_writer=data_writer)
     experiment.run_experiment()
