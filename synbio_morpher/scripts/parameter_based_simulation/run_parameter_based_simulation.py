@@ -126,7 +126,7 @@ def main(config: dict = None, data_writer=None):
             config['parameter_based_simulation'])
 
         num_species = config['parameter_based_simulation'].get('num_species', 3)
-        num_unique_interactions = np.sum(np.triu(num_species))
+        num_unique_interactions = np.sum(np.triu(np.ones(num_species, num_species)))
         analytic_types = get_analytics_types_all()
 
         all_analytic_matrices = define_matrices(num_species=num_species,
