@@ -4,7 +4,7 @@ import os
 import sys
 import pandas as pd
 import jax
-from typing import List, Tuple
+from typing import Tuple
 
 
 if __package__ is None or (__package__ == ''):
@@ -18,7 +18,7 @@ if __package__ is None or (__package__ == ''):
 
 from synbio_morpher.utils.data.data_format_tools.manipulate_fasta import load_seq_from_FASTA
 from synbio_morpher.utils.misc.numerical import count_monotonic_group_lengths, find_monotonic_group_idxs, is_within_range
-from synbio_morpher.utils.misc.string_handling import string_to_tuple_list
+from synbio_morpher.utils.misc.string_handling import string_to_tuple_list, convert_liststr_to_list
 from synbio_morpher.utils.misc.type_handling import get_first_elements
 from synbio_morpher.utils.results.analytics.naming import get_true_interaction_cols
 
@@ -36,12 +36,9 @@ def proc_info(info):
                                                         <= 10), 'sp_distance'] = np.absolute(info['precision_wrt_species-6'] - 10)
 
     if type(info['mutation_type'].iloc[0]) == str:
-        info['mutation_type'] = info['mutation_type'].str.strip(
-            '[]').str.split(',').apply(lambda x: [int(xx) for xx in x if xx != ''])
+        info['mutation_type'] = convert_liststr_to_list(info['mutation_type'].str)
     if type(info['mutation_positions'].iloc[0]) == str:
-        info['mutation_positions'] = info['mutation_positions'].str.strip(
-            '[]').str.split(',').apply(lambda x: [int(xx) for xx in x if xx != ''])
-
+        info['mutation_positions'] = convert_liststr_to_list(info['mutation_positions'].str)
 
     #  Binding sites
 

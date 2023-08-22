@@ -3,15 +3,14 @@
 # All rights reserved.
 
 # This source code is licensed under the MIT-style license found in the
-# LICENSE file in the root directory of this source tree. 
-    
+# LICENSE file in the root directory of this source tree.
+
 from datetime import datetime
 from copy import deepcopy
-from typing import Union
+from typing import Union, List
 from difflib import SequenceMatcher
 from functools import partial
 import logging
-import os
 
 import numpy as np
 
@@ -20,6 +19,12 @@ def add_outtype(filepath, out_type):
     if out_type in filepath:
         return filepath
     return filepath + '.' + out_type
+
+
+def convert_liststr_to_list(str_list: List(str)):
+    """ Convert lists of ints that have been turned into strings
+    back into lists. """
+    return str_list.strip('[]').str.split(',').apply(lambda x: [int(xx) for xx in x if xx != ''])
 
 
 def get_intersecting_string(string_list):
@@ -139,5 +144,6 @@ def string_to_tuple_list(string):
     if not string or type(string) != str:
         return []
     tuple_strings = string.split(':')
-    tuples = [tuple(map(int, ts.strip('()').split(','))) for ts in tuple_strings]
+    tuples = [tuple(map(int, ts.strip('()').split(',')))
+              for ts in tuple_strings]
     return tuples
