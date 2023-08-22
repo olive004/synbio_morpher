@@ -23,15 +23,14 @@
         "num_species": 3
     },
     "signal": {
-        "signal":[0, 1],
-        "signal_spec": "raw",
-        "signal_type": "abstract",
-        "total_time":12000,
-        "magnitude":20,
-        "positions":null,
-        "heights":null,
-        "durations": null,
-        "use_solver": "naive"
-    }, 
+        "inputs": ["RNA_0"],
+        "outputs": ["RNA_1"],
+        "function_name": "step_function",
+        "function_kwargs": {
+            "impulse_center": 1, 
+            "impulse_halfwidth": 5, 
+            "target": 2
+        }
+    },
     "system_type": "RNA"
 }

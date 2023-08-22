@@ -7,7 +7,6 @@
 
 import logging
 from fire import Fire
-from multiprocessing import Process
 from functools import partial
 import jax
 import jax.numpy as jnp
@@ -15,13 +14,12 @@ import os
 from typing import List
 import numpy as np
 from synbio_morpher.srv.io.manage.script_manager import script_preamble
-from synbio_morpher.srv.io.manage.sys_interface import make_filename_safely
 from synbio_morpher.srv.parameter_prediction.simulator import SIMULATOR_UNITS
 from synbio_morpher.utils.common.setup import construct_circuit_from_cfg, prepare_config
 from synbio_morpher.utils.results.analytics.naming import get_analytics_types_all
 from synbio_morpher.utils.results.experiments import Experiment, Protocol
 from synbio_morpher.utils.data.data_format_tools.common import load_json_as_dict
-from synbio_morpher.utils.misc.numerical import make_symmetrical_matrix_from_sequence, triangular_sequence
+from synbio_morpher.utils.misc.numerical import make_symmetrical_matrix_from_sequence
 from synbio_morpher.utils.parameter_inference.interpolation_grid import create_parameter_range
 from synbio_morpher.utils.circuit.agnostic_circuits.circuit_manager import CircuitModeller
 
@@ -163,8 +161,7 @@ def main(config: dict, data_writer, batch_size: int):
                 # @time_it
                 # if np.mod(i, 100) == 0:
                 write_all(all_analytic_matrices, analytic_types, data_writer)
-                
-    
+
     experiment = Experiment(config=config,
                             protocols=[Protocol(partial(core_func, config=config))],
                             data_writer=data_writer)
