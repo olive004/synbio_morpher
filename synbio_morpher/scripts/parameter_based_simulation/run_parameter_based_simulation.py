@@ -113,7 +113,7 @@ def run_batch(batch_i: int,
     return circuits, interaction_strength_choices
 
 
-def main(config: dict, data_writer, batch_size: int):
+def main(config: dict = None, data_writer=None):
 
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
         'synbio_morpher', 'scripts', 'parameter_based_simulation', 'configs', 'base_config.json'))
@@ -121,6 +121,7 @@ def main(config: dict, data_writer, batch_size: int):
     config = prepare_config(config)
 
     def core_func(config):
+        batch_size = config['batch_size']
         interaction_strengths = create_parameter_range(
             config['parameter_based_simulation'])
 
