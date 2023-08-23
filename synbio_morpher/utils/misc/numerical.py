@@ -213,12 +213,16 @@ def is_within_range(number, range_tuple):
     return np.logical_and(range_tuple[0] <= number, number <= range_tuple[-1])
 
 
-def make_symmetrical_matrix_from_sequence(arr, side_length: int):    
-    iu = np.triu_indices(side_length)
-    mat = np.zeros([side_length,side_length])
-    mat[iu] = arr
-    mat = mat + mat.T - np.diag(mat.diagonal())
-    return mat
+def make_symmetrical_matrix_from_sequence(arr, side_length: int):
+    i = np.triu(np.arange(side_length * side_length).reshape(side_length, side_length))
+    ii = i + i.T - np.diag(i.diagonal())
+    idxs = np.interp(ii, np.unique(ii), np.arange(len(arr))).astype(int)
+    return arr[idxs.flatten()].reshape(side_length, side_length)
+    # iu = np.triu_indices(side_length)
+    # mat = np.zeros([side_length,side_length])
+    # mat[iu] = arr
+    # mat = mat + mat.T - np.diag(mat.diagonal())
+    # return mat
 
 
 def np_delete_axes(array, rowcol: Union[list, int], axes: list):

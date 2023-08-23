@@ -47,6 +47,8 @@ class MolecularInteractions():
 
     def set_precision(self):
         for attr, v in self.__dict__.items():
+            if v is None:
+                continue
             self.__setattr__(attr, self.precision(v))
 
 
@@ -78,11 +80,16 @@ class InteractionMatrix():
             binding_sites=nans,
             units='test'
         )
+        set_assoc = False
 
         if interactions_loaded is not None:
-            self.interactions = MolecularInteractions(**interactions_loaded)
+            for matrix_type, loaded_matrix in interactions_loaded.items():
+                self.interactions.__setattr__(matrix_type, loaded_matrix)
+            if (interactions_loaded.get('binding_rates_dissociation') is not None) and (
+                interactions_loaded.get('binding_rates_association') is None):
+                set_assoc = True
 
-        elif matrix_paths is not None:
+        if matrix_paths is not None:
             for matrix_type, matrix_path in matrix_paths.items():
                 if isinstance(matrix_path, str):
                     loaded_matrix, self.units, self.sample_names = self.load(
@@ -97,11 +104,13 @@ class InteractionMatrix():
                 self.interactions.binding_rates_association = matrix_paths['binding_rates_association'] * np.ones_like(
                     self.interactions.binding_rates_dissociation)
             elif not allow_empty:
-                assert experiment_config is not None, f'Please either provide the parameter for `association_binding_rate` as '
-                '`binding_rates_association` in the `interactions` field in the config, or provide the entire config.'
-                self.interactions.binding_rates_association = load_param(
-                    list(matrix_paths.values())[0], 'association_binding_rate', experiment_config=experiment_config
-                ) * np.ones_like(self.interactions.binding_rates_dissociation)
+                set_assoc = True
+        if set_assoc or (self.interactions.binding_rates_association is None) or np.isnan(self.interactions.binding_rates_association).all():
+            assert experiment_config is not None, f'Please either provide the parameter for `association_binding_rate` as '
+            '`binding_rates_association` in the `interactions` field in the config, or provide the entire config.'
+            self.interactions.binding_rates_association = load_param(
+                filepath=None, param='association_binding_rate', experiment_config=experiment_config
+            ) * np.ones_like(self.interactions.binding_rates_dissociation)
 
     def load(self, filepath, quiet=True):
         filetype = determine_file_format(filepath)

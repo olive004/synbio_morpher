@@ -1,9 +1,13 @@
 {
-    "data_path": "./synbio_morpher/scripts/parameter_based_simulation/configs/empty_circuit.fasta",
+    "data_path": null,
+    "data": {
+        "RNA_0": null,
+        "RNA_1": null,
+        "RNA_2": null
+    },
     "experiment": {
         "purpose": "parameter_based_simulation",
         "parallelise": true,
-        "num_subprocesses": 6,
         "debug_mode": false
     },
     "identities": {
@@ -16,11 +20,10 @@
     },
     "molecular_params": "./synbio_morpher/utils/common/configs/RNA_circuit/molecular_params.json",
     "parameter_based_simulation": {
-        "interaction_min": 0,
-        "interaction_max": 1,
+        "interaction_min": 0.01,
+        "interaction_max": 0.99,
         "step_size": 0.1,
-        "log_scale": false,
-        "num_species": 3
+        "log_scale": false
     },
     "signal": {
         "inputs": ["RNA_0"],
@@ -33,7 +36,7 @@
         }
     },
     "simulation": {
-        "dt0": 0.1,
+        "dt0": 0.01,
         "t0": 0,
         "t1": 100,
         "tmax": 120000,
@@ -47,5 +50,5 @@
     },
     "include_prod_deg": false,
     "system_type": "RNA",
-    "batch_size": 10
+    "batch_size": 100
 }

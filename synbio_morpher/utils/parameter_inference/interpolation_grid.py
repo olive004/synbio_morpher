@@ -23,7 +23,7 @@ def parameter_range_creation(range_min, range_max, range_step, is_logscale=False
     if not is_logscale:
         parameter_range = np.arange(
             range_min, range_max, range_step).astype(np.float64)
-        return np.around(parameter_range, np.power(10, calculate_num_decimals(range_step)-1))
+        return parameter_range # np.around(parameter_range, np.power(10, calculate_num_decimals(range_step)-1))
     else:
         num_parameters = int(np.ceil((range_max - range_min) / range_step))
         log_scale = np.logspace(range_min, range_max, num=num_parameters)

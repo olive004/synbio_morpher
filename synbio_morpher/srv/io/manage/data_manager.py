@@ -21,8 +21,8 @@ class DataManager():
             self.data = self.loader.load_data(filepath, identities=identities)
         elif data is None and filepath is None:
             self.data = Data(loaded_data=data, identities=identities)
-            logging.warning(
-                f'No data: either a data filepath or raw data must be supplied to DataManager')
+            # logging.warning(
+            #     f'No data: either a data filepath or raw data must be supplied to DataManager')
             # raise ValueError('Either a data filepath or raw data must be supplied.')
         else:
             self.data = Data(loaded_data=data, identities=identities)

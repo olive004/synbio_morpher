@@ -52,6 +52,10 @@ def make_time_str():
     return now.strftime("%Y_%m_%d_%H%M%S")
 
 
+def make_circuit_name():
+    return 'circuit_' + ''.join(str(datetime.now()).replace('.', '').split(':')[1:])
+
+
 def list_to_str(input_listlike):
     return ''.join(input_listlike)
 

@@ -8,6 +8,7 @@
 
 
 import logging
+from typing import Optional
 from synbio_morpher.srv.parameter_prediction.simulator import SIMULATOR_UNITS
 from synbio_morpher.utils.data.data_format_tools.common import load_json_as_dict
 from synbio_morpher.utils.misc.errors import ExperimentError
@@ -23,7 +24,7 @@ INTERACTION_FILE_ADDONS = {
 }
 
 
-def load_param(filepath, param, experiment_config: dict = None) -> dict:
+def load_param(filepath: Optional[None], param, experiment_config: Optional[dict] = None) -> dict:
     if experiment_config is None:
         experiment_config = load_experiment_config(
             experiment_folder=get_root_experiment_folder(filepath))

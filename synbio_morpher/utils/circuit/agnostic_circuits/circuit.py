@@ -13,6 +13,7 @@ import logging
 from synbio_morpher.srv.parameter_prediction.interactions import MolecularInteractions, InteractionMatrix
 from synbio_morpher.srv.io.manage.data_manager import DataManager
 from synbio_morpher.utils.circuit.common.system_setup import construct_bioreaction_model
+from synbio_morpher.utils.misc.string_handling import make_circuit_name
 from synbio_morpher.utils.misc.type_handling import flatten_listlike, get_unique
 from synbio_morpher.utils.results.results import ResultCollector
 from synbio_morpher.utils.signal.signals_new import Signal
@@ -43,7 +44,7 @@ class Circuit():
             self.init_refcircuit(config)
 
     def init_refcircuit(self, config: dict):
-        self.name = config.get("name")
+        self.name = config.get("name", make_circuit_name())
         self.subname = config.get('subname', 'ref_circuit')
 
         self.result_collector = ResultCollector()

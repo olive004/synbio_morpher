@@ -9,12 +9,13 @@ import logging
 from copy import deepcopy
 from typing import List
 from bioreaction.model.data_containers import BasicModel
-from synbio_morpher.utils.data.common import Data
 from synbio_morpher.srv.io.manage.sys_interface import make_filename_safely
-from synbio_morpher.utils.data.data_format_tools.common import load_json_as_dict
 from synbio_morpher.srv.io.manage.data_manager import DataManager
+from synbio_morpher.utils.data.common import Data
+from synbio_morpher.utils.data.data_format_tools.common import load_json_as_dict
 from synbio_morpher.utils.misc.units import per_mol_to_per_molecule
 from synbio_morpher.utils.misc.io import isolate_filename
+from synbio_morpher.utils.misc.string_handling import make_circuit_name
 from synbio_morpher.utils.misc.type_handling import cast_all_values_as_list
 from synbio_morpher.utils.signal.configs import get_signal_type, parse_sig_args
 from synbio_morpher.utils.signal.signals import Signal
@@ -63,8 +64,6 @@ def compose_kwargs(prev_configs: dict = None, config: dict = None) -> dict:
             if kwarg not in ['experiment', 'mutations_args', 'signal', 'simulation', 'include_prod_deg']:
                 config[kwarg] = c
 
-    if 'data/data' in config.get("data_path", None):
-        'there_is_a_bug'
     data_manager = DataManager(filepath=make_filename_safely(config.get("data_path", None)),
                                identities=config.get("identities", {}),
                                data=config.get("data", None))
@@ -86,6 +85,7 @@ def compose_kwargs(prev_configs: dict = None, config: dict = None) -> dict:
         "simulation_steady_state": config["simulation_steady_state"],
         "system_type": config["system_type"]
     })
+    kwargs["name"] = kwargs["name"] if kwargs["name"] is not None else make_circuit_name()
     assert all([e in kwargs for e in ESSENTIAL_KWARGS]), 'Some of the kwargs for composing ' \
         f'a circuit are not listed in essential kwargs {ESSENTIAL_KWARGS}: {dict({e: e in kwargs for e in ESSENTIAL_KWARGS})}'
     return kwargs
