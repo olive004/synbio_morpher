@@ -147,10 +147,12 @@ def main(config: dict = None, data_writer=None):
         logging.info(
             f'Each analytics matrix has a shape of {np.shape(all_analytic_matrices)[1:]}')
 
+        save = 10
+        save_every = int(num_iterations / save)
         start_time = datetime.now()
         for batch_i in range(num_iterations):
             logging.info(
-                f'\nBatch {batch_i} out of {num_iterations}, each of size {batch_size}. Run time so far: {datetime.now() - start_time}')
+                f'\n\nBatch {batch_i} out of {num_iterations}, each of size {batch_size}. Run time so far: {datetime.now() - start_time}\n')
             circuits, all_interaction_strength_choices = run_batch(batch_i=batch_i,
                                                                    config=config,
                                                                    data_writer=data_writer,
@@ -167,8 +169,12 @@ def main(config: dict = None, data_writer=None):
                     all_analytic_matrices[j][tuple(
                         idxs)] = circuit.result_collector.results['signal'].analytics.get(analytic)[np.array([i for i, s in enumerate(circuit.model.species) if s in circuit.get_input_species()])]
 
+            if ((batch_i > 0) and (np.mod(batch_i, save_every) == 0)) or (batch_i + 1 == num_iterations):
                 write_all(all_analytic_matrices, get_true_names_analytics(
                     circuit.result_collector.results['signal'].analytics), data_writer)
+            
+            batch_time = (datetime.now() - start_time) / (batch_i + 1)
+            logging.info(f'\n\nTime per batch: {batch_time}\nProjected total time: {batch_time * num_iterations}')
 
     experiment = Experiment(config=config, config_file=config,
                             protocols=[
