@@ -8,6 +8,7 @@
 import logging
 import numpy as np
 import jax.numpy as jnp
+from datetime import datetime
 from typing import List, Tuple
 from synbio_morpher.utils.misc.type_handling import merge_dicts
 from synbio_morpher.utils.results.analytics.naming import DIFF_KEY, RATIO_KEY
@@ -59,21 +60,17 @@ def get_precision(starting_states, steady_states, signal_0, signal_1):
     return calculate_precision(output_diff, starting_states, signal_diff, signal_0)
 
 
-def get_precision_simp(starting_states, steady_states, signal_factor):
-    numer = jnp.where((starting_states != 0).astype(int),
-                      (steady_states - starting_states) / starting_states, 1)
-
-    precision = jnp.absolute(jnp.divide(
-        numer, signal_factor))
-    return jnp.divide(1, precision)
-
-
 def calculate_sensitivity(output_diff, starting_states, signal_diff, signal_0) -> jnp.ndarray:
-    denom = jnp.where(signal_0 != 0, signal_diff / signal_0, np.inf)
+    # denom = jnp.where(signal_0 != 0, signal_diff / signal_0, np.inf)
     numer = jnp.where((starting_states != 0).astype(int),
                       output_diff / starting_states, np.inf)
-    return jnp.absolute(jnp.divide(
-        numer, denom))
+
+    return jnp.where(signal_0 != 0,
+                     jnp.absolute(jnp.divide(
+                         numer, signal_diff / signal_0)),
+                     np.inf)
+    # return jnp.absolute(jnp.divide(
+    #     numer, denom))
 
 
 def get_sensitivity(signal_idx: int, starting_states, peaks):
@@ -173,7 +170,7 @@ def frequency(data):
     return freq
 
 
-def generate_base_analytics(data: jnp.ndarray, time: jnp.ndarray, labels: List[str],
+def generate_base_analytics(data: jnp.ndarray, t: jnp.ndarray, labels: List[str],
                             signal_onehot: jnp.ndarray, signal_time,
                             ref_circuit_data: jnp.ndarray, include_deriv: bool = False) -> dict:
     """ Assuming [species, time] for data """
@@ -182,63 +179,97 @@ def generate_base_analytics(data: jnp.ndarray, time: jnp.ndarray, labels: List[s
     if data is None:
         return {}
 
+    timings = {}
 
+    timings['init'] = datetime.now()
     analytics = {
         # 'initial_steady_states': jnp.expand_dims(data[:, 0], axis=1),
         # 'max_amount': jnp.expand_dims(jnp.max(data, axis=1), axis=1),
         # 'min_amount': jnp.expand_dims(jnp.min(data, axis=1), axis=1),
         # 'steady_states': jnp.expand_dims(data[:, -1], axis=1)
     }
+    timings['init'] = datetime.now() - timings['init']
 
+    timings['initial_steady_states'] = datetime.now()
     analytics['initial_steady_states'] = data[:, 0]
+    timings['initial_steady_states'] = datetime.now() - \
+        timings['initial_steady_states']
 
+    timings['max_amount'] = datetime.now()
     analytics['max_amount'] = jnp.max(data, axis=1)
+    timings['max_amount'] = datetime.now() - timings['max_amount']
 
+    timings['min_amount'] = datetime.now()
     analytics['min_amount'] = jnp.min(data, axis=1)
+    timings['min_amount'] = datetime.now() - timings['min_amount']
 
+    timings['steady_states'] = datetime.now()
     analytics['steady_states'] = data[:, -1]
+    timings['steady_states'] = datetime.now() - timings['steady_states']
 
+    timings['RMSE'] = datetime.now()
     analytics['RMSE'] = get_rmse(data, ref_circuit_data).squeeze()
+    timings['RMSE'] = datetime.now() - timings['RMSE']
 
+    timings['first_derivative'] = datetime.now()
     first_derivative = get_derivative(data)
     if include_deriv:
         analytics['first_derivative'] = first_derivative
+    timings['first_derivative'] = datetime.now() - timings['first_derivative']
 
+    timings['fold_change'] = datetime.now()
     analytics['fold_change'] = get_fold_change(
         starting_states=analytics['initial_steady_states'],
         steady_states=analytics['steady_states']
     )
+    timings['fold_change'] = datetime.now() - timings['fold_change']
 
     peaks = get_peaks(analytics['initial_steady_states'], analytics['steady_states'],
                       analytics['max_amount'], analytics['min_amount'])
 
+    timings['overshoot'] = datetime.now()
     analytics['overshoot'] = get_overshoot(
         steady_states=analytics['steady_states'],
         peaks=peaks
     )
+    timings['overshoot'] = datetime.now() - timings['overshoot']
 
     if signal_idxs is not None:
         signal_labels = list(map(labels.__getitem__, signal_idxs))
         for s, s_idx in zip(signal_labels, signal_idxs):
 
+            timings[f'precision_wrt_species-{s_idx}'] = datetime.now()
             analytics[f'precision_wrt_species-{s_idx}'] = get_precision(
                 starting_states=analytics['initial_steady_states'],
                 steady_states=analytics['steady_states'],
                 signal_0=analytics['initial_steady_states'][s_idx],
-                signal_1=data[s_idx, 1]
+                signal_1=data[s_idx, np.argmax(t == signal_time)]
             )
+            timings[f'precision_wrt_species-{s_idx}'] = datetime.now(
+            ) - timings[f'precision_wrt_species-{s_idx}']
 
             # t axis: 1
-            t_end = np.min([len(time), data.shape[1]])
+            t_end = np.min([len(t), data.shape[1]])
+            timings[f'response_time_wrt_species-{s_idx}'] = datetime.now()
             analytics[f'response_time_wrt_species-{s_idx}'] = get_step_response_times(
-                data=data[:, :t_end], t=time[:t_end], steady_states=analytics['steady_states'][:, None],
+                data=data[:, :t_end], t=t[:t_end], steady_states=analytics['steady_states'][:, None],
                 # deriv=first_derivative[:, :t_end],
                 signal_time=signal_time)
+            timings[f'response_time_wrt_species-{s_idx}'] = datetime.now(
+            ) - timings[f'response_time_wrt_species-{s_idx}']
 
+            timings[f'sensitivity_wrt_species-{s_idx}'] = datetime.now()
             analytics[f'sensitivity_wrt_species-{s_idx}'] = get_sensitivity(
                 signal_idx=s_idx, peaks=peaks, starting_states=analytics['initial_steady_states']
             )
+            timings[f'sensitivity_wrt_species-{s_idx}'] = datetime.now(
+            ) - timings[f'sensitivity_wrt_species-{s_idx}']
 
+    logging.info(timings)
+    print(f'Total time: {np.sum(list(timings.values()))}')
+    print('Full timings:\n', {
+          tk: v/np.sum(list(timings.values())) for tk, v in timings.items()})
+    # print('Analytics:\n', analytics)
     return analytics
 
 
@@ -267,12 +298,12 @@ def generate_analytics(data, time, labels: List[str], ref_circuit_data=None,
     if data.shape[0] != len(labels):
         species_axis = data.shape.index(len(labels))
         data = np.swapaxes(data, 0, species_axis)
-    analytics = generate_base_analytics(data=data, time=time, labels=labels,
+    analytics = generate_base_analytics(data=data, t=time, labels=labels,
                                         signal_onehot=signal_onehot, signal_time=signal_time,
                                         ref_circuit_data=ref_circuit_data)
 
     # Differences & ratios
-    ref_analytics = generate_base_analytics(data=ref_circuit_data, time=time, labels=labels,
+    ref_analytics = generate_base_analytics(data=ref_circuit_data, t=time, labels=labels,
                                             signal_onehot=signal_onehot, signal_time=signal_time,
                                             ref_circuit_data=ref_circuit_data)
     differences, ratios = generate_differences_ratios(analytics, ref_analytics)

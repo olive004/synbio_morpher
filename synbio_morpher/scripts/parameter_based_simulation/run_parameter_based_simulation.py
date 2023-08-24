@@ -167,7 +167,7 @@ def main(config: dict = None, data_writer=None):
 
                 for j, analytic in enumerate(get_true_names_analytics(circuit.result_collector.results['signal'].analytics)):
                     all_analytic_matrices[j][tuple(
-                        idxs)] = circuit.result_collector.results['signal'].analytics.get(analytic)[np.array([i for i, s in enumerate(circuit.model.species) if s in circuit.get_input_species()])]
+                        idxs)] = circuit.result_collector.results['signal'].analytics.get(analytic)[np.array([i for i, s in enumerate(circuit.model.species) if s in circuit.get_input_species()])][:, None]
 
             if ((batch_i > 0) and (np.mod(batch_i, save_every) == 0)) or (batch_i + 1 == num_iterations):
                 write_all(all_analytic_matrices, get_true_names_analytics(
