@@ -8,6 +8,7 @@
 import logging
 import numpy as np
 import jax.numpy as jnp
+from datetime import datetime
 from typing import List, Tuple
 from synbio_morpher.utils.misc.type_handling import merge_dicts
 from synbio_morpher.utils.results.analytics.naming import DIFF_KEY, RATIO_KEY
@@ -149,6 +150,57 @@ def get_step_response_times(data, t, steady_states, deriv, signal_time: int):
     return response_times
 
 
+def get_step_response_times2(data, t, steady_states, deriv, signal_time: int):
+    """ Assumes that data starts pre-perturbation, but after an initial steady state 
+    has been reached. """
+    
+    # margin_stst = 0.001
+    # is_data_outside_stst = (data > (final_steady_states + final_steady_states * margin_stst)
+    #                         ) | (data < (final_steady_states - final_steady_states * margin_stst))
+    
+    # np.argmax(np.flip(is_data_outside_stst, axis=1), axis=1)
+
+    t_expanded = np.expand_dims(t, axis=0)
+    margin_stst = 0.001
+    is_data_outside_stst = (data > (steady_states + steady_states * margin_stst)
+                            ) | (data < (steady_states - steady_states * margin_stst))
+
+    # 1. Get zero derivative within margin
+    fmargin = 0.01
+    fm = jnp.expand_dims(jnp.max(deriv, axis=1) * fmargin, axis=1)
+    zd = (deriv <= fm) & (deriv >= -fm)  # This is just dx/dt == 0
+
+    # 2. Find start time of signal change
+    t0 = signal_time
+
+    # 3. Get the time all species first start to change where the derivative is not zero
+    #    If tstart is equal to 0, it means the species did not change after the signal
+    tstart = t * ((zd == False) & (t_expanded >= t0)).astype(int)
+    tstart = jnp.where(tstart == 0, np.inf, tstart)
+    tstart = jnp.min(tstart, axis = 1)
+
+    # 4. Stop measuring response time where the species is within the
+    # steady state margin and has a zero derivative after its start time
+    idxs_first_zd_after_signal = jnp.argmax(
+        (t_expanded >= jnp.expand_dims(tstart, axis=1)) * (is_data_outside_stst == False), axis=1)
+        # ((t_expanded * zd) >= jnp.expand_dims(tstart, axis=1)) * (is_data_outside_stst == False), axis=1)
+
+    argmax_workaround = jnp.ones_like(
+        steady_states) * jnp.arange(len(t)) == jnp.expand_dims(idxs_first_zd_after_signal - 1, axis=1)
+    tstop = jnp.where(jnp.max(t_expanded * argmax_workaround, axis=1) != 0,
+                        jnp.max(t_expanded * argmax_workaround, axis=1), tstart)
+
+    response_times = jnp.where(
+        tstart != 0,
+        tstop - t0,
+        np.inf
+    )
+
+    if response_times.ndim == 1:
+        return jnp.expand_dims(response_times, axis=1)
+    return response_times
+
+
 def frequency(data):
     spectrum = jnp.fft.fft(data)/len(data)
     spectrum = spectrum[range(int(len(data)/2))]
@@ -164,52 +216,73 @@ def generate_base_analytics(data: jnp.ndarray, time: jnp.ndarray, labels: List[s
     if data is None:
         return {}
 
+    timings = {}
+    
+    timings['init'] = datetime.now()
     analytics = {
         'initial_steady_states': jnp.expand_dims(data[:, 0], axis=1),
         'max_amount': jnp.expand_dims(jnp.max(data, axis=-1), axis=1),
         'min_amount': jnp.expand_dims(jnp.min(data, axis=-1), axis=1),
-        'RMSE': get_rmse(data, ref_circuit_data),
         'steady_states': jnp.expand_dims(data[:, -1], axis=1)
     }
+    timings['init'] = datetime.now() - timings['init']
+    
+    timings['RMSE'] = datetime.now()
+    analytics['RMSE'] = get_rmse(data, ref_circuit_data)
+    timings['RMSE'] = datetime.now() - timings['RMSE']
 
+    timings['first_derivative'] = datetime.now()
     first_derivative = get_derivative(data)
     if include_deriv:
         analytics['first_derivative'] = first_derivative
+    timings['first_derivative'] = datetime.now() - timings['first_derivative']
     
     
+    timings['fold_change'] = datetime.now()
     analytics['fold_change'] = get_fold_change(
         starting_states=analytics['initial_steady_states'],
         steady_states=analytics['steady_states']
     )
+    timings['fold_change'] = datetime.now() - timings['fold_change']
 
     peaks = get_peaks(analytics['initial_steady_states'], analytics['steady_states'],
                       analytics['max_amount'], analytics['min_amount']) 
 
+    timings['overshoot'] = datetime.now()
     analytics['overshoot'] = get_overshoot(
         steady_states=analytics['steady_states'],
         peaks=peaks
     )
-
+    timings['overshoot'] = datetime.now() - timings['overshoot']
+    
     if signal_idxs is not None:
         signal_labels = list(map(labels.__getitem__, signal_idxs))
         for s, s_idx in zip(signal_labels, signal_idxs):
 
+            timings[f'precision_wrt_species-{s_idx}'] = datetime.now()
             analytics[f'precision_wrt_species-{s_idx}'] = get_precision(
                 starting_states=analytics['initial_steady_states'],
                 steady_states=analytics['steady_states'],
                 signal_0=analytics['initial_steady_states'][s_idx],
                 signal_1=data[s_idx, 1]
             )
+            timings[f'precision_wrt_species-{s_idx}'] = datetime.now() - timings[f'precision_wrt_species-{s_idx}']
             
             # t axis: 1
             t_end = np.min([len(time), data.shape[1]])
-            analytics[f'response_time_wrt_species-{s_idx}'] = get_step_response_times(
+            timings[f'response_time_wrt_species-{s_idx}'] = datetime.now()
+            analytics[f'response_time_wrt_species-{s_idx}'] = get_step_response_times2(
                 data=data[:, :t_end], t=time[:t_end], steady_states=analytics['steady_states'][:, :t_end],
                 deriv=first_derivative[:, :t_end], signal_time=signal_time)
+            timings[f'response_time_wrt_species-{s_idx}'] = datetime.now() - timings[f'response_time_wrt_species-{s_idx}']
             
+            timings[f'sensitivity_wrt_species-{s_idx}'] = datetime.now()
             analytics[f'sensitivity_wrt_species-{s_idx}'] = get_sensitivity(
                 signal_idx=s_idx, peaks=peaks, starting_states=analytics['initial_steady_states']
             )
+            timings[f'sensitivity_wrt_species-{s_idx}'] = datetime.now() - timings[f'sensitivity_wrt_species-{s_idx}']
+            
+    logging.info(timings)
     return analytics
 
 

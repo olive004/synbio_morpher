@@ -20,9 +20,9 @@
     },
     "molecular_params": "./synbio_morpher/utils/common/configs/RNA_circuit/molecular_params.json",
     "parameter_based_simulation": {
-        "interaction_strengths": [1.00049000e-07, 1.27707391e-06, 1.63011901e-05, 2.08076288e-04,
-        2.65598654e-03, 3.39022990e-02, 4.32745370e-01, 5.52377155e+00,
-        7.05080962e+01, 8.99999500e+02],
+        "interaction_strengths": [1.00049000e-07, 1.75576522e-06, 3.08120172e-05, 5.40721727e-04,
+        9.48915433e-03, 1.66525674e-01, 2.92236790e+00, 5.12847897e+01,
+        8.99999500e+02],
         "interaction_min": 0.0001,
         "interaction_max": 899,
         "step_size": 9,
