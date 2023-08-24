@@ -11,7 +11,6 @@ from subprocess import PIPE, run
 from functools import partial
 from synbio_morpher.utils.misc.helper import vanilla_return, processor
 from synbio_morpher.utils.modelling.physical import equilibrium_constant_reparameterisation, eqconstant_to_rates
-from synbio_morpher.srv.parameter_prediction.IntaRNA.bin.copomus.IntaRNA import IntaRNA
 
 
 SIMULATOR_UNITS = {
@@ -77,6 +76,7 @@ class RawSimulationHandling():
     def get_simulator(self, allow_self_interaction: bool):
 
         if self.simulator_name == "IntaRNA":
+            from synbio_morpher.srv.parameter_prediction.IntaRNA.bin.copomus.IntaRNA import IntaRNA
             self.units = SIMULATOR_UNITS[self.simulator_name]['energy']
             if check_IntaRNA_path():
                 import sys
