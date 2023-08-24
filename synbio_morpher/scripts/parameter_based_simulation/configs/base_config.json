@@ -21,7 +21,7 @@
     "molecular_params": "./synbio_morpher/utils/common/configs/RNA_circuit/molecular_params.json",
     "parameter_based_simulation": {
         "interaction_strengths": [
-            0.0001, 0.0002, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1, 5, 10, 50, 200, 899
+            0.0001, 0.001, 0.005, 0.01, 0.1, 1, 10, 200, 899
         ],
         "interaction_min": 0.0001,
         "interaction_max": 899,
