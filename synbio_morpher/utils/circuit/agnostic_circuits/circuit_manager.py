@@ -375,7 +375,7 @@ class CircuitModeller():
             else:
                 ref_circuit_data = b_new_copynumbers[ref_idx]
                 
-            signal_time = signal.func.keywords['impulse_center'] if ref_idx.use_prod_and_deg else 1
+            signal_time = signal.func.keywords['impulse_center'] if ref_circuit.use_prod_and_deg else 1
 
             analytics_func = jax.vmap(partial(
                 generate_analytics, time=t, labels=[
