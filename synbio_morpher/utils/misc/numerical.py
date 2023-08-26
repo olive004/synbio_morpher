@@ -3,8 +3,8 @@
 # All rights reserved.
 
 # This source code is licensed under the MIT-style license found in the
-# LICENSE file in the root directory of this source tree. 
-    
+# LICENSE file in the root directory of this source tree.
+
 import functools
 import logging
 from math import factorial
@@ -86,7 +86,7 @@ def find_monotonic_group_idxs(lst: list, increasing=True) -> list:
     Returns:
         int: The number of groups that match the specified condition.
     """
-    
+
     if not lst:
         return []
 
@@ -98,7 +98,7 @@ def find_monotonic_group_idxs(lst: list, increasing=True) -> list:
     all_l = []
     current_group = [lst[0]]
 
-    if len(lst) > 1: 
+    if len(lst) > 1:
 
         for i in range(1, len(lst)):
             if sign * (lst[i] - lst[i-1]) == 1:
@@ -119,17 +119,16 @@ def count_monotonic_group_lengths(lst, increasing=True) -> list:
     return [len(l) for l in all_l]
 
 
-def expand_matrix_triangle_idx(flat_triangle_idx):
+def expand_matrix_triangle_idx(flat_triangle_idx: int, flat_triangle_size: int) -> tuple:
     """ Computes the indices of a triangle, or the lower half
     of a symmetrical square matrix. Assuming that 1D index 
     traverses columns then rows.
-    For example, a 1D flat input of 5 would index into the 
+    For example, a 1D flat input of 4 (assuming 0-indexing) would index into the 
     3rd row and 2nd column, returning the 0-based indices (2, 1) """
 
-    # Reverse of the triangle_sequence formula
-    n = (-1 + np.sqrt(1 - 4 * 1 * (-2*flat_triangle_idx))) / 2
-    row = np.floor(n)
-    col = flat_triangle_idx - triangular_sequence(np.floor(n))
+    symmat = make_symmetrical_matrix_from_sequence(
+        np.arange(flat_triangle_size), side_length=)
+    idxs = np.where(symmat == flat_triangle_idx)
 
     return (int(row), int(col))
 
@@ -214,7 +213,10 @@ def is_within_range(number, range_tuple):
 
 
 def make_symmetrical_matrix_from_sequence(arr, side_length: int):
-    i = np.triu(np.arange(side_length * side_length).reshape(side_length, side_length))
+    """ For a flat 1D array, make a symmetrical 2D matrix filling
+    in the upper triangle with the 1D array. """
+    i = np.triu(
+        np.arange(side_length * side_length).reshape(side_length, side_length))
     ii = i + i.T - np.diag(i.diagonal())
     idxs = np.interp(ii, np.unique(ii), np.arange(len(arr))).astype(int)
     return arr[idxs.flatten()].reshape(side_length, side_length)

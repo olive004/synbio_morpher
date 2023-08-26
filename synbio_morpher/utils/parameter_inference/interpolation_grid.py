@@ -10,8 +10,9 @@
 import logging
 from typing import Union
 import numpy as np
+import jax
 
-from synbio_morpher.utils.misc.numerical import calculate_num_decimals, expand_matrix_triangle_idx, triangular_sequence
+from synbio_morpher.utils.misc.numerical import expand_matrix_triangle_idx, triangular_sequence, make_symmetrical_matrix_from_sequence
 from synbio_morpher.utils.misc.type_handling import merge_dicts
 
 
@@ -108,11 +109,18 @@ def make_species_interaction_summary(species_interactions, strength_config, orig
 def make_species_interactions_index_map(num_species) -> dict:
     species_interactions_index_map = {}
     flat_triangle_size = triangular_sequence(num_species)
-    for combination in range(flat_triangle_size):
-        triangle_idx = expand_matrix_triangle_idx(combination)
-        species_interactions_index_map[triangle_idx] = combination
-        species_interactions_index_map[tuple(
-            reversed(triangle_idx))] = combination
+    
+    symmat = make_symmetrical_matrix_from_sequence(
+        np.arange(flat_triangle_size), side_length=num_species)
+    def helper(np_idx):
+        return (np_idx[0][0], np_idx[1][0])
+    species_interactions_index_map = {helper(np.where(symmat == i)): i for i in range(flat_triangle_size)}
+    species_interactions_index_map = jax.tree_util.tree_map(lambda x: (x[0][0], x[0][1]), species_interactions_index_map)
+    # for combination in range(flat_triangle_size):
+    #     triangle_idx = expand_matrix_triangle_idx(combination, flat_triangle_size)
+    #     species_interactions_index_map[triangle_idx] = combination
+    #     species_interactions_index_map[tuple(
+    #         reversed(triangle_idx))] = combination
     return species_interactions_index_map
 
 

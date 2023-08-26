@@ -51,8 +51,8 @@ def main(config=None, data_writer: ResultWriter = None):
             circuit_filepath = original_config['data_path']
             data = GeneCircuitLoader().load_data(circuit_filepath)
             return data.sample_names
-        else: 
-            return list(original_config['data'].keys())
+        else:
+            return sorted(original_config['data'].keys())
 
     original_config = load_experiment_config_original(
         source_dir, target_purpose='parameter_based_simulation')
