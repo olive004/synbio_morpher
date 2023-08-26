@@ -4,7 +4,7 @@
     },
     "source_parameter_dir": {
         "is_source_dir_incomplete": false,
-        "source_dir": "data/stitch_parameter_grid/2022_06_23_215621/",
+        "source_dir": "data/parameter_based_simulation/2023_08_24_114212/",
         "purpose_to_get_source_dir_from": null,
         "source_dir_actually_used_POSTERITY": null
     },
@@ -17,8 +17,8 @@
                 "2": ["RNA_0", "RNA_2"]
             },
             "strengths": {
-                "0": {"start_value": 0, "end_value": 0.5, "step_size": null},
-                "1": {"start_value": 0.1, "end_value": 0.6, "step_size": null},
+                "0": {"start_value": null, "end_value": null, "step_size": null},
+                "1": {"start_value": null, "end_value": null, "step_size": null},
                 "2": {"start_value": null, "end_value": null, "step_size": null}
             },
             "non_varying_species_interactions": {

@@ -16,7 +16,7 @@ from synbio_morpher.srv.io.loaders.data_loader import DataLoader, GeneCircuitLoa
 from synbio_morpher.srv.io.manage.script_manager import script_preamble
 from synbio_morpher.srv.parameter_prediction.simulator import SIMULATOR_UNITS
 from synbio_morpher.utils.misc.type_handling import flatten_listlike
-from synbio_morpher.utils.results.analytics.naming import get_analytics_types_all
+from synbio_morpher.utils.results.analytics.naming import get_analytics_types_all, get_true_names_analytics
 from synbio_morpher.utils.results.experiments import Experiment, Protocol
 from synbio_morpher.utils.results.result_writer import ResultWriter
 from synbio_morpher.utils.data.data_format_tools.common import load_json_as_dict
@@ -31,7 +31,7 @@ def main(config=None, data_writer: ResultWriter = None):
 
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
         # 'synbio_morpher', 'scripts', 'parameter_grid_analysis', 'configs', 'heatmap_cfg.json'))
-        'synbio_morpher', 'scripts', 'parameter_grid_analysis', 'configs', 'testing.json'))
+        'synbio_morpher', 'scripts', 'parameter_grid_analysis', 'configs', 'base_config.json'))
 
     # Load in parameter grid
     config_file = load_json_as_dict(config)
@@ -47,9 +47,12 @@ def main(config=None, data_writer: ResultWriter = None):
         return all_parameter_grids
 
     def get_sample_names(original_config):
-        circuit_filepath = original_config['data_path']
-        data = GeneCircuitLoader().load_data(circuit_filepath)
-        return data.sample_names
+        if original_config['data_path']:
+            circuit_filepath = original_config['data_path']
+            data = GeneCircuitLoader().load_data(circuit_filepath)
+            return data.sample_names
+        else: 
+            return list(original_config['data'].keys())
 
     original_config = load_experiment_config_original(
         source_dir, target_purpose='parameter_based_simulation')
@@ -70,7 +73,7 @@ def main(config=None, data_writer: ResultWriter = None):
 
     selected_analytics = slicing_configs['analytics']['names']
     if selected_analytics is None:
-        selected_analytics = get_analytics_types_all()
+        selected_analytics = get_true_names_analytics(list(all_parameter_grids.keys()))
 
     def validate_species_cfgs(*cfg_species_lists: list):
         def validate_each(species_name):
