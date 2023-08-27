@@ -17,9 +17,9 @@
                 "2": ["RNA_0", "RNA_2"]
             },
             "strengths": {
-                "0": {"start_value": 0, "end_value": 0.6, "step_size": null},
-                "1": {"start_value": 0.1, "end_value": 0.6, "step_size": null},
-                "2": {"start_value": null, "end_value": null, "step_size": null}
+                "0": {"interaction_min": 0, "end_value": 0.6, "step_size": null},
+                "1": {"interaction_min": 0.1, "end_value": 0.6, "step_size": null},
+                "2": {"interaction_min": null, "end_value": null, "step_size": null}
             },
             "non_varying_species_interactions": {
                 "0": ["RNA_0", "RNA_0"],

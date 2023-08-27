@@ -84,14 +84,9 @@ def make_species_interaction_summary(species_interactions, strength_config, orig
         species_interactions_ref['interaction_params'] = strength_config[grouping]
         parameter_creation_cfg = strength_config[grouping]
 
-        key_translation = {
-            'start_value': 'interaction_min',
-            'end_value': 'interaction_max'
-        }
         for k, v in parameter_creation_cfg.items():
             if v is None:
-                parameter_creation_cfg[k] = original_config['parameter_based_simulation'][key_translation.get(
-                    k, k)]
+                parameter_creation_cfg[k] = original_config['parameter_based_simulation'][k]
         species_interactions_ref['parameter_range'] = create_parameter_range(
             parameter_creation_cfg)
 
@@ -115,7 +110,7 @@ def make_species_interactions_index_map(num_species) -> dict:
     def helper(np_idx):
         return (np_idx[0][0], np_idx[1][0])
     species_interactions_index_map = {helper(np.where(symmat == i)): i for i in range(flat_triangle_size)}
-    species_interactions_index_map = jax.tree_util.tree_map(lambda x: (x[0][0], x[0][1]), species_interactions_index_map)
+    # species_interactions_index_map = {k: (x[0][0], x[0][1]) for k, x in species_interactions_index_map.items()}
     # for combination in range(flat_triangle_size):
     #     triangle_idx = expand_matrix_triangle_idx(combination, flat_triangle_size)
     #     species_interactions_index_map[triangle_idx] = combination

@@ -120,23 +120,23 @@ class ResultWriter(DataWriter):
     def visualise_graph(self, circuit: Circuit, mode="pyvis", new_vis=False):
         """ This is broken right now - networkx has updated """
         return
-        from synbio_morpher.utils.results.graph import Graph
-        # input_species = sorted(set(flatten_listlike(
-        #     [r.input for r in circuit.model.reactions if r.output and r.input])))
-        # idxs = [circuit.model.species.index(i) for i in input_species]
-        # input_eqconstants = np.asarray([
-        #     [circuit.interactions.eqconstants[i, ii] for ii in idxs] for i in idxs])
-        input_eqconstants = circuit.interactions.eqconstants
-        input_species = sorted(set(flatten_listlike([
-            r.input for r in circuit.model.reactions if r.input])))
-        graph = Graph(source_matrix=input_eqconstants,
-                      labels=sorted([s.name for s in input_species]))
+        # from synbio_morpher.utils.results.graph import Graph
+        # # input_species = sorted(set(flatten_listlike(
+        # #     [r.input for r in circuit.model.reactions if r.output and r.input])))
+        # # idxs = [circuit.model.species.index(i) for i in input_species]
+        # # input_eqconstants = np.asarray([
+        # #     [circuit.interactions.eqconstants[i, ii] for ii in idxs] for i in idxs])
+        # input_eqconstants = circuit.interactions.eqconstants
+        # input_species = sorted(set(flatten_listlike([
+        #     r.input for r in circuit.model.reactions if r.input])))
+        # graph = Graph(source_matrix=input_eqconstants,
+        #               labels=sorted([s.name for s in input_species]))
 
-        out_path = os.path.join(self.write_dir, 'graph')
-        if mode == 'pyvis':
-            from synbio_morpher.utils.results.visualisation import visualise_graph_pyvis
-            visualise_graph_pyvis(graph=graph.graph,
-                                  out_path=out_path, new_vis=new_vis)
-        else:
-            from synbio_morpher.utils.results.visualisation import visualise_graph_pyplot
-            visualise_graph_pyplot(graph=graph.graph, new_vis=new_vis)
+        # out_path = os.path.join(self.write_dir, 'graph')
+        # if mode == 'pyvis':
+        #     from synbio_morpher.utils.results.visualisation import visualise_graph_pyvis
+        #     visualise_graph_pyvis(graph=graph.graph,
+        #                           out_path=out_path, new_vis=new_vis)
+        # else:
+        #     from synbio_morpher.utils.results.visualisation import visualise_graph_pyplot
+        #     visualise_graph_pyplot(graph=graph.graph, new_vis=new_vis)

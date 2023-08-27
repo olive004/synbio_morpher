@@ -127,10 +127,10 @@ def expand_matrix_triangle_idx(flat_triangle_idx: int, flat_triangle_size: int) 
     3rd row and 2nd column, returning the 0-based indices (2, 1) """
 
     symmat = make_symmetrical_matrix_from_sequence(
-        np.arange(flat_triangle_size), side_length=)
+        np.arange(flat_triangle_size))
     idxs = np.where(symmat == flat_triangle_idx)
 
-    return (int(row), int(col))
+    return (idxs[0], idxs[1])
 
 
 def generate_mixed_binary(length: int, count: int, zeros_to_ones: bool = True):
