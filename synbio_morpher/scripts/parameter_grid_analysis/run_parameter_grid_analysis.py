@@ -3,14 +3,15 @@
 # All rights reserved.
 
 # This source code is licensed under the MIT-style license found in the
-# LICENSE file in the root directory of this source tree. 
-    
+# LICENSE file in the root directory of this source tree.
 
 
 from functools import partial
 import os
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 from synbio_morpher.srv.io.loaders.data_loader import DataLoader, GeneCircuitLoader
 from synbio_morpher.srv.io.manage.script_manager import script_preamble
@@ -69,7 +70,8 @@ def main(config=None, data_writer: ResultWriter = None):
 
     selected_analytics = slicing_configs['analytics']['names']
     if selected_analytics is None:
-        selected_analytics = get_true_names_analytics(list(all_parameter_grids.keys()))
+        selected_analytics = get_true_names_analytics(
+            list(all_parameter_grids.keys()))
 
     def validate_species_cfgs(*cfg_species_lists: list):
         def validate_each(species_name):
@@ -114,19 +116,52 @@ def main(config=None, data_writer: ResultWriter = None):
                                                         'ylabel': f'{sorted_species_interactions[1]} interaction strength '\
                                                         f'({SIMULATOR_UNITS["IntaRNA"]["energy"]})',
                                                         'title': f'{analytic_name.replace("_", " ")} for {sorted_species_interactions[0]} and {sorted_species_interactions[1]}',
-                                                        'text': {'x': 12, 'y': 0.85, 's': info_text,
-                                                                 'fontsize': 10,
-                                                                 'bbox': dict(boxstyle='round', facecolor='wheat', alpha=1)},
+                                                        # 'text': {'x': 12, 'y': 0.85, 's': info_text,
+                                                        #          'fontsize': 10,
+                                                        #          'bbox': dict(boxstyle='round', facecolor='wheat', alpha=1)},
                                                         'vmin': np.min(data_per_species),
                                                         'vmax': np.max(data_per_species)
                                                         # 'figure': {'figsize': (15, 15)}
                                                         })
+
             data_writer.write_results(result_collector.results, new_report=False,
                                       no_visualisations=False, only_numerical=False,
                                       no_analytics=True, no_numerical=True)
 
+        def visualise_corner(analytic_name: str, data: np.ndarray, species_names: list):
+
+            idxs = np.triu_indices(len(species_names))
+
+            fig = plt.figure(figsize=(6*len(idxs[0]), 5*len(idxs[0])))
+            plt_kwrgs = {'vmin': np.min(data),
+                         'vmax': np.max(data)
+                         }
+
+            plot_i = 0
+            for i, (sii, sij) in enumerate(zip(idxs[0], idxs[1])):
+                for j, (sji, sjj) in enumerate(zip(idxs[0], idxs[1])):
+                    if i == j:
+                        continue
+                    plot_i += 1
+                    slices = [(0,)] * len(idxs[0])
+                    slices[i] = slice(data.shape[i])
+                    slices[j] = slice(data.shape[j])
+
+                    ax = plt.subplot(len(idxs[0]), len(idxs[0]), plot_i)
+                    sns.heatmap(data[tuple(slices)].squeeze(), **plt_kwrgs)
+                    plt.xlabel = f'{[species_names[sii], species_names[sij]]} interaction strength '\
+                        f'({SIMULATOR_UNITS["IntaRNA"]["energy"]})'
+                    plt.ylabel = f'{[species_names[sji], species_names[sjj]]} interaction strength '\
+                        f'({SIMULATOR_UNITS["IntaRNA"]["energy"]})'
+                    plt.title(
+                        f'{analytic_name.replace("_", " ")} for {[species_names[sii], species_names[sij]]} and {[species_names[sji], species_names[sjj]]}')
+
+            # out_path = os.path.join(data_writer.write_dir, 'corner_{analytic_name}.png')
+            out_path = f'corner_{analytic_name}.png'
+            fig.savefig(out_path)
+
         species_interaction_summary = make_species_interaction_summary(
-            species_interactions=selected_species_interactions, 
+            species_interactions=selected_species_interactions,
             strength_config=slicing_configs['interactions']['strengths'],
             original_config=original_config, sample_names=sample_names)
 
@@ -138,15 +173,21 @@ def main(config=None, data_writer: ResultWriter = None):
         )
         for analytic_name in selected_analytics:
             data = all_parameter_grids[analytic_name][slice_indices]
-            visualise_analytic(analytic_name, data, selected_species_interactions)
+            visualise_analytic(analytic_name, data,
+                               selected_species_interactions)
+            visualise_corner(analytic_name, all_parameter_grids[analytic_name][slice_indices[0]],
+                             species_names=sorted(set(flatten_listlike(selected_species_interactions.values()) +
+                                                      flatten_listlike(unselected_species_interactions.values()))))
 
     experiment = Experiment(config=config, config_file=config, protocols=[
         Protocol(partial(run_visualisation,
                          all_parameter_grids=all_parameter_grids,
                          data_writer=data_writer,
                          selected_analytics=selected_analytics,
-                         selected_species_interactions=slicing_configs['interactions']['interacting_species'],
-                         unselected_species_interactions=slicing_configs['interactions']['non_varying_species_interactions'],
+                         selected_species_interactions=slicing_configs[
+                             'interactions']['interacting_species'],
+                         unselected_species_interactions=slicing_configs[
+                             'interactions']['non_varying_species_interactions'],
                          slicing_configs=slicing_configs,
                          sample_names=sample_names,
                          shape_parameter_grid=shape_parameter_grid))

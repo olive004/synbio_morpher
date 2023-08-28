@@ -10,7 +10,7 @@
     },
     "slicing": {
         "interactions": {
-            "help": "Can select a maximum of 3 interacting species to visualise against one another (3D). Labels for species interacting are arbitrary and must just match the keys in the 'strengths' field. \nThe strengths are in the form [start, stop, stepsize], where null is default",
+            "help": "Can select a maximum of 2 interacting species to visualise against one another (3D). Labels for species interacting are arbitrary and must just match the keys in the 'strengths' field. \nThe strengths are in the form [start, stop, stepsize], where null is default",
             "interacting_species": {
                 "0": ["RNA_0", "RNA_1"],
                 "1": ["RNA_0", "RNA_2"]

@@ -12,7 +12,7 @@ from typing import Union
 import numpy as np
 import jax
 
-from synbio_morpher.utils.misc.numerical import expand_matrix_triangle_idx, triangular_sequence, make_symmetrical_matrix_from_sequence
+from synbio_morpher.utils.misc.numerical import triangular_sequence, make_symmetrical_matrix_from_sequence
 from synbio_morpher.utils.misc.type_handling import merge_dicts
 
 
