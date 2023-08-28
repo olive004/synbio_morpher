@@ -47,21 +47,21 @@ def create_parameter_range(range_configs: dict) -> np.ndarray:
 
 
 # Helper funcs
-def convert_parameter_values_to_slice(start_value, end_value, step_size, original_config) -> Union[slice, tuple]:
+def convert_parameter_values_to_slice(interaction_min, interaction_max, step_size, original_config) -> Union[slice, tuple]:
 
     def parse_parameter_range_kwargs(start_value, end_value, original_parameter_range):
         if start_value is None:
-            start_value = np.float64(0)
+            start_value = original_parameter_range[0]
         if end_value is None:
-            end_value = np.float64(original_parameter_range[-1])
-        return np.float64(start_value), np.float64(end_value)
+            end_value = original_parameter_range[-1]
+        return start_value, end_value
 
     original_parameter_range = create_parameter_range(
         original_config['parameter_based_simulation'])
-    start_value, end_value = parse_parameter_range_kwargs(start_value, end_value,
+    interaction_min, interaction_max = parse_parameter_range_kwargs(interaction_min, interaction_max,
                                                             original_parameter_range)
     selected_parameter_range_idxs = np.arange(len(
-        original_parameter_range))[(original_parameter_range >= start_value) == (original_parameter_range <= end_value)]
+        original_parameter_range))[(original_parameter_range >= interaction_min) == (original_parameter_range <= interaction_max)]
     if len(selected_parameter_range_idxs) > 1:
         return slice(
             selected_parameter_range_idxs[0], selected_parameter_range_idxs[-1]+1) #, step_size)
@@ -72,7 +72,7 @@ def convert_parameter_values_to_slice(start_value, end_value, step_size, origina
 
 
 # Convenience table
-def make_species_interaction_summary(species_interactions, strength_config, original_config, sample_names):
+def make_species_interaction_summary(species_interactions, strength_config, original_config, sample_names) -> dict:
     all_refs = {}
     for grouping, species_interaction in species_interactions.items():
         species_interactions_ref = {}
@@ -87,15 +87,16 @@ def make_species_interaction_summary(species_interactions, strength_config, orig
         for k, v in parameter_creation_cfg.items():
             if v is None:
                 parameter_creation_cfg[k] = original_config['parameter_based_simulation'][k]
+        
         species_interactions_ref['parameter_range'] = create_parameter_range(
-            parameter_creation_cfg)
+            original_config['parameter_based_simulation'])
 
         if type(strength_config[grouping]) == dict:
             species_interactions_ref['interaction_slice'] = convert_parameter_values_to_slice(
                 original_config=original_config, **strength_config[grouping])
         else:
             species_interactions_ref['interaction_slice'] = convert_parameter_values_to_slice(
-                start_value=strength_config[grouping], end_value=strength_config[grouping],
+                interaction_min=strength_config[grouping], interaction_max=strength_config[grouping],
                 step_size=None, original_config=original_config)
         all_refs[tuple(species_interaction)] = species_interactions_ref
     return all_refs
@@ -164,10 +165,8 @@ def make_slice(selected_species_interactions, unselected_species_interactions,
                     original_config=original_config, **parameter_config[grouping])
             else:
                 slice_idx_map[interaction_idx] = convert_parameter_values_to_slice(
-                    start_value=parameter_config[grouping], end_value=parameter_config[grouping],
+                    interaction_min=parameter_config[grouping], interaction_max=parameter_config[grouping],
                     step_size=None, original_config=original_config)
-
-        logging.info(parameter_config)
 
         return slice_idx_map
 

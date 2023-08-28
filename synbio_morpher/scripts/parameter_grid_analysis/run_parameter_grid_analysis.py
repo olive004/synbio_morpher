@@ -34,9 +34,8 @@ def main(config=None, data_writer: ResultWriter = None):
         'synbio_morpher', 'scripts', 'parameter_grid_analysis', 'configs', 'base_config.json'))
 
     # Load in parameter grid
-    config_file = load_json_as_dict(config)
-    config_file, source_dir = get_search_dir(
-        config_searchdir_key='source_parameter_dir', config_file=config_file)
+    config, source_dir = get_search_dir(
+        config_searchdir_key='source_parameter_dir', config_file=config)
 
     def load_parameter_grids():
         all_parameter_grids = {}
@@ -66,10 +65,7 @@ def main(config=None, data_writer: ResultWriter = None):
         f'not equal number of species in original configuration file {sample_names}.'
 
     # Get relevant configs
-    slicing_configs = config_file['slicing']
-
-    selected_species_interactions = slicing_configs['interactions']['interacting_species']
-    unselected_species_interactions = slicing_configs['interactions']['non_varying_species_interactions']
+    slicing_configs = config['slicing']
 
     selected_analytics = slicing_configs['analytics']['names']
     if selected_analytics is None:
@@ -83,14 +79,14 @@ def main(config=None, data_writer: ResultWriter = None):
                 f'Species {cfg_species_list} from config were not found in list ' \
                 f'of species from circuit {sample_names}'
 
-    validate_species_cfgs(flatten_listlike(list(selected_species_interactions.values())),
-                          flatten_listlike(list(unselected_species_interactions.values())))
+    validate_species_cfgs(flatten_listlike(list(slicing_configs['interactions']['interacting_species'].values())),
+                          flatten_listlike(list(slicing_configs['interactions']['non_varying_species_interactions'].values())))
 
     def run_visualisation(all_parameter_grids, data_writer, selected_analytics,
                           selected_species_interactions, unselected_species_interactions,
                           slicing_configs, sample_names, shape_parameter_grid):
 
-        def visualise_analytic(analytic_name, data):
+        def visualise_analytic(analytic_name: str, data: np.ndarray, selected_species_interactions: list):
             result_collector = ResultCollector()
             for i, species_name in enumerate(slicing_configs['species_choices']):
                 data_per_species = data[i]
@@ -130,7 +126,8 @@ def main(config=None, data_writer: ResultWriter = None):
                                       no_analytics=True, no_numerical=True)
 
         species_interaction_summary = make_species_interaction_summary(
-            selected_species_interactions, slicing_configs['interactions']['strengths'],
+            species_interactions=selected_species_interactions, 
+            strength_config=slicing_configs['interactions']['strengths'],
             original_config=original_config, sample_names=sample_names)
 
         slice_indices = make_slice(selected_species_interactions, unselected_species_interactions, slicing_configs,
@@ -141,15 +138,15 @@ def main(config=None, data_writer: ResultWriter = None):
         )
         for analytic_name in selected_analytics:
             data = all_parameter_grids[analytic_name][slice_indices]
-            visualise_analytic(analytic_name, data)
+            visualise_analytic(analytic_name, data, selected_species_interactions)
 
-    experiment = Experiment(config=config, config_file=config_file, protocols=[
+    experiment = Experiment(config=config, config_file=config, protocols=[
         Protocol(partial(run_visualisation,
                          all_parameter_grids=all_parameter_grids,
                          data_writer=data_writer,
                          selected_analytics=selected_analytics,
-                         selected_species_interactions=selected_species_interactions,
-                         unselected_species_interactions=unselected_species_interactions,
+                         selected_species_interactions=slicing_configs['interactions']['interacting_species'],
+                         unselected_species_interactions=slicing_configs['interactions']['non_varying_species_interactions'],
                          slicing_configs=slicing_configs,
                          sample_names=sample_names,
                          shape_parameter_grid=shape_parameter_grid))

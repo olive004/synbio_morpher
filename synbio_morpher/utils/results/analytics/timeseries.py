@@ -221,7 +221,7 @@ def generate_base_analytics(data: jnp.ndarray, t: jnp.ndarray, labels: List[str]
                 starting_states=analytics['initial_steady_states'],
                 steady_states=analytics['steady_states'],
                 signal_0=analytics['initial_steady_states'][s_idx],
-                signal_1=data[s_idx, np.argmax(t == signal_time)]
+                signal_1=data[s_idx, np.argmax(t >= signal_time)]
             )
 
             # t axis: 1
