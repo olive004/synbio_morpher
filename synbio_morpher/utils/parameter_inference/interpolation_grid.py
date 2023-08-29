@@ -82,12 +82,12 @@ def make_species_interaction_summary(species_interactions, strength_config, orig
         species_interactions_ref['interaction_params'] = strength_config[grouping]
         parameter_creation_cfg = strength_config[grouping]
 
-        for k, v in parameter_creation_cfg.items():
-            if v is None:
-                parameter_creation_cfg[k] = original_config['parameter_based_simulation'][k]
+        # for k, v in parameter_creation_cfg.items():
+        #     if v is None:
+        #         parameter_creation_cfg[k] = original_config['parameter_based_simulation'][k]
         
-        species_interactions_ref['parameter_range'] = create_parameter_range(
-            original_config['parameter_based_simulation'])
+        # species_interactions_ref['parameter_range'] = create_parameter_range(
+        #     original_config['parameter_based_simulation'])
 
         if type(strength_config[grouping]) == dict:
             species_interactions_ref['interaction_slice'] = convert_parameter_values_to_slice(

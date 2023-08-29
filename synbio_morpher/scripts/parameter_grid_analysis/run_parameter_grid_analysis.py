@@ -21,7 +21,7 @@ from synbio_morpher.utils.misc.io import get_pathnames, isolate_filename
 from synbio_morpher.utils.misc.scripts_io import get_search_dir, load_experiment_config_original
 from synbio_morpher.utils.misc.string_handling import prettify_keys_for_label
 from synbio_morpher.utils.misc.type_handling import flatten_listlike
-from synbio_morpher.utils.parameter_inference.interpolation_grid import make_slice, make_species_interaction_summary
+from synbio_morpher.utils.parameter_inference.interpolation_grid import make_slice, make_species_interaction_summary, create_parameter_range
 from synbio_morpher.utils.results.analytics.naming import get_analytics_types_all, get_true_names_analytics
 from synbio_morpher.utils.results.experiments import Experiment, Protocol
 from synbio_morpher.utils.results.result_writer import ResultWriter
@@ -72,7 +72,7 @@ def main(config=None, data_writer: ResultWriter = None):
     selected_analytics = slicing_configs['analytics']['names']
     if selected_analytics is None:
         selected_analytics = get_true_names_analytics(
-            list(all_parameter_grids.keys()))
+            list(all_parameter_grids.keys())) + ['overshoot_asratio']
 
     def validate_species_cfgs(*cfg_species_lists: list):
         def validate_each(species_name):
@@ -89,7 +89,8 @@ def main(config=None, data_writer: ResultWriter = None):
                           selected_species_interactions, unselected_species_interactions,
                           slicing_configs, sample_names, shape_parameter_grid):
 
-        def visualise_analytic(analytic_name: str, data: np.ndarray, selected_species_interactions: list):
+        def visualise_analytic(analytic_name: str, data: np.ndarray,
+                               selected_species_interactions: list, original_parameter_range: np.ndarray):
             result_collector = ResultCollector()
             for i, species_name in enumerate(slicing_configs['species_choices']):
                 data_per_species = data[i]
@@ -98,7 +99,7 @@ def main(config=None, data_writer: ResultWriter = None):
                 sorted_species_interactions = [
                     species_interaction_idxs[k] for k in sorted(species_interaction_idxs.keys())]
                 ind, cols = list(map(
-                    lambda k: species_interaction_summary[k]['parameter_range'], sorted_species_interactions[:2]))
+                    lambda k: original_parameter_range, sorted_species_interactions[:2]))
                 data_container = pd.DataFrame(
                     data=np.squeeze(data_per_species),
                     index=ind,
@@ -130,16 +131,16 @@ def main(config=None, data_writer: ResultWriter = None):
                                       no_analytics=True, no_numerical=True)
 
         def visualise_corner(analytic_name: str, data: np.ndarray, species_names: list,
-                             species_chosen: list, constant, constant_idx: int):
+                             species_chosen: list, original_range: np.ndarray, constant_idx: int):
 
-            def collect_minmax(data, idxs):
+            def collect_minmax(data, idxs, io):
                 dmin = []
                 dmax = []
                 for i, (sii, sij) in enumerate(zip(idxs[0], idxs[1])):
                     for j, (sji, sjj) in enumerate(zip(idxs[0], idxs[1])):
                         if i <= j:
                             continue
-                        slices = [(0,)] * len(idxs[0])
+                        slices = [(io,)] * len(idxs[0])
                         slices[i] = slice(data.shape[i])
                         slices[j] = slice(data.shape[j])
                         d = np.where(data[tuple(slices)] < np.inf,
@@ -149,49 +150,55 @@ def main(config=None, data_writer: ResultWriter = None):
                 return dmin, dmax
 
             idxs = np.triu_indices(len(species_names))
+            ticks = [f"{x:.2e}" for x in original_range]
 
             for s in species_chosen:
 
-                dmin, dmax = collect_minmax(data, idxs)
+                for io, o in enumerate(original_range):
 
-                plt_kwrgs = {
-                    'vmin': np.min(dmin),
-                    'vmax': np.max(dmax),
-                }
+                    dmin, dmax = collect_minmax(data, idxs, io)
 
-                fig1, ax1 = plt.subplots(nrows=len(idxs[0]), ncols=len(idxs[0]),
-                                         figsize=(7*len(idxs[0]), 6*len(idxs[0])))
-                fig2, ax2 = plt.subplots(nrows=len(idxs[0]), ncols=len(idxs[0]),
-                                         figsize=(7*len(idxs[0]), 6*len(idxs[0])))
-                for i, (sii, sij) in enumerate(zip(idxs[0], idxs[1])):
-                    for j, (sji, sjj) in enumerate(zip(idxs[0], idxs[1])):
-                        if i <= j:
-                            continue
-                        slices = [(constant_idx,)] * len(idxs[0])
-                        slices[i] = slice(data.shape[i])
-                        slices[j] = slice(data.shape[j])
+                    plt_kwrgs = {
+                        'vmin': np.min(dmin),
+                        'vmax': np.max(dmax),
+                    }
 
-                        d = np.where(data[tuple(slices)] < np.inf,
-                                     data[tuple(slices)], np.nan).squeeze()
-                        sns.heatmap(d, ax=ax1[i, j])
-                        sns.heatmap(d, ax=ax2[i, j], **plt_kwrgs)
+                    fig1, ax1 = plt.subplots(nrows=len(idxs[0]), ncols=len(idxs[0]),
+                                             figsize=(7*len(idxs[0]), 6*len(idxs[0])))
+                    fig1.subplots_adjust(wspace=0.325, hspace=0.325)
+                    fig2, ax2 = plt.subplots(nrows=len(idxs[0]), ncols=len(idxs[0]),
+                                             figsize=(7*len(idxs[0]), 6*len(idxs[0])))
+                    fig2.subplots_adjust(wspace=0.325, hspace=0.325)
+                    for i, (sii, sij) in enumerate(zip(idxs[0], idxs[1])):
+                        for j, (sji, sjj) in enumerate(zip(idxs[0], idxs[1])):
+                            if i <= j:
+                                continue
+                            slices = [(io,)] * len(idxs[0])
+                            slices[i] = slice(data.shape[i])
+                            slices[j] = slice(data.shape[j])
 
-                        for ax in [ax1[i, j], ax2[i, j]]:
-                            ax.set_xlabel(f'{[species_names[sii], species_names[sij]]} '
-                                          f'({SIMULATOR_UNITS["IntaRNA"]["energy"]})')
-                            ax.set_ylabel(f'{[species_names[sji], species_names[sjj]]} '
-                                          f'({SIMULATOR_UNITS["IntaRNA"]["energy"]})')
-                            # ax.set_title(
-                            #     f'{prettify_keys_for_label(analytic_name)} for {[species_names[sii], species_names[sij]]} and {[species_names[sji], species_names[sjj]]}')
+                            d = np.where(data[tuple(slices)] < np.inf,
+                                         data[tuple(slices)], np.nan).squeeze()
+                            sns.heatmap(d, xticklabels=ticks,
+                                        yticklabels=ticks, ax=ax1[i, j])
+                            sns.heatmap(
+                                d, xticklabels=ticks, yticklabels=ticks, ax=ax2[i, j], **plt_kwrgs)
 
-                fig1.suptitle(f'{prettify_keys_for_label(analytic_name.split("_wrt")[0])} of {s} for interactions\n(held constant at {constant})',
-                              fontsize=14)
-                fig1.savefig(os.path.join(
-                    data_writer.write_dir, f'corner_{analytic_name}_{s}.png'))
-                fig2.suptitle(f'{prettify_keys_for_label(analytic_name.split("_wrt")[0])} of {s} for interactions\n(held constant at {constant})',
-                              fontsize=14)
-                fig2.savefig(os.path.join(
-                    data_writer.write_dir, f'fullcorner_{analytic_name}_{s}.png'))
+                            for ax in [ax1[i, j], ax2[i, j]]:
+                                ax.set_xlabel(f'{[species_names[sii], species_names[sij]]} '
+                                              f'({SIMULATOR_UNITS["IntaRNA"]["energy"]})')
+                                ax.set_ylabel(f'{[species_names[sji], species_names[sjj]]} '
+                                              f'({SIMULATOR_UNITS["IntaRNA"]["energy"]})')
+
+                    fig1.suptitle(f'{prettify_keys_for_label(analytic_name.split("_wrt")[0])} of {s} for interactions\n(held constant at {o})',
+                                  fontsize=14)
+                    fig1.savefig(os.path.join(
+                        data_writer.write_dir, f'corner_{analytic_name}_{s}_{io}.png'))
+                    fig2.suptitle(f'{prettify_keys_for_label(analytic_name.split("_wrt")[0])} of {s} for interactions\n(held constant at {o})',
+                                  fontsize=14)
+                    fig2.savefig(os.path.join(
+                        data_writer.write_dir, f'fullcorner_{analytic_name}_{s}_{io}.png'))
+                    plt.clf
 
         species_interaction_summary = make_species_interaction_summary(
             species_interactions=selected_species_interactions,
@@ -204,17 +211,19 @@ def main(config=None, data_writer: ResultWriter = None):
             ['Held constant:'] + [f'{n}: {v}' for n, v in zip(
                 unselected_species_interactions.values(), slicing_configs['interactions']['non_varying_strengths'].values())]
         )
+        original_parameter_range = create_parameter_range(
+            original_config['parameter_based_simulation'])
         species_names = sorted(set(flatten_listlike(selected_species_interactions.values()) +
                                    flatten_listlike(unselected_species_interactions.values())))
         for analytic_name in selected_analytics:
-            if 'precision' in analytic_name:
-                print('yes')
             data = all_parameter_grids[analytic_name][slice_indices]
             visualise_analytic(analytic_name, data,
-                               selected_species_interactions)
+                               selected_species_interactions, original_parameter_range)
             visualise_corner(analytic_name, all_parameter_grids[analytic_name][slice_indices[0]],
-                             species_names=species_names, species_chosen=slicing_configs['species_choices'],
-                             constant, constant_idx=)
+                             species_names=species_names, species_chosen=slicing_configs[
+                                 'species_choices'],
+                             original_range=original_parameter_range,
+                             constant_idx=config['visualisation']['corner']['constant_idx'])
 
     experiment = Experiment(config=config, config_file=config, protocols=[
         Protocol(partial(run_visualisation,

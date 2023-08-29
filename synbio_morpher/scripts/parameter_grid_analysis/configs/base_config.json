@@ -40,6 +40,8 @@
 
     },
     "visualisation": {
-        "none": 0
+        "corner": {
+            "constant_idx": 0
+        }
     }
 }
