@@ -319,8 +319,10 @@ class VisODE():
                     getattr(plt, plot_kwrg, partial(
                         warning_call, object=plt, dummy_value=None, function=plot_kwrg))(**value)
                 else:
-                    getattr(plt, plot_kwrg, partial(
-                        warning_call, dummy_value=None, function=plot_kwrg))(value)
+                    f = getattr(plt, plot_kwrg, partial(
+                        warning_call, dummy_value=None, function=plot_kwrg))
+                    if callable(f):
+                        f(value)
 
     def rename_legend(self, plot, new_title: str, new_labels: list):
         leg = plot.axes.flat[0].get_legend()
