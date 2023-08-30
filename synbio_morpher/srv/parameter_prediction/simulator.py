@@ -6,6 +6,8 @@
 # LICENSE file in the root directory of this source tree. 
     
 
+import numpy as np
+import diffrax as dfx
 import logging
 from subprocess import PIPE, run
 from functools import partial
@@ -110,6 +112,26 @@ def check_IntaRNA_path():
             return p.stdout
     else:
         logging.warning(f'Could not detect IntaRNA on system: {p}')
+        
+        
+def make_piecewise_stepcontrol(t0, t1, dt0, dt1, split: int = 3):
+    tdiff = (t1 - t0) / split
+    dts = np.interp(np.arange(split), [0, split-1], [dt0, dt1])
+
+    i = 0
+    ts = np.arange(
+            t0 + tdiff * i, 
+            t0 + tdiff * i + tdiff, 
+            dts[i])
+    for i in range(i+1, split):
+        nx = np.arange(
+            t0 + tdiff * i, 
+            t0 + tdiff * i + tdiff, 
+            dts[i])
+        ts = np.concatenate([ts, nx])
+    ts[0] = t0
+    ts[-1] = t1
+    return dfx.StepTo(ts)
 
 
 def simulate_IntaRNA(input, compute_by_filename: bool, allow_self_interaction: bool, sim_kwargs: dict, simulator):

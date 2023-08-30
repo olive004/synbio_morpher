@@ -24,7 +24,7 @@ from bioreaction.model.data_containers import Species
 from bioreaction.simulation.simfuncs.basic_de import bioreaction_sim, bioreaction_sim_expanded
 from bioreaction.simulation.manager import simulate_steady_states
 
-from synbio_morpher.srv.parameter_prediction.simulator import SIMULATOR_UNITS
+from synbio_morpher.srv.parameter_prediction.simulator import SIMULATOR_UNITS, make_piecewise_stepcontrol
 from synbio_morpher.srv.parameter_prediction.interactions import InteractionDataHandler, InteractionSimulator, INTERACTION_FIELDS_TO_WRITE
 from synbio_morpher.utils.circuit.agnostic_circuits.circuit import Circuit, interactions_to_df
 from synbio_morpher.utils.misc.helper import vanilla_return
@@ -477,7 +477,7 @@ class CircuitModeller():
         if choice == 'log':
             return self.make_log_stepcontrol(**kwargs)
         elif choice == 'piecewise':
-            return self.make_piecewise_stepcontrol(**kwargs)
+            return self.make_piecewise_stepcontrol(t0=self.t0, t1=self.t1, dt0=self.dt0, dt1=self.dt1, **kwargs)
         else:
             raise ValueError(f'The stepsize controller option `{choice}` is not available.')
         
@@ -491,26 +491,7 @@ class CircuitModeller():
         ts[0] = self.t0
         ts[-1] = self.t1
         return dfx.StepTo(ts)
-        
-    def make_piecewise_stepcontrol(self, split: int = 3):
-        tdiff = (self.t1 - self.t0) / split
-        dts = np.interp(np.arange(split), [0, split-1], [self.dt0, self.dt1])
-
-        i = 0
-        ts = np.arange(
-                self.t0 + tdiff * i, 
-                self.t0 + tdiff * i + tdiff, 
-                dts[i])
-        for i in range(i+1, split):
-            nx = np.arange(
-                self.t0 + tdiff * i, 
-                self.t0 + tdiff * i + tdiff, 
-                dts[i])
-            ts = np.concatenate([ts, nx])
-        ts[0] = self.t0
-        ts[-1] = self.t1
-        return dfx.StepTo(ts)
-
+    
     def prepare_internal_funcs(self, circuits: List[Circuit]):
         """ Create simulation function. If more customisation is needed per circuit, move
         variables into the relevant wrapper simulation method """
