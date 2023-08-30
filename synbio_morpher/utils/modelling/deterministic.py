@@ -120,6 +120,6 @@ def bioreaction_sim_dfx_expanded(y0, t0, t1, dt0,
     )
     return dfx.diffeqsolve(term, solver,
                            t0=t0, t1=t1, dt0=dt0,
-                           y0=y0,
+                           y0=y0.squeeze(),
                            saveat=saveat, max_steps=max_steps,
                            stepsize_controller=stepsize_controller)
