@@ -477,7 +477,7 @@ class CircuitModeller():
         if choice == 'log':
             return self.make_log_stepcontrol(**kwargs)
         elif choice == 'piecewise':
-            return self.make_piecewise_stepcontrol(t0=self.t0, t1=self.t1, dt0=self.dt0, dt1=self.dt1, **kwargs)
+            return make_piecewise_stepcontrol(t0=self.t0, t1=self.t1, dt0=self.dt0, dt1=self.dt1, **kwargs)
         else:
             raise ValueError(f'The stepsize controller option `{choice}` is not available.')
         
