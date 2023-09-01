@@ -268,11 +268,12 @@ def generate_analytics(data, time, labels: List[str], ref_circuit_data=None,
                                         ref_circuit_data=ref_circuit_data)
 
     # Differences & ratios
-    ref_analytics = generate_base_analytics(data=ref_circuit_data, t=time, labels=labels,
-                                            signal_onehot=signal_onehot, signal_time=signal_time,
-                                            ref_circuit_data=ref_circuit_data)
-    differences, ratios = generate_differences_ratios(analytics, ref_analytics)
-    return merge_dicts(analytics, differences, ratios)
+    # ref_analytics = generate_base_analytics(data=ref_circuit_data, t=time, labels=labels,
+    #                                         signal_onehot=signal_onehot, signal_time=signal_time,
+    #                                         ref_circuit_data=ref_circuit_data)
+    # differences, ratios = generate_differences_ratios(analytics, ref_analytics)
+    # return merge_dicts(analytics, differences, ratios)
+    return analytics
 
 
 class Timeseries():
