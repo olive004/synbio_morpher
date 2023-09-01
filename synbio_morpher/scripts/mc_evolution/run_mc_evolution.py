@@ -24,13 +24,9 @@ from synbio_morpher.utils.common.setup import construct_circuit_from_cfg, prepar
 from synbio_morpher.utils.data.data_format_tools.common import load_json_as_dict
 from synbio_morpher.utils.data.data_format_tools.manipulate_fasta import load_seq_from_FASTA
 from synbio_morpher.utils.evolution.evolver import Evolver
-from synbio_morpher.utils.evolution.mutation import implement_mutation, apply_mutation_to_sequence, get_mutation_type_mapping, reverse_mut_mapping
+from synbio_morpher.utils.evolution.mutation import apply_mutation_to_sequence, get_mutation_type_mapping, reverse_mut_mapping
 from synbio_morpher.utils.misc.type_handling import flatten_listlike
-from synbio_morpher.utils.misc.numerical import add_recursively
-from synbio_morpher.utils.misc.helper import vanilla_return
-from synbio_morpher.utils.modelling.deterministic import bioreaction_sim_dfx_expanded
-from synbio_morpher.utils.results.analytics.naming import get_analytics_types_all, get_true_names_analytics, get_true_interaction_cols
-from synbio_morpher.utils.results.analytics.timeseries import generate_analytics
+from synbio_morpher.utils.results.analytics.naming import get_true_interaction_cols
 from synbio_morpher.utils.results.experiments import Experiment, Protocol
 from synbio_morpher.utils.results.writer import DataWriter
 from synbio_morpher.srv.io.loaders.circuit_loader import load_circuit
