@@ -48,10 +48,10 @@
         "batch_size": 10000,
         "max_circuits": 20000,
         "device": "gpu",
-        "threshold_steady_states": 0.05, 
+        "threshold_steady_states": 0.01, 
         "use_rate_scaling": true
     },
     "include_prod_deg": false,
     "system_type": "RNA",
-    "batch_size": 5
+    "batch_size": 5000
 }
