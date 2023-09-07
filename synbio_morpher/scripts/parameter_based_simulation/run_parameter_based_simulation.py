@@ -39,7 +39,7 @@ def define_matrices(num_species, size_interaction_array, num_unique_interactions
     return all_analytic_matrices
 
 
-def make_inter action_matrices(num_species: int,
+def make_interaction_matrices(num_species: int,
                               interaction_strengths: np.ndarray,
                               num_unique_interactions: int,
                               starting_iteration: int,
