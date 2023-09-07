@@ -60,7 +60,7 @@ def compute_analytics(y, t, labels, signal_onehot):
 
 def mini_sim(B11, B12, B13, B22, B23, B33):
     unbound_species = ['RNA_0', 'RNA_1', 'RNA_2']
-    species = ['RNA_0', 'RNA_1', 'RNA_2', 'RNA_0-0', 'RNA_0-1', 'RNA_0-2', 'RNA_1-1', 'RNA_1-2', 'RNA_2-2']
+    species = ['RNA_0-0', 'RNA_0-1', 'RNA_0-2', 'RNA_1-1', 'RNA_1-2', 'RNA_2-2', 'RNA_0', 'RNA_1', 'RNA_2']
     signal_species = ['RNA_0']
     output_species = ['RNA_1']
     s_idxs = [species.index(s) for s in signal_species]
@@ -72,24 +72,24 @@ def mini_sim(B11, B12, B13, B22, B23, B33):
     N0 = 200
     
     # Amounts
-    y00 = np.array([[N0, N0, N0, 0, 0, 0, 0, 0, 0]])
+    y00 = np.array([[0, 0, 0, 0, 0, 0, N0, N0, N0]])
     
     # Reactions
     inputs = np.array([
-        [2, 0, 0, 0, 0, 0, 0, 0, 0],
-        [1, 1, 0, 0, 0, 0, 0, 0, 0],
-        [1, 0, 1, 0, 0, 0, 0, 0, 0],
-        [0, 2, 0, 0, 0, 0, 0, 0, 0],
-        [0, 1, 1, 0, 0, 0, 0, 0, 0],
-        [0, 0, 2, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 2, 0, 0],
+        [0, 0, 0, 0, 0, 0, 1, 1, 0],
+        [0, 0, 0, 0, 0, 0, 1, 0, 1],
+        [0, 0, 0, 0, 0, 0, 0, 2, 0],
+        [0, 0, 0, 0, 0, 0, 0, 1, 1],
+        [0, 0, 0, 0, 0, 0, 0, 0, 2],
     ])
     outputs = np.array([
+        [1, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 1, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 1, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 1, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 1, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 1, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 1, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 1, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 1],
     ])
     
     # Rates
@@ -117,20 +117,20 @@ def mini_sim(B11, B12, B13, B22, B23, B33):
         stepsize_controller=make_piecewise_stepcontrol(t0=t0, t1=t1, dt0=dt0, dt1=dt1)
         ))
     
-    y0, t = simulate_steady_states(y0=y00, total_time=t1-t0, sim_func=sim_func, t0=t0, t1=t1, threshold=0.1, reverse_rates=reverse_rates, disable_logging=True)
+    y0, t = simulate_steady_states(y0=y00, total_time=t1-t0, sim_func=sim_func, t0=t0, t1=t1, threshold=0.05, reverse_rates=reverse_rates, disable_logging=True)
     y0 = np.array(y0.squeeze()[-1, :]).reshape(y00.shape)
     
     # Signal
     y0s = y0 * ((signal_onehot == 0) * 1) + y00 * signal_target * signal_onehot
-    y, t = simulate_steady_states(y0s, total_time=t1-t0, sim_func=sim_func, t0=t0, t1=t1, threshold=0.1, reverse_rates=reverse_rates, disable_logging=True)
+    y, t = simulate_steady_states(y0s, total_time=t1-t0, sim_func=sim_func, t0=t0, t1=t1, threshold=0.05, reverse_rates=reverse_rates, disable_logging=True)
     y = np.concatenate([y0, y.squeeze()[:-1, :]], axis=0)
     
     analytics = compute_analytics(y, t, labels=np.arange(y.shape[-1]), signal_onehot=signal_onehot)
     
-    s = analytics['sensitivity_wrt_species-0']
-    p = analytics['precision_wrt_species-0']
+    s = analytics[f'sensitivity_wrt_species-{s_idxs[0]}']
+    p = analytics[f'precision_wrt_species-{s_idxs[0]}']
     r = optimise_sp(
         s=s[:, None][tuple(output_idxs)], p=p[:, None][tuple(output_idxs)]
     )[0]
     
-    return r, analytics
+    return r, analytics, y, t
