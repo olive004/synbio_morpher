@@ -417,7 +417,7 @@ def main(config=None, data_writer=None):
 
     signal_species = config_og['signal']['inputs']
     filt = (
-        (data[get_true_interaction_cols(data, 'energies')].sum(axis=1) != 0) &
+        (data[get_true_interaction_cols(data, 'energies', num_species=3)].sum(axis=1) != 0) &
         (data['sample_name'].isin(signal_species) != True) &
         (data['overshoot'] > 0)
     )
