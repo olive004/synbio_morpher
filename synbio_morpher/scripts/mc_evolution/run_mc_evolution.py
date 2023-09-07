@@ -35,9 +35,11 @@ from synbio_morpher.srv.io.manage.script_manager import script_preamble
 
 # Init
 
-def pick_circuits(config: dict, data) -> pd.DataFrame:
+def pick_circuits(config: dict, data: pd.DataFrame, init_sample_size: int = 1000) -> pd.DataFrame:
 
     percentile = 0.9
+    data = data.iloc[np.random.choice(np.arange(len(data)), size=init_sample_size, replace=False)]
+    
     sensitivity_range = data['sensitivity_wrt_species-6'] > (data['sensitivity_wrt_species-6'].max() *
                                                                 percentile)
     starting_circ_rows = data[sensitivity_range].sort_values(
@@ -397,6 +399,8 @@ def main(config=None, data_writer=None):
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
         "synbio_morpher", "scripts", "mc_evolution", "configs", "base_config.json"))
     
+    np.random.seed(config.get('seed', 0))
+    
     fn = config['info_path']
     data = pd.read_csv(fn)
     data['mutation_type'] = data['mutation_type'].str.strip('[]').str.split(',').apply(lambda x: [int(xx) for xx in x if xx])
@@ -418,7 +422,7 @@ def main(config=None, data_writer=None):
         (data['overshoot'] > 0)
     )
 
-    starting_circ_rows = pick_circuits(config_og, data[filt])
+    starting_circ_rows = pick_circuits(config_og, data[filt], init_sample_size=config['init_sample_size'])
 
     plot_starting_circuits(starting_circ_rows, data, filt, data_writer)
     

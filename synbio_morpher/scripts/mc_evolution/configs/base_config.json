@@ -5,13 +5,16 @@
     },
     "simulation": {
         "device": "gpu",
-        "threshold_steady_states": 0.05
+        "threshold_steady_states": 0.05,
+        "use_initial_to_add_signal": true
     },
     "mutations_args": {
         "algorithm": "all"
     },
     "info_path": "data/ensemble_mutation_effect_analysis/2023_07_17_105328/summarise_simulation/tabulated_mutation_info.csv",
     "choose_max": 100,
+    "init_sample_size": 10000, 
+    "seed": 0,
     "total_steps": 50,
     "use_diversity": true
 }
