@@ -3,8 +3,8 @@
 # All rights reserved.
 
 # This source code is licensed under the MIT-style license found in the
-# LICENSE file in the root directory of this source tree. 
-    
+# LICENSE file in the root directory of this source tree.
+
 from copy import deepcopy
 from typing import List
 from functools import partial
@@ -53,10 +53,12 @@ class CircuitModeller():
             'interaction_factor', 1)
         self.discard_numerical_mutations = config['experiment'].get(
             'no_numerical', False)
-        self.use_initial_to_add_signal = config.get('simulation', {}).get('use_initial_to_add_signal', True)
+        self.use_initial_to_add_signal = config.get(
+            'simulation', {}).get('use_initial_to_add_signal', True)
         self.dt0 = config.get('simulation', {}).get('dt0', 0.3)
         self.dt1_factor = config.get('simulation', {}).get('dt1_factor', 5)
-        self.dt1 = config.get('simulation', {}).get('dt1', self.dt1_factor*self.dt0)
+        self.dt1 = config.get('simulation', {}).get(
+            'dt1', self.dt1_factor*self.dt0)
         self.t0 = config.get('simulation', {}).get('t0', 0)
         self.t1 = config.get('simulation', {}).get('t1', 10)
         self.threshold_steady_states = config.get('simulation', {}).get(
@@ -94,7 +96,8 @@ class CircuitModeller():
             else:
                 filename = None
             input_species = circuit.get_input_species()
-            reactant_species = [r.species for r in circuit.qreactions.reactants]
+            reactant_species = [
+                r.species for r in circuit.qreactions.reactants]
             interactions = self.run_interaction_simulator(
                 species=input_species,
                 filename=filename,
@@ -107,7 +110,7 @@ class CircuitModeller():
             circuit.init_interactions(init_dummy=True)
         else:
             circuit.init_interactions()
-            
+
         circuit.interactions.binding_rates_association = circuit.interactions.binding_rates_association * \
             self.interaction_factor
         circuit.interactions.binding_rates_dissociation = circuit.interactions.binding_rates_dissociation * \
@@ -159,7 +162,7 @@ class CircuitModeller():
 
     def compute_steady_states(self, modeller: Modeller, circuits: List[Circuit],
                               solver_type: str = 'jax', use_zero_rates: bool = False) -> List[Circuit]:
-            
+
         if solver_type == 'ivp':
             b_copynumbers = []
             for circuit in circuits:
@@ -170,7 +173,8 @@ class CircuitModeller():
                         ((circuit.qreactions.reactions.reverse_rates -
                           circuit.qreactions.reactions.forward_rates) < 1e2) * 1
 
-                signal_onehot = np.zeros_like(circuit.signal.reactions_onehot) if circuit.use_prod_and_deg else np.zeros_like(circuit.signal.onehot)
+                signal_onehot = np.zeros_like(
+                    circuit.signal.reactions_onehot) if circuit.use_prod_and_deg else np.zeros_like(circuit.signal.onehot)
                 steady_state_result = integrate.solve_ivp(
                     partial(bioreaction_sim, args=None, reactions=r, signal=vanilla_return,
                             signal_onehot=signal_onehot),
@@ -192,7 +196,8 @@ class CircuitModeller():
                 [c.qreactions.reactions.reverse_rates for c in circuits])
             starting_states = np.asarray(
                 [c.qreactions.quantities for c in circuits])
-            signal_onehot = np.zeros_like(ref_circuit.signal.reactions_onehot) if ref_circuit.use_prod_and_deg else np.zeros_like(ref_circuit.signal.onehot)
+            signal_onehot = np.zeros_like(
+                ref_circuit.signal.reactions_onehot) if ref_circuit.use_prod_and_deg else np.zeros_like(ref_circuit.signal.onehot)
 
             sim_func = jax.vmap(partial(bioreaction_sim_dfx_expanded,
                                         t0=self.t0, t1=self.t1, dt0=self.dt0,
@@ -203,15 +208,16 @@ class CircuitModeller():
                                         solver=dfx.Tsit5(),
                                         saveat=dfx.SaveAt(
                                             ts=np.linspace(self.t0, self.t1, int(np.min([200, self.t1-self.t0])))),
-                                        stepsize_controller=self.make_stepsize_controller(choice='piecewise')
+                                        stepsize_controller=self.make_stepsize_controller(
+                                            choice='piecewise')
                                         ))
-            
+
             b_copynumbers, t = simulate_steady_states(
                 y0=starting_states, total_time=self.tmax, sim_func=sim_func,
                 t0=self.t0, t1=self.t1,
-                threshold=self.threshold_steady_states, 
+                threshold=self.threshold_steady_states,
                 reverse_rates=reverse_rates,
-                )
+            )
 
             b_copynumbers = np.swapaxes(b_copynumbers, 1, 2)
 
@@ -276,7 +282,7 @@ class CircuitModeller():
 
         self.dt0 = np.min([1 / (5 * rate_max), 0.1])
         self.dt1 = self.dt1_factor * self.dt0
-        
+
         return circuits
 
     def simulate_signal_batch(self, circuits: List[Circuit],
@@ -290,7 +296,7 @@ class CircuitModeller():
 
             b_steady_states = [None] * len(circuits)
             b_reverse_rates = [None] * len(circuits)
-                
+
             species_chosen = circuits[0].model.species[np.argmax(
                 signal.onehot)]
             other_species = flatten_listlike(
@@ -299,18 +305,17 @@ class CircuitModeller():
                                else 0 for s in circuits[0].model.species])
             for i, c in enumerate(circuits):
                 if not c.use_prod_and_deg:
+                    stst = c.result_collector.get_result(
+                        'steady_states').analytics['steady_states'].flatten()
                     if self.use_initial_to_add_signal:
-                        b_steady_states[i] = c.result_collector.get_result(
-                            'steady_states').analytics['steady_states'].flatten() * ((signal.onehot == 0) * 1) + \
-                            (c.result_collector.get_result(
-                                'steady_states').analytics['initial_steady_states'].flatten() *
+                        inst = c.result_collector.get_result(
+                            'steady_states').analytics['initial_steady_states'].flatten()
+                        b_steady_states[i] = stst * ((signal.onehot == 0) * 1) + \
+                            (inst *
                              signal.func.keywords['target']) * signal.onehot
                     else:
-                        b_steady_states[i] = c.result_collector.get_result(
-                            'steady_states').analytics['steady_states'].flatten() * ((onehots == 0) * 1) + \
-                            (c.result_collector.get_result(
-                                'steady_states').analytics['steady_states'].flatten() *
-                             signal.func.keywords['target']) * onehots
+                        b_steady_states[i] = stst * ((onehots == 0) * 1) + \
+                            (stst * signal.func.keywords['target']) * onehots
 
                 else:
                     b_steady_states[i] = c.result_collector.get_result(
@@ -318,11 +323,13 @@ class CircuitModeller():
                 b_reverse_rates[i] = c.qreactions.reactions.reverse_rates
             b_steady_states = np.asarray(b_steady_states)
             b_reverse_rates = np.asarray(b_reverse_rates)
-            b_og_states = np.array([c.result_collector.get_result('steady_states').analytics['steady_states'].flatten() * onehots + b_steady_states[i] * ((onehots == 0) * 1) for i, c in enumerate(circuits)])
+            b_og_states = np.array([c.result_collector.get_result('steady_states').analytics['steady_states'].flatten(
+            ) * onehots + b_steady_states[i] * ((onehots == 0) * 1) for i, c in enumerate(circuits)])
 
             return b_steady_states, b_reverse_rates, b_og_states
 
-        b_steady_states, b_reverse_rates, b_og_states = prepare_batch_params(circuits)
+        b_steady_states, b_reverse_rates, b_og_states = prepare_batch_params(
+            circuits)
 
         s_time = datetime.now()
         b_new_copynumbers, t = simulate_steady_states(
@@ -330,7 +337,7 @@ class CircuitModeller():
             t0=self.t0, t1=self.t1,
             threshold=self.threshold_steady_states,
             reverse_rates=b_reverse_rates,
-            )
+        )
 
         s_time = datetime.now() - s_time
         logging.warning(
@@ -338,11 +345,12 @@ class CircuitModeller():
 
         if np.shape(b_new_copynumbers)[1] != ref_circuit.circuit_size and np.shape(b_new_copynumbers)[-1] == ref_circuit.circuit_size:
             b_new_copynumbers = np.swapaxes(b_new_copynumbers, 1, 2)
-        
+
         # Fix first entry for signal species -> Warning: deletes final element in simulated data
-        for i, c in enumerate(circuits): 
+        for i, c in enumerate(circuits):
             if not c.use_prod_and_deg:
-                b_new_copynumbers[i, :, :] = np.concatenate([np.expand_dims(b_og_states[i, :], axis=1), b_new_copynumbers[i, :, :-1]], axis=1)
+                b_new_copynumbers[i, :, :] = np.concatenate([np.expand_dims(
+                    b_og_states[i, :], axis=1), b_new_copynumbers[i, :, :-1]], axis=1)
 
         # Get analytics batched too
 
@@ -374,7 +382,7 @@ class CircuitModeller():
                     ref_circuit_data = ref_circuit_result.data
             else:
                 ref_circuit_data = b_new_copynumbers[ref_idx]
-                
+
             signal_time = signal.func.keywords['impulse_center'] if ref_circuit.use_prod_and_deg else t[1]
 
             analytics_func = jax.vmap(partial(
@@ -471,7 +479,7 @@ class CircuitModeller():
             self.result_writer.unsubdivide_last_dir()
         self.result_writer.unsubdivide()
         return circuit
-    
+
     def make_stepsize_controller(self, choice: str, **kwargs):
         """ The choice can be either log or piecewise """
         if choice == 'log':
@@ -479,19 +487,22 @@ class CircuitModeller():
         elif choice == 'piecewise':
             return make_piecewise_stepcontrol(t0=self.t0, t1=self.t1, dt0=self.dt0, dt1=self.dt1, **kwargs)
         else:
-            raise ValueError(f'The stepsize controller option `{choice}` is not available.')
-        
+            raise ValueError(
+                f'The stepsize controller option `{choice}` is not available.')
+
     def make_log_stepcontrol(self, upper_log: int = 3):
         num = 1000
-        x = np.interp(np.logspace(0, upper_log, num=num), [1, np.power(10, upper_log)], [self.dt0, self.dt1])
+        x = np.interp(np.logspace(0, upper_log, num=num), [
+                      1, np.power(10, upper_log)], [self.dt0, self.dt1])
         while np.cumsum(x)[-1] < self.t1:
-            x = np.interp(np.logspace(0, upper_log, num=num), [1, np.power(10, upper_log)], [self.dt0, self.dt1])
+            x = np.interp(np.logspace(0, upper_log, num=num), [
+                          1, np.power(10, upper_log)], [self.dt0, self.dt1])
             num += 1
         ts = np.cumsum(x)
         ts[0] = self.t0
         ts[-1] = self.t1
         return dfx.StepTo(ts)
-    
+
     def prepare_internal_funcs(self, circuits: List[Circuit]):
         """ Create simulation function. If more customisation is needed per circuit, move
         variables into the relevant wrapper simulation method """
@@ -526,10 +537,11 @@ class CircuitModeller():
                         saveat=dfx.SaveAt(
                             # t0=True, t1=True),
                             ts=np.linspace(self.t0, self.t1, 500)),  # int(np.min([500, self.t1-self.t0]))))
-                            # ts=np.interp(np.logspace(0, 2, num=500), [1, np.power(10, 2)], [self.t0, self.t1])),  # Save more points early in the sim
-                        stepsize_controller=self.make_stepsize_controller(choice='piecewise')
+                        # ts=np.interp(np.logspace(0, 2, num=500), [1, np.power(10, 2)], [self.t0, self.t1])),  # Save more points early in the sim
+                        stepsize_controller=self.make_stepsize_controller(
+                            choice='piecewise')
                         )))
-            
+
         elif self.simulation_args['solver'] == 'ivp':
             # way slower
 
@@ -559,7 +571,8 @@ class CircuitModeller():
 
             self.sim_func = b_ivp
         else:
-            raise ValueError(f'The simulation function could not be specified with solver option {self.simulation_args["solver"]}. Try `diffrax` or `ivp`.')
+            raise ValueError(
+                f'The simulation function could not be specified with solver option {self.simulation_args["solver"]}. Try `diffrax` or `ivp`.')
 
     def batch_circuits(self,
                        circuits: List[Circuit],
@@ -570,9 +583,10 @@ class CircuitModeller():
 
         batch_size = len(circuits) if batch_size is None else batch_size
 
-        num_subcircuits = [len(flatten_nested_dict(c.mutations)) + 1 for c in circuits]
+        num_subcircuits = [len(flatten_nested_dict(
+            c.mutations)) + 1 for c in circuits]
         tot_subcircuits = sum(num_subcircuits)
-        
+
         viable_circuit_nums = [0]
         next_viable = 0
         i = 0
