@@ -54,5 +54,5 @@
     },
     "include_prod_deg": false,
     "system_type": "RNA",
-    "batch_size": 10
+    "batch_size": 10000
 }
