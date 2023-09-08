@@ -102,6 +102,7 @@ def get_true_interaction_cols(data: pd.DataFrame, interaction_attr, remove_symme
                 idxs = sorted(idxs)
             num_ending = '_' + str(idxs[0]) + '-' + str(idxs[1])
             names.append(interaction_attr + num_ending)
+    names = sorted(set(names))
     assert all([n in data.columns for n in names]
                ), f'Interaction info column names were not isolated correctly: {names}'
     return sorted(set([n for n in names if n in data.columns]))
