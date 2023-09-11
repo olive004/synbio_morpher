@@ -26,10 +26,10 @@ from fire import Fire
 # from synbio_morpher.scripts.ensemble_visualisation.run_ensemble_visualisation import main
 # from synbio_morpher.scripts.parameter_based_simulation.run_parameter_based_simulation import main
 # from synbio_morpher.scripts.stitch_parameter_grid.run_stitch_parameter_grid import main
-# from synbio_morpher.scripts.parameter_grid_analysis.run_parameter_grid_analysis import main
+from synbio_morpher.scripts.parameter_grid_analysis.run_parameter_grid_analysis import main
 # from synbio_morpher.scripts.parameter_grid_analysis.run_multi_parameter_grid_analysis import main
 # from synbio_morpher.scripts.ensemble_parameter_grid_analysis.run_ensemble_parameter_grid_analysis import main
-from synbio_morpher.scripts.mc_evolution.run_mc_evolution import main
+# from synbio_morpher.scripts.mc_evolution.run_mc_evolution import main
 
 
 FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
