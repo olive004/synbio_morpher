@@ -3,8 +3,7 @@
 # All rights reserved.
 
 # This source code is licensed under the MIT-style license found in the
-# LICENSE file in the root directory of this source tree. 
-    
+# LICENSE file in the root directory of this source tree.
 
 
 import logging
@@ -109,9 +108,9 @@ def get_bulkiest_dict_key(dict_like):
     return k_bulkiest
 
 
-def get_first_elements(tuples_list: List[Union[tuple, list]], empty_replacement = ()):
+def get_nth_elements(tuples_list: List[Union[tuple, list]], empty_replacement=(), n: int = 0):
     """ GC """
-    return [[tt[0] for tt in t] if t else empty_replacement for t in tuples_list]
+    return [[tt[n] for tt in t] if t else empty_replacement for t in tuples_list]
 
 
 def get_unique(list_like: list):

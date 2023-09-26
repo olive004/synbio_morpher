@@ -19,7 +19,7 @@ if __package__ is None or (__package__ == ''):
 from synbio_morpher.utils.data.data_format_tools.manipulate_fasta import load_seq_from_FASTA
 from synbio_morpher.utils.misc.numerical import count_monotonic_group_lengths, find_monotonic_group_idxs, is_within_range
 from synbio_morpher.utils.misc.string_handling import string_to_tuple_list, convert_liststr_to_list
-from synbio_morpher.utils.misc.type_handling import get_first_elements
+from synbio_morpher.utils.misc.type_handling import get_nth_elements
 from synbio_morpher.utils.results.analytics.naming import get_true_interaction_cols
 
 SEQ_LENGTH = 20
@@ -58,7 +58,7 @@ def proc_info(info):
         # fbs = [string_to_tuple_list(bb) for bb in info[b]]
         fbs = jax.tree_util.tree_map(
             lambda bb: string_to_tuple_list(bb), info[b].to_list())
-        first = get_first_elements(fbs, empty_replacement=[])
+        first = get_nth_elements(fbs, empty_replacement=[])
         info[bs] = list(map(count_monotonic_group_lengths, first))
         info[bsi] = list(map(find_monotonic_group_idxs, first))
         info[g] = info[bs].apply(len)
