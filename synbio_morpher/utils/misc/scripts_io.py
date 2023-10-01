@@ -150,7 +150,7 @@ def load_experiment_output_summary(experiment_folder) -> pd.DataFrame:
         if not os.path.isdir(experiment_folder):
             raise ValueError(f'Invalid experiment folder {experiment_folder} loaded. Check for spelling errors in pathnames supplied in config.')
     summary_path = os.path.join(experiment_folder, 'output_summary.csv')
-    if False: # os.path.isfile(summary_path):
+    if os.path.isfile(summary_path):
         output_summary = load_csv(summary_path)
     else:
         output_summary = generate_output_summary(experiment_folder)
