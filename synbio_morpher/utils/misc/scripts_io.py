@@ -231,7 +231,7 @@ def make_output_summary(experiment_folder: str) -> pd.DataFrame:
             output_summary['name'] = os.path.basename(file)
             purposes = [p for p in experiment_folder.split(os.path.sep) if p in get_purposes()]
             output_summary['subdir'] = purposes[-1] if purposes else None
-        output_summary_all = pd.concat([output_summary_all, output_summary])
+        output_summary_all = pd.concat([output_summary_all, pd.DataFrame.from_dict(output_summary)])
     return output_summary_all
 
 
