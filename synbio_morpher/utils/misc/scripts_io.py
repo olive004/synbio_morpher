@@ -153,7 +153,7 @@ def load_experiment_output_summary(experiment_folder) -> pd.DataFrame:
     if False: # os.path.isfile(summary_path):
         output_summary = load_csv(summary_path)
     else:
-        output_summary = make_output_summary(experiment_folder)
+        output_summary = generate_output_summary(experiment_folder)
     return output_summary
 
 
@@ -219,12 +219,12 @@ def load_experiment_config(experiment_folder: str) -> dict:
     return experiment_config
 
 
-def make_output_summary(experiment_folder: str, recursion_depth: int = 0) -> pd.DataFrame:
+def generate_output_summary(experiment_folder: str, recursion_depth: int = 0) -> pd.DataFrame:
     output_summary_all = pd.DataFrame()
     for filedir in os.listdir(experiment_folder):
         output_summary = {}
         if os.path.isdir(os.path.join(experiment_folder, filedir)) and (recursion_depth < 2):
-            output_summary = make_output_summary(os.path.join(experiment_folder, filedir))
+            output_summary = generate_output_summary(os.path.join(experiment_folder, filedir))
         elif os.path.isfile(os.path.join(experiment_folder, filedir)):
             output_summary['out_name'] = os.path.basename(filedir)
             output_summary['out_path'] = os.path.join(experiment_folder, filedir)
