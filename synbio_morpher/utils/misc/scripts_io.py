@@ -150,7 +150,7 @@ def load_experiment_output_summary(experiment_folder) -> pd.DataFrame:
         if not os.path.isdir(experiment_folder):
             raise ValueError(f'Invalid experiment folder {experiment_folder} loaded. Check for spelling errors in pathnames supplied in config.')
     summary_path = os.path.join(experiment_folder, 'output_summary.csv')
-    if os.path.isfile(summary_path):
+    if False: # os.path.isfile(summary_path):
         output_summary = load_csv(summary_path)
     else:
         output_summary = make_output_summary(experiment_folder)
@@ -219,19 +219,21 @@ def load_experiment_config(experiment_folder: str) -> dict:
     return experiment_config
 
 
-def make_output_summary(experiment_folder: str) -> pd.DataFrame:
-    output_summary_all = pd.DataFrame
-    for file in os.path.join(experiment_folder):
+def make_output_summary(experiment_folder: str, recursion_depth: int = 0) -> pd.DataFrame:
+    output_summary_all = pd.DataFrame()
+    for filedir in os.listdir(experiment_folder):
         output_summary = {}
-        if os.path.isfile(file):
-            output_summary['out_name'] = os.path.basename(file)
-            output_summary['out_path'] = os.path.join(experiment_folder, file)
-            output_summary['filename_addon'] = os.path.splitext(file)[1]
-            output_summary['out_type'] = os.path.splitext(file)[1]
-            output_summary['name'] = os.path.basename(file)
+        if os.path.isdir(os.path.join(experiment_folder, filedir)) and (recursion_depth < 2):
+            output_summary = make_output_summary(os.path.join(experiment_folder, filedir))
+        elif os.path.isfile(os.path.join(experiment_folder, filedir)):
+            output_summary['out_name'] = os.path.basename(filedir)
+            output_summary['out_path'] = os.path.join(experiment_folder, filedir)
+            output_summary['filename_addon'] = os.path.splitext(filedir)[1]
+            output_summary['out_type'] = os.path.splitext(filedir)[1]
+            output_summary['name'] = os.path.basename(filedir)
             purposes = [p for p in experiment_folder.split(os.path.sep) if p in get_purposes()]
             output_summary['subdir'] = purposes[-1] if purposes else None
-        output_summary_all = pd.concat([output_summary_all, pd.DataFrame.from_dict(output_summary)])
+        output_summary_all = pd.concat([output_summary_all, pd.DataFrame.from_dict({k: [v] for k, v in output_summary.items()})])
     return output_summary_all
 
 
