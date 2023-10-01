@@ -17,7 +17,7 @@ import importlib
 from synbio_morpher.srv.io.manage.sys_interface import PACKAGE_NAME, SCRIPT_DIR, DATA_DIR
 from synbio_morpher.utils.data.data_format_tools.common import write_csv, write_json, write_np
 from synbio_morpher.utils.data.data_format_tools.manipulate_fasta import write_fasta_file
-from synbio_morpher.utils.misc.io import create_location, get_subdirectories
+from synbio_morpher.utils.misc.io import create_location
 from synbio_morpher.utils.misc.string_handling import add_outtype, make_time_str
 from synbio_morpher.utils.misc.type_handling import find_sublist_max, convert_type_from_pandas
 

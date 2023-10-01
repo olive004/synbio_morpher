@@ -142,7 +142,8 @@ class NucleotideGenerator(SeqGenerator):
         out_path = self.data_writer.output(out_name=name, out_type=out_type,
                                            seq_generator=seq_generator, stype=self.stype,
                                            count=num_components, return_path=True,
-                                           subfolder='circuits')
+                                           subfolder='circuits',
+                                           write_master=True)
         return {'data_path': out_path}
 
     def generate_circuits_batch(self, num_circuits, slength, num_components: int,

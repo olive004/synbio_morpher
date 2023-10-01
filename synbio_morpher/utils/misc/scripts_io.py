@@ -150,8 +150,11 @@ def load_experiment_output_summary(experiment_folder) -> pd.DataFrame:
         if not os.path.isdir(experiment_folder):
             raise ValueError(f'Invalid experiment folder {experiment_folder} loaded. Check for spelling errors in pathnames supplied in config.')
     summary_path = os.path.join(experiment_folder, 'output_summary.csv')
-
-    return load_csv(summary_path)
+    if os.path.isfile(summary_path):
+        output_summary = load_csv(summary_path)
+    else:
+        output_summary = make_output_summary(experiment_folder)
+    return output_summary
 
 
 def load_result_report(local_experiment_folder: str, result_type: str = 'signal', index=slice(None)):
@@ -214,6 +217,22 @@ def load_experiment_config(experiment_folder: str) -> dict:
         raise KeyError(
             f'Could not retrieve original configs from experiment, instead got {experiment_report}')
     return experiment_config
+
+
+def make_output_summary(experiment_folder: str) -> pd.DataFrame:
+    output_summary_all = pd.DataFrame
+    for file in os.path.join(experiment_folder):
+        output_summary = {}
+        if os.path.isfile(file):
+            output_summary['out_name'] = os.path.basename(file)
+            output_summary['out_path'] = os.path.join(experiment_folder, file)
+            output_summary['filename_addon'] = os.path.splitext(file)[1]
+            output_summary['out_type'] = os.path.splitext(file)[1]
+            output_summary['name'] = os.path.basename(file)
+            purposes = [p for p in experiment_folder.split(os.path.sep) if p in get_purposes()]
+            output_summary['subdir'] = purposes[-1] if purposes else None
+        output_summary_all = pd.concat([output_summary_all, output_summary])
+    return output_summary_all
 
 
 def get_recent_experiment_folder(purpose_folder: str) -> str:
