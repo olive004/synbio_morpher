@@ -105,7 +105,7 @@ class InteractionMatrix():
                     self.interactions.binding_rates_dissociation)
             elif not allow_empty:
                 set_assoc = True
-        if set_assoc or (self.interactions.binding_rates_association is None) or np.isnan(self.interactions.binding_rates_association).all():
+        if set_assoc and ((self.interactions.binding_rates_association is None) or np.isnan(self.interactions.binding_rates_association).all()):
             assert experiment_config is not None, f'Please either provide the parameter for `association_binding_rate` as '
             '`binding_rates_association` in the `interactions` field in the config, or provide the entire config.'
             self.interactions.binding_rates_association = load_param(
