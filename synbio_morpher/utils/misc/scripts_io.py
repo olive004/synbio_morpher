@@ -223,8 +223,9 @@ def generate_output_summary(experiment_folder: str, recursion_depth: int = 0) ->
     output_summary_all = pd.DataFrame()
     for filedir in os.listdir(experiment_folder):
         output_summary = {}
-        if os.path.isdir(os.path.join(experiment_folder, filedir)) and (recursion_depth < 2):
-            output_summary = generate_output_summary(os.path.join(experiment_folder, filedir))
+        if os.path.isdir(os.path.join(experiment_folder, filedir)) and (recursion_depth < 1):
+            recursion_depth += 1
+            output_summary = generate_output_summary(os.path.join(experiment_folder, filedir), recursion_depth=recursion_depth)
         elif os.path.isfile(os.path.join(experiment_folder, filedir)):
             output_summary['out_name'] = os.path.basename(filedir)
             output_summary['out_path'] = os.path.join(experiment_folder, filedir)
@@ -233,7 +234,10 @@ def generate_output_summary(experiment_folder: str, recursion_depth: int = 0) ->
             output_summary['name'] = os.path.basename(filedir)
             purposes = [p for p in experiment_folder.split(os.path.sep) if p in get_purposes()]
             output_summary['subdir'] = purposes[-1] if purposes else None
-        output_summary_all = pd.concat([output_summary_all, pd.DataFrame.from_dict({k: [v] for k, v in output_summary.items()})])
+        if type(output_summary) == dict:
+            output_summary_all = pd.concat([output_summary_all, pd.DataFrame.from_dict({k: [v] for k, v in output_summary.items()})])
+        else:
+            output_summary_all = pd.concat([output_summary_all, output_summary])
     return output_summary_all
 
 
