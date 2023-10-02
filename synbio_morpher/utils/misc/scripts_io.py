@@ -226,12 +226,16 @@ def generate_output_summary(experiment_folder: str, recursion_depth: int = 0) ->
         if os.path.isdir(os.path.join(experiment_folder, filedir)) and (recursion_depth < 1):
             recursion_depth += 1
             output_summary = generate_output_summary(os.path.join(experiment_folder, filedir), recursion_depth=recursion_depth)
+            recursion_depth -= 1
         elif os.path.isfile(os.path.join(experiment_folder, filedir)):
-            output_summary['out_name'] = os.path.basename(filedir)
+            # output_summary['out_name'] = os.path.splitext(os.path.basename(filedir))[0]
+            output_summary['out_name'] = os.path.splitext(os.path.basename(filedir))[0]
             output_summary['out_path'] = os.path.join(experiment_folder, filedir)
             output_summary['filename_addon'] = os.path.splitext(filedir)[1]
-            output_summary['out_type'] = os.path.splitext(filedir)[1]
-            output_summary['name'] = os.path.basename(filedir)
+            output_summary['out_type'] = output_summary['filename_addon']
+            # n = os.path.basename(experiment_folder)
+            # output_summary['name'] = os.path.splitext(os.path.basename(filedir))[0].replace(n, '').strip('_')
+            output_summary['name'] = output_summary['out_name']
             purposes = [p for p in experiment_folder.split(os.path.sep) if p in get_purposes()]
             output_summary['subdir'] = purposes[-1] if purposes else None
         if type(output_summary) == dict:
@@ -249,6 +253,6 @@ def get_path_from_output_summary(name, output_summary: pd.DataFrame = None, expe
     if output_summary is None:
         assert experiment_folder, f'No experiment path given, cannot find experiment summary.'
         output_summary = load_experiment_output_summary(experiment_folder)
-    pathname = output_summary.loc[output_summary['out_name']
+    pathname = output_summary.loc[output_summary['name']
                                   == name]['out_path'].values[0]
     return pathname
