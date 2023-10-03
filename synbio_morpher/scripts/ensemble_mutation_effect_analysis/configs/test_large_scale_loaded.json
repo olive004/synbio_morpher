@@ -58,8 +58,8 @@
             },
             "source_of_interaction_stats": {
                 "is_source_dir_incomplete": false,
-                "source_dir": "data/gather_interaction_stats/2023_07_15_220412",
-                "purpose_to_get_source_dir_from": "gather_interaction_stats",
+                "source_dir": "data/ensemble_mutation_effect_analysis/2023_10_02_154355/gather_interaction_stats",
+                "purpose_to_get_source_dir_from": null,
                 "source_dir_actually_used_POSTERITY": null
             },
             "molecular_params_factor": 1,
