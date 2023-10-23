@@ -19,6 +19,7 @@ from synbio_morpher.utils.misc.type_handling import inverse_dict
 
 FORMAT_EXTS = {
     "fasta": "fasta",
+    "fna": "fasta",
     "npy": "numpy",
     "csv": "csv",
     "json": "json"
