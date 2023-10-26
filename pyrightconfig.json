@@ -1,6 +1,8 @@
 {
-    
     "exclude": [
         "data"
+    ],
+    "include": [
+        "*.json"
     ]
 }

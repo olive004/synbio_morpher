@@ -64,7 +64,7 @@ def compose_kwargs(prev_configs: dict = None, config: dict = None) -> dict:
             if kwarg not in ['experiment', 'mutations_args', 'signal', 'simulation', 'include_prod_deg']:
                 config[kwarg] = c
 
-    data_manager = DataManager(filepath=make_filename_safely(config.get("data_path", None)),
+    data_manager = DataManager(filepath=config.get("data_path", None), # make_filename_safely(config.get("data_path", None)),
                                identities=config.get("identities", {}),
                                data=config.get("data", None))
     kwargs = {}
