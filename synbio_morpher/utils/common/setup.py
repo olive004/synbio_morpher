@@ -51,6 +51,8 @@ def process_molecular_params(params: dict, factor=1) -> dict:
         if 'rate' in k and '_per_molecule' not in k:
             new_params[k + '_per_molecule'] = per_mol_to_per_molecule(v)
     params.update(new_params)
+    if not len(params):
+        raise ValueError('Need to provide molecular parameters in the config `molecular_params` field.')
     params['creation_rate'] = params['creation_rate'] * factor
     params['degradation_rate'] = params['degradation_rate'] * factor
     return params

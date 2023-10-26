@@ -182,3 +182,5 @@ def main(config=None, data_writer=None):
                             data_writer=data_writer)
     experiment.run_experiment()
     
+    return config, data_writer
+    

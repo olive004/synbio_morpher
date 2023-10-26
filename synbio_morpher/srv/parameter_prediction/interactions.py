@@ -3,8 +3,7 @@
 # All rights reserved.
 
 # This source code is licensed under the MIT-style license found in the
-# LICENSE file in the root directory of this source tree. 
-    
+# LICENSE file in the root directory of this source tree.
 
 
 import logging
@@ -86,7 +85,7 @@ class InteractionMatrix():
             for matrix_type, loaded_matrix in interactions_loaded.items():
                 self.interactions.__setattr__(matrix_type, loaded_matrix)
             if (interactions_loaded.get('binding_rates_dissociation') is not None) and (
-                interactions_loaded.get('binding_rates_association') is None):
+                    interactions_loaded.get('binding_rates_association') is None):
                 set_assoc = True
 
         if matrix_paths is not None:
@@ -106,8 +105,7 @@ class InteractionMatrix():
             elif not allow_empty:
                 set_assoc = True
         if set_assoc and ((self.interactions.binding_rates_association is None) or np.isnan(self.interactions.binding_rates_association).all()):
-            assert experiment_config is not None, f'Please either provide the parameter for `association_binding_rate` as '
-            '`binding_rates_association` in the `interactions` field in the config, or provide the entire config.'
+            assert experiment_config is not None, f'Please either provide the parameter for `association_binding_rate` as `binding_rates_association` in the `interactions` field in the config, or provide the entire config.'
             self.interactions.binding_rates_association = load_param(
                 filepath=None, param='association_binding_rate', experiment_config=experiment_config
             ) * np.ones_like(self.interactions.binding_rates_dissociation)
@@ -129,7 +127,8 @@ class InteractionMatrix():
         else:
             raise TypeError(
                 f'Unsupported filetype {filetype} for loading {filepath}')
-        units = load_units(filepath, experiment_config=self.experiment_config, quiet=quiet)
+        units = load_units(
+            filepath, experiment_config=self.experiment_config, quiet=quiet)
         return matrix, units, sample_names
 
     def isolate_circuit_name(self, circuit_filepath, filetype):
@@ -167,7 +166,8 @@ class InteractionDataHandler():
     def __init__(self, simulation_handler: RawSimulationHandling,
                  quantities: np.array):
         self.sample_processor = simulation_handler.get_sim_interpretation_protocol()
-        self.sample_postproc = simulation_handler.get_postprocessing(initial=quantities)
+        self.sample_postproc = simulation_handler.get_postprocessing(
+            initial=quantities)
         self.units = simulation_handler.units
 
     def init_data(self, data: dict, debug_mode: bool = False):
@@ -228,7 +228,7 @@ def b_get_stats(interactions_mxs: List[InteractionMatrix]):
     for interaction_attr in INTERACTION_FIELDS_TO_WRITE:
         b_interaction_attrs[interaction_attr] = np.concatenate([np.expand_dims(
             im.interactions.__getattribute__(interaction_attr), axis=0) for im in interactions_mxs], axis=0)
-    
+
     batch_dim = b_interaction_attrs['energies'].ndim - 2 - 1
     idxs_interacting = get_unique_interacting_idxs(
         b_interaction_attrs['energies'], batch_dim)

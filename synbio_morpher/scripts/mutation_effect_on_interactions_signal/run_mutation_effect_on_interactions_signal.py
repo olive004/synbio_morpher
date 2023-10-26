@@ -122,7 +122,7 @@ def main(config=None, data_writer=None):
                             data_writer=data_writer, debug_inputs=False)
     experiment.run_experiment()
 
-    return config_file, data_writer
+    return config, data_writer
 
 
 if __name__ == "__main__":

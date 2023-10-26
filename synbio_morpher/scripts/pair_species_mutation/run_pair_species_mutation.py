@@ -14,7 +14,8 @@ from synbio_morpher.utils.results.experiments import Experiment, Protocol
 from synbio_morpher.utils.results.result_writer import ResultWriter
 from synbio_morpher.utils.data.data_format_tools.common import load_json_as_dict
 from synbio_morpher.utils.data.fake_data_generation.seq_generator import RNAGenerator
-from synbio_morpher.utils.evolution.mutation import Evolver
+from synbio_morpher.utils.evolution.evolver import Evolver
+from synbio_morpher.utils.common.setup import construct_circuit_from_cfg, prepare_config, expand_config
 
 
 def main(config=None, data_writer=None):
@@ -69,6 +70,7 @@ def main(config=None, data_writer=None):
                             data_writer=data_writer)
     experiment.run_experiment()
 
+    return config, data_writer
 
 if __name__ == "__main__":
     Fire(main)

@@ -56,6 +56,7 @@ def main(config=None, data_writer=None):
                             data_writer=data_writer)
     experiment.run_experiment()
 
+    return config, data_writer
 
 if __name__ == "__main__":
     Fire(main)

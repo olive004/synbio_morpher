@@ -62,3 +62,5 @@ def main(config=None, data_writer=None):
         Protocol(partial(loop_parameter_grid_analysis, config=config_file))
     ], data_writer=data_writer)
     experiment.run_experiment()
+    
+    return config, data_writer
