@@ -12,7 +12,7 @@ from typing import Tuple, List
 import numpy as np
 from bioreaction.model.data_containers import Species
 from synbio_morpher.srv.io.loaders.misc import load_csv
-from synbio_morpher.utils.evolution.mutation import get_mutation_type_mapping, Mutations
+from synbio_morpher.utils.evolution.mutation import get_mutation_type_mapping, Mutations, EXCLUDED_NUCS
 from synbio_morpher.utils.misc.type_handling import flatten_listlike, flatten_nested_dict
 from synbio_morpher.utils.results.writer import DataWriter, kwargs_from_table
 from synbio_morpher.utils.misc.string_handling import add_outtype
@@ -167,7 +167,7 @@ class Evolver():
                 return sorted(set([np.mod(int(np.divide(flat_idx, np.power(length, i))), length) for i in range(nesting)]))
 
             mutation_nums_per_position = [len(
-                self.mutation_type_mapping.keys()) - 1]
+                [k for k in self.mutation_type_mapping.keys() if k not in EXCLUDED_NUCS]) - 1]
             for i, specie in enumerate(circuit.model.species):
                 circuit.mutations[specie.name] = {}
                 sequence = specie.physical_data

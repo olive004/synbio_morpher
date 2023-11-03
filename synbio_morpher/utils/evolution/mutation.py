@@ -15,6 +15,7 @@ from synbio_morpher.utils.circuit.agnostic_circuits.circuit import Circuit
 from synbio_morpher.utils.results.writer import Tabulated
 
 
+EXCLUDED_NUCS = ['N']
 mutation_type_mapping_RNA = {
     # Mutation idx from parent key to child key
     "A": {
