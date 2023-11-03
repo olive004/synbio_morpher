@@ -3,8 +3,7 @@
 # All rights reserved.
 
 # This source code is licensed under the MIT-style license found in the
-# LICENSE file in the root directory of this source tree. 
-    
+# LICENSE file in the root directory of this source tree.
 
 
 from typing import List, Dict, Union
@@ -86,11 +85,13 @@ def filter_data(data: pd.DataFrame, filters: dict = {}):
             "max_self_interacting", data["num_self_interacting"].iloc[0])]
     if filters.get("min_num_self_interacting") is not None:
         filt_stats = filt_stats[filt_stats['num_self_interacting']
-                          >= filters["min_num_self_interacting"]]
+                                >= filters["min_num_self_interacting"]]
     if filters.get("not_in_dirs") is not None:
         if 'name' in filt_stats.columns:
-            assert type(filters['not_in_dirs']) == list, f'The used directories should be in a list, not {filters["filt_stats"]}'
-            used_circuits = flatten_nested_listlike([os.listdir(f) for f in filters['not_in_dirs']])
+            assert type(
+                filters['not_in_dirs']) == list, f'The used directories should be in a list, not {filters["filt_stats"]}'
+            used_circuits = flatten_nested_listlike(
+                [os.listdir(f) for f in filters['not_in_dirs']])
             filt_stats = filt_stats[~filt_stats['name'].isin(used_circuits)]
     filt_stats = filt_stats.iloc[:min(filters.get(
         'max_total', len(filt_stats)), len(filt_stats))]
@@ -175,14 +176,6 @@ def b_tabulate_mutation_info(source_dir: str, data_writer: DataWriter, experimen
                                          search_dir=source_interaction_dir,
                                          subdirs=INTERACTION_TYPES,
                                          as_dict=True, first_only=True, allow_empty=False)
-            # if not matrix_paths:
-            #     # The interactions might have been written to the above directory, bit hacky
-            #     matrix_paths = get_pathnames(file_key=[os.path.basename(
-            #         source_interaction_dir) + '_' + i for i in INTERACTION_TYPES],
-            #         search_dir=os.path.dirname(
-            #         source_interaction_dir),
-            #         subdirs=INTERACTION_TYPES,
-            #         as_dict=True, first_only=True, allow_empty=False)
             matrix_paths.update(get_pathnames(file_key=[INTERACTION_FIELDS_TO_WRITE[0]],
                                               search_dir=source_interaction_dir,
                                               subdirs=[
@@ -235,11 +228,13 @@ def b_tabulate_mutation_info(source_dir: str, data_writer: DataWriter, experimen
 
         result_reports = []
         for result_source_dir in result_source_dirs:
-            result_reports.append(
-                make_result_report(result_source_dir,
-                                   all_sample_names, chosen_sample_names)
-            )
-        result_table = pd.concat(result_reports, axis=0)
+            try:
+                result_report = make_result_report(result_source_dir,
+                                               all_sample_names, chosen_sample_names)
+            except:
+                result_report = None
+            if result_report:
+                result_reports.append(result_report)
 
         def process_results(table: pd.DataFrame) -> pd.DataFrame:
             """ Contracts the columns of the table into list (reverse of explode) """
@@ -249,12 +244,15 @@ def b_tabulate_mutation_info(source_dir: str, data_writer: DataWriter, experimen
                 columns=['result_source_dir'])
             return table
 
-        # Contract columns so that the results match the length of the current table
-        result_table = process_results(result_table)
-
         new_table = pd.concat([pd.DataFrame.from_dict(
-            curr_table).reset_index(), int_stats, diff_interactions, ratio_interactions, result_table], axis=1)
-        new_table = new_table.explode(list(result_table.columns))
+            curr_table).reset_index(), int_stats, diff_interactions, ratio_interactions], axis=1)
+
+        # Contract columns so that the results match the length of the current table
+        if result_reports:
+            result_table = pd.concat(result_reports, axis=0)
+            result_table = process_results(result_table)
+            new_table = pd.concat([new_table, result_table], axis=1)
+            new_table = new_table.explode(list(result_table.columns))
         if check_coherent:
             check_coherency(new_table)
         info_table = pd.concat([info_table, new_table])
@@ -299,7 +297,7 @@ def b_tabulate_mutation_info(source_dir: str, data_writer: DataWriter, experimen
             first_only=True, file_key='mutations', search_dir=circuit_dir, allow_empty=True)
         if mutations_pathname:
             mutations = GeneCircuitLoader().load_data(mutations_pathname).data
-            # HAVE TO SORT THIS SINCE MUTATION DIRECTORIES ARE SORTED 
+            # HAVE TO SORT THIS SINCE MUTATION DIRECTORIES ARE SORTED
             mutations = mutations.sort_values('mutation_name')
             if os.path.isdir(os.path.join(circuit_dir, 'mutations')):
                 mutation_dirs = sorted(get_subdirectories(
@@ -320,13 +318,13 @@ def b_tabulate_mutation_info(source_dir: str, data_writer: DataWriter, experimen
                 'path_to_template_circuit': mutations['template_file']
             })
             current_og_table['path_to_template_circuit'] = mutations['template_file'].iloc[0]
-            
+
         # Expand the interaction keys in the table
         info_table = update_info_table(info_table, curr_table=current_og_table, int_stats=interaction_stats_og,
                                        ref_stats=interaction_stats_og, result_source_dirs=[
                                            circuit_dir],
                                        all_sample_names=all_sample_names, chosen_sample_names=sample_names)
-        
+
         if mutations_pathname:
             # Expand the interaction keys in the table
             info_table = update_info_table(info_table, curr_table=mutation_table,

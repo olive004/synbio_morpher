@@ -11,6 +11,7 @@ import os
 from synbio_morpher.scripts.generate_species_templates.run_generate_species_templates import main as generate_species_templates
 from synbio_morpher.scripts.gather_interaction_stats.run_gather_interaction_stats import main as gather_interaction_stats
 from synbio_morpher.scripts.mutation_effect_on_interactions_signal.run_mutation_effect_on_interactions_signal import main as mutation_effect_on_interactions_signal
+from synbio_morpher.scripts.summarise_simulation.run_summarise_simulation import main as summarise_simulation
 from synbio_morpher.srv.io.manage.script_manager import script_preamble, ensemble_func
 
 
