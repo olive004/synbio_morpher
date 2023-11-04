@@ -288,7 +288,8 @@ def b_tabulate_mutation_info(source_dir: str, data_writer: DataWriter, experimen
             'mutation_num': 0,
             'mutation_type': [],
             'mutation_positions': [],
-            'path_to_template_circuit': ''
+            'path_to_template_circuit': '',
+            'sample_num': len(all_sample_names)
         }
         current_og_table = pd.DataFrame.from_dict(
             {k: [v] for k, v in current_og_table.items()})
@@ -315,7 +316,8 @@ def b_tabulate_mutation_info(source_dir: str, data_writer: DataWriter, experimen
                 'mutation_num': mutations['count'],
                 'mutation_type': cast_astype(mutations['mutation_types'], int),
                 'mutation_positions': cast_astype(mutations['positions'], int),
-                'path_to_template_circuit': mutations['template_file']
+                'path_to_template_circuit': mutations['template_file'],
+                'sample_num': len(all_sample_names)
             })
             current_og_table['path_to_template_circuit'] = mutations['template_file'].iloc[0]
 

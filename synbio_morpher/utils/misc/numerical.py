@@ -215,11 +215,13 @@ def is_within_range(number, range_tuple):
 def make_symmetrical_matrix_from_sequence(arr, side_length: int):
     """ For a flat 1D array, make a symmetrical 2D matrix filling
     in the upper triangle with the 1D array. """
+    if arr.ndim > 1:
+        logging.warning('For flat 1D sequence array, remember to squeeze')
     i = np.triu(
         np.arange(side_length * side_length).reshape(side_length, side_length))
+    # idxs = np.interp(ii, np.unique(ii), np.arange(len(arr))).astype(int)
     ii = i + i.T - np.diag(i.diagonal())
-    idxs = np.interp(ii, np.unique(ii), np.arange(len(arr))).astype(int)
-    return arr[idxs.flatten()].reshape(side_length, side_length)
+    return arr[ii.flatten()].reshape(side_length, side_length)
     # iu = np.triu_indices(side_length)
     # mat = np.zeros([side_length,side_length])
     # mat[iu] = arr

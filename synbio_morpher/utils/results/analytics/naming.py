@@ -8,6 +8,7 @@
 from typing import List
 import logging
 import pandas as pd
+import numpy as np
 
 
 DIFF_KEY = '_diff_to_base_circuit'
@@ -93,16 +94,11 @@ def get_true_interaction_cols(data: pd.DataFrame, interaction_attr, remove_symme
     elif num_species is None:
         num_species = 3
         logging.warning(f'Assuming that the number of species is {num_species}')
-
-    names = []
-    for i in range(num_species):
-        for ii in range(num_species):
-            idxs = [i, ii]
-            if remove_symmetrical:
-                idxs = sorted(idxs)
-            num_ending = '_' + str(idxs[0]) + '-' + str(idxs[1])
-            names.append(interaction_attr + num_ending)
-    names = sorted(set(names))
+    a = np.triu(np.ones((num_species, num_species)))
+    if not remove_symmetrical:
+        a += np.tril(np.ones((num_species, num_species)))
+    names = list(map(lambda i: interaction_attr + '_' + str(i[0]) + '-' + str(i[1]), np.array(np.where(a > 0)).T))
+        
     assert all([n in data.columns for n in names]
                ), f'Interaction info column names were not isolated correctly: {names}'
-    return sorted(set([n for n in names if n in data.columns]))
+    return names
