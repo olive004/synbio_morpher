@@ -45,32 +45,32 @@ class Evolver():
             return False
         return True
 
-    def get_batch_mutator(self, algorithm: str):
+    # def get_batch_mutator(self, algorithm: str):
 
-        def mutation_sampler(sequence_length, num_mutations, batch_size=1):
-            if sequence_length < num_mutations:
-                logging.warning(
-                    f'For sequences of length {sequence_length}, cannot mutate {num_mutations} times.')
-            positions = np.random.choice(sequence_length, size=(
-                num_mutations, batch_size), replace=False)
-            return positions
+    #     def mutation_sampler(sequence_length, num_mutations, batch_size=1):
+    #         if sequence_length < num_mutations:
+    #             logging.warning(
+    #                 f'For sequences of length {sequence_length}, cannot mutate {num_mutations} times.')
+    #         positions = np.random.choice(sequence_length, size=(
+    #             num_mutations, batch_size), replace=False)
+    #         return positions
 
-        def sample_mutations(self, sequence: str, positions: list, mutation_nums_per_position: list) -> Tuple[list, list]:
-            mutation_types = {}
-            new_positions = []
-            mutation_nums_per_position = mutation_nums_per_position * \
-                len(positions) if len(
-                    mutation_nums_per_position) == 1 else mutation_nums_per_position
-            for p, n in zip(positions, mutation_nums_per_position):
-                possible_transitions = self.mutation_type_mapping[sequence[p]]
-                if n > len(possible_transitions):
-                    logging.warning(
-                        f'Cannot pick {n} when there are only {len(possible_transitions)} choices')
-                mutation_types[p] = list(np.random.choice(
-                    list(possible_transitions.values()), size=n, replace=False))
-                new_positions.append([p] * n)
+    #     def sample_mutations(self, sequence: str, positions: list, mutation_nums_per_position: list) -> Tuple[list, list]:
+    #         mutation_types = {}
+    #         new_positions = []
+    #         mutation_nums_per_position = mutation_nums_per_position * \
+    #             len(positions) if len(
+    #                 mutation_nums_per_position) == 1 else mutation_nums_per_position
+    #         for p, n in zip(positions, mutation_nums_per_position):
+    #             possible_transitions = self.mutation_type_mapping[sequence[p]]
+    #             if n > len(possible_transitions):
+    #                 logging.warning(
+    #                     f'Cannot pick {n} when there are only {len(possible_transitions)} choices')
+    #             mutation_types[p] = list(np.random.choice(
+    #                 list(possible_transitions.values()), size=n, replace=False))
+    #             new_positions.append([p] * n)
 
-            return flatten_listlike(mutation_types.values()), flatten_listlike(new_positions)
+    #         return flatten_listlike(mutation_types.values()), flatten_listlike(new_positions)
 
     def mutate(self, circuit: Circuit, algorithm: str, write_to_subsystem=False):
         """ algorithm can be either random or all """
@@ -100,11 +100,18 @@ class Evolver():
         def make_species_iter(circuit: Circuit):
             spec_iter = circuit.model.species
             if self.concurrent_species_to_mutate:
-                if self.concurrent_species_to_mutate == 'single_species_at_a_time':
-                    spec_iter = circuit.model.species
-                elif self.concurrent_species_to_mutate in [s.name for s in circuit.model.species]:
-                    spec_iter = [
-                        s for s in circuit.model.species if s.name == self.concurrent_species_to_mutate]
+                if type(self.concurrent_species_to_mutate) == str:
+                    if self.concurrent_species_to_mutate == 'single_species_at_a_time':
+                        spec_iter = circuit.model.species
+                    elif self.concurrent_species_to_mutate in [s.name for s in circuit.model.species]:
+                        spec_iter = [
+                            s for s in circuit.model.species if s.name == self.concurrent_species_to_mutate]
+                elif type(self.concurrent_species_to_mutate) == list:
+                    spec_iter = []
+                    for c in self.concurrent_species_to_mutate:
+                        spec_iter.append([
+                            s for s in circuit.model.species if s.name == c])
+                    spec_iter = flatten_listlike(spec_iter)
                 else:
                     logging.warning(
                         f'The mutation option {self.concurrent_species_to_mutate} is not implemented.')
