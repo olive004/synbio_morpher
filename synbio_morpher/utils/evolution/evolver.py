@@ -106,6 +106,9 @@ class Evolver():
                     elif self.concurrent_species_to_mutate in [s.name for s in circuit.model.species]:
                         spec_iter = [
                             s for s in circuit.model.species if s.name == self.concurrent_species_to_mutate]
+                    else:
+                        logging.warning(f'Could not find {self.concurrent_species_to_mutate} among the circuit species:')
+                        logging.warning([s.name for s in circuit.model.species])
                 elif type(self.concurrent_species_to_mutate) == list:
                     spec_iter = []
                     for c in self.concurrent_species_to_mutate:
