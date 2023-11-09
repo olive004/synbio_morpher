@@ -3,8 +3,8 @@
 # All rights reserved.
 
 # This source code is licensed under the MIT-style license found in the
-# LICENSE file in the root directory of this source tree. 
-    
+# LICENSE file in the root directory of this source tree.
+
 from functools import partial
 import logging
 import os
@@ -27,13 +27,15 @@ class Evolver():
                  data_writer: DataWriter,
                  mutation_type: str = 'random',
                  sequence_type: str = None,
-                 seed: int = None) -> None:
+                 seed: int = None,
+                 concurrent_species_to_mutate: str = '') -> None:
         self.data_writer = data_writer
         self.mutation_type = mutation_type  # Not implemented
         self.out_name = 'mutations'
         self.out_type = 'csv'
         self.sequence_type = sequence_type
         self.mutation_type_mapping = get_mutation_type_mapping(sequence_type)
+        self.concurrent_species_to_mutate = concurrent_species_to_mutate
 
         if seed is not None:
             np.random.seed(seed)
@@ -42,16 +44,6 @@ class Evolver():
         if circuit.mutations_args['mutation_counts'] is None or circuit.mutations_args['mutation_nums_within_sequence'] is None:
             return False
         return True
-
-    # def batch_mutate(self, circuits: List[Circuit], algorithm: str, write_to_subsystem=True, batch=True):
-    #     c_idx = 0
-    #     if not all([self.is_mutation_possible(c) for c in circuits]):
-    #         raise ValueError(
-    #             'Could not mutate: mutation settings not found for some circuits')
-    #     mutator = self.get_mutator(algorithm)
-    #     mutations_args = circuits[c_idx].mutations_args
-    #     assert all([mutations_args == c.mutations_args for c in circuits]
-    #                ), 'Cannot batch with varying mutation args.'
 
     def get_batch_mutator(self, algorithm: str):
 
@@ -80,31 +72,7 @@ class Evolver():
 
             return flatten_listlike(mutation_types.values()), flatten_listlike(new_positions)
 
-        # def rand_mutator():
-        #     for specie in circuit.model.species:
-        #         circuit.mutations[specie.name] = {}
-        #         sequence = specie.physical_data
-        #         if not sequence:
-        #             continue
-        #         for mutation_nums_within_sequence in circuit.mutations_args['mutation_nums_within_sequence']:
-        #             for mutation_counts in circuit.mutations_args['mutation_counts']:
-        #                 for mutation_idx in range(mutation_counts):
-
-        #                     positions = positions if positions_chosen is not None else mutation_sampler(
-        #                         len(sequence), mutation_nums_within_sequence)
-        #                     mutation_types, positions = self.sample_mutations(
-        #                         sequence, positions, circuit.mutations_args['mutation_nums_per_position'])
-
-        #                     mutation = self.make_mutations(
-        #                         specie=specie, positions=positions,
-        #                         mutation_idx=mutation_idx,
-        #                         mutation_types=mutation_types, algorithm=algorithm,
-        #                         template_file=circuit.data.source)
-
-        #                     circuit.mutations[specie.name][mutation.mutation_name] = mutation
-        #     return circuit
-
-    def mutate(self, circuit: Circuit, algorithm: str, write_to_subsystem=False, write_to_fasta=False):
+    def mutate(self, circuit: Circuit, algorithm: str, write_to_subsystem=False):
         """ algorithm can be either random or all """
         if write_to_subsystem:
             self.data_writer.subdivide_writing(
@@ -114,9 +82,6 @@ class Evolver():
             circuit = mutator(circuit)
         else:
             logging.info('No mutation settings found, did not mutate.')
-
-        if write_to_fasta:
-            self.write_to_fasta(circuit)
 
         if write_to_subsystem:
             self.data_writer.unsubdivide_last_dir()
@@ -132,8 +97,23 @@ class Evolver():
                 num_mutations, batch_size), replace=False)
             return positions
 
+        def make_species_iter(circuit: Circuit):
+            spec_iter = circuit.model.species
+            if self.concurrent_species_to_mutate:
+                if self.concurrent_species_to_mutate == 'single_species_at_a_time':
+                    spec_iter = circuit.model.species
+                elif self.concurrent_species_to_mutate in [s.name for s in circuit.model.species]:
+                    spec_iter = [
+                        s for s in circuit.model.species if s.name == self.concurrent_species_to_mutate]
+                else:
+                    logging.warning(
+                        f'The mutation option {self.concurrent_species_to_mutate} is not implemented.')
+            return spec_iter
+
         def rand_mutator(circuit: Circuit, algorithm: str, positions_chosen=None):
-            for specie in circuit.model.species:
+            spec_iter = make_species_iter(circuit)
+
+            for specie in spec_iter:
                 circuit.mutations[specie.name] = {}
                 sequence = specie.physical_data
                 if not sequence:
@@ -168,7 +148,8 @@ class Evolver():
 
             mutation_nums_per_position = [len(
                 [k for k in self.mutation_type_mapping.keys() if k not in EXCLUDED_NUCS]) - 1]
-            for i, specie in enumerate(circuit.model.species):
+            spec_iter = make_species_iter(circuit)
+            for i, specie in enumerate(spec_iter):
                 circuit.mutations[specie.name] = {}
                 sequence = specie.physical_data
                 sequence_l = len(sequence)
@@ -229,7 +210,7 @@ class Evolver():
             f'm{mutation_count}-' + str(
                 mutation_idx),
             template_species=specie,
-            template_name=specie.name, 
+            template_name=specie.name,
             template_seq=specie.physical_data,
             mutation_types=mutation_types,
             count=mutation_count,
@@ -244,21 +225,22 @@ class Evolver():
         self.data_writer.output(
             out_type=self.out_type, out_name=self.out_name, data=mutations.as_table(), overwrite=overwrite)
 
-    def write_to_fasta(self, circuit: Circuit):
-        for m_name, m in flatten_nested_dict(circuit.mutations):
-            pass
-        self.data_writer.output()
 
 def load_mutations(circuit, filename=None):
     table = load_csv(filename, load_as='pandas')
-    circuit.mutations = {} 
+    circuit.mutations = {}
     species_names = [s.name for s in circuit.model.species]
     for i in range(len(table)):
-        mutating_species = circuit.model.species[species_names.index(table.iloc[i]['template_name'])]
+        mutating_species = circuit.model.species[species_names.index(
+            table.iloc[i]['template_name'])]
         if mutating_species not in circuit.mutations:
-            circuit.mutations[mutating_species] = {table.iloc[i]['mutation_name']: Mutations(template_species=mutating_species, **kwargs_from_table(Mutations, table=table.iloc[i]))}
+            circuit.mutations[mutating_species] = {table.iloc[i]['mutation_name']: Mutations(
+                template_species=mutating_species, **kwargs_from_table(Mutations, table=table.iloc[i]))}
         else:
-            circuit.mutations[mutating_species].update({table.iloc[i]['mutation_name']: Mutations(template_species=mutating_species, **kwargs_from_table(Mutations, table=table.iloc[i]))})
-        circuit.mutations[mutating_species][table.iloc[i]['mutation_name']].mutation_types = [int(v) for v in circuit.mutations[mutating_species][table.iloc[i]['mutation_name']].mutation_types]
-        circuit.mutations[mutating_species][table.iloc[i]['mutation_name']].positions = [int(v) for v in circuit.mutations[mutating_species][table.iloc[i]['mutation_name']].positions]
+            circuit.mutations[mutating_species].update({table.iloc[i]['mutation_name']: Mutations(
+                template_species=mutating_species, **kwargs_from_table(Mutations, table=table.iloc[i]))})
+        circuit.mutations[mutating_species][table.iloc[i]['mutation_name']].mutation_types = [int(
+            v) for v in circuit.mutations[mutating_species][table.iloc[i]['mutation_name']].mutation_types]
+        circuit.mutations[mutating_species][table.iloc[i]['mutation_name']].positions = [int(
+            v) for v in circuit.mutations[mutating_species][table.iloc[i]['mutation_name']].positions]
     return circuit
