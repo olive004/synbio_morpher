@@ -103,12 +103,12 @@ class Evolver():
                 if type(self.concurrent_species_to_mutate) == str:
                     if self.concurrent_species_to_mutate == 'single_species_at_a_time':
                         spec_iter = circuit.model.species
-                    elif self.concurrent_species_to_mutate in [s.name for s in circuit.model.species]:
+                    elif self.concurrent_species_to_mutate in circuit.species_names:
                         spec_iter = [
                             s for s in circuit.model.species if s.name == self.concurrent_species_to_mutate]
                     else:
                         logging.warning(f'Could not find {self.concurrent_species_to_mutate} among the circuit species:')
-                        logging.warning([s.name for s in circuit.model.species])
+                        logging.warning(circuit.species_names)
                 elif type(self.concurrent_species_to_mutate) == list:
                     spec_iter = []
                     for c in self.concurrent_species_to_mutate:
@@ -239,7 +239,7 @@ class Evolver():
 def load_mutations(circuit, filename=None):
     table = load_csv(filename, load_as='pandas')
     circuit.mutations = {}
-    species_names = [s.name for s in circuit.model.species]
+    species_names = circuit.species_names
     for i in range(len(table)):
         mutating_species = circuit.model.species[species_names.index(
             table.iloc[i]['template_name'])]

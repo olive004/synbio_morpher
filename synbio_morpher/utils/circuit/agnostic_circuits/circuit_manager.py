@@ -11,6 +11,7 @@ from functools import partial
 from datetime import datetime
 import inspect
 import os
+import gc
 # import sys
 import logging
 import diffrax as dfx
@@ -129,6 +130,30 @@ class CircuitModeller():
                 filename_addon=filename_addon, subfolder=filename_addon)
         return circuit
 
+    def compute_interactions_batch(self, circuits, batch=True):
+        # Make sure multi-threading is on
+        assert self.simulator_args[''] > 1, 'Set the IntaRNA nu'
+        if self.simulator_args['name'] == 'IntaRNA':
+            if self.simulator_args['threads'] == 1:
+                logging.warning(
+                    'For batch-computation of interaction strengths with IntaRNA, multi-threading is recommended. Set `threads` in the config file within the simulator arguments (`interaction_simulator`) kwargs.')
+        # And that raw_stdout is set to true, otherwise IntaRNA will only return the first interaction
+            if self.simulator_args['raw_stdout'] == False:
+                logging.warning('For batching IntaRNA, setting raw_stdout to True, otherwise the output from the Python API will only return one interaction')
+                self.simulator_args['raw_stdout'] = True
+
+        # Write temporary fasta file with all interactions
+        
+
+        # Run simulator with fasta as input
+
+        # Process output from string into csv into numpy
+
+        # Fill in the species that didn't get returned with IntaRNA non-interaction default parameters
+
+        # Delete fasta file
+        pass
+
     def run_interaction_simulator(self, species: List[Species], quantities, filename=None) -> InteractionDataHandler:
         data = {s: s.physical_data for s in species}
         # if filename is not None:
@@ -153,7 +178,7 @@ class CircuitModeller():
                 category='time_series',
                 vis_func=VisODE().plot,
                 vis_kwargs={'t': t,
-                            'legend': [s.name for s in circuit.model.species],
+                            'legend': circuit.species_names,
                             'out_type': 'svg'},
                 analytics_kwargs={'labels': [
                     s.name for s in circuit.model.species]},
@@ -414,7 +439,7 @@ class CircuitModeller():
                 vis_func=VisODE().plot,
                 analytics=analytics,
                 vis_kwargs={'t': t,
-                            'legend': [s.name for s in circuit.model.species],
+                            'legend': circuit.species_names,
                             'out_type': 'svg'})
         # return {top_name: {subname: circuits[len(v)*i + j] for j, subname in enumerate(v.keys())}
         #         for i, (top_name, v) in enumerate(.items())}
@@ -446,9 +471,10 @@ class CircuitModeller():
             subcircuits[i].circuit_size = circuit.circuit_size
             subcircuits[i].signal: Signal = circuit.signal
             subcircuits[i].use_prod_and_deg = circuit.use_prod_and_deg
-
+            
             # Cannot be by ref
             subcircuits[i].model = deepcopy(circuit.model)
+            subcircuits[i].species_names = circuit.species_name
             subcircuits[i].qreactions = deepcopy(circuit.qreactions)
             subcircuits[i] = implement_mutation(subcircuits[i], m)
         return subcircuits
@@ -590,6 +616,7 @@ class CircuitModeller():
         viable_circuit_nums = [0]
         next_viable = 0
         i = 0
+        assert num_subcircuits[0] < self.max_circuits, f'The number of subcircuits {num_subcircuits[0]} in the first circuit is less than the max circuits specified ({self.max_circuits}).'
         while i < len(num_subcircuits):
             while (i < len(num_subcircuits)) and (next_viable + num_subcircuits[i] < self.max_circuits):
                 next_viable += num_subcircuits[i]
@@ -645,6 +672,7 @@ class CircuitModeller():
             logging.warning(
                 f'Single batch: {single_batch_time} \nProjected time: {single_batch_time.total_seconds() * len(subcircuits)/tot_subcircuits}s \nTotal time: {str(datetime.now() - start_time)}')
             del subcircuits
+            gc.collect()
         return circuits
 
     def run_batch(self,

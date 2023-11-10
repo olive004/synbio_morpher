@@ -125,8 +125,8 @@ class Mutations(Tabulated):
 
 def implement_mutation(circuit: Circuit, mutation: Mutations):
 
-    if mutation.template_name in [s.name for s in circuit.model.species]:
-        sidx = [s.name for s in circuit.model.species].index(mutation.template_name)
+    if mutation.template_name in circuit.species_names:
+        sidx = circuit.species_names.index(mutation.template_name)
         # circuit.model.species[sidx].name = mutation.mutation_name
         circuit.model.species[sidx].physical_data = mutation.get_sequence()
     else:

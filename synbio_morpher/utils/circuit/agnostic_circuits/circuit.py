@@ -51,6 +51,7 @@ class Circuit():
         self.use_prod_and_deg = config.get('include_prod_deg', True)
         self.model = construct_bioreaction_model(
             config.get('data'), config.get('molecular_params'), include_prod_deg=self.use_prod_and_deg)
+        self.species_names = [s.name for s in self.model.species]
         self.circuit_size = len(self.model.species)
         self.data: DataManager = config.get('data')
         self.qreactions = self.init_reactions(self.model, config)
