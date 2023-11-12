@@ -134,6 +134,18 @@ def make_piecewise_stepcontrol(t0, t1, dt0, dt1, split: int = 3):
     return dfx.StepTo(ts)
 
 
+def process_raw_stdout(stdout):
+    """ Process the raw output of IntaRNA when multithreading. """
+    d = {}
+    header = stdout.split('\n')[0].split(';')
+    for t in stdout.split('\n')[1:-1]:
+        d[t.split(';')[0]] = {
+            header[2]: float(t.split(';')[2]),
+            header[3]: t.split(';')[3]
+        }
+    return d
+
+
 def simulate_IntaRNA(input, compute_by_filename: bool, allow_self_interaction: bool, sim_kwargs: dict, simulator):
     if compute_by_filename:
         f = simulate_IntaRNA_fn
