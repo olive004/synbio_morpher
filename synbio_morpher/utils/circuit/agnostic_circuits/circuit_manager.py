@@ -88,9 +88,9 @@ class CircuitModeller():
             circuits = self.scale_rates(circuits)
         circuits = self.find_steady_states(circuits)
         return circuits
-
-    # @time_it
-    def compute_interactions(self, circuit: Circuit):
+    
+    def compute_interactions_core(self, circuit: Circuit) -> Circuit:
+        
         if circuit.interactions_state == 'uninitialised' and not self.debug_mode:
             if self.simulator_args['compute_by_filename'] and circuit.subname == "ref_circuit" and os.path.exists(circuit.data.source):
                 filename = circuit.data.source
@@ -111,6 +111,12 @@ class CircuitModeller():
             circuit.init_interactions(init_dummy=True)
         else:
             circuit.init_interactions()
+            
+        return circuit
+
+    # @time_it
+    def compute_interactions(self, circuit: Circuit):
+        circuit = self.compute_interactions_core(circuit)
 
         circuit.interactions.binding_rates_association = circuit.interactions.binding_rates_association * \
             self.interaction_factor
@@ -130,20 +136,26 @@ class CircuitModeller():
                 filename_addon=filename_addon, subfolder=filename_addon)
         return circuit
 
-    def compute_interactions_batch(self, circuits, batch=True):
+    def compute_interactions_batch(self, circuits: List[Circuit], batch=True):
         # Make sure multi-threading is on
-        assert self.simulator_args[''] > 1, 'Set the IntaRNA nu'
         if self.simulator_args['name'] == 'IntaRNA':
             if self.simulator_args['threads'] == 1:
                 logging.warning(
                     'For batch-computation of interaction strengths with IntaRNA, multi-threading is recommended. Set `threads` in the config file within the simulator arguments (`interaction_simulator`) kwargs.')
         # And that raw_stdout is set to true, otherwise IntaRNA will only return the first interaction
             if self.simulator_args['raw_stdout'] == False:
-                logging.warning('For batching IntaRNA, setting raw_stdout to True, otherwise the output from the Python API will only return one interaction')
+                logging.warning(
+                    'For batching IntaRNA, setting raw_stdout to True, otherwise the output from the Python API will only return one interaction')
                 self.simulator_args['raw_stdout'] = True
 
         # Write temporary fasta file with all interactions
-        
+        self.result_writer.subdivide_writing('temp_fastas')
+        for circuit in circuits:
+            fn = self.result_writer.output({s.name: s.physical_data for s in circuit.get_input_species()},
+                                           out_type='fasta',
+                                           out_name=f'temp_{circuit.name}',
+                                           return_path=True)
+            
 
         # Run simulator with fasta as input
 
@@ -471,7 +483,7 @@ class CircuitModeller():
             subcircuits[i].circuit_size = circuit.circuit_size
             subcircuits[i].signal: Signal = circuit.signal
             subcircuits[i].use_prod_and_deg = circuit.use_prod_and_deg
-            
+
             # Cannot be by ref
             subcircuits[i].model = deepcopy(circuit.model)
             subcircuits[i].species_names = circuit.species_name
@@ -616,7 +628,8 @@ class CircuitModeller():
         viable_circuit_nums = [0]
         next_viable = 0
         i = 0
-        assert num_subcircuits[0] < self.max_circuits, f'The number of subcircuits {num_subcircuits[0]} in the first circuit is less than the max circuits specified ({self.max_circuits}).'
+        assert num_subcircuits[
+            0] < self.max_circuits, f'The number of subcircuits {num_subcircuits[0]} in the first circuit is less than the max circuits specified ({self.max_circuits}).'
         while i < len(num_subcircuits):
             while (i < len(num_subcircuits)) and (next_viable + num_subcircuits[i] < self.max_circuits):
                 next_viable += num_subcircuits[i]

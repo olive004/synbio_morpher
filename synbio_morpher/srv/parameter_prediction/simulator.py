@@ -8,11 +8,14 @@
 
 import numpy as np
 import diffrax as dfx
+import os
 import logging
 from subprocess import PIPE, run
 from functools import partial
 from synbio_morpher.utils.misc.helper import vanilla_return, processor
 from synbio_morpher.utils.modelling.physical import equilibrium_constant_reparameterisation, eqconstant_to_rates
+from synbio_morpher.utils.misc.string_handling import make_time_str
+from synbio_morpher.utils.data.data_format_tools.manipulate_fasta import write_fasta_file
 
 
 SIMULATOR_UNITS = {
@@ -146,9 +149,24 @@ def process_raw_stdout(stdout):
     return d
 
 
-def simulate_IntaRNA(input, compute_by_filename: bool, allow_self_interaction: bool, sim_kwargs: dict, simulator):
+def write_temp_fastas(input: dict):
+    temp_fn = 'temp_circuit'
+    while os.path.exists(temp_fn):
+        temp_fn = temp_fn + '_' + make_time_str()
+        if len(temp_fn) > 100:
+            raise ValueError('The temporary director for writing fastas to simulate interactions could not be created.')
+        
+    write_fasta_file(out_path=temp_fn, data=input, byseq=True)
+    return temp_fn
+
+
+def simulate_IntaRNA(input: dict, compute_by_filename: bool, allow_self_interaction: bool, sim_kwargs: dict, simulator, filename=None):
     if compute_by_filename:
         f = simulate_IntaRNA_fn
+    elif sim_kwargs['threads'] > 0:
+        f = partial(simulate_IntaRNA_fn, remove_file=True)
+        filename = write_temp_fastas(dict(zip(list(map(lambda s: s.name, input.keys())), input.values())))
+        input = (filename, input)
     else:
         f = simulate_IntaRNA_data
     return f(input, allow_self_interaction=allow_self_interaction, sim_kwargs=sim_kwargs, simulator=simulator)
@@ -178,12 +196,13 @@ def simulate_IntaRNA_data(batch: dict, allow_self_interaction: bool, sim_kwargs:
     return data
 
 
-def simulate_IntaRNA_fn(input: tuple, allow_self_interaction: bool, sim_kwargs: dict, simulator):
+def simulate_IntaRNA_fn(inputs: tuple, allow_self_interaction: bool, sim_kwargs: dict, simulator, remove_file: bool = False):
     """ Use the FASTA filename to compute the interactions between all RNAs.
     If threads = 0, interactions will be computed in parallel """
-    filename, species = input
-    data = {k: {k: False for k in species.keys()} for k in species.keys()}
-    species_str = {s.name: s for s in species}
+    filename, input = inputs
+    dinit = dict(zip(input.keys(), [False] * len(input)))
+    data = dict(zip(input.keys(), [dinit] * len(input.keys())))
+    species_str = dict(zip(list(map(lambda s: s.name, input.keys())), input.keys()))
 
     sim_kwargs["query"] = filename
     sim_kwargs["target"] = filename
@@ -195,4 +214,6 @@ def simulate_IntaRNA_fn(input: tuple, allow_self_interaction: bool, sim_kwargs: 
             if not allow_self_interaction and s['id1'] == s['id2']:
                 continue
             data[species_str[s['id1']]][species_str[s['id2']]] = s
+    if remove_file:
+        os.remove(filename)
     return data
