@@ -89,6 +89,8 @@ def load_simulator_kwargs(default_args: dict, config_args: str = None) -> Dict:
         if kwarg_condition:
             simulator_kwargs = handle_simulator_cfgs(
                 simulator_name, default_args[simulator_name])
+            if config_args.get('interaction_simulator', {}).get('simulator_kwargs'):
+                simulator_kwargs.update(config_args['interaction_simulator']['simulator_kwargs'])
             break
     return simulator_kwargs
 
