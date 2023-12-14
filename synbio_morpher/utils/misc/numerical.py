@@ -133,6 +133,20 @@ def expand_matrix_triangle_idx(flat_triangle_idx: int, flat_triangle_size: int) 
     return (idxs[0], idxs[1])
 
 
+def flatten_to_matrix(flattened_vector):
+    length = symmetrical_matrix_length(len(flattened_vector))
+    matrix = [[0] * length for _ in range(length)]
+
+    index = 0
+    for i in range(length):
+        for j in range(i, length):
+            matrix[i][j] = flattened_vector[index]
+            matrix[j][i] = flattened_vector[index]
+            index += 1
+
+    return np.array(matrix)
+
+
 def generate_mixed_binary(length: int, count: int, zeros_to_ones: bool = True):
     # TODO: This could be much better. Generate
     # sequences in a way that
@@ -246,6 +260,10 @@ def round_to_nearest(x, base):
 def square_matrix_rand(num_nodes: int = 3):
     dims = (num_nodes, num_nodes)
     return np.random.rand(*dims)
+
+
+def symmetrical_matrix_length(flattened_length):
+    return int((-1 + np.sqrt(1 + 8 * flattened_length)) / 2)
 
 
 def transpose_arraylike(arraylike):
