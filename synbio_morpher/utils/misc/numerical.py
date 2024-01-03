@@ -236,11 +236,14 @@ def make_symmetrical_matrix_from_sequence(arr, side_length: int):
     # idxs = np.interp(ii, np.unique(ii), np.arange(len(arr))).astype(int)
     ii = i + i.T - np.diag(i.diagonal())
     return arr[ii.flatten()].reshape(side_length, side_length)
-    # iu = np.triu_indices(side_length)
-    # mat = np.zeros([side_length,side_length])
-    # mat[iu] = arr
-    # mat = mat + mat.T - np.diag(mat.diagonal())
-    # return mat
+
+
+def make_symmetrical_matrix_from_sequence_nojax(arr, side_length: int):
+    """ For a flat 1D array, make a symmetrical 2D matrix filling
+    in the upper triangle with the 1D array. Not jax-friendly. """
+    n = np.zeros((side_length, side_length))
+    n[np.triu_indices(side_length)] = arr
+    return n
 
 
 def np_delete_axes(array, rowcol: Union[list, int], axes: list):

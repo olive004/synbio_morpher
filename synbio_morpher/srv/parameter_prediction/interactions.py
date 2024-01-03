@@ -186,12 +186,12 @@ class InteractionDataHandler():
         return interactions
 
     def parse(self, data: dict) -> MolecularInteractions:
-        matrix, energies, a_rates, d_rates, binding = self.make_matrix(data)
+        eqconstants, energies, a_rates, d_rates, binding = self.make_matrix(data)
         return MolecularInteractions(
             binding_rates_association=a_rates,
             binding_rates_dissociation=d_rates,
             energies=energies,
-            eqconstants=matrix,
+            eqconstants=eqconstants,
             binding_sites=binding)
 
     def make_matrix(self, data: dict) -> Tuple[np.ndarray, np.ndarray]:
@@ -202,8 +202,8 @@ class InteractionDataHandler():
                 fields = self.sample_processor(raw_sample)
                 energies[i, j] = fields['energies']
                 binding[i, j] = fields['binding']
-        matrix, (a_rates, d_rates) = self.sample_postproc(energies)
-        return matrix, energies, a_rates, d_rates, binding
+        eqconstants, (a_rates, d_rates) = self.sample_postproc(energies)
+        return eqconstants, energies, a_rates, d_rates, binding
 
 
 class InteractionSimulator():

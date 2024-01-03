@@ -88,9 +88,9 @@ class CircuitModeller():
             circuits = self.scale_rates(circuits)
         circuits = self.find_steady_states(circuits)
         return circuits
-    
+
     def compute_interactions_core(self, circuit: Circuit) -> Circuit:
-        
+
         if circuit.interactions_state == 'uninitialised' and not self.debug_mode:
             if self.simulator_args['compute_by_filename'] and circuit.subname == "ref_circuit" and os.path.exists(circuit.data.source):
                 filename = circuit.data.source
@@ -111,7 +111,7 @@ class CircuitModeller():
             circuit.init_interactions(init_dummy=True)
         else:
             circuit.init_interactions()
-            
+
         return circuit
 
     # @time_it
@@ -155,7 +155,6 @@ class CircuitModeller():
                                            out_type='fasta',
                                            out_name=f'temp_{circuit.name}',
                                            return_path=True)
-            
 
         # Run simulator with fasta as input
 

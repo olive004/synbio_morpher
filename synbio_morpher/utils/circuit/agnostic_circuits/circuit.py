@@ -87,7 +87,7 @@ class Circuit():
         jax.config.update('jax_platform_name', str(xla_bridge.get_backend().platform))
         
         qreactions = QuantifiedReactions()
-        qreactions.init_properties(model, config)
+        qreactions.init_properties(model, config['starting_concentration'])
         return qreactions
 
     def init_interactions(self, interaction_cfg: dict = None, interactions_loaded: dict = None, config: dict = None, 
