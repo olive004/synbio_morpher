@@ -485,7 +485,7 @@ class CircuitModeller():
 
             # Cannot be by ref
             subcircuits[i].model = deepcopy(circuit.model)
-            subcircuits[i].species_names = circuit.species_name
+            subcircuits[i].species_names = circuit.species_names
             subcircuits[i].qreactions = deepcopy(circuit.qreactions)
             subcircuits[i] = implement_mutation(subcircuits[i], m)
         return subcircuits

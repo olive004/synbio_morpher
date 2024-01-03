@@ -142,7 +142,7 @@ def process_raw_stdout(stdout):
     d = {}
     header = stdout.split('\n')[0].split(';')
     for t in stdout.split('\n')[1:-1]:
-        d[t.split(';')[0]] = {n: t.split(';')[i] for i, n in enumerate(header)}
+        d[(t.split(';')[0], t.split(';')[1])] = {n: t.split(';')[i] for i, n in enumerate(header)}
     return d
 
 
@@ -205,6 +205,8 @@ def simulate_IntaRNA_fn(inputs: tuple, allow_self_interaction: bool, sim_kwargs:
     sim_kwargs["target"] = filename
     output = simulator.run(**sim_kwargs)
     if output:
+        if type(output) == str:
+            output = list(process_raw_stdout(output).values())
         if type(output) == dict:
             output = [output]
         for s in output:
