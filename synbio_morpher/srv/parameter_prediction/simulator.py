@@ -142,7 +142,8 @@ def process_raw_stdout(stdout):
     d = {}
     header = stdout.split('\n')[0].split(';')
     for t in stdout.split('\n')[1:-1]:
-        d[(t.split(';')[0], t.split(';')[1])] = {n: t.split(';')[i] for i, n in enumerate(header)}
+        d.setdefault(t.split(';')[0], {})
+        d[t.split(';')[0]][t.split(';')[1]] = {n: t.split(';')[i] for i, n in enumerate(header)}
     return d
 
 
