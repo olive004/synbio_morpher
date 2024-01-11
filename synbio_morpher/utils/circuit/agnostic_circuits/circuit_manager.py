@@ -9,6 +9,8 @@ from copy import deepcopy
 from typing import List
 from functools import partial
 from datetime import datetime
+import multiprocessing
+import threading
 import inspect
 import os
 import gc
@@ -139,31 +141,31 @@ class CircuitModeller():
     def compute_interactions_batch(self, circuits: List[Circuit], batch=True):
         # Make sure multi-threading is on
         if self.simulator_args['name'] == 'IntaRNA':
-            if self.simulator_args['threads'] == 1:
+            if self.simulator_args['simulator_kwargs']['threads'] > 1:
+                if self.simulator_args['simulator_kwargs']['raw_stdout'] == False:
+                    logging.warning(
+                        'For batching IntaRNA, setting raw_stdout to True, otherwise the output from the Python API will only return one interaction')
+                    self.simulator_args['simulator_kwargs']['raw_stdout'] = True
+            else:
                 logging.warning(
                     'For batch-computation of interaction strengths with IntaRNA, multi-threading is recommended. Set `threads` in the config file within the simulator arguments (`interaction_simulator`) kwargs.')
-        # And that raw_stdout is set to true, otherwise IntaRNA will only return the first interaction
-            if self.simulator_args['raw_stdout'] == False:
+        n_threads = self.simulator_args.get('multithread', 0)
+        if n_threads > 0:
+            for i in range(0, len(circuits), n_threads):
+                j = i + n_threads if i + \
+                    n_threads < len(circuits) else len(circuits)
+                with multiprocessing.Pool(n_threads) as pool:
+                    circuits[i:j] = pool.map(
+                        self.compute_interactions, circuits[i:j])
+        else:
+            if self.simulator_args['name'] == 'IntaRNA':
                 logging.warning(
-                    'For batching IntaRNA, setting raw_stdout to True, otherwise the output from the Python API will only return one interaction')
-                self.simulator_args['raw_stdout'] = True
-
-        # Write temporary fasta file with all interactions
-        self.result_writer.subdivide_writing('temp_fastas')
-        for circuit in circuits:
-            fn = self.result_writer.output({s.name: s.physical_data for s in circuit.get_input_species()},
-                                           out_type='fasta',
-                                           out_name=f'temp_{circuit.name}',
-                                           return_path=True)
-
-        # Run simulator with fasta as input
-
-        # Process output from string into csv into numpy
-
-        # Fill in the species that didn't get returned with IntaRNA non-interaction default parameters
-
-        # Delete fasta file
-        pass
+                    'For batch-computation of interaction strengths with IntaRNA, multi-threading is recommended. ' + \
+                    'Set `multithread` to > 0 in the config file within the simulator arguments (`interaction_simulator`) or ' + \
+                    '`threads` in the config file within the simulator arguments (`interaction_simulator`) for the kwargs (`simulator_kwargs`).')
+            for i, c in enumerate(circuits):
+                circuits[i] = self.compute_interactions(c)
+        return circuits
 
     def run_interaction_simulator(self, species: List[Species], quantities, filename=None) -> InteractionDataHandler:
         data = {s: s.physical_data for s in species}

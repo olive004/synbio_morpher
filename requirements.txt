@@ -1,12 +1,13 @@
 argparse
 biopython
 bokeh
--e git+https://github.com/Steel-Lab-Oxford/core-bioreaction-simulation.git@a3b65d09c22475c5346beec8c180ba6d5c76f866#egg=bioreaction
+-e git+https://github.com/Steel-Lab-Oxford/core-bioreaction-simulation.git@47391ff32aa2e0e9dcbb4541efb526ff6c43e427#egg=bioreaction
 celluloid
 chex>=0.1.6
 fire
-jax==0.4.8 -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
-# jaxlib==0.4.9+cuda11.cudnn86 -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+jax==0.4.16
+# -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+# jaxlib==0.4.16+cuda11.cudnn86 -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html 
 jupyter
 diffrax
 matplotlib==3.6.0

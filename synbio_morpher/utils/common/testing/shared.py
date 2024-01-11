@@ -32,6 +32,7 @@ ENSEMBLE_CONFIG = {
             },
             "interaction_simulator": {
                 "name": "IntaRNA",
+                "multithread": 12,
                 "postprocess": True
             },
             "molecular_params": "synbio_morpher/utils/common/configs/RNA_circuit/molecular_params.json",
@@ -59,6 +60,11 @@ ENSEMBLE_CONFIG = {
             "experiment": {
                 "purpose": "mutation_effect_on_interactions_signal",
                 "debug_mode": False
+            },
+            "interaction_simulator": {
+                "name": "IntaRNA",
+                "multithread": 12,
+                "postprocess": True
             },
             "mutations_args": {
                 "algorithm": "random",
@@ -195,7 +201,7 @@ def simulate(circuits, config, data_writer):
         write_to_subsystem=True,
         batch_size=config['simulation'].get('batch_size', 100),
         methods={
-            "compute_interactions": {},
+            "compute_interactions_batch": {'batch': True},
             "init_circuits": {'batch': True},
             "simulate_signal_batch": {'ref_circuit': None,
                                       'batch': config['simulation']['use_batch_mutations']},
