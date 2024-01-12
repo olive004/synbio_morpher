@@ -152,7 +152,7 @@ def write_temp_fastas(input: dict):
     while os.path.exists(temp_fn):
         temp_fn = temp_fn + '_' + make_time_str()
         if len(temp_fn) > 100:
-            raise ValueError('The temporary director for writing fastas to simulate interactions could not be created.')
+            raise ValueError('The temporary directory for writing fastas to simulate interactions could not be created.')
         
     write_fasta_file(out_path=temp_fn, data=input, byseq=True)
     return temp_fn
