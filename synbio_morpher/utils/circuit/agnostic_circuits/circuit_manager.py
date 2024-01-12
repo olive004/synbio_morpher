@@ -125,7 +125,9 @@ class CircuitModeller():
         circuit.interactions.binding_rates_dissociation = circuit.interactions.binding_rates_dissociation * \
             self.interaction_factor
         circuit.update_species_simulated_rates(circuit.interactions)
+        return circuit
 
+    def write_interactions(self, circuit):
         for filename_addon in sorted(INTERACTION_FIELDS_TO_WRITE):
             interaction_matrix = circuit.interactions.__getattribute__(
                 filename_addon)
@@ -146,11 +148,22 @@ class CircuitModeller():
                     logging.warning(
                         'For batching IntaRNA, setting raw_stdout to True, otherwise the output from the Python API will only return one interaction')
                     self.simulator_args['simulator_kwargs']['raw_stdout'] = True
-            else:
-                logging.warning(
-                    'For batch-computation of interaction strengths with IntaRNA, multi-threading is recommended. Set `threads` in the config file within the simulator arguments (`interaction_simulator`) kwargs.')
         n_threads = self.simulator_args.get('multithread', 0)
         if n_threads > 0:
+            # processes = []
+            # # creating processes
+            # for i in range(0, len(circuits), n_threads):
+            #     j = i + n_threads if i + \
+            #         n_threads < len(circuits) else len(circuits)
+            #     p = multiprocessing.Process(
+            #         target=self.compute_interactions, args=(circuits[i:j],))
+            #     processes.append(p)
+            #     p.start()
+
+            # # completing process
+            # for p in processes:
+            #     p.join()
+
             for i in range(0, len(circuits), n_threads):
                 j = i + n_threads if i + \
                     n_threads < len(circuits) else len(circuits)
@@ -160,8 +173,8 @@ class CircuitModeller():
         else:
             if self.simulator_args['name'] == 'IntaRNA':
                 logging.warning(
-                    'For batch-computation of interaction strengths with IntaRNA, multi-threading is recommended. ' + \
-                    'Set `multithread` to > 0 in the config file within the simulator arguments (`interaction_simulator`) or ' + \
+                    'For batch-computation of interaction strengths with IntaRNA, multi-threading is recommended. ' +
+                    'Set `multithread` to > 0 in the config file within the simulator arguments (`interaction_simulator`) or ' +
                     '`threads` in the config file within the simulator arguments (`interaction_simulator`) for the kwargs (`simulator_kwargs`).')
             for i, c in enumerate(circuits):
                 circuits[i] = self.compute_interactions(c)

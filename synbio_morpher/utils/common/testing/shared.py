@@ -63,7 +63,7 @@ ENSEMBLE_CONFIG = {
             },
             "interaction_simulator": {
                 "name": "IntaRNA",
-                "multithread": 12,
+                "multithread": 0,
                 "postprocess": True
             },
             "mutations_args": {
@@ -100,7 +100,7 @@ ENSEMBLE_CONFIG = {
                 "interaction_factor": 1,
                 "batch_size": 100,
                 "max_circuits": 1000,
-                "device": "cpu",
+                "device": "gpu",
                 "threshold_steady_states": 0.001,
                 "use_rate_scaling": True
             },
@@ -178,7 +178,7 @@ def five_circuits(config: dict, data_writer=None):
 
     return [construct_circuit_from_cfg(
         {'data_path': p,
-         'interactions': i
+        #  'interactions': i
          }, config) for p, i in zip(paths, interactions_cfg)], config, data_writer
 
 
@@ -202,6 +202,7 @@ def simulate(circuits, config, data_writer):
         batch_size=config['simulation'].get('batch_size', 100),
         methods={
             "compute_interactions_batch": {'batch': True},
+            "write_interactions": {},
             "init_circuits": {'batch': True},
             "simulate_signal_batch": {'ref_circuit': None,
                                       'batch': config['simulation']['use_batch_mutations']},

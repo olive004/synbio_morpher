@@ -233,7 +233,7 @@ def b_tabulate_mutation_info(source_dir: str, data_writer: DataWriter, experimen
                                                all_sample_names, chosen_sample_names)
             except:
                 result_report = None
-            if result_report:
+            if result_report is not None:
                 result_reports.append(result_report)
 
         def process_results(table: pd.DataFrame) -> pd.DataFrame:
