@@ -17,10 +17,13 @@ def fake_binding_site(energy):
     num_bs = np.min([SEQ_LENGTH, int(100 / np.abs(energy))])
     num_groups = np.random.randint(int(SEQ_LENGTH/num_bs)) + 1
 
-    starting_bind = [np.max([1, np.random.randint(0, np.max([1, SEQ_LENGTH - num_bs - num_groups]))])]
-    [starting_bind.append(starting_bind[-1] + np.random.randint(int(num_bs / num_groups), SEQ_LENGTH - starting_bind[-1] - int(num_bs / num_groups))) for i in range(num_groups - 1)]
+    starting_bind = [np.max([1, np.random.randint(
+        0, np.max([1, SEQ_LENGTH - num_bs - num_groups]))])]
+    [starting_bind.append(starting_bind[-1] + np.random.randint(int(num_bs / num_groups),
+                          SEQ_LENGTH - starting_bind[-1] - int(num_bs / num_groups))) for i in range(num_groups - 1)]
 
-    fwd_bind = [np.arange(sb, sb+np.floor(num_bs/len(starting_bind)), 1) for sb in starting_bind]
+    fwd_bind = [np.arange(sb, sb+np.floor(num_bs/len(starting_bind)), 1)
+                for sb in starting_bind]
     rev_bind = [SEQ_LENGTH - fb for fb in fwd_bind]
     return flatten_listlike([[(f, r) for f, r in zip(fwd, rev)] for fwd, rev in zip(fwd_bind, rev_bind)]), num_groups, num_bs
 
@@ -116,6 +119,7 @@ def main():
 
     t = TestCircuit()
     t.test_refcircuits()
+
 
 if __name__ == '__main__':
     unittest.main()

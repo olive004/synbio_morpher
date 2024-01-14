@@ -43,6 +43,13 @@ from synbio_morpher.utils.results.result_writer import ResultWriter
 from synbio_morpher.utils.signal.signals_new import Signal
 
 
+def wrap_dict_result(k, inp, d, f, **kwargs):
+    v = f(*inp, **kwargs)
+    d[k] = v
+    logging.info(d[k])
+    # return v
+
+
 class CircuitModeller():
 
     def __init__(self, result_writer=None, config: dict = {}) -> None:
@@ -150,26 +157,35 @@ class CircuitModeller():
                     self.simulator_args['simulator_kwargs']['raw_stdout'] = True
         n_threads = self.simulator_args.get('multithread', 0)
         if n_threads > 0:
-            # processes = []
-            # # creating processes
+            # manager = multiprocessing.Manager()
             # for i in range(0, len(circuits), n_threads):
+            #     # creating processes
             #     j = i + n_threads if i + \
             #         n_threads < len(circuits) else len(circuits)
-            #     p = multiprocessing.Process(
-            #         target=self.compute_interactions, args=(circuits[i:j],))
-            #     processes.append(p)
-            #     p.start()
+            #     d = manager.dict()
+            #     processes = [multiprocessing.Process(
+            #         target=partial(wrap_dict_result,
+            #                        f=self.compute_interactions, d=d),
+            #         args=(ii, (circuits[ii],))
+            #     ) for ii in range(i, j)]
 
-            # # completing process
-            # for p in processes:
-            #     p.join()
+            #     for p in processes:
+            #         p.start()
+
+            #     # completing process
+            #     for p in processes:
+            #         p.join()
+
+            #     circuits[i:j] = [d[ii] for ii in range(i, j)]
 
             for i in range(0, len(circuits), n_threads):
                 j = i + n_threads if i + \
                     n_threads < len(circuits) else len(circuits)
-                with multiprocessing.Pool(n_threads) as pool:
+                with multiprocessing.Pool(j - i) as pool:
+                    d = {}
+                    k = np.arange(i, j)
                     circuits[i:j] = pool.map(
-                        self.compute_interactions, circuits[i:j])
+                        partial(wrap_dict_result, f=self.compute_interactions, d=d), list(zip(k, circuits[i:j])))
         else:
             if self.simulator_args['name'] == 'IntaRNA':
                 logging.warning(
