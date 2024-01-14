@@ -63,7 +63,7 @@ ENSEMBLE_CONFIG = {
             },
             "interaction_simulator": {
                 "name": "IntaRNA",
-                "multithread": 5,
+                "multithread": 1,
                 "postprocess": True
             },
             "mutations_args": {
