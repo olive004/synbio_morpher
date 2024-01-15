@@ -54,8 +54,12 @@ class RawSimulationHandling():
         def process_interaction(sample):
             if sample == False:  # No interactions
                 sample = {}
-            return process_IntaRNA_sample(sample)
-
+            if type(sample) == dict:
+                return process_IntaRNA_sample(sample)
+            elif type(sample) == str:
+                return process_raw_stdout(sample)
+            else:
+                raise ValueError(f':process_interaction: The sample {sample} type could not be processed.')
         if self.simulator_name == "IntaRNA":
             return process_interaction
 
