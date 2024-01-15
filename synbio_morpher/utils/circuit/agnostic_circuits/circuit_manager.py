@@ -364,7 +364,7 @@ class CircuitModeller():
         #     circuits[i].qreactions.reactions.forward_rates = circuits[i].qreactions.reactions.forward_rates / rate_max
         #     circuits[i].qreactions.reactions.reverse_rates = circuits[i].qreactions.reactions.reverse_rates / rate_max
 
-        self.dt0 = np.min([1 / (5 * rate_max), 0.1])
+        self.dt0 = np.min([1/ (5 * rate_max), 0.1])
         self.dt1 = self.dt1_factor * self.dt0
 
         return circuits

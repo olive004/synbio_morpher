@@ -54,12 +54,13 @@ class RawSimulationHandling():
         def process_interaction(sample):
             if sample == False:  # No interactions
                 sample = {}
-            if type(sample) == dict:
-                return process_IntaRNA_sample(sample)
-            elif type(sample) == str:
-                return process_raw_stdout(sample)
-            else:
-                raise ValueError(f':process_interaction: The sample {sample} type could not be processed.')
+            if type(sample) == str:
+                d = process_raw_stdout(sample)
+                if 'energies' not in d:
+                    logging.warning(f'The sample {sample} may have been processed incorrectly. Make sure `raw_stdout` is not True in config.')
+                return process_raw_stdout(d)
+            return process_IntaRNA_sample(sample)
+        
         if self.simulator_name == "IntaRNA":
             return process_interaction
 

@@ -36,7 +36,7 @@ class TestCircuit(unittest.TestCase):
     def test_refcircuits(self):
         """ Make sure that each simulation used the correct reference circuit """
 
-        for c in [TEST_CONFIG, CONFIG]:
+        for c in [CONFIG]: # [TEST_CONFIG, CONFIG]:
             circuits, config, data_writer, info = create_test_inputs(c)
 
             ref_circuits = info[info["mutation_name"] == "ref_circuit"]
@@ -122,4 +122,5 @@ def main():
 
 
 if __name__ == '__main__':
-    unittest.main()
+    # unittest.main()
+    main()

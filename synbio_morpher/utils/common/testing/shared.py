@@ -63,8 +63,12 @@ ENSEMBLE_CONFIG = {
             },
             "interaction_simulator": {
                 "name": "IntaRNA",
-                "multithread": 1,
-                "postprocess": True
+                "multithread": 0,
+                "postprocess": True,
+                "simulator_kwargs": {
+                    "outcsvcols": "id1,id2,E,E_norm,subseqDB,Pu1,Pu2"
+                    # "raw_stdout": False
+                }
             },
             "mutations_args": {
                 "algorithm": "random",
@@ -91,7 +95,7 @@ ENSEMBLE_CONFIG = {
                 }
             },
             "simulation": {
-                "dt0": 0.0001,
+                "dt0": 0.001,
                 "t0": 0,
                 "t1": 100,
                 "tmax": 20000,
@@ -201,8 +205,9 @@ def simulate(circuits, config, data_writer):
         write_to_subsystem=True,
         batch_size=config['simulation'].get('batch_size', 100),
         methods={
-            "compute_interactions_batch": {'batch': True},
-            "write_interactions": {},
+            # "compute_interactions_batch": {'batch': True},
+            # "write_interactions": {},
+            "compute_interactions": {},
             "init_circuits": {'batch': True},
             "simulate_signal_batch": {'ref_circuit': None,
                                       'batch': config['simulation']['use_batch_mutations']},

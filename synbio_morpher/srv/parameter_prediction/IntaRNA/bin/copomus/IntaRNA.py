@@ -63,6 +63,9 @@ class IntaRNA:
             sys.stderr.write(f'IntaRNA Error: {stdout} {stderr}\n')
             sys.exit(p.returncode)
         if not raw_stdout:
+        # if stdout and (not raw_stdout):
+            # if not stdout:
+            #     return stdout
             if n == 1:
                 d = self.output_to_dict(stdout)
                 if type(d) != bool:
