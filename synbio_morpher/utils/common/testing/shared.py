@@ -63,7 +63,7 @@ ENSEMBLE_CONFIG = {
             },
             "interaction_simulator": {
                 "name": "IntaRNA",
-                "multithread": 0,
+                "multithread": 5,
                 "postprocess": True,
                 "simulator_kwargs": {
                     "outcsvcols": "id1,id2,E,E_norm,subseqDB,Pu1,Pu2"

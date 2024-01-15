@@ -160,12 +160,12 @@ class CircuitModeller():
                     self.simulator_args['simulator_kwargs']['raw_stdout'] = True
         n_threads = self.simulator_args.get('multithread', 0)
         if n_threads > 0:
-            for i in range(0, len(circuits), n_threads):
-                j = i + n_threads if i + \
-                    n_threads < len(circuits) else len(circuits)
-                executor = concurrent.futures.ProcessPoolExecutor(max_workers=j - i)
-                results = list(executor.map(self.compute_interactions, circuits[i:j]))
-                circuits[i:j] = results
+            # for i in range(0, len(circuits), n_threads):
+            #     j = i + n_threads if i + \
+            #         n_threads < len(circuits) else len(circuits)
+            #     executor = concurrent.futures.ProcessPoolExecutor(max_workers=j - i)
+            #     results = list(executor.map(self.compute_interactions, circuits[i:j]))
+            #     circuits[i:j] = results
 
             # manager = multiprocessing.Manager()
             # rets = []
@@ -180,7 +180,6 @@ class CircuitModeller():
             #                        f=self.compute_interactions),
             #         args=(ii, (circuits[ii],), q)
             #     ) for ii in range(i, j)]
-
             #     for p in processes:
             #         p.start()
             #     for p in processes:
@@ -189,20 +188,19 @@ class CircuitModeller():
             #     # completing process
             #     for p in processes:
             #         p.join()
-
             #     # circuits[i:j] = [d[ii] for ii in range(i, j)]
             # circuits = rets
 
-            # for i in range(0, len(circuits), n_threads):
-            #     j = i + n_threads if i + \
-            #         n_threads < len(circuits) else len(circuits)
-            #     pool = multiprocessing.Pool(j - i)
-            #     # d = {}
-            #     # k = np.arange(i, j)
-            #     # circuits[i:j] = pool.map(
-            #     #     partial(wrap_dict_result, f=self.compute_interactions, d=d), list(zip(k, circuits[i:j])))
-            #     circuits[i:j] = pool.map(
-            #         self.compute_interactions, circuits[i:j])
+            for i in range(0, len(circuits), n_threads):
+                j = i + n_threads if i + \
+                    n_threads < len(circuits) else len(circuits)
+                pool = multiprocessing.Pool(j - i)
+                # d = {}
+                # k = np.arange(i, j)
+                # circuits[i:j] = pool.map(
+                #     partial(wrap_dict_result, f=self.compute_interactions, d=d), list(zip(k, circuits[i:j])))
+                circuits[i:j] = pool.map(
+                    self.compute_interactions, circuits[i:j])
         else:
             if self.simulator_args['name'] == 'IntaRNA':
                 logging.warning(
