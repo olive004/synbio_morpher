@@ -135,9 +135,9 @@ class CircuitModeller():
         circuit.interactions.binding_rates_dissociation = circuit.interactions.binding_rates_dissociation * \
             self.interaction_factor
         circuit.update_species_simulated_rates(circuit.interactions)
-        return circuit
+    #     return circuit
 
-    def write_interactions(self, circuit):
+    # def write_interactions(self, circuit):
         for filename_addon in sorted(INTERACTION_FIELDS_TO_WRITE):
             interaction_matrix = circuit.interactions.__getattribute__(
                 filename_addon)
