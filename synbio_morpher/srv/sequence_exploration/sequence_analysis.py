@@ -163,8 +163,9 @@ def b_tabulate_mutation_info(source_dir: str, data_writer: DataWriter, experimen
     def check_coherency(table: pd.DataFrame) -> None:
         for (target, pathname) in [('circuit_name', 'path_to_template_circuit')]:
             if type(table) == pd.DataFrame:
-                assert table[target].values[0] in table[pathname].values[0], \
-                    f'Name {table[target].values[0]} should be in path {table[pathname].values[0]}.'
+                if type(table[pathname].values[0]) == str:
+                    assert table[target].values[0] in table[pathname].values[0], \
+                        f'Name {table[target].values[0]} should be in path {table[pathname].values[0]}.'
             else:
                 assert table[target] in table[pathname], \
                     f'Name {table[target]} should be in path {table[pathname]}.'
