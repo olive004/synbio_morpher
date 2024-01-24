@@ -34,11 +34,13 @@ class MolecularInteractions():
                  binding_rates_association=None,
                  binding_rates_dissociation=None,
                  energies=None,
-                 eqconstants=None, units=None, binding_sites=None) -> None:
+                 eqconstants=None, units=None, binding_sites=None,
+                 raw=None) -> None:
         self.binding_rates_association = binding_rates_association
         self.binding_rates_dissociation = binding_rates_dissociation
         self.energies = energies
         self.eqconstants = eqconstants
+        self.raw = raw
         self.set_precision()
 
         self.binding_sites = binding_sites
@@ -180,19 +182,22 @@ class InteractionDataHandler():
                 binding_rates_dissociation=nans,
                 energies=nans,
                 eqconstants=nans,
-                binding_sites=nans
+                binding_sites=nans,
+                raw=data
             )
         interactions.units = self.units
         return interactions
 
     def parse(self, data: dict) -> MolecularInteractions:
         eqconstants, energies, a_rates, d_rates, binding = self.make_matrix(data)
+        raw = {s.name: v for s, v in data.items()}
         return MolecularInteractions(
             binding_rates_association=a_rates,
             binding_rates_dissociation=d_rates,
             energies=energies,
             eqconstants=eqconstants,
-            binding_sites=binding)
+            binding_sites=binding,
+            raw=raw)
 
     def make_matrix(self, data: dict) -> Tuple[np.ndarray, np.ndarray]:
         energies = np.zeros((len(data), len(data)))
@@ -218,9 +223,9 @@ class InteractionSimulator():
         {sample1: {sample2: interaction}} """
         self.data_handler = InteractionDataHandler(
             simulation_handler=self.simulation_handler, quantities=quantities)
-        data = self.simulator(input, compute_by_filename=compute_by_filename)
-        data = self.data_handler.init_data(data)
-        return data
+        raw = self.simulator(input, compute_by_filename=compute_by_filename)
+        interactions = self.data_handler.init_data(raw)
+        return interactions
 
 
 def b_get_stats(interactions_mxs: List[InteractionMatrix]):

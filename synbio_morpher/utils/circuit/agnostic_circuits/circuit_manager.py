@@ -135,9 +135,10 @@ class CircuitModeller():
         circuit.interactions.binding_rates_dissociation = circuit.interactions.binding_rates_dissociation * \
             self.interaction_factor
         circuit.update_species_simulated_rates(circuit.interactions)
-    #     return circuit
+        self.write_interactions(circuit)
+        return circuit
 
-    # def write_interactions(self, circuit):
+    def write_interactions(self, circuit):
         for filename_addon in sorted(INTERACTION_FIELDS_TO_WRITE):
             interaction_matrix = circuit.interactions.__getattribute__(
                 filename_addon)
@@ -148,7 +149,13 @@ class CircuitModeller():
                 out_type='csv', out_name=circuit.name,
                 overwrite=True, new_file=True,
                 filename_addon=filename_addon, subfolder=filename_addon)
-        return circuit
+        
+        if 'raw' in circuit.interactions.__dict__:
+            self.result_writer.output(
+                data=circuit.interactions.__getattribute__('raw'),
+                out_type='csv', out_name=circuit.name,
+                overwrite=True, new_file=True,
+                filename_addon=filename_addon, subfolder=filename_addon)
 
     def compute_interactions_batch(self, circuits: List[Circuit], batch=True):
         # Make sure multi-threading is on

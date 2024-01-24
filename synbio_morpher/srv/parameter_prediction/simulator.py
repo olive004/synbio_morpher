@@ -48,7 +48,7 @@ class RawSimulationHandling():
             """ There are a variety of parameters that IntaRNA spits out. E is hybridisation energy"""
             return {
                 'energies': sample.get('E', NO_INTERACTION_EQCONSTANT),
-                'binding': sample.get('bpList', '')
+                'binding': sample.get('bpList', sample.get('subseqDB', ''))
             }
 
         def process_interaction(sample):
@@ -193,6 +193,9 @@ def simulate_IntaRNA_data(batch: dict, allow_self_interaction: bool, sim_kwargs:
                     sim_kwargs["query"] = sample_i
                     sim_kwargs["target"] = sample_j
                     current_pair[label_j] = simulator.run(**sim_kwargs)
+                    if type(current_pair[label_j]) == dict and ('id1' in current_pair[label_j].keys()) and ('id2' in current_pair[label_j].keys()):
+                        current_pair[label_j]['id1'] = label_j if current_pair[label_j]['id1'] == 'target' else label_i
+                        current_pair[label_j]['id2'] = label_j if current_pair[label_j]['id1'] == 'target' else label_i
             data[label_i] = current_pair
     else:
         data = simulator.run(**sim_kwargs)
