@@ -34,7 +34,7 @@ if __package__ is None or (__package__ == ''):
     __package__ = os.path.basename(module_path)
 
 
-from synbio_morpher.utils.results.analytics.timeseries import get_sensitivity_simp, get_precision_simp, get_step_response_times, get_overshoot, get_peaks
+from synbio_morpher.utils.results.analytics.timeseries import compute_sensitivity_simple, get_precision_simp, get_step_response_times, get_overshoot, get_peaks
 from synbio_morpher.utils.misc.units import per_mol_to_per_molecule
 from synbio_morpher.utils.misc.type_handling import flatten_listlike
 from synbio_morpher.utils.misc.numerical import make_symmetrical_matrix_from_sequence
@@ -177,7 +177,7 @@ def get_analytics(steady_states, final_states, t, K_eqs, model,
         starting_states=steady_states,
         steady_states=final_states[:, -1, :]
     ))
-    sensitivity = np.array(jax.jit(jax.vmap(partial(get_sensitivity_simp, signal_factor=signal_factor)))(
+    sensitivity = np.array(jax.jit(jax.vmap(partial(compute_sensitivity_simple, signal_factor=signal_factor)))(
         peaks=peaks, starting_states=steady_states
     ))
     overshoots = np.array(get_overshoot(np.swapaxes(
