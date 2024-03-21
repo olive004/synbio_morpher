@@ -1,7 +1,9 @@
+import diffrax as dfx
+import numpy as np
+from synbio_morpher.srv.parameter_prediction.simulator import make_piecewise_stepcontrol
 
 
 def get_diffrax_solver(solver_type):
-    import diffrax as dfx
 
     solvers = {
         'Tsit5': dfx.Tsit5,
@@ -31,12 +33,12 @@ def get_diffrax_solver(solver_type):
     return solvers[solver_type]
 
 
-def make_stepsize_controller(self, choice: str, **kwargs):
+def make_stepsize_controller(t0, t1, dt0, dt1, choice: str, **kwargs):
     """ The choice can be either log or piecewise """
     if choice == 'log':
-        return self.make_log_stepcontrol(**kwargs)
+        return make_log_stepcontrol(t0, t1, dt0, dt1, **kwargs)
     elif choice == 'piecewise':
-        return make_piecewise_stepcontrol(t0=self.t0, t1=self.t1, dt0=self.dt0, dt1=self.dt1, **kwargs)
+        return make_piecewise_stepcontrol(t0=t0, t1=t1, dt0=dt0, dt1=dt1, **kwargs)
     elif choice == 'adaptive':
         return dfx.PIDController(rtol=1e-3, atol=1e-5)
     else:
@@ -44,15 +46,15 @@ def make_stepsize_controller(self, choice: str, **kwargs):
             f'The stepsize controller option `{choice}` is not available.')
 
 
-def make_log_stepcontrol(self, upper_log: int = 3):
+def make_log_stepcontrol(t0, t1, dt0, dt1, upper_log: int = 3):
     num = 1000
     x = np.interp(np.logspace(0, upper_log, num=num), [
-        1, np.power(10, upper_log)], [self.dt0, self.dt1])
-    while np.cumsum(x)[-1] < self.t1:
+        1, np.power(10, upper_log)], [dt0, dt1])
+    while np.cumsum(x)[-1] < t1:
         x = np.interp(np.logspace(0, upper_log, num=num), [
-            1, np.power(10, upper_log)], [self.dt0, self.dt1])
+            1, np.power(10, upper_log)], [dt0, dt1])
         num += 1
     ts = np.cumsum(x)
-    ts[0] = self.t0
-    ts[-1] = self.t1
+    ts[0] = t0
+    ts[-1] = t1
     return dfx.StepTo(ts)

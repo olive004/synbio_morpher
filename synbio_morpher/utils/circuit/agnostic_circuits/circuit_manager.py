@@ -36,7 +36,7 @@ from synbio_morpher.utils.misc.runtime import clear_caches
 from synbio_morpher.utils.misc.type_handling import flatten_nested_dict, flatten_listlike, append_nest_dicts
 from synbio_morpher.utils.results.visualisation import VisODE
 from synbio_morpher.utils.modelling.deterministic import bioreaction_sim_dfx_expanded
-from synbio_morpher.utils.modelling.solvers import get_diffrax_solver
+from synbio_morpher.utils.modelling.solvers import get_diffrax_solver, make_stepsize_controller
 from synbio_morpher.utils.evolution.mutation import implement_mutation
 from synbio_morpher.utils.results.analytics.timeseries import generate_analytics
 from synbio_morpher.utils.results.result_writer import ResultWriter
@@ -288,9 +288,7 @@ class CircuitModeller():
                                             self.steady_state_args.get('method', 'Dopri5')),
                                         saveat=dfx.SaveAt(
                                             ts=np.linspace(self.t0, self.t1, int(np.min([200, self.t1-self.t0])))),
-                                        stepsize_controller=self.make_stepsize_controller(
-                                            choice='piecewise')
-                                        ))
+                                        stepsize_controller=make_stepsize_controller(choice='piecewise')))
 
             b_copynumbers, t = simulate_steady_states(
                 y0=y0, total_time=self.tmax, sim_func=sim_func,
@@ -630,9 +628,7 @@ class CircuitModeller():
                             # t0=True, t1=True),
                             ts=np.linspace(self.t0, self.t1, 500)),  # int(np.min([500, self.t1-self.t0]))))
                         # ts=np.interp(np.logspace(0, 2, num=500), [1, np.power(10, 2)], [self.t0, self.t1])),  # Save more points early in the sim
-                        stepsize_controller=self.make_stepsize_controller(
-                            choice='piecewise')
-                        )))
+                        stepsize_controller=make_stepsize_controller(choice='piecewise'))))
 
         elif self.simulation_args['solver'] == 'ivp':
             # way slower
