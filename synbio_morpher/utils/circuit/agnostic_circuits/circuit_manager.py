@@ -37,6 +37,7 @@ from synbio_morpher.utils.misc.type_handling import flatten_nested_dict, flatten
 from synbio_morpher.utils.results.visualisation import VisODE
 from synbio_morpher.utils.modelling.base import Modeller
 from synbio_morpher.utils.modelling.deterministic import Deterministic, bioreaction_sim_dfx_expanded
+from synbio_morpher.utils.modelling.solvers import get_diffrax_solver
 from synbio_morpher.utils.evolution.mutation import implement_mutation
 from synbio_morpher.utils.results.analytics.timeseries import generate_analytics
 from synbio_morpher.utils.results.result_writer import ResultWriter
@@ -287,7 +288,7 @@ class CircuitModeller():
                                         inputs=ref_circuit.qreactions.reactions.inputs,
                                         outputs=ref_circuit.qreactions.reactions.outputs,
                                         forward_rates=forward_rates,
-                                        solver=dfx.Kvaerno3(),
+                                        solver=get_diffrax_solver(self.steady_state_args.get('method', 'Dopri5')),
                                         saveat=dfx.SaveAt(
                                             ts=np.linspace(self.t0, self.t1, int(np.min([200, self.t1-self.t0])))),
                                         stepsize_controller=self.make_stepsize_controller(
@@ -652,7 +653,7 @@ class CircuitModeller():
                         forward_rates=forward_rates,
                         inputs=ref_circuit.qreactions.reactions.inputs,
                         outputs=ref_circuit.qreactions.reactions.outputs,
-                        solver=dfx.Kvaerno3(),
+                        solver=get_diffrax_solver(self.simulation_args.get('method', 'Dopri5')),
                         saveat=dfx.SaveAt(
                             # t0=True, t1=True),
                             ts=np.linspace(self.t0, self.t1, 500)),  # int(np.min([500, self.t1-self.t0]))))
