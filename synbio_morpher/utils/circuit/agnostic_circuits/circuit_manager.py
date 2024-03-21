@@ -19,7 +19,6 @@ import gc
 import logging
 import diffrax as dfx
 import numpy as np
-
 import jax
 # jax.config.update('jax_platform_name', 'cpu')
 
@@ -135,7 +134,6 @@ class CircuitModeller():
         circuit.interactions.binding_rates_dissociation = circuit.interactions.binding_rates_dissociation * \
             self.interaction_factor
         circuit.update_species_simulated_rates(circuit.interactions)
-        self.write_interactions(circuit)
         return circuit
 
     def write_interactions(self, circuit):
@@ -149,13 +147,7 @@ class CircuitModeller():
                 out_type='csv', out_name=circuit.name,
                 overwrite=True, new_file=True,
                 filename_addon=filename_addon, subfolder=filename_addon)
-        
-        if 'raw' in circuit.interactions.__dict__:
-            self.result_writer.output(
-                data=circuit.interactions.__getattribute__('raw'),
-                out_type='csv', out_name=circuit.name,
-                overwrite=True, new_file=True,
-                filename_addon=filename_addon, subfolder=filename_addon)
+        return circuit
 
     def compute_interactions_batch(self, circuits: List[Circuit], batch=True):
         # Make sure multi-threading is on
@@ -167,12 +159,12 @@ class CircuitModeller():
                     self.simulator_args['simulator_kwargs']['raw_stdout'] = True
         n_threads = self.simulator_args.get('multithread', 0)
         if n_threads > 0:
-            # for i in range(0, len(circuits), n_threads):
-            #     j = i + n_threads if i + \
-            #         n_threads < len(circuits) else len(circuits)
-            #     executor = concurrent.futures.ProcessPoolExecutor(max_workers=j - i)
-            #     results = list(executor.map(self.compute_interactions, circuits[i:j]))
-            #     circuits[i:j] = results
+            for i in range(0, len(circuits), n_threads):
+                j = i + n_threads if i + \
+                    n_threads < len(circuits) else len(circuits)
+                executor = concurrent.futures.ProcessPoolExecutor(max_workers=j - i)
+                results = list(executor.map(self.compute_interactions, circuits[i:j]))
+                circuits[i:j] = results
 
             # manager = multiprocessing.Manager()
             # rets = []
@@ -187,6 +179,7 @@ class CircuitModeller():
             #                        f=self.compute_interactions),
             #         args=(ii, (circuits[ii],), q)
             #     ) for ii in range(i, j)]
+
             #     for p in processes:
             #         p.start()
             #     for p in processes:
@@ -195,19 +188,20 @@ class CircuitModeller():
             #     # completing process
             #     for p in processes:
             #         p.join()
+
             #     # circuits[i:j] = [d[ii] for ii in range(i, j)]
             # circuits = rets
 
-            for i in range(0, len(circuits), n_threads):
-                j = i + n_threads if i + \
-                    n_threads < len(circuits) else len(circuits)
-                pool = multiprocessing.Pool(j - i)
-                # d = {}
-                # k = np.arange(i, j)
-                # circuits[i:j] = pool.map(
-                #     partial(wrap_dict_result, f=self.compute_interactions, d=d), list(zip(k, circuits[i:j])))
-                circuits[i:j] = pool.map(
-                    self.compute_interactions, circuits[i:j])
+            # for i in range(0, len(circuits), n_threads):
+            #     j = i + n_threads if i + \
+            #         n_threads < len(circuits) else len(circuits)
+            #     pool = multiprocessing.Pool(j - i)
+            #     # d = {}
+            #     # k = np.arange(i, j)
+            #     # circuits[i:j] = pool.map(
+            #     #     partial(wrap_dict_result, f=self.compute_interactions, d=d), list(zip(k, circuits[i:j])))
+            #     circuits[i:j] = pool.map(
+            #         self.compute_interactions, circuits[i:j])
         else:
             if self.simulator_args['name'] == 'IntaRNA':
                 logging.warning(
@@ -283,8 +277,7 @@ class CircuitModeller():
             forward_rates = ref_circuit.qreactions.reactions.forward_rates
             reverse_rates = np.asarray(
                 [c.qreactions.reactions.reverse_rates for c in circuits])
-            starting_states = np.asarray(
-                [c.qreactions.quantities for c in circuits])
+            y0 = np.asarray([c.qreactions.quantities for c in circuits])
             signal_onehot = np.zeros_like(
                 ref_circuit.signal.reactions_onehot) if ref_circuit.use_prod_and_deg else np.zeros_like(ref_circuit.signal.onehot)
 
@@ -294,7 +287,7 @@ class CircuitModeller():
                                         inputs=ref_circuit.qreactions.reactions.inputs,
                                         outputs=ref_circuit.qreactions.reactions.outputs,
                                         forward_rates=forward_rates,
-                                        solver=dfx.Tsit5(),
+                                        solver=dfx.Kvaerno3(),
                                         saveat=dfx.SaveAt(
                                             ts=np.linspace(self.t0, self.t1, int(np.min([200, self.t1-self.t0])))),
                                         stepsize_controller=self.make_stepsize_controller(
@@ -302,13 +295,47 @@ class CircuitModeller():
                                         ))
 
             b_copynumbers, t = simulate_steady_states(
-                y0=starting_states, total_time=self.tmax, sim_func=sim_func,
+                y0=y0, total_time=self.tmax, sim_func=sim_func,
                 t0=self.t0, t1=self.t1,
                 threshold=self.threshold_steady_states,
                 reverse_rates=reverse_rates,
             )
 
             b_copynumbers = np.swapaxes(b_copynumbers, 1, 2)
+            
+        elif solver_type == 'torchode':
+            raise NotImplementedError
+            # import torchode as tode
+            # import torch
+            # ref_circuit = circuits[0]
+            # forward_rates = ref_circuit.qreactions.reactions.forward_rates
+            # reverse_rates = np.asarray(
+            #     [c.qreactions.reactions.reverse_rates for c in circuits])
+            # y0 = np.asarray([c.qreactions.quantities for c in circuits])
+            # signal_onehot = np.zeros_like(
+            #     ref_circuit.signal.reactions_onehot) if ref_circuit.use_prod_and_deg else np.zeros_like(ref_circuit.signal.onehot)
+
+            # sim_func = partial(bioreaction_sim_expanded,
+            #                             inputs=ref_circuit.qreactions.reactions.inputs,
+            #                             outputs=ref_circuit.qreactions.reactions.outputs,
+            #                 forward_rates=forward_rates.squeeze(), reverse_rates=reverse_rates.squeeze()
+            #                 )
+            
+            # t_eval = np.linspace(self.t0, self.t1, int(np.min([200, self.t1-self.t0]))).repeat(len(circuits))
+            # prob = tode.InitialValueProblem(y0=y0, t_eval=t_eval)
+            # odeterm = tode.ODETerm(sim_func, with_args=True)
+            # step_method = tode.Dopri5(term=odeterm)
+            # step_controller = tode.PIDController(
+            #     atol=1e-4, rtol=1e-2, pcoeff=0.2, icoeff=0.5, dcoeff=0.0, term=odeterm)
+            # solver = tode.AutoDiffAdjoint(step_method, step_controller)
+            # self.solver = torch.compile(solver)
+            # sol = self.solver.solve(prob)
+            
+        elif solver_type == 'torchdiffeq':
+            t_eval = np.linspace(self.t0, self.t1, 100)
+            raise NotImplementedError
+            # tdeq.odeint_adjoint(sim_func, starting_states, t)
+
 
         return np.asarray(b_copynumbers), np.squeeze(t)
 
@@ -369,7 +396,7 @@ class CircuitModeller():
         #     circuits[i].qreactions.reactions.forward_rates = circuits[i].qreactions.reactions.forward_rates / rate_max
         #     circuits[i].qreactions.reactions.reverse_rates = circuits[i].qreactions.reactions.reverse_rates / rate_max
 
-        self.dt0 = np.min([1/ (5 * rate_max), 0.1])
+        self.dt0 = np.min([1 / (5 * rate_max), 0.1])
         self.dt1 = self.dt1_factor * self.dt0
 
         return circuits
@@ -533,7 +560,7 @@ class CircuitModeller():
             # Can be by reference
             subcircuits[i].name = circuit.name
             subcircuits[i].circuit_size = circuit.circuit_size
-            subcircuits[i].signal: Signal = circuit.signal
+            subcircuits[i].signal = circuit.signal
             subcircuits[i].use_prod_and_deg = circuit.use_prod_and_deg
 
             # Cannot be by ref
@@ -576,6 +603,8 @@ class CircuitModeller():
             return self.make_log_stepcontrol(**kwargs)
         elif choice == 'piecewise':
             return make_piecewise_stepcontrol(t0=self.t0, t1=self.t1, dt0=self.dt0, dt1=self.dt1, **kwargs)
+        elif choice == 'adaptive':
+            return dfx.PIDController(rtol=1e-3, atol=1e-5)
         else:
             raise ValueError(
                 f'The stepsize controller option `{choice}` is not available.')
@@ -623,7 +652,7 @@ class CircuitModeller():
                         forward_rates=forward_rates,
                         inputs=ref_circuit.qreactions.reactions.inputs,
                         outputs=ref_circuit.qreactions.reactions.outputs,
-                        solver=dfx.Tsit5(),
+                        solver=dfx.Kvaerno3(),
                         saveat=dfx.SaveAt(
                             # t0=True, t1=True),
                             ts=np.linspace(self.t0, self.t1, 500)),  # int(np.min([500, self.t1-self.t0]))))
