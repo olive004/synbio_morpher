@@ -288,7 +288,7 @@ class CircuitModeller():
                                             self.steady_state_args.get('method', 'Dopri5')),
                                         saveat=dfx.SaveAt(
                                             ts=np.linspace(self.t0, self.t1, int(np.min([200, self.t1-self.t0])))),
-                                        stepsize_controller=make_stepsize_controller(choice='piecewise')))
+                                        stepsize_controller=make_stepsize_controller(self.t0, self.t1, self.dt0, self.dt1, choice='piecewise')))
 
             b_copynumbers, t = simulate_steady_states(
                 y0=y0, total_time=self.tmax, sim_func=sim_func,
@@ -628,7 +628,7 @@ class CircuitModeller():
                             # t0=True, t1=True),
                             ts=np.linspace(self.t0, self.t1, 500)),  # int(np.min([500, self.t1-self.t0]))))
                         # ts=np.interp(np.logspace(0, 2, num=500), [1, np.power(10, 2)], [self.t0, self.t1])),  # Save more points early in the sim
-                        stepsize_controller=make_stepsize_controller(choice='piecewise'))))
+                        stepsize_controller=make_stepsize_controller(self.t0, self.t1, self.dt0, self.dt1, choice='piecewise'))))
 
         elif self.simulation_args['solver'] == 'ivp':
             # way slower
