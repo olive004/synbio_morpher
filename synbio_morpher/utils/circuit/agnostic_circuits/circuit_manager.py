@@ -269,7 +269,7 @@ class CircuitModeller():
                 b_copynumbers.append(copynumbers)
                 t = steady_state_result.t
 
-        elif solver_type == 'jax':
+        elif solver_type == 'diffrax':
             ref_circuit = circuits[0]
             forward_rates = ref_circuit.qreactions.reactions.forward_rates
             reverse_rates = np.asarray(
