@@ -73,7 +73,7 @@ def parse_cfg_args(config: dict = None, default_args: Dict = None) -> Dict:
     config['interaction_simulator']['molecular_params'] = config['molecular_params']
     config['interaction_simulator']['compute_by_filename'] = config['interaction_simulator'].get(
         'compute_by_filename', False)
-    config['simulation_steady_state'] = default_args['simulation_steady_state']
+    config['simulation_steady_state'] = config.get('simulation_steady_state', default_args['simulation_steady_state'])
 
     return config
 
