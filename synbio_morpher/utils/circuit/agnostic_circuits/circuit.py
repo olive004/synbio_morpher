@@ -91,8 +91,8 @@ class Circuit():
         return qreactions
 
     def init_interactions(self, interaction_cfg: dict = None, interactions_loaded: dict = None, config: dict = None, 
-                          init_dummy=False) -> MolecularInteractions:
-        if interaction_cfg is None and interactions_loaded is None:
+                          init_dummy=False):
+        if (interaction_cfg is None) and (interactions_loaded is None):
             num_in_species = len(self.get_input_species())
             dummy_inters = np.zeros((5, num_in_species, num_in_species)) * np.nan
             if init_dummy:

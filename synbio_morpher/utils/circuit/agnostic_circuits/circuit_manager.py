@@ -6,7 +6,7 @@
 # LICENSE file in the root directory of this source tree.
 
 from copy import deepcopy
-from typing import List
+from typing import List, Tuple
 from functools import partial
 from datetime import datetime
 import multiprocessing
@@ -241,7 +241,7 @@ class CircuitModeller():
         return circuits
 
     def compute_steady_states(self, circuits: List[Circuit],
-                              solver_type: str = 'jax', use_zero_rates: bool = False) -> List[Circuit]:
+                              solver_type: str = 'jax', use_zero_rates: bool = False) -> Tuple[np.ndarray, np.ndarray]:
 
         if solver_type == 'ivp':
             b_copynumbers = []
@@ -331,6 +331,9 @@ class CircuitModeller():
             t_eval = np.linspace(self.t0, self.t1, 100)
             raise NotImplementedError
             # tdeq.odeint_adjoint(sim_func, starting_states, t)
+            
+        else:
+            raise ValueError(f'The chosen solver `{solver_type}` is not supported.')
 
         return np.asarray(b_copynumbers), np.squeeze(t)
 
