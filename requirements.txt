@@ -3,7 +3,7 @@ biopython
 bokeh
 -e git+https://github.com/Steel-Lab-Oxford/core-bioreaction-simulation.git@47391ff32aa2e0e9dcbb4541efb526ff6c43e427#egg=bioreaction
 celluloid
-chex>=0.1.6
+chex
 fire
 jax==0.4.29
 # -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
