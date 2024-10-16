@@ -5,7 +5,7 @@ sudo docker pull docker/dockerfile:1
 sudo docker pull quay.io/biocontainers/intarna:3.3.2--pl5321h7ff8a90_0
 # sudo docker run --rm -it --entrypoint bash quay.io/biocontainers/intarna:3.3.2--pl5321h7ff8a90_0
 # sudo docker pull nvidia/cuda:12.1.0-devel-ubuntu22.04
-sudo docker pull nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
+sudo docker pull nvidia/cuda:12.6.0-cudnn-devel-ubuntu22.04
 
 # If image not built yet
 sudo docker build -t genetic_glitch:latest docker_unix
@@ -26,7 +26,6 @@ genetic_glitch:latest
 sudo docker container start gcg
 sudo docker exec -it gcg /bin/bash 
 # sudo docker container stop gcg
-
 
 # Docusaurus
 # 1. Started by installing Node.js and following installation guide https://github.com/nodejs/help/wiki/Installation

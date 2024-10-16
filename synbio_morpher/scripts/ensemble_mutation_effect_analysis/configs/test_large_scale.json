@@ -14,7 +14,7 @@
             },
             "molecular_params": "./synbio_morpher/utils/common/configs/RNA_circuit/molecular_params.json",
             "circuit_generation": {
-                "repetitions": 100000,
+                "repetitions": 100,
                 "species_count": 3,
                 "sequence_length": 20,
                 "generator_protocol": "random",
@@ -48,7 +48,7 @@
             "data_path": null,
             "experiment": {
                 "purpose": "mutation_effect_on_interactions_signal",
-                "no_visualisations": true,
+                "no_visualisations": false,
                 "no_numerical": true,
                 "debug_mode": false
             },
@@ -65,7 +65,7 @@
             },
             "mutations_args": {
                 "algorithm": "random",
-                "mutation_counts": 10,
+                "mutation_counts": 2,
                 "mutation_nums_within_sequence": [1, 2, 3, 5, 10, 15],
                 "mutation_nums_per_position": 1,
                 "concurrent_species_to_mutate": "single_species_at_a_time",
