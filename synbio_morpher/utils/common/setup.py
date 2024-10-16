@@ -71,7 +71,7 @@ def compose_kwargs(prev_configs: dict = None, config: dict = None) -> dict:
                                data=config.get("data", None))
     kwargs = {}
     kwargs = expand_model_config(config, kwargs, data_manager.data.sample_names)
-    kwargs.update({
+    kwargs_specific = {
         "data": data_manager.data,
         "data_path": data_manager.source,
         # For pre-loading interactions
@@ -86,7 +86,8 @@ def compose_kwargs(prev_configs: dict = None, config: dict = None) -> dict:
         "simulation": config["simulation"],
         "simulation_steady_state": config["simulation_steady_state"],
         "system_type": config["system_type"]
-    })
+    }
+    kwargs.update(kwargs_specific)
     kwargs["name"] = kwargs["name"] if kwargs["name"] is not None else make_circuit_name()
     assert all([e in kwargs for e in ESSENTIAL_KWARGS]), 'Some of the kwargs for composing ' \
         f'a circuit are not listed in essential kwargs {ESSENTIAL_KWARGS}: {dict({e: e in kwargs for e in ESSENTIAL_KWARGS})}'
@@ -99,8 +100,12 @@ def expand_config(config: dict) -> dict:
     config["interactions_loaded"] = config.get("interactions_loaded")  # Actual matrix of interactions
     config["interaction_simulator"] = config.get("interaction_simulator", {"name": "IntaRNA"})
     config["molecular_params"] = process_molecular_params(deepcopy(load_json_as_dict(config.get("molecular_params"))), config.get("molecular_params_factor", 1))
-    config["mutations_args"] = config.get("mutations_args", {})
     config["signal"] = load_json_as_dict(config.get("signal"))
+    return config
+
+
+def add_empty_fields(config: dict) -> dict:
+    config["mutations_args"] = config.get("mutations_args", {})
     config["simulation"] = config.get("simulation", {})
     config["simulation_steady_state"] = config.get("simulation_steady_state", {})
     config["system_type"] = config.get("system_type")
@@ -111,6 +116,7 @@ def prepare_config(config_filepath: str = None, config_file: dict = None):
     config_file = get_configs(config_file, config_filepath)
     config_file = expand_config(config_file)
     config_file = parse_cfg_args(config_file)
+    config_file = add_empty_fields(config_file)
     return config_file
 
 def construct_circuit_from_cfg(prev_configs: dict, config_file: dict):

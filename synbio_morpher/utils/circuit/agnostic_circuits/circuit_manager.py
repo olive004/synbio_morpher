@@ -54,7 +54,7 @@ def wrap_queue_res(k, inp, q, f, **kwargs):
 class CircuitModeller():
 
     def __init__(self, result_writer=None, config: dict = {}) -> None:
-        self.result_writer = ResultWriter() if result_writer is None else result_writer
+        self.result_writer = ResultWriter(None) if result_writer is None else result_writer
         self.steady_state_args = config['simulation_steady_state']
         self.simulator_args = config['interaction_simulator']
         self.simulation_args = config.get('simulation', {})

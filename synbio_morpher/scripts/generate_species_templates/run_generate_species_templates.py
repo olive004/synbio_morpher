@@ -49,6 +49,12 @@ def main(config=None, data_writer=None):
                     result_writer=data_writer, config=config_file).compute_interactions,
                 req_input=True,
                 name="compute_interaction_strengths"
+            ),
+            Protocol(
+                CircuitModeller(
+                    result_writer=data_writer, config=config_file).write_interactions,
+                req_input=True,
+                name="compute_interaction_strengths"
             )
         ]
     ]

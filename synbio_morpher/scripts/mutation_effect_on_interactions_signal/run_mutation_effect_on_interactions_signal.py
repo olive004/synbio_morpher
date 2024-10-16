@@ -32,7 +32,7 @@ def main(config=None, data_writer=None):
     # Start_experiment
     config_file, source_experiment_dir = get_search_dir(
         config_searchdir_key='source_of_interaction_stats', config_file=config_file)
-    config_file = expand_config(config=config_file)
+    # config_file = expand_config(config=config_file)
     config_file = prepare_config(config_file)
 
     def logging_circuit(clist: list):

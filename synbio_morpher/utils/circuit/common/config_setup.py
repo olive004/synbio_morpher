@@ -66,8 +66,8 @@ def handle_simulator_cfgs(simulator, simulator_cfg_path):
 
 def parse_cfg_args(config: dict = None, default_args: Dict = None) -> Dict:
 
-    if default_args is None:
-        default_args = retrieve_default_args()
+    default_args = retrieve_default_args() if default_args is None else default_args
+
     simulator_kwargs = load_simulator_kwargs(default_args, config)
     config['interaction_simulator']['simulator_kwargs'] = simulator_kwargs
     config['interaction_simulator']['molecular_params'] = config['molecular_params']
@@ -83,10 +83,10 @@ def load_simulator_kwargs(default_args: dict, config_args: str = None) -> Dict:
         'interaction_simulator', {}).get('name')
     simulator_kwargs = None
     for simulator_name in get_simulator_names():
-        kwarg_condition = simulator_name in default_args
+        kwarg_flag = simulator_name in default_args
         if not target_simulator_name is None:
-            kwarg_condition = kwarg_condition and simulator_name == target_simulator_name
-        if kwarg_condition:
+            kwarg_flag = kwarg_flag and simulator_name == target_simulator_name
+        if kwarg_flag:
             simulator_kwargs = handle_simulator_cfgs(
                 simulator_name, default_args[simulator_name])
             if config_args.get('interaction_simulator', {}).get('simulator_kwargs'):

@@ -48,7 +48,7 @@ class MolecularInteractions():
 
     def set_precision(self):
         for attr, v in self.__dict__.items():
-            if v is None:
+            if v is None or (attr == 'raw'):
                 continue
             self.__setattr__(attr, self.precision(v))
 
