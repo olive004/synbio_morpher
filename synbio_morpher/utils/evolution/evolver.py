@@ -125,15 +125,16 @@ class Evolver():
 
             for specie in spec_iter:
                 circuit.mutations[specie.name] = {}
-                sequence = specie.physical_data
+                sequence = specie.sequence
                 if not sequence:
                     continue
                 for mutation_nums_within_sequence in circuit.mutations_args['mutation_nums_within_sequence']:
                     for mutation_counts in circuit.mutations_args['mutation_counts']:
                         for mutation_idx in range(mutation_counts):
 
-                            positions = positions if positions_chosen is not None else mutation_sampler(
-                                len(sequence), mutation_nums_within_sequence).flatten()
+                            positions = mutation_sampler(len(sequence), mutation_nums_within_sequence).flatten().tolist()
+                            # positions = positions if positions_chosen is not None else mutation_sampler(
+                            #     len(sequence), mutation_nums_within_sequence).flatten()
                             mutation_types, positions = self.sample_mutations(
                                 sequence, positions, circuit.mutations_args['mutation_nums_per_position'])
 
@@ -161,7 +162,7 @@ class Evolver():
             spec_iter = make_species_iter(circuit)
             for i, specie in enumerate(spec_iter):
                 circuit.mutations[specie.name] = {}
-                sequence = specie.physical_data
+                sequence = specie.sequence
                 sequence_l = len(sequence)
                 if sequence_l == 0:
                     continue
@@ -205,8 +206,8 @@ class Evolver():
             if n > len(possible_transitions):
                 logging.warning(
                     f'Cannot pick {n} when there are only {len(possible_transitions)} choices')
-            mutation_types[p] = list(np.random.choice(
-                list(possible_transitions.values()), size=n, replace=False))
+            mutation_types[p] = np.random.choice(
+                list(possible_transitions.values()), size=n, replace=False).tolist()
             new_positions.append([p] * n)
 
         return flatten_listlike(mutation_types.values()), flatten_listlike(new_positions)
@@ -221,7 +222,7 @@ class Evolver():
                 mutation_idx),
             template_species=specie,
             template_name=specie.name,
-            template_seq=specie.physical_data,
+            template_seq=specie.sequence,
             mutation_types=mutation_types,
             count=mutation_count,
             positions=positions,
@@ -253,4 +254,25 @@ def load_mutations(circuit, filename=None):
             v) for v in circuit.mutations[mutating_species][table.iloc[i]['mutation_name']].mutation_types]
         circuit.mutations[mutating_species][table.iloc[i]['mutation_name']].positions = [int(
             v) for v in circuit.mutations[mutating_species][table.iloc[i]['mutation_name']].positions]
+    return circuit
+
+
+def apply_mutation_to_sequence(sequence: str, mutation_positions: List[int], mutation_types: List[str]) -> List[str]:
+    sequence = np.array([*sequence])
+    sequence[mutation_positions] = mutation_types
+    return ''.join(sequence)
+
+
+def implement_mutation(circuit: Circuit, mutation: Mutations):
+
+    if mutation.template_name in circuit.species_names:
+        sidx = circuit.species_names.index(mutation.template_name)
+        # circuit.model.species[sidx].name = mutation.mutation_name
+        circuit.model.species[sidx].sequence = mutation.get_sequence()
+    else:
+        raise KeyError(
+            f'Could not find specie {mutation.template_name} in model for mutation {mutation.mutation_name}')
+
+    circuit.qreactions.update_reactants(circuit.model)
+    circuit.qreactions.update_reactions(circuit.model)
     return circuit

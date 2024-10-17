@@ -298,7 +298,7 @@ def process_for_next_run(circuits: list, data_writer: DataWriter):
 
     for i, c in enumerate(circuits):
         circuits[i].name = make_next_name(c.name)
-        # sequences = {s.name: s.physical_data for s in c.model.species if s.physical_data}
+        # sequences = {s.name: s.sequence for s in c.model.species if s.sequence}
         sequences = load_seq_from_FASTA(c.data.source, as_type='dict')
         circuits[i].data.source = write_mutated_circuit(
             name=circuits[i].name, subname='ref_circuit', sequences=sequences, data_writer=data_writer)
@@ -452,7 +452,7 @@ def main(config=None, data_writer=None):
     def write(summary_datas, data_writer):
         data_writer.subdivide_writing('summary_datas')
         for step, sdata in summary_datas.items():
-            data_writer.output('csv', out_name='sdata_' +
+            data_writer.output(out_type='csv', out_name='sdata_' +
                                str(step), write_master=False, data=sdata)
         data_writer.unsubdivide()
 

@@ -22,7 +22,7 @@ def get_system_type(sys_type):
 def add_data_to_species(model: BasicModel, data: Data):
     for i, s in enumerate(model.species):
         if s.name in data.data.keys():
-            model.species[i].physical_data = data.data[s.name]
+            model.species[i].sequence = data.data[s.name]
     return model
 
 

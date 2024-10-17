@@ -49,8 +49,8 @@
             "experiment": {
                 "purpose": "mutation_effect_on_interactions_signal",
                 "no_visualisations": false,
-                "no_numerical": true,
-                "debug_mode": 1
+                "no_numerical": false,
+                "debug_mode": 0
             },
             "interaction_simulator": {
                 "name": "IntaRNA",

@@ -67,7 +67,7 @@ class ResultWriter(DataWriter):
 
         if new_report:
             out_name = out_name + '_' + make_time_str()
-        self.output(out_type, out_name, overwrite=not (
+        self.output(out_type=out_type, out_name=out_name, overwrite=not (
             new_report), data=report)
 
     def write_numerical(self, data, out_name: str):

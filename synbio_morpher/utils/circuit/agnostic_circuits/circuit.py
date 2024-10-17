@@ -5,7 +5,7 @@
 # This source code is licensed under the MIT-style license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import Union
+from typing import Union, Dict
 import pandas as pd
 import numpy as np
 import logging
@@ -13,11 +13,12 @@ import logging
 from synbio_morpher.srv.parameter_prediction.interactions import MolecularInteractions, InteractionMatrix
 from synbio_morpher.srv.io.manage.data_manager import DataManager
 from synbio_morpher.utils.circuit.common.system_setup import construct_bioreaction_model
+from synbio_morpher.utils.evolution.mutation import Mutations
 from synbio_morpher.utils.misc.string_handling import make_circuit_name
 from synbio_morpher.utils.misc.type_handling import flatten_listlike, get_unique
 from synbio_morpher.utils.results.results import ResultCollector
 from synbio_morpher.utils.signal.signals_new import Signal
-from bioreaction.model.data_containers import BasicModel, QuantifiedReactions, MedModel
+from bioreaction.model.data_containers import BasicModel, QuantifiedReactions
 
 
 FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
@@ -65,7 +66,7 @@ class Circuit():
             assert self.interactions_state != 'uninitialised', f'The interactions should have been initialised from {config.get("interactions")}'
         self.signal: Signal  # = None
         self.mutations_args: dict = config.get('mutations_args', {})
-        self.mutations = {}
+        self.mutations: Dict[str, Mutations] = {}
 
         self.update_species_simulated_rates(self.interactions)
 

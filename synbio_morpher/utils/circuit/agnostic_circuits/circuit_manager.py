@@ -6,7 +6,7 @@
 # LICENSE file in the root directory of this source tree.
 
 from copy import deepcopy
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, Optional
 from functools import partial
 from datetime import datetime
 import multiprocessing
@@ -37,7 +37,8 @@ from synbio_morpher.utils.misc.type_handling import flatten_nested_dict, flatten
 from synbio_morpher.utils.results.visualisation import VisODE
 from synbio_morpher.utils.modelling.deterministic import bioreaction_sim_dfx_expanded, bioreaction_sim_dfx_naive
 from synbio_morpher.utils.modelling.solvers import get_diffrax_solver, make_stepsize_controller
-from synbio_morpher.utils.evolution.mutation import implement_mutation
+from synbio_morpher.utils.evolution.evolver import implement_mutation
+from synbio_morpher.utils.evolution.mutation import Mutations
 from synbio_morpher.utils.results.analytics.timeseries import generate_analytics
 from synbio_morpher.utils.results.result_writer import ResultWriter
 
@@ -222,7 +223,7 @@ class CircuitModeller():
         return circuits
 
     def run_interaction_simulator(self, species: List[Species], quantities, filename=None) -> InteractionDataHandler:
-        data = {s: s.physical_data for s in species}
+        data = {s: s.sequence for s in species}
         # if filename is not None:
         #     return self.interaction_simulator.run((filename, data), compute_by_filename=True)
         # else:
@@ -539,7 +540,7 @@ class CircuitModeller():
         for i, (circuit, analytics) in enumerate(zip(circuits, b_analytics_l)):
             if self.discard_numerical_mutations and circuit.subname != 'ref_circuit':
                 sig_data = None
-                vis_func = lambda x: x
+                vis_func = lambda **kwargs: kwargs
             else:
                 sig_data = b_new_copynumbers[i]
                 vis_func=VisODE().plot
@@ -558,7 +559,7 @@ class CircuitModeller():
         clear_caches()
         return circuits
 
-    def make_subcircuit(self, circuit: Circuit, mutation_name: str, mutation=None):
+    def make_subcircuit(self, circuit: Circuit, mutation_name: str, mutation: Optional[Mutations] =None):
 
         subcircuit = deepcopy(circuit)
         subcircuit.reset_to_initial_state()

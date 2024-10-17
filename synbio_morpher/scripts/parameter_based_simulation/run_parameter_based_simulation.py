@@ -74,7 +74,7 @@ def create_circuits(config: dict, interaction_matrices: np.ndarray):
 
 def write_all(all_analytic_matrices, analytic_types, data_writer, out_type='npy'):
     for m, analytic in enumerate(analytic_types):
-        data_writer.output(out_type, out_name=analytic,
+        data_writer.output(out_type=out_type, out_name=analytic,
                            data=all_analytic_matrices[m].astype(np.float32), overwrite=True,
                            write_to_top_dir=True)
 

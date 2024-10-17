@@ -129,7 +129,7 @@ def main(config=None, data_writer=None):
     # Write full matrices
     def write_all(stitched_parameter_grids, out_type='npy'):
         for analytic_name, grid in stitched_parameter_grids.items():
-            data_writer.output(out_type, out_name=analytic_name,
+            data_writer.output(out_type=out_type, out_name=analytic_name,
                                data=grid.astype(np.float32), overwrite=True,
                                write_to_top_dir=True)
 
