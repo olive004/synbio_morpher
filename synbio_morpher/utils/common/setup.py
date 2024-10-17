@@ -18,7 +18,7 @@ from synbio_morpher.utils.misc.io import isolate_filename
 from synbio_morpher.utils.misc.string_handling import make_circuit_name
 from synbio_morpher.utils.misc.type_handling import cast_all_values_as_list
 from synbio_morpher.utils.signal.configs import get_signal_type, parse_sig_args
-from synbio_morpher.utils.signal.signals import Signal
+from synbio_morpher.utils.signal.signals_new import Signal
 from synbio_morpher.utils.circuit.common.config_setup import parse_cfg_args, get_configs
 from synbio_morpher.utils.circuit.common.system_setup import get_system_type
 
@@ -101,12 +101,12 @@ def expand_config(config: dict) -> dict:
     config["interaction_simulator"] = config.get("interaction_simulator", {"name": "IntaRNA"})
     config["molecular_params"] = process_molecular_params(deepcopy(load_json_as_dict(config.get("molecular_params"))), config.get("molecular_params_factor", 1))
     config["signal"] = load_json_as_dict(config.get("signal"))
-    config["simulation_steady_state"] = config.get("simulation_steady_state", {})
     return config
 
 
 def add_empty_fields(config: dict) -> dict:
     config["mutations_args"] = config.get("mutations_args", {})
+    config["simulation_steady_state"] = config.get("simulation_steady_state", {})
     config["simulation"] = config.get("simulation", {})
     config["system_type"] = config.get("system_type")
     return config

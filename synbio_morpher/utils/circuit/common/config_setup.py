@@ -64,7 +64,7 @@ def handle_simulator_cfgs(simulator, simulator_cfg_path):
     return cfg_protocol(simulator_cfg)
 
 
-def parse_cfg_args(config: Union[dict, None] = None, default_args: Union[dict, None] = None) -> dict:
+def parse_cfg_args(config: dict, default_args: Union[dict, None] = None) -> dict:
 
     default_args = retrieve_default_args() if default_args is None else default_args
 
@@ -73,13 +73,13 @@ def parse_cfg_args(config: Union[dict, None] = None, default_args: Union[dict, N
     config['interaction_simulator']['molecular_params'] = config['molecular_params']
     config['interaction_simulator']['compute_by_filename'] = config['interaction_simulator'].get(
         'compute_by_filename', False)
-    default_args['simulation_steady_state'].update(config['simulation_steady_state'])
+    default_args['simulation_steady_state'].update(config.get('simulation_steady_state', {}))
     config['simulation_steady_state'] = default_args['simulation_steady_state']
 
     return config
 
 
-def load_simulator_kwargs(default_args: dict, config_args: dict = None) -> dict:
+def load_simulator_kwargs(default_args: dict, config_args: dict) -> Union[dict, None]:
     target_simulator_name = config_args.get(
         'interaction_simulator', {}).get('name')
     simulator_kwargs = None

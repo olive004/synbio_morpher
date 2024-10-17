@@ -34,7 +34,7 @@ SCRIPT_DIR = 'scripts'
 DATA_DIR = os.path.join(DATA_TOP_DIR, 'data')
 
 
-def make_filename_safely(filename: Union[str, List[str], dict]):
+def make_filename_safely(filename: Union[str, List[str], dict]) -> Union[str, dict]:
     if type(filename) == list:
         if DATA_DIR not in filename and (os.path.abspath(DATA_DIR) not in filename):
             filename.insert(0, DATA_DIR)

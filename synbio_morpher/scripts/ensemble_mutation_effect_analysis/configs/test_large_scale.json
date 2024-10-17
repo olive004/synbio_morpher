@@ -97,7 +97,7 @@
                 "use_rate_scaling": true
             },
             "simulation_steady_state": {
-                "method": "ImplicitEuler",
+                "method": "Dopri5",
                 "stepsize_controller": "adaptive"
             },
             "source_of_interaction_stats": {
