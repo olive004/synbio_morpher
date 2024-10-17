@@ -66,7 +66,7 @@
             "mutations_args": {
                 "algorithm": "random",
                 "mutation_counts": 2,
-                "mutation_nums_within_sequence": [1, 2, 3, 5, 10, 15],
+                "mutation_nums_within_sequence": [1],
                 "mutation_nums_per_position": 1,
                 "concurrent_species_to_mutate": "single_species_at_a_time",
                 "seed": 3

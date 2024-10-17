@@ -42,6 +42,14 @@ from synbio_morpher.utils.results.analytics.timeseries import generate_analytics
 from synbio_morpher.utils.results.result_writer import ResultWriter
 
 
+# Set modelling environment variables
+# os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
+os.environ["XLA_PYTHON_CLIENT_ALLOCATOR"] = "platform"
+debug_mode = True
+if debug_mode:
+    jax.config.update("jax_disable_jit", True)
+
+
 def wrap_queue_res(k, inp, q, f, **kwargs):
     print(k)
     print(inp)
@@ -80,9 +88,6 @@ class CircuitModeller():
             'max_circuits', 10000)  # Maximum number of circuits to hold in memory
         self.debug_mode = config.get('experiment', {}).get('debug_mode', False)
         self.sim_func = None
-
-        # os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
-        os.environ["XLA_PYTHON_CLIENT_ALLOCATOR"] = "platform"
 
         jax.config.update('jax_platform_name', config.get(
             'simulation', {}).get('device', 'cpu'))
@@ -271,7 +276,7 @@ class CircuitModeller():
 
         elif solver_type == 'diffrax':
             ref_circuit = circuits[0]
-            forward_rates = ref_circuit.qreactions.reactions.forward_rates
+            forward_rates = ref_circuit.qreactions.reactions.forward_rates  # Assuming all forward rates are the same
             reverse_rates = np.asarray(
                 [c.qreactions.reactions.reverse_rates for c in circuits])
             y0 = np.asarray([c.qreactions.quantities for c in circuits])
