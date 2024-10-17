@@ -119,23 +119,24 @@ def bioreaction_sim_dfx_expanded(y0, t0, t1, dt0,
                 forward_rates=forward_rates.squeeze(), reverse_rates=reverse_rates.squeeze()
                 )
     )
-    return dfx.diffeqsolve(term, solver,
+    sol = dfx.diffeqsolve(term, solver,
                            t0=t0, t1=t1, dt0=dt0,
                            y0=y0.squeeze(),
                            saveat=saveat, max_steps=max_steps,
                            stepsize_controller=stepsize_controller)
+    return sol.ys, sol.ts
 
 
-def bioreaction_sim_dfx_debug(y0, reverse_rates,
+def bioreaction_sim_dfx_naive(y0: np.ndarray, reverse_rates,
                               t0, t1, dt0,
                               inputs, outputs, forward_rates,
                               save_every_n_tsteps: int = 1
                               ):
 
-    y = y0
-    num_saves = int((t1 - t0) // (dt0 * save_every_n_tsteps) + 1)
-    saves_y = np.zeros((num_saves, *y0.shape))
+    y = y0.copy()
     saves_t = np.arange(t0, t1, dt0*save_every_n_tsteps)
+    num_saves = len(saves_t)
+    saves_y = np.zeros((num_saves, *y0.shape))
 
     save_index = 0  # To keep track of saves
     for i, ti in enumerate(np.arange(t0, t1, dt0)):
@@ -146,8 +147,8 @@ def bioreaction_sim_dfx_debug(y0, reverse_rates,
                 forward_rates=forward_rates,
                 reverse_rates=reverse_rates[iy]) * dt0
 
-            if i % save_every_n_tsteps == 0:
-                saves_y[save_index, iy] = y
-                save_index += 1
+        if i % save_every_n_tsteps == 0:
+            saves_y[save_index] = y
+            save_index += 1
 
     return saves_y, saves_t

@@ -40,7 +40,7 @@ def make_stepsize_controller(t0, t1, dt0, dt1, choice: str, **kwargs):
     elif choice == 'piecewise':
         return make_piecewise_stepcontrol(t0=t0, t1=t1, dt0=dt0, dt1=dt1, **kwargs)
     elif choice == 'adaptive':
-        return dfx.PIDController(rtol=1e-3, atol=1e-5)
+        return dfx.PIDController(rtol=1e-7, atol=1e-9)
     else:
         raise ValueError(
             f'The stepsize controller option `{choice}` is not available.')

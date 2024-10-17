@@ -50,7 +50,7 @@
                 "purpose": "mutation_effect_on_interactions_signal",
                 "no_visualisations": false,
                 "no_numerical": true,
-                "debug_mode": true
+                "debug_mode": 1
             },
             "interaction_simulator": {
                 "name": "IntaRNA",
@@ -82,9 +82,10 @@
                 }
             },
             "simulation": {
-                "dt0": 0.1,
+                "dt0": 0.01,
+                "dt1": 0.5,
                 "t0": 0,
-                "t1": 600,
+                "t1": 10,
                 "tmax": 120000,
                 "solver": "diffrax",
                 "use_batch_mutations": true,
@@ -94,6 +95,10 @@
                 "device": "cpu",
                 "threshold_steady_states": 0.05, 
                 "use_rate_scaling": true
+            },
+            "simulation_steady_state": {
+                "method": "ImplicitEuler",
+                "stepsize_controller": "adaptive"
             },
             "source_of_interaction_stats": {
                 "is_source_dir_incomplete": true,

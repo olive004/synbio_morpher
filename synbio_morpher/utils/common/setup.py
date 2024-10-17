@@ -7,7 +7,7 @@
     
 import logging
 from copy import deepcopy
-from typing import List
+from typing import List, Union
 from bioreaction.model.data_containers import BasicModel
 from synbio_morpher.srv.io.manage.sys_interface import make_filename_safely
 from synbio_morpher.srv.io.manage.data_manager import DataManager
@@ -101,18 +101,18 @@ def expand_config(config: dict) -> dict:
     config["interaction_simulator"] = config.get("interaction_simulator", {"name": "IntaRNA"})
     config["molecular_params"] = process_molecular_params(deepcopy(load_json_as_dict(config.get("molecular_params"))), config.get("molecular_params_factor", 1))
     config["signal"] = load_json_as_dict(config.get("signal"))
+    config["simulation_steady_state"] = config.get("simulation_steady_state", {})
     return config
 
 
 def add_empty_fields(config: dict) -> dict:
     config["mutations_args"] = config.get("mutations_args", {})
     config["simulation"] = config.get("simulation", {})
-    config["simulation_steady_state"] = config.get("simulation_steady_state", {})
     config["system_type"] = config.get("system_type")
     return config
 
 
-def prepare_config(config_filepath: str = None, config_file: dict = None):
+def prepare_config(config_filepath: Union[str, dict, None] = None, config_file: Union[dict, None] = None):
     config_file = get_configs(config_file, config_filepath)
     config_file = expand_config(config_file)
     config_file = parse_cfg_args(config_file)

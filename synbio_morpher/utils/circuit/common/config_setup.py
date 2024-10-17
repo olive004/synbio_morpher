@@ -7,7 +7,7 @@
 
 import argparse
 import os
-from typing import Dict, List
+from typing import Dict, List, Union
 
 from synbio_morpher.srv.parameter_prediction.simulator_loading import find_simulator_loader
 from synbio_morpher.srv.io.manage.sys_interface import PACKAGE_DIR, PACKAGE_NAME
@@ -18,7 +18,7 @@ from synbio_morpher.srv.io.manage.sys_interface import make_filename_safely
 from synbio_morpher.utils.data.data_format_tools.common import load_json_as_dict
 
 
-def get_configs(config_file, config_filepath):
+def get_configs(config_file, config_filepath) -> dict:
     config_filepath = make_filename_safely(config_filepath)
     if config_file is None and config_filepath:
         config_file = load_json_as_dict(config_filepath)
@@ -64,7 +64,7 @@ def handle_simulator_cfgs(simulator, simulator_cfg_path):
     return cfg_protocol(simulator_cfg)
 
 
-def parse_cfg_args(config: dict = None, default_args: Dict = None) -> Dict:
+def parse_cfg_args(config: Union[dict, None] = None, default_args: Union[dict, None] = None) -> dict:
 
     default_args = retrieve_default_args() if default_args is None else default_args
 
@@ -73,12 +73,13 @@ def parse_cfg_args(config: dict = None, default_args: Dict = None) -> Dict:
     config['interaction_simulator']['molecular_params'] = config['molecular_params']
     config['interaction_simulator']['compute_by_filename'] = config['interaction_simulator'].get(
         'compute_by_filename', False)
-    config['simulation_steady_state'] = config.get('simulation_steady_state', default_args['simulation_steady_state'])
+    default_args['simulation_steady_state'].update(config['simulation_steady_state'])
+    config['simulation_steady_state'] = default_args['simulation_steady_state']
 
     return config
 
 
-def load_simulator_kwargs(default_args: dict, config_args: str = None) -> Dict:
+def load_simulator_kwargs(default_args: dict, config_args: dict = None) -> dict:
     target_simulator_name = config_args.get(
         'interaction_simulator', {}).get('name')
     simulator_kwargs = None
@@ -95,7 +96,7 @@ def load_simulator_kwargs(default_args: dict, config_args: str = None) -> Dict:
     return simulator_kwargs
 
 
-def retrieve_default_args() -> Dict:
+def retrieve_default_args() -> dict:
     fn = get_pathnames(file_key='default_args', search_dir=os.path.join(
         PACKAGE_DIR, 'utils', 'common', 'configs', 'simulators'), first_only=True)
     default_args = load_json_as_dict(fn)

@@ -35,7 +35,7 @@ from synbio_morpher.utils.misc.numerical import invert_onehot, zero_out_negs
 from synbio_morpher.utils.misc.runtime import clear_caches
 from synbio_morpher.utils.misc.type_handling import flatten_nested_dict, flatten_listlike, append_nest_dicts
 from synbio_morpher.utils.results.visualisation import VisODE
-from synbio_morpher.utils.modelling.deterministic import bioreaction_sim_dfx_expanded, bioreaction_sim_dfx_debug
+from synbio_morpher.utils.modelling.deterministic import bioreaction_sim_dfx_expanded, bioreaction_sim_dfx_naive
 from synbio_morpher.utils.modelling.solvers import get_diffrax_solver, make_stepsize_controller
 from synbio_morpher.utils.evolution.mutation import implement_mutation
 from synbio_morpher.utils.results.analytics.timeseries import generate_analytics
@@ -92,6 +92,8 @@ class CircuitModeller():
 
         if self.debug_mode:
             jax.config.update("jax_disable_jit", True)
+            if self.debug_mode == 1:
+                os.environ["EQX_ON_ERROR"] = "breakpoint"
 
     def init_circuit(self, circuit: Circuit) -> Circuit:
         if self.simulation_args.get('use_rate_scaling', True):
@@ -266,7 +268,7 @@ class CircuitModeller():
                             signal_onehot=signal_onehot),
                     (self.t0, self.t1),
                     y0=circuit.qreactions.quantities,
-                    method=self.steady_state_args.get('method', 'DOP853'))
+                    method=self.steady_state_args.get('method', 'Dopri5'))
                 if not steady_state_result.success:
                     raise ValueError(
                         'Steady state could not be found through solve_ivp - possibly because units '
@@ -285,8 +287,8 @@ class CircuitModeller():
             signal_onehot = np.zeros_like(
                 ref_circuit.signal.reactions_onehot) if ref_circuit.use_prod_and_deg else np.zeros_like(ref_circuit.signal.onehot)
 
-            if self.debug_mode:
-                sim_func = partial(bioreaction_sim_dfx_debug,
+            if self.debug_mode == 2:
+                sim_func = partial(bioreaction_sim_dfx_naive,
                                    t0=self.t0, t1=self.t1, dt0=self.dt0,
                                    inputs=ref_circuit.qreactions.reactions.inputs,
                                    outputs=ref_circuit.qreactions.reactions.outputs,
@@ -304,7 +306,8 @@ class CircuitModeller():
                                                 self.steady_state_args.get('method', 'Dopri5')),
                                             saveat=dfx.SaveAt(
                                                 ts=np.linspace(self.t0, self.t1, int(np.min([200, self.t1-self.t0])))),
-                                            stepsize_controller=make_stepsize_controller(self.t0, self.t1, self.dt0, self.dt1, choice='piecewise')))
+                                            stepsize_controller=make_stepsize_controller(self.t0, self.t1, self.dt0, self.dt1, 
+                                                                                         choice=self.steady_state_args.get('stepsize_controller', 'piecewise'))))
 
             b_copynumbers, t = simulate_steady_states(
                 y0=y0, total_time=self.tmax, sim_func=sim_func,
@@ -395,15 +398,13 @@ class CircuitModeller():
         return copynumbers
 
     def scale_rates(self, circuits: List[Circuit], batch: bool = True) -> List[Circuit]:
-        forward_rates = [None] * len(circuits)
-        reverse_rates = [None] * len(circuits)
+        forward_rates = np.zeros((len(circuits), *circuits[0].qreactions.reactions.forward_rates.shape))
+        reverse_rates = np.zeros((len(circuits), *circuits[0].qreactions.reactions.forward_rates.shape))
 
         for i, c in enumerate(circuits):
             forward_rates[i] = np.array(c.qreactions.reactions.forward_rates)
             reverse_rates[i] = np.array(c.qreactions.reactions.reverse_rates)
 
-        forward_rates, reverse_rates = np.array(
-            forward_rates), np.array(reverse_rates)
         rate_max = np.max([np.max(np.asarray(forward_rates)),
                           np.max(np.asarray(reverse_rates))])
 
@@ -411,7 +412,7 @@ class CircuitModeller():
         #     circuits[i].qreactions.reactions.forward_rates = circuits[i].qreactions.reactions.forward_rates / rate_max
         #     circuits[i].qreactions.reactions.reverse_rates = circuits[i].qreactions.reactions.reverse_rates / rate_max
 
-        self.dt0 = np.min([1 / (5 * rate_max), 0.1])
+        self.dt0 = np.min([1 / (5 * rate_max), self.dt0])
         self.dt1 = self.dt1_factor * self.dt0
 
         return circuits
