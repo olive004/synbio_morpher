@@ -50,7 +50,7 @@
                 "purpose": "mutation_effect_on_interactions_signal",
                 "no_visualisations": false,
                 "no_numerical": true,
-                "debug_mode": false
+                "debug_mode": true
             },
             "interaction_simulator": {
                 "name": "IntaRNA",
@@ -89,9 +89,9 @@
                 "solver": "diffrax",
                 "use_batch_mutations": true,
                 "interaction_factor": 1,
-                "batch_size": 20000,
+                "batch_size": 5,
                 "max_circuits": 60000,
-                "device": "gpu",
+                "device": "cpu",
                 "threshold_steady_states": 0.05, 
                 "use_rate_scaling": true
             },

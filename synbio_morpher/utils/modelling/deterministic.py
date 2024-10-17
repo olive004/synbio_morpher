@@ -3,15 +3,16 @@
 # All rights reserved.
 
 # This source code is licensed under the MIT-style license found in the
-# LICENSE file in the root directory of this source tree. 
-    
+# LICENSE file in the root directory of this source tree.
+
 import logging
 from functools import partial
 import numpy as np
 import jax
 import jax.numpy as jnp
 import diffrax as dfx
-from bioreaction.simulation.simfuncs.basic_de import bioreaction_sim, bioreaction_sim_expanded
+from diffrax._step_size_controller.base import AbstractStepSizeController
+from bioreaction.simulation.simfuncs.basic_de import bioreaction_sim, bioreaction_sim_expanded, one_step_de_sim_expanded
 from bioreaction.model.data_containers import QuantifiedReactions
 from synbio_morpher.utils.modelling.base import Modeller
 
@@ -107,13 +108,13 @@ def bioreaction_sim_dfx_expanded(y0, t0, t1, dt0,
                                  saveat=dfx.SaveAt(
                                      t0=True, t1=True, steps=True),
                                  max_steps=16**5,
-                                 stepsize_controller=dfx.ConstantStepSize()):
+                                 stepsize_controller: AbstractStepSizeController = dfx.ConstantStepSize()):
     if type(stepsize_controller) == dfx.StepTo:
         dt0 = None
     term = dfx.ODETerm(
         partial(bioreaction_sim_expanded,
                 inputs=inputs, outputs=outputs,
-                # signal=signal, 
+                # signal=signal,
                 # signal_onehot=signal_onehot,
                 forward_rates=forward_rates.squeeze(), reverse_rates=reverse_rates.squeeze()
                 )
@@ -123,3 +124,30 @@ def bioreaction_sim_dfx_expanded(y0, t0, t1, dt0,
                            y0=y0.squeeze(),
                            saveat=saveat, max_steps=max_steps,
                            stepsize_controller=stepsize_controller)
+
+
+def bioreaction_sim_dfx_debug(y0, reverse_rates,
+                              t0, t1, dt0,
+                              inputs, outputs, forward_rates,
+                              save_every_n_tsteps: int = 1
+                              ):
+
+    y = y0
+    num_saves = int((t1 - t0) // (dt0 * save_every_n_tsteps) + 1)
+    saves_y = np.zeros((num_saves, *y0.shape))
+    saves_t = np.arange(t0, t1, dt0*save_every_n_tsteps)
+
+    save_index = 0  # To keep track of saves
+    for i, ti in enumerate(np.arange(t0, t1, dt0)):
+        for iy, yi in enumerate(y):
+            y[iy] = yi + one_step_de_sim_expanded(
+                spec_conc=yi, inputs=inputs,
+                outputs=outputs,
+                forward_rates=forward_rates,
+                reverse_rates=reverse_rates[iy]) * dt0
+
+            if i % save_every_n_tsteps == 0:
+                saves_y[save_index, iy] = y
+                save_index += 1
+
+    return saves_y, saves_t

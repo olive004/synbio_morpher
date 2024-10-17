@@ -35,7 +35,7 @@ from synbio_morpher.utils.misc.numerical import invert_onehot, zero_out_negs
 from synbio_morpher.utils.misc.runtime import clear_caches
 from synbio_morpher.utils.misc.type_handling import flatten_nested_dict, flatten_listlike, append_nest_dicts
 from synbio_morpher.utils.results.visualisation import VisODE
-from synbio_morpher.utils.modelling.deterministic import bioreaction_sim_dfx_expanded
+from synbio_morpher.utils.modelling.deterministic import bioreaction_sim_dfx_expanded, bioreaction_sim_dfx_debug
 from synbio_morpher.utils.modelling.solvers import get_diffrax_solver, make_stepsize_controller
 from synbio_morpher.utils.evolution.mutation import implement_mutation
 from synbio_morpher.utils.results.analytics.timeseries import generate_analytics
@@ -45,9 +45,6 @@ from synbio_morpher.utils.results.result_writer import ResultWriter
 # Set modelling environment variables
 # os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
 os.environ["XLA_PYTHON_CLIENT_ALLOCATOR"] = "platform"
-debug_mode = True
-if debug_mode:
-    jax.config.update("jax_disable_jit", True)
 
 
 def wrap_queue_res(k, inp, q, f, **kwargs):
@@ -62,7 +59,8 @@ def wrap_queue_res(k, inp, q, f, **kwargs):
 class CircuitModeller():
 
     def __init__(self, result_writer=None, config: dict = {}) -> None:
-        self.result_writer = ResultWriter(None) if result_writer is None else result_writer
+        self.result_writer = ResultWriter(
+            None) if result_writer is None else result_writer
         self.steady_state_args = config['simulation_steady_state']
         self.simulator_args = config['interaction_simulator']
         self.simulation_args = config.get('simulation', {})
@@ -91,6 +89,9 @@ class CircuitModeller():
 
         jax.config.update('jax_platform_name', config.get(
             'simulation', {}).get('device', 'cpu'))
+
+        if self.debug_mode:
+            jax.config.update("jax_disable_jit", True)
 
     def init_circuit(self, circuit: Circuit) -> Circuit:
         if self.simulation_args.get('use_rate_scaling', True):
@@ -276,24 +277,34 @@ class CircuitModeller():
 
         elif solver_type == 'diffrax':
             ref_circuit = circuits[0]
-            forward_rates = ref_circuit.qreactions.reactions.forward_rates  # Assuming all forward rates are the same
+            # Assuming all forward rates are the same
+            forward_rates = ref_circuit.qreactions.reactions.forward_rates
             reverse_rates = np.asarray(
                 [c.qreactions.reactions.reverse_rates for c in circuits])
             y0 = np.asarray([c.qreactions.quantities for c in circuits])
             signal_onehot = np.zeros_like(
                 ref_circuit.signal.reactions_onehot) if ref_circuit.use_prod_and_deg else np.zeros_like(ref_circuit.signal.onehot)
 
-            sim_func = jax.vmap(partial(bioreaction_sim_dfx_expanded,
-                                        t0=self.t0, t1=self.t1, dt0=self.dt0,
-                                        signal=vanilla_return, signal_onehot=signal_onehot,
-                                        inputs=ref_circuit.qreactions.reactions.inputs,
-                                        outputs=ref_circuit.qreactions.reactions.outputs,
-                                        forward_rates=forward_rates,
-                                        solver=get_diffrax_solver(
-                                            self.steady_state_args.get('method', 'Dopri5')),
-                                        saveat=dfx.SaveAt(
-                                            ts=np.linspace(self.t0, self.t1, int(np.min([200, self.t1-self.t0])))),
-                                        stepsize_controller=make_stepsize_controller(self.t0, self.t1, self.dt0, self.dt1, choice='piecewise')))
+            if self.debug_mode:
+                sim_func = partial(bioreaction_sim_dfx_debug,
+                                   t0=self.t0, t1=self.t1, dt0=self.dt0,
+                                   inputs=ref_circuit.qreactions.reactions.inputs,
+                                   outputs=ref_circuit.qreactions.reactions.outputs,
+                                   forward_rates=forward_rates,
+                                   save_every_n_tsteps=5
+                                   )
+            else:
+                sim_func = jax.vmap(partial(bioreaction_sim_dfx_expanded,
+                                            t0=self.t0, t1=self.t1, dt0=self.dt0,
+                                            signal=vanilla_return, signal_onehot=signal_onehot,
+                                            inputs=ref_circuit.qreactions.reactions.inputs,
+                                            outputs=ref_circuit.qreactions.reactions.outputs,
+                                            forward_rates=forward_rates,
+                                            solver=get_diffrax_solver(
+                                                self.steady_state_args.get('method', 'Dopri5')),
+                                            saveat=dfx.SaveAt(
+                                                ts=np.linspace(self.t0, self.t1, int(np.min([200, self.t1-self.t0])))),
+                                            stepsize_controller=make_stepsize_controller(self.t0, self.t1, self.dt0, self.dt1, choice='piecewise')))
 
             b_copynumbers, t = simulate_steady_states(
                 y0=y0, total_time=self.tmax, sim_func=sim_func,
@@ -305,7 +316,7 @@ class CircuitModeller():
             b_copynumbers = np.swapaxes(b_copynumbers, 1, 2)
 
         elif solver_type == 'torchode':
-            raise NotImplementedError
+            raise NotImplementedError()
             # import torchode as tode
             # import torch
             # ref_circuit = circuits[0]
@@ -334,11 +345,12 @@ class CircuitModeller():
 
         elif solver_type == 'torchdiffeq':
             t_eval = np.linspace(self.t0, self.t1, 100)
-            raise NotImplementedError
+            raise NotImplementedError()
             # tdeq.odeint_adjoint(sim_func, starting_states, t)
-            
+
         else:
-            raise ValueError(f'The chosen solver `{solver_type}` is not supported.')
+            raise ValueError(
+                f'The chosen solver `{solver_type}` is not supported.')
 
         return np.asarray(b_copynumbers), np.squeeze(t)
 

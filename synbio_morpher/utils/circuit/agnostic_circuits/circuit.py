@@ -75,7 +75,7 @@ class Circuit():
         self.use_prod_and_deg = True
         self.model = None
         self.circuit_size = None
-        self.qreactions = None
+        self.qreactions: QuantifiedReactions = None
         self.interactions_state: str = 'uninitialised'
         self.interactions = None
         self.signal: Signal = None
