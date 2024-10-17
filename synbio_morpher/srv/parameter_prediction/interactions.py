@@ -31,10 +31,12 @@ class MolecularInteractions():
     precision = np.float32
 
     def __init__(self,
-                 binding_rates_association=None,
-                 binding_rates_dissociation=None,
-                 energies=None,
-                 eqconstants=None, units=None, binding_sites=None,
+                 binding_rates_association: np.ndarray,
+                 binding_rates_dissociation: np.ndarray,
+                 energies: np.ndarray,
+                 eqconstants: np.ndarray,
+                 binding_sites: np.ndarray,
+                 units=None,
                  raw=None) -> None:
         self.binding_rates_association = binding_rates_association
         self.binding_rates_dissociation = binding_rates_dissociation
@@ -56,12 +58,12 @@ class MolecularInteractions():
 class InteractionMatrix():
 
     def __init__(self,  # config_args=None,
-                 matrix_paths: dict = None,
-                 experiment_dir: str = None,
-                 num_nodes: int = None,
+                 matrix_paths: Union[dict, None] = None,
+                 experiment_dir: Union[None, str] = None,
+                 num_nodes: Union[None, int] = None,
                  units: str = '',
-                 experiment_config: dict = None,
-                 interactions_loaded: dict = None,
+                 experiment_config: Union[None, dict] = None,
+                 interactions_loaded: Union[None, dict] = None,
                  allow_empty=False
                  ):
 
@@ -95,7 +97,6 @@ class InteractionMatrix():
                 if isinstance(matrix_path, str):
                     loaded_matrix, self.units, self.sample_names = self.load(
                         matrix_path)
-                    loaded_matrix = loaded_matrix.to_numpy()
                     self.interactions.__setattr__(matrix_type, loaded_matrix)
                     self.interactions.units = self.units
                 elif isinstance(matrix_path, np.ndarray):
@@ -112,25 +113,28 @@ class InteractionMatrix():
                 filepath=None, param='association_binding_rate', experiment_config=experiment_config
             ) * np.ones_like(self.interactions.binding_rates_dissociation)
 
-    def load(self, filepath, quiet=True):
+    def load(self, filepath, quiet=True) -> Tuple[np.ndarray, str, list]:
         filetype = determine_file_format(filepath)
 
         self.name = self.isolate_circuit_name(filepath, filetype)
         if filetype == 'csv':
             try:
                 matrix, sample_names = load_csv(
-                    filepath, load_as='pd', return_header=True)
+                    filepath, load_as='numpy', return_header=True)
             except FileNotFoundError as ee:
                 try:
                     matrix, sample_names = load_csv(
-                        os.path.join(PACKAGE_DIR, filepath), load_as='pd', return_header=True)
+                        os.path.join(PACKAGE_DIR, filepath), load_as='numpy', return_header=True)
                 except FileNotFoundError as e:
                     raise FileNotFoundError(ee)
         else:
             raise TypeError(
                 f'Unsupported filetype {filetype} for loading {filepath}')
-        units = load_units(
-            filepath, experiment_config=self.experiment_config, quiet=quiet)
+        if self.experiment_config is not None:
+            units = load_units(
+                filepath, experiment_config=self.experiment_config, quiet=quiet)
+        else:
+            units = 'unknown'
         return matrix, units, sample_names
 
     def isolate_circuit_name(self, circuit_filepath, filetype):

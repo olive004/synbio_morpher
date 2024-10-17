@@ -5,8 +5,8 @@
 # This source code is licensed under the MIT-style license found in the
 # LICENSE file in the root directory of this source tree.
 
-import logging
 from functools import partial
+from typing import Union
 import numpy as np
 import jax
 import jax.numpy as jnp
@@ -79,13 +79,14 @@ def bioreactions_simulate_signal_scan(copynumbers, time: np.ndarray, inputs, out
         return bioreaction_sim_expanded(t, carry, args=(forward_rates, reverse_rates), inputs=inputs, outputs=outputs,
                                         # forward_rates=forward_rates,
                                         # reverse_rates=reverse_rates,
-                                        signal=signal,
-                                        signal_onehot=signal_onehot), carry
+                                        # signal=signal,
+                                        # signal_onehot=signal_onehot
+                                        ), carry
     return jax.lax.scan(to_scan, copynumbers, (time))
 
 
 def bioreaction_sim_wrapper(qreactions: QuantifiedReactions, t0, t1, dt0,
-                            signal, signal_onehot: np.ndarray,
+                            signal, signal_onehot: jnp.ndarray,
                             y0=None,
                             solver=dfx.Tsit5(),
                             saveat=dfx.SaveAt(t0=True, t1=True, steps=True)):
@@ -103,7 +104,7 @@ def bioreaction_sim_wrapper(qreactions: QuantifiedReactions, t0, t1, dt0,
 
 def bioreaction_sim_dfx_expanded(y0, t0, t1, dt0,
                                  inputs, outputs, forward_rates, reverse_rates,
-                                 signal, signal_onehot: np.ndarray,
+                                 signal, signal_onehot: Union[int, np.ndarray],
                                  solver=dfx.Tsit5(),
                                  saveat=dfx.SaveAt(
                                      t0=True, t1=True, steps=True),

@@ -6,7 +6,7 @@
 # LICENSE file in the root directory of this source tree.
 
 from copy import deepcopy
-from typing import List, Tuple
+from typing import List, Tuple, Union
 from functools import partial
 from datetime import datetime
 import multiprocessing
@@ -306,8 +306,8 @@ class CircuitModeller():
                                                 self.steady_state_args.get('method', 'Dopri5')),
                                             saveat=dfx.SaveAt(
                                                 ts=np.linspace(self.t0, self.t1, int(np.min([200, self.t1-self.t0])))),
-                                            stepsize_controller=make_stepsize_controller(self.t0, self.t1, self.dt0, self.dt1, 
-                                                                                         choice=self.steady_state_args.get('stepsize_controller', 'piecewise'))))
+                                            stepsize_controller=make_stepsize_controller(self.t0, self.t1, self.dt0, self.dt1,
+                                                                                         choice=self.steady_state_args.get('stepsize_controller', 'adaptive'))))
 
             b_copynumbers, t = simulate_steady_states(
                 y0=y0, total_time=self.tmax, sim_func=sim_func,
@@ -398,8 +398,10 @@ class CircuitModeller():
         return copynumbers
 
     def scale_rates(self, circuits: List[Circuit], batch: bool = True) -> List[Circuit]:
-        forward_rates = np.zeros((len(circuits), *circuits[0].qreactions.reactions.forward_rates.shape))
-        reverse_rates = np.zeros((len(circuits), *circuits[0].qreactions.reactions.forward_rates.shape))
+        forward_rates = np.zeros(
+            (len(circuits), *circuits[0].qreactions.reactions.forward_rates.shape))
+        reverse_rates = np.zeros(
+            (len(circuits), *circuits[0].qreactions.reactions.forward_rates.shape))
 
         for i, c in enumerate(circuits):
             forward_rates[i] = np.array(c.qreactions.reactions.forward_rates)
@@ -537,13 +539,16 @@ class CircuitModeller():
         for i, (circuit, analytics) in enumerate(zip(circuits, b_analytics_l)):
             if self.discard_numerical_mutations and circuit.subname != 'ref_circuit':
                 sig_data = None
+                vis_func = lambda x: x
             else:
                 sig_data = b_new_copynumbers[i]
+                vis_func=VisODE().plot
+                
             circuits[i].result_collector.add_result(
                 data=sig_data,
                 name='signal',
                 category='time_series',
-                vis_func=VisODE().plot,
+                vis_func=vis_func,
                 analytics=analytics,
                 vis_kwargs={'t': t,
                             'legend': circuit.species_names,
@@ -649,7 +654,9 @@ class CircuitModeller():
                             # t0=True, t1=True),
                             ts=np.linspace(self.t0, self.t1, 500)),  # int(np.min([500, self.t1-self.t0]))))
                         # ts=np.interp(np.logspace(0, 2, num=500), [1, np.power(10, 2)], [self.t0, self.t1])),  # Save more points early in the sim
-                        stepsize_controller=make_stepsize_controller(self.t0, self.t1, self.dt0, self.dt1, choice='piecewise'))))
+                        stepsize_controller=make_stepsize_controller(self.t0, self.t1, self.dt0, self.dt1,
+                                                                     choice=self.simulation_args.get('stepsize_controller', 'adaptive'))
+                        )))
 
         elif self.simulation_args['solver'] == 'ivp':
             # way slower
@@ -669,7 +676,7 @@ class CircuitModeller():
                         ),
                         t_span=(self.t0, self.t1),
                         y0=y0i,
-                        method=self.steady_state_args.get('method', 'DOP853')
+                        method=self.steady_state_args.get('method', 'Dopri5')
                     )
                     if not signal_result.success:
                         raise ValueError(
@@ -686,11 +693,11 @@ class CircuitModeller():
     def batch_circuits(self,
                        circuits: List[Circuit],
                        methods: dict,
-                       batch_size: int = None,
+                       batch_size: int = 0,
                        include_normal_run: bool = True,
                        write_to_subsystem=True):
 
-        batch_size = len(circuits) if batch_size is None else batch_size
+        batch_size = len(circuits) if batch_size == 0 else batch_size
 
         num_subcircuits = [len(flatten_nested_dict(
             c.mutations)) + 1 for c in circuits]
@@ -720,7 +727,7 @@ class CircuitModeller():
 
             # Preallocate then create subcircuits - otherwise memory leak
             subcircuits_time = datetime.now()
-            subcircuits = [None] * sum(num_subcircuits[vi:vf])
+            subcircuits: List[Union[Circuit, None]] = [None] * sum(num_subcircuits[vi:vf])
             c_idx = 0
             for i, circuit in enumerate(circuits[vi: vf]):
                 curr_subcircuits = self.load_mutations(circuit)
@@ -737,14 +744,14 @@ class CircuitModeller():
                 f'\t\tMaking subcircuits {int(sum(num_subcircuits[:vi]))} - {int(sum(num_subcircuits[:vf]))} took {subcircuits_time.total_seconds()}s')
 
             # Batch
-            ref_circuit = subcircuits[0]
+            ref_circuit: Circuit = subcircuits[0]
             for b in range(0, len(subcircuits), batch_size):
                 logging.warning(
                     f'\tBatching {b} - {b+batch_size} circuits (out of {int(sum(num_subcircuits[:vi]))} - {int(sum(num_subcircuits[:vf]))} (total: {tot_subcircuits})) (Circuits: {vi} - {vf} of {len(circuits)})')
                 bf = b+batch_size if b + \
                     batch_size < len(subcircuits) else len(subcircuits)
 
-                b_circuits = subcircuits[b:bf]
+                b_circuits: Union[List[Circuit], None] = subcircuits[b:bf]
                 if not b_circuits:
                     continue
                 ref_circuit = self.run_batch(
@@ -762,9 +769,9 @@ class CircuitModeller():
     def run_batch(self,
                   subcircuits: List[Circuit],
                   methods: dict,
-                  leading_ref_circuit: Circuit = None,
+                  leading_ref_circuit: Circuit,
                   include_normal_run: bool = True,
-                  write_to_subsystem: bool = True) -> List[Circuit]:
+                  write_to_subsystem: bool = True) -> Circuit:
 
         for method, kwargs in methods.items():
             method_time = datetime.now()

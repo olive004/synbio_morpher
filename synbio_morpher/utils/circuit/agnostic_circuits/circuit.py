@@ -3,8 +3,8 @@
 # All rights reserved.
 
 # This source code is licensed under the MIT-style license found in the
-# LICENSE file in the root directory of this source tree. 
-    
+# LICENSE file in the root directory of this source tree.
+
 from typing import Union
 import pandas as pd
 import numpy as np
@@ -17,7 +17,7 @@ from synbio_morpher.utils.misc.string_handling import make_circuit_name
 from synbio_morpher.utils.misc.type_handling import flatten_listlike, get_unique
 from synbio_morpher.utils.results.results import ResultCollector
 from synbio_morpher.utils.signal.signals_new import Signal
-from bioreaction.model.data_containers import BasicModel, QuantifiedReactions
+from bioreaction.model.data_containers import BasicModel, QuantifiedReactions, MedModel
 
 
 FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
@@ -37,66 +37,70 @@ class Circuit():
     time_axis = 1
 
     def __init__(self, config: dict, as_mutation=False):
-        
+
         if as_mutation:
             self.init_mutation()
         else:
             self.init_refcircuit(config)
 
     def init_refcircuit(self, config: dict):
-        self.name = config.get("name", make_circuit_name())
+        self.name: str = config.get("name", make_circuit_name())
         self.subname = config.get('subname', 'ref_circuit')
 
         self.result_collector = ResultCollector()
         self.use_prod_and_deg = config.get('include_prod_deg', True)
         self.model = construct_bioreaction_model(
-            config.get('data'), config.get('molecular_params'), include_prod_deg=self.use_prod_and_deg)
+            config['data'], config.get('molecular_params', {}), include_prod_deg=self.use_prod_and_deg)
         self.species_names = [s.name for s in self.model.species]
         self.circuit_size = len(self.model.species)
-        self.data: DataManager = config.get('data')
+        self.data: DataManager = config['data']
         self.qreactions = self.init_reactions(self.model, config)
         self.interactions_state: str = config.get(
             'interactions_state', 'uninitialised')
         self.init_interactions(interaction_cfg=config.get('interactions'),
-                               interactions_loaded=config.get('interactions_loaded'), 
+                               interactions_loaded=config.get(
+                                   'interactions_loaded'),
                                config=config)
         if config.get('interactions_loaded') is not None or config.get('interactions') is not None:
             assert self.interactions_state != 'uninitialised', f'The interactions should have been initialised from {config.get("interactions")}'
-        self.signal: Signal = None
+        self.signal: Signal  # = None
         self.mutations_args: dict = config.get('mutations_args', {})
         self.mutations = {}
 
         self.update_species_simulated_rates(self.interactions)
 
     def init_mutation(self):
-        self.name: str = None
+        self.name: str  # = None
         self.subname = None
         self.result_collector = ResultCollector()
         self.use_prod_and_deg = True
-        self.model = None
-        self.circuit_size = None
-        self.qreactions: QuantifiedReactions = None
+        self.model: BasicModel  # = None
+        self.circuit_size: int  # = None
+        self.qreactions: QuantifiedReactions  # = None
         self.interactions_state: str = 'uninitialised'
-        self.interactions = None
-        self.signal: Signal = None
+        self.interactions: MolecularInteractions # = None
+        self.signal: Signal  # = None
 
     def init_reactions(self, model: BasicModel, config: dict) -> QuantifiedReactions:
         import jax
         from jax.lib import xla_bridge
         # jax.config.update('jax_platform_name', 'cpu')
-        jax.config.update('jax_platform_name', str(xla_bridge.get_backend().platform))
-        
+        jax.config.update('jax_platform_name', str(
+            xla_bridge.get_backend().platform))
+
         qreactions = QuantifiedReactions()
         qreactions.init_properties(model, config['starting_concentration'])
         return qreactions
 
-    def init_interactions(self, interaction_cfg: dict = None, interactions_loaded: dict = None, config: dict = None, 
+    def init_interactions(self, interaction_cfg: Union[None, dict] = None, interactions_loaded: Union[None, dict] = None, config: Union[None, dict] = None,
                           init_dummy=False):
         if (interaction_cfg is None) and (interactions_loaded is None):
             num_in_species = len(self.get_input_species())
-            dummy_inters = np.zeros((5, num_in_species, num_in_species)) * np.nan
+            dummy_inters = np.zeros(
+                (5, num_in_species, num_in_species)) * np.nan
             if init_dummy:
-                dummy_inters = np.random.rand(*(5, num_in_species, num_in_species))
+                dummy_inters = np.random.rand(
+                    *(5, num_in_species, num_in_species))
             self.interactions = MolecularInteractions(
                 binding_rates_association=dummy_inters[0],
                 binding_rates_dissociation=dummy_inters[1],
