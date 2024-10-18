@@ -8,8 +8,9 @@
 from functools import partial
 import logging
 import os
-from typing import Tuple, List, Union
+from typing import Tuple, List, Union, Optional
 import numpy as np
+import pandas as pd
 from bioreaction.model.data_containers import Species
 from synbio_morpher.srv.io.loaders.misc import load_csv
 from synbio_morpher.utils.evolution.mutation import get_mutation_type_mapping, Mutations, EXCLUDED_NUCS
@@ -213,7 +214,7 @@ class Evolver():
 
     def make_mutations(self, specie: Species, positions: list,
                        mutation_idx: int, mutation_types: list,
-                       algorithm: str, template_file: str):
+                       algorithm: str, template_file: Optional[str]):
         mutation_count = len(positions)
         mutations = Mutations(
             mutation_name=specie.name+'_' +
@@ -238,6 +239,8 @@ class Evolver():
 
 def load_mutations(circuit, filename=None):
     table = load_csv(filename, load_as='pandas')
+    if type(table) != pd.DataFrame:
+        raise ValueError(f'Table from {filename} must return as pandas.')
     circuit.mutations = {}
     species_names = circuit.species_names
     for i in range(len(table)):
@@ -245,10 +248,10 @@ def load_mutations(circuit, filename=None):
             table.iloc[i]['template_name'])]
         if mutating_species not in circuit.mutations:
             circuit.mutations[mutating_species] = {table.iloc[i]['mutation_name']: Mutations(
-                template_species=mutating_species, **kwargs_from_table(Mutations, table=table.iloc[i]))}
+                template_species=mutating_species, **kwargs_from_table(Mutations, table=table.iloc[i]))} # type: ignore
         else:
             circuit.mutations[mutating_species].update({table.iloc[i]['mutation_name']: Mutations(
-                template_species=mutating_species, **kwargs_from_table(Mutations, table=table.iloc[i]))})
+                template_species=mutating_species, **kwargs_from_table(Mutations, table=table.iloc[i]))}) # type: ignore
         circuit.mutations[mutating_species][table.iloc[i]['mutation_name']].mutation_types = [int(
             v) for v in circuit.mutations[mutating_species][table.iloc[i]['mutation_name']].mutation_types]
         circuit.mutations[mutating_species][table.iloc[i]['mutation_name']].positions = [int(
@@ -256,7 +259,7 @@ def load_mutations(circuit, filename=None):
     return circuit
 
 
-def apply_mutation_to_sequence(sequence: str, mutation_positions: List[int], mutation_types: List[str]) -> List[str]:
+def apply_mutation_to_sequence(sequence: str, mutation_positions: List[int], mutation_types: List[str]) -> str:
     sequence_arr = np.array([*sequence])
     sequence_arr[mutation_positions] = mutation_types
     return ''.join(sequence_arr)

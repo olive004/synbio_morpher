@@ -36,8 +36,9 @@ def load_param(param, experiment_config: Optional[dict] = None, filepath: Option
         experiment_config['molecular_params'])[param])
 
 
-def load_units(filepath, experiment_config: Union[dict, None] = None, quiet: bool = False):
+def load_units(filepath, experiment_config: Union[dict, None] = None, quiet: bool = False) -> str:
 
+    units = ''
     if experiment_config is None:
         try:
             experiment_config = load_experiment_config(
@@ -47,7 +48,8 @@ def load_units(filepath, experiment_config: Union[dict, None] = None, quiet: boo
             if not quiet:
                 logging.warning(
                     f'Units unknown - supply a valid experiment directory instead of {filepath}')
-            return 'unknown'
+            units = 'unknown'
+            return units
 
     simulator_cfgs = experiment_config.get('interaction_simulator', {})
 
@@ -57,8 +59,9 @@ def load_units(filepath, experiment_config: Union[dict, None] = None, quiet: boo
                 return u
     elif simulator_cfgs.get('name') == 'IntaRNA':
         if simulator_cfgs.get('postprocess'):
-            return SIMULATOR_UNITS['IntaRNA']['rate']
+            units = SIMULATOR_UNITS['IntaRNA']['rate']
         else:
-            return SIMULATOR_UNITS['IntaRNA']['energy']
+            units = SIMULATOR_UNITS['IntaRNA']['energy']
     else:
-        return 'unknown'
+        units = 'unknown'
+    return units

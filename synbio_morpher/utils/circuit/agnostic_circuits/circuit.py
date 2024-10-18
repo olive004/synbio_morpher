@@ -66,13 +66,13 @@ class Circuit():
             assert self.interactions_state != 'uninitialised', f'The interactions should have been initialised from {config.get("interactions")}'
         self.signal: Signal  # = None
         self.mutations_args: dict = config.get('mutations_args', {})
-        self.mutations: Dict[str, Dict[str, Mutations]] = {}
+        self.mutations: Dict[str, Union[Mutations, Dict[str, Mutations]]] = {}
 
         self.update_species_simulated_rates(self.interactions)
 
     def init_mutation(self):
         self.name: str  # = None
-        self.subname = None
+        self.subname: str
         self.result_collector = ResultCollector()
         self.use_prod_and_deg = True
         self.model: BasicModel  # = None

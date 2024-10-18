@@ -23,7 +23,7 @@ def main(config=None, data_writer=None):
             "synbio_morpher", "scripts", "generate_species_templates", "configs", "base_config.json"))
     config_file = load_json_as_dict(config)
     config_file = prepare_config(config_file)
-    exp_configs = config_file.get("circuit_generation")
+    exp_configs = config_file["circuit_generation"]
 
     protocols = [
         Protocol(

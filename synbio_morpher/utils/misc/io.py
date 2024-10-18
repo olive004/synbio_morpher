@@ -35,7 +35,7 @@ def get_pathnames(search_dir: str, file_key: Union[List, str] = '', first_only: 
                   allow_empty: bool = False, subdir: str = '',
                   subdirs: Optional[list] = None,
                   conditional: Union[str, None] = 'filenames',
-                  as_dict=False) -> Union[dict, list]:
+                  as_dict=False):
     """ Get the pathnames in a folder given a keyword. 
 
     Args:
@@ -48,6 +48,7 @@ def get_pathnames(search_dir: str, file_key: Union[List, str] = '', first_only: 
     elif conditional == 'filenames':
         path_condition_f = os.path.isfile
 
+    path_names = []
     if type(file_key) == list:
         if as_dict and subdirs is not None:
             all_path_names = {}
@@ -102,4 +103,7 @@ def convert_pathname_to_module(filepath: str):
 def import_module_from_path(module_name: str, filepath: str):
     import importlib.util
     spec = importlib.util.spec_from_file_location(module_name, filepath)
-    return importlib.util.module_from_spec(spec)
+    if spec is not None:
+        return importlib.util.module_from_spec(spec)
+    else:
+        raise ModuleNotFoundError(f'Could not find module {module_name} in {filepath}')

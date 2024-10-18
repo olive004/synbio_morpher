@@ -44,6 +44,8 @@ def main(config=None, data_writer=None):
     def load_parameter_grids():
         all_parameter_grids = {}
         subprocess_dirs = get_subprocesses_dirnames(source_dir)
+        if type(subprocess_dirs) != list:
+            raise ValueError(f'Directories from {source_dir} did not return as a list.')
         for subprocess_dir in sort_by_ordinal_number(subprocess_dirs):
             parameter_grids = get_pathnames(subprocess_dir, 'npy')
             for parameter_grid in parameter_grids:
@@ -105,6 +107,7 @@ def main(config=None, data_writer=None):
 
             nonzeros_count = 0
             next_i = 0
+            i = 0
             for ite in range(total_iterations):
                 i = int(ite/subprocess_iterations)
                 if next_i == i:

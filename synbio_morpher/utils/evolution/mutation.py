@@ -7,9 +7,8 @@
     
 
 
-from typing import List
+from typing import List, Optional
 from copy import deepcopy
-import numpy as np
 from bioreaction.model.data_containers import Species
 from synbio_morpher.utils.results.writer import Tabulated
 
@@ -83,7 +82,7 @@ class Mutations(Tabulated):
 
     def __init__(self, mutation_name: str, template_species: Species,
                  template_name: str, template_seq: str,
-                 template_file: str, positions: List[int], mutation_types: List[int],
+                 template_file: Optional[str], positions: List[int], mutation_types: List[int],
                  count: int, sequence_type: str, algorithm: str) -> None:
 
         self.mutation_name = mutation_name

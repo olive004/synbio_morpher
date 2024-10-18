@@ -9,7 +9,6 @@ import logging
 from copy import deepcopy
 from typing import List, Union, Optional
 from bioreaction.model.data_containers import BasicModel
-from synbio_morpher.srv.io.manage.sys_interface import make_filename_safely
 from synbio_morpher.srv.io.manage.data_manager import DataManager
 from synbio_morpher.utils.data.common import Data
 from synbio_morpher.utils.data.data_format_tools.common import load_json_as_dict
@@ -66,7 +65,7 @@ def compose_kwargs(config: dict, prev_configs: Optional[dict] = None) -> dict:
             if kwarg not in ['experiment', 'mutations_args', 'signal', 'simulation', 'include_prod_deg']:
                 config[kwarg] = c
 
-    data_manager = DataManager(filepath=config.get("data_path", None), # make_filename_safely(config.get("data_path", None)),
+    data_manager = DataManager(filepath=config.get("data_path", None),
                                identities=config.get("identities", {}),
                                data=config.get("data", None))
     kwargs = {}
@@ -112,7 +111,7 @@ def add_empty_fields(config: dict) -> dict:
     return config
 
 
-def prepare_config(config_filepath: Union[str, dict, None] = None, config_file: Union[dict, None] = None):
+def prepare_config(config_filepath: Optional[Union[str, dict]] = None, config_file: Optional[dict] = None):
     config_file = get_configs(config_file, config_filepath)
     config_file = expand_config(config_file)
     config_file = parse_cfg_args(config_file)

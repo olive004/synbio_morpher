@@ -7,7 +7,7 @@
 
 import argparse
 import os
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Optional
 
 from synbio_morpher.srv.parameter_prediction.simulator_loading import find_simulator_loader
 from synbio_morpher.srv.io.manage.sys_interface import PACKAGE_DIR, PACKAGE_NAME
@@ -18,21 +18,23 @@ from synbio_morpher.srv.io.manage.sys_interface import make_filename_safely
 from synbio_morpher.utils.data.data_format_tools.common import load_json_as_dict
 
 
-def get_configs(config_file, config_filepath) -> dict:
+def get_configs(config_file: Optional[dict], config_filepath: Optional[Union[str, dict]]) -> dict:
     config_filepath = make_filename_safely(config_filepath)
-    if config_file is None and config_filepath:
-        config_file = load_json_as_dict(config_filepath)
-    elif config_file and config_filepath:
-        raise ValueError(
-            'Both a config and a config filepath were defined - only use one config option.')
-    elif config_file is None and config_filepath is None:
-        raise ValueError('Config file or path needed as input to function.')
+    if config_file is None:
+        if config_filepath is None:
+            raise ValueError('Config file or path needed as input to function.')
+        else:
+            config_file = load_json_as_dict(config_filepath)
+    else:
+        if config_filepath:
+            raise ValueError(
+                'Both a config and a config filepath were defined - only use one config option.')
     return config_file
 
 
-def create_argparse_from_dict(dict_args: Dict):
+def create_argparse_from_dict(dict_args: dict):
     parser = argparse.ArgumentParser()
-    args_namespace, left_argv = parser.parse_known_args(args=dict_args)
+    args_namespace, left_argv = parser.parse_known_args(args=dict_args) # type: ignore
     args_namespace = update_namespace_with_dict(args_namespace, dict_args)
     return args_namespace, left_argv
 
@@ -99,8 +101,10 @@ def load_simulator_kwargs(default_args: dict, config_args: dict) -> Union[dict, 
 def retrieve_default_args() -> dict:
     fn = get_pathnames(file_key='default_args', search_dir=os.path.join(
         PACKAGE_DIR, 'utils', 'common', 'configs', 'simulators'), first_only=True)
-    default_args = load_json_as_dict(fn)
-    return default_args
+    if (type(fn) == str) or (type(fn) == dict):
+        default_args = load_json_as_dict(fn)
+        return default_args
+    else: raise ValueError(f'Filename(s) {fn} could not be found')
 
 
 def update_namespace_with_dict(namespace_args, updater_dict: Dict):

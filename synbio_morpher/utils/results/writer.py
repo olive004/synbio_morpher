@@ -25,7 +25,7 @@ from synbio_morpher.utils.misc.type_handling import find_sublist_max, convert_ty
 
 class DataWriter():
 
-    def __init__(self, purpose: str, out_location: Optional[str] = None, ensemble_script: str = None) -> None:
+    def __init__(self, purpose: str, out_location: Optional[str] = None, ensemble_script: Optional[str] = None) -> None:
         self.purpose = purpose
         self.script_dir = SCRIPT_DIR
         self.root_output_dir = DATA_DIR
@@ -175,7 +175,7 @@ class DataWriter():
         output_summary['subdir'] = self.write_dir.replace(
             self.top_write_dir + os.sep, '')
         self.output(out_type='csv', out_name='output_summary', write_master=False,
-                    **{'data': output_summary})
+                    writer_kwargs={'data': output_summary})
 
 
 class Tabulated(ABC):

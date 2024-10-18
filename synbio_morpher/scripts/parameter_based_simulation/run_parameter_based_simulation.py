@@ -11,7 +11,7 @@ from functools import partial
 import jax
 import jax.numpy as jnp
 import os
-from typing import List
+from typing import List, Optional
 from datetime import datetime
 import numpy as np
 from synbio_morpher.srv.io.manage.script_manager import script_preamble
@@ -26,7 +26,7 @@ from synbio_morpher.utils.circuit.agnostic_circuits.circuit_manager import Circu
 
 
 # Create matrices
-def define_matrices(num_species, size_interaction_array, num_unique_interactions, analytic_types) -> List[np.ndarray]:
+def define_matrices(num_species, size_interaction_array, num_unique_interactions, analytic_types) -> np.ndarray:
     matrix_dimensions = tuple(
         [num_species] + [size_interaction_array]*num_unique_interactions)
     matrix_size = num_species * \
@@ -67,7 +67,7 @@ def create_circuits(config: dict, interaction_matrices: np.ndarray):
             'binding_rates_dissociation': interaction_matrix,
             'units': SIMULATOR_UNITS['IntaRNA']['rate']}
         }
-        circuits[i] = construct_circuit_from_cfg(
+        circuits[i] = construct_circuit_from_cfg( # type: ignore
             prev_configs=cfg, config_file=config)
     return circuits
 
@@ -115,7 +115,7 @@ def run_batch(batch_i: int,
     return circuits, interaction_strength_choices
 
 
-def main(config: dict = None, data_writer=None):
+def main(config: Optional[dict] = None, data_writer=None):
 
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
         'synbio_morpher', 'scripts', 'parameter_based_simulation', 'configs', 'base_config.json'))
@@ -165,13 +165,15 @@ def main(config: dict = None, data_writer=None):
                 idxs = [slice(0, num_species)] + [[strength_idx]
                                                   for strength_idx in interaction_strength_choices]
 
-                for j, analytic in enumerate(get_true_names_analytics(circuit.result_collector.results['signal'].analytics)):
-                    all_analytic_matrices[j][tuple(
-                        idxs)] = circuit.result_collector.results['signal'].analytics.get(analytic)[np.array([i for i, s in enumerate(circuit.model.species) if s in circuit.get_input_species()])][:, None]
+                sig_analytics = circuit.result_collector.results['signal'].analytics
+                if sig_analytics is not None:
+                    for j, analytic in enumerate(get_true_names_analytics(sig_analytics)):
+                        all_analytic_matrices[j][tuple(
+                            idxs)] = sig_analytics[analytic][np.array([i for i, s in enumerate(circuit.model.species) if s in circuit.get_input_species()])][:, None]
 
             if ((batch_i > 0) and (np.mod(batch_i, save_every) == 0)) or (batch_i + 1 == num_iterations):
                 write_all(all_analytic_matrices, get_true_names_analytics(
-                    circuit.result_collector.results['signal'].analytics), data_writer)
+                    circuits[0].result_collector.results['signal'].analytics), data_writer)
             
             batch_time = (datetime.now() - start_time) / (batch_i + 1)
             logging.info(f'\n\nTime per batch: {batch_time}\nProjected total time: {batch_time * num_iterations}')

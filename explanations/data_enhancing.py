@@ -161,7 +161,7 @@ def melt(info: pd.DataFrame, num_group_cols: list, num_bs_cols: list, numerical_
     return infom
 
 
-def get_named_aggs(info: pd.DataFrame, include_log: bool = False) -> pd.DataFrame:
+def get_named_aggs(info: pd.DataFrame, include_log: bool = False) -> dict:
     # Standard Deviations
 
     relevant_cols = [
@@ -234,7 +234,8 @@ def summ_energies(infom: pd.DataFrame, include_log: bool = True) -> pd.DataFrame
     v = infom.groupby(['circuit_name', 'mutation_num', 'sample_name'], as_index=False).agg(
         **{'frac_muts_in_binding_site' + '_std': pd.NamedAgg(column='frac_muts_in_binding_site', aggfunc='std'),
            'frac_muts_in_binding_site' + '_mean': pd.NamedAgg(column='frac_muts_in_binding_site', aggfunc='mean'),
-           'frac_muts_in_binding_site' + '_std_normed_by_mean': pd.NamedAgg(column='frac_muts_in_binding_site', aggfunc=lambda x: np.std(x) / np.max([1, np.mean(x)]))})
+           'frac_muts_in_binding_site' + '_std_normed_by_mean': pd.NamedAgg(
+               column='frac_muts_in_binding_site', aggfunc=lambda x: np.std(x) / np.max([1, np.mean(x)]))}) # type: ignore
     info_summ['frac_muts_in_binding_site' + '_std'
               ] = v['frac_muts_in_binding_site' + '_std']
     info_summ['frac_muts_in_binding_site' + '_mean'
