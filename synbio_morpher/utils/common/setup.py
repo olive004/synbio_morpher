@@ -7,7 +7,7 @@
     
 import logging
 from copy import deepcopy
-from typing import List, Union
+from typing import List, Union, Optional
 from bioreaction.model.data_containers import BasicModel
 from synbio_morpher.srv.io.manage.sys_interface import make_filename_safely
 from synbio_morpher.srv.io.manage.data_manager import DataManager
@@ -32,7 +32,7 @@ ESSENTIAL_KWARGS = [
 ]
 
 
-def expand_model_config(in_config: dict, out_config: dict, sample_names: List[str]) -> dict:
+def expand_model_config(in_config: dict, out_config: dict, sample_names: Union[List[str], dict]) -> dict:
     if 'starting_concentration' not in out_config.keys():
         out_config['starting_concentration'] = {}
         for s in sample_names:
@@ -58,7 +58,7 @@ def process_molecular_params(params: dict, factor=1) -> dict:
     return params
 
 
-def compose_kwargs(prev_configs: dict = None, config: dict = None) -> dict:
+def compose_kwargs(config: dict, prev_configs: Optional[dict] = None) -> dict:
     """ Extra configs like data paths can be supplied here, eg. for circuits that were dynamically generated. """
 
     if prev_configs is not None:
@@ -119,7 +119,7 @@ def prepare_config(config_filepath: Union[str, dict, None] = None, config_file: 
     config_file = add_empty_fields(config_file)
     return config_file
 
-def construct_circuit_from_cfg(prev_configs: dict, config_file: dict):
+def construct_circuit_from_cfg(prev_configs: Optional[dict], config_file: dict):
     kwargs = compose_kwargs(prev_configs=prev_configs, config=config_file)
     circuit = instantiate_system(kwargs)
     if kwargs.get("signal"):

@@ -20,6 +20,7 @@ import logging
 import diffrax as dfx
 import numpy as np
 import jax
+import jax.numpy as jnp
 # jax.config.update('jax_platform_name', 'cpu')
 
 from scipy import integrate
@@ -28,7 +29,7 @@ from bioreaction.simulation.simfuncs.basic_de import bioreaction_sim, bioreactio
 from bioreaction.simulation.manager import simulate_steady_states
 
 from synbio_morpher.srv.parameter_prediction.simulator import SIMULATOR_UNITS, make_piecewise_stepcontrol
-from synbio_morpher.srv.parameter_prediction.interactions import InteractionDataHandler, InteractionSimulator, INTERACTION_FIELDS_TO_WRITE
+from synbio_morpher.srv.parameter_prediction.interactions import InteractionSimulator, INTERACTION_FIELDS_TO_WRITE, MolecularInteractions
 from synbio_morpher.utils.circuit.agnostic_circuits.circuit import Circuit, interactions_to_df
 from synbio_morpher.utils.misc.helper import vanilla_return
 from synbio_morpher.utils.misc.numerical import invert_onehot, zero_out_negs
@@ -222,7 +223,7 @@ class CircuitModeller():
                 circuits[i] = self.compute_interactions(c)
         return circuits
 
-    def run_interaction_simulator(self, species: List[Species], quantities, filename=None) -> InteractionDataHandler:
+    def run_interaction_simulator(self, species: List[Species], quantities, filename=None) -> MolecularInteractions:
         data = {s: s.sequence for s in species}
         # if filename is not None:
         #     return self.interaction_simulator.run((filename, data), compute_by_filename=True)
@@ -251,7 +252,7 @@ class CircuitModeller():
 
     def compute_steady_states(self, circuits: List[Circuit],
                               solver_type: str = 'jax', use_zero_rates: bool = False) -> Tuple[np.ndarray, np.ndarray]:
-
+        t = np.zeros(0)
         if solver_type == 'ivp':
             b_copynumbers = []
             for circuit in circuits:
@@ -262,8 +263,8 @@ class CircuitModeller():
                         ((circuit.qreactions.reactions.reverse_rates -
                           circuit.qreactions.reactions.forward_rates) < 1e2) * 1
 
-                signal_onehot = np.zeros_like(
-                    circuit.signal.reactions_onehot) if circuit.use_prod_and_deg else np.zeros_like(circuit.signal.onehot)
+                signal_onehot = jnp.zeros_like(
+                    circuit.signal.reactions_onehot) if circuit.use_prod_and_deg else jnp.zeros_like(circuit.signal.onehot)
                 steady_state_result = integrate.solve_ivp(
                     partial(bioreaction_sim, args=None, reactions=r, signal=vanilla_return,
                             signal_onehot=signal_onehot),
@@ -319,7 +320,7 @@ class CircuitModeller():
 
             b_copynumbers = np.swapaxes(b_copynumbers, 1, 2)
 
-        elif solver_type == 'torchode':
+        elif solver_type in ['torchode', 'torchdiffeq']:
             raise NotImplementedError()
             # import torchode as tode
             # import torch
@@ -347,9 +348,8 @@ class CircuitModeller():
             # self.solver = torch.compile(solver)
             # sol = self.solver.solve(prob)
 
-        elif solver_type == 'torchdiffeq':
-            t_eval = np.linspace(self.t0, self.t1, 100)
-            raise NotImplementedError()
+        # elif solver_type == 'torchdiffeq':
+            # t_eval = np.linspace(self.t0, self.t1, 100)
             # tdeq.odeint_adjoint(sim_func, starting_states, t)
 
         else:
@@ -358,21 +358,21 @@ class CircuitModeller():
 
         return np.asarray(b_copynumbers), np.squeeze(t)
 
-    def model_circuit(self, y0: np.ndarray, circuit: Circuit):
-        assert np.shape(y0)[circuit.time_axis] == 1, 'Please only use 1-d ' \
-            f'initial copynumbers instead of {np.shape(y0)}'
+    # def model_circuit(self, y0: np.ndarray, circuit: Circuit):
+    #     assert np.shape(y0)[circuit.time_axis] == 1, 'Please only use 1-d ' \
+    #         f'initial copynumbers instead of {np.shape(y0)}'
 
-        modelling_func = partial(bioreaction_sim, args=None,
-                                 reactions=circuit.qreactions.reactions,
-                                 signal=circuit.signal.func,
-                                 signal_onehot=circuit.signal.reactions_onehot)
+    #     modelling_func = partial(bioreaction_sim, args=None,
+    #                              reactions=circuit.qreactions.reactions,
+    #                              signal=circuit.signal.func,
+    #                              signal_onehot=jnp.array(circuit.signal.reactions_onehot))
 
-        copynumbers = self.iterate_modelling_func(y0, modelling_func,
-                                                  max_time=self.t1,
-                                                  time_interval=self.dt0,
-                                                  signal_f=circuit.signal.func,
-                                                  signal_onehot=circuit.signal.onehot)
-        return copynumbers
+    #     copynumbers = self.iterate_modelling_func(y0, modelling_func,
+    #                                               max_time=self.t1,
+    #                                               time_interval=self.dt0,
+    #                                               signal_f=circuit.signal.func,
+    #                                               signal_onehot=circuit.signal.onehot)
+    #     return copynumbers
 
     def iterate_modelling_func(self, init_copynumbers,
                                modelling_func, max_time,
@@ -430,7 +430,7 @@ class CircuitModeller():
         def prepare_batch_params(circuits: List[Circuit]):
 
             b_steady_states = [None] * len(circuits)
-            b_reverse_rates = [None] * len(circuits)
+            b_reverse_rates = np.zeros((len(circuits), *circuits[0].qreactions.reactions.reverse_rates.shape))
 
             species_chosen = circuits[0].model.species[np.argmax(
                 signal.onehot)]
@@ -565,14 +565,14 @@ class CircuitModeller():
         subcircuit.reset_to_initial_state()
         subcircuit.strip_to_core()
         if mutation is None:
-            mutation = circuit.mutations.get(mutation_name)
+            mutation = circuit.mutations[mutation_name]
         subcircuit.subname = mutation_name
 
         subcircuit = implement_mutation(circuit=subcircuit, mutation=mutation)
         return subcircuit
 
     def load_mutations(self, circuit: Circuit):
-        subcircuits = [Circuit(config=None, as_mutation=True)
+        subcircuits = [Circuit(config={}, as_mutation=True)
                        for m in flatten_nested_dict(circuit.mutations)]
         for i, (m_name, m) in enumerate(flatten_nested_dict(circuit.mutations).items()):
             if not m:
@@ -608,13 +608,12 @@ class CircuitModeller():
             # logging.info(f'Running methods on mutation {name} ({i})')
             if include_normal_run and i == 0:
                 self.result_writer.unsubdivide_last_dir()
-                circuit = self.apply_to_circuit(
-                    circuit, methods, ref_circuit=circuit)
+                circuit = self.apply_to_circuit(circuit, methods)
                 self.result_writer.subdivide_writing(
                     'mutations', safe_dir_change=False)
             subcircuit = self.make_subcircuit(circuit, name, mutation)
             self.result_writer.subdivide_writing(name, safe_dir_change=False)
-            self.apply_to_circuit(subcircuit, methods, ref_circuit=circuit)
+            self.apply_to_circuit(subcircuit, methods)
             self.result_writer.unsubdivide_last_dir()
         self.result_writer.unsubdivide()
         return circuit

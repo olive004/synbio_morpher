@@ -66,7 +66,7 @@ class Circuit():
             assert self.interactions_state != 'uninitialised', f'The interactions should have been initialised from {config.get("interactions")}'
         self.signal: Signal  # = None
         self.mutations_args: dict = config.get('mutations_args', {})
-        self.mutations: Dict[str, Mutations] = {}
+        self.mutations: Dict[str, Dict[str, Mutations]] = {}
 
         self.update_species_simulated_rates(self.interactions)
 
@@ -141,17 +141,17 @@ class Circuit():
         self.qreactions.reactions = self.qreactions.init_reactions(
             self.model)
 
-    @property
-    def signal(self):
-        return self._signal
+    # @property
+    # def signal(self):
+    #     return self._signal
 
-    @signal.getter
-    def signal(self):
-        # if self._signal is None:
-        #     logging.warning(
-        #         f'Trying to retrieve None signal from circuit. Make sure signal specified in circuit config')
-        return self._signal
+    # @signal.getter
+    # def signal(self):
+    #     # if self._signal is None:
+    #     #     logging.warning(
+    #     #         f'Trying to retrieve None signal from circuit. Make sure signal specified in circuit config')
+    #     return self._signal
 
-    @signal.setter
-    def signal(self, value):
-        self._signal = value
+    # @signal.setter
+    # def signal(self, value):
+    #     self._signal = value

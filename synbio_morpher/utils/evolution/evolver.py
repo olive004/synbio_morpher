@@ -8,14 +8,13 @@
 from functools import partial
 import logging
 import os
-from typing import Tuple, List
+from typing import Tuple, List, Union
 import numpy as np
 from bioreaction.model.data_containers import Species
 from synbio_morpher.srv.io.loaders.misc import load_csv
 from synbio_morpher.utils.evolution.mutation import get_mutation_type_mapping, Mutations, EXCLUDED_NUCS
-from synbio_morpher.utils.misc.type_handling import flatten_listlike, flatten_nested_dict
+from synbio_morpher.utils.misc.type_handling import flatten_listlike
 from synbio_morpher.utils.results.writer import DataWriter, kwargs_from_table
-from synbio_morpher.utils.misc.string_handling import add_outtype
 
 
 from synbio_morpher.utils.circuit.agnostic_circuits.circuit import Circuit
@@ -26,9 +25,9 @@ class Evolver():
     def __init__(self,
                  data_writer: DataWriter,
                  mutation_type: str = 'random',
-                 sequence_type: str = None,
-                 seed: int = None,
-                 concurrent_species_to_mutate: str = '') -> None:
+                 sequence_type: str = 'RNA',
+                 seed: int = 0,
+                 concurrent_species_to_mutate: Union[str, list] = '') -> None:
         self.data_writer = data_writer
         self.mutation_type = mutation_type  # Not implemented
         self.out_name = 'mutations'
@@ -258,9 +257,9 @@ def load_mutations(circuit, filename=None):
 
 
 def apply_mutation_to_sequence(sequence: str, mutation_positions: List[int], mutation_types: List[str]) -> List[str]:
-    sequence = np.array([*sequence])
-    sequence[mutation_positions] = mutation_types
-    return ''.join(sequence)
+    sequence_arr = np.array([*sequence])
+    sequence_arr[mutation_positions] = mutation_types
+    return ''.join(sequence_arr)
 
 
 def implement_mutation(circuit: Circuit, mutation: Mutations):

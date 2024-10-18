@@ -60,7 +60,7 @@ def get_filename_from_within_package(json_pathname: str) -> str:
     return full_json_pathname
 
 
-def load_json_as_dict(json_pathname: Union[str, dict], process=True) -> dict:
+def load_json_as_dict(json_pathname: Union[str, dict, None], process=True) -> dict:
     if not json_pathname:
         return {}
     elif type(json_pathname) == dict:

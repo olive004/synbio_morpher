@@ -74,7 +74,7 @@ def main(config=None, data_writer=None):
         [
             # Mutate circuit
             Protocol(
-                partial(Evolver(data_writer=data_writer, sequence_type=config_file.get('system_type'), 
+                partial(Evolver(data_writer=data_writer, sequence_type=config_file['system_type'], 
                                 seed=config_file.get('mutations_args', {}).get('seed', np.random.randint(1000))).mutate,
                         write_to_subsystem=True,
                         algorithm=config_file.get('mutations_args', {}).get('algorithm', 'random')),
