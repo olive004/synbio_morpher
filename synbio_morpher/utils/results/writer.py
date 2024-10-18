@@ -175,7 +175,7 @@ class DataWriter():
         output_summary['subdir'] = self.write_dir.replace(
             self.top_write_dir + os.sep, '')
         self.output(out_type='csv', out_name='output_summary', write_master=False,
-                    writer_kwargs={'data': output_summary})
+                    **{'data': output_summary}) # type: ignore
 
 
 class Tabulated(ABC):

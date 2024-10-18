@@ -76,7 +76,7 @@ def get_true_names_analytics(candidate_cols: Optional[Union[List[str], dict]]) -
     analytics_sig = get_signal_dependent_analytics()
     analytics_base = get_base_analytics_all()
 
-    if candidate_cols:
+    if candidate_cols is not None:
         for c in candidate_cols:
             for s in analytics_sig:
                 if s in c:

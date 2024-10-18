@@ -95,6 +95,8 @@ def main(config=None, data_writer=None):
                             data_selected = data
                         d = data_selected.groupby(['circuit_name', 'mutation_num'], as_index=False).agg(
                             {c: ('mean', 'std')})
+                        if d.empty():
+                            continue
                         for log_opt in log_opts:
                             log_text = '_log' if any(log_opt) else ''
                             for normalise in [False]:  # , True]:

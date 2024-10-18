@@ -463,7 +463,7 @@ class CircuitModeller():
             b_reverse_rates = np.asarray(b_reverse_rates)
             # b_og_states = np.array([analytics_stst['steady_states'].flatten(
             # ) * onehots + b_steady_states[i] * ((onehots == 0) * 1) for i, c in enumerate(circuits)])
-            b_og_states = b_steady_states * np.expand_dims(onehots, 1) + b_steady_states * np.expand_dims((onehots == 0) * 1, 1) 
+            b_og_states = b_steady_states * onehots + b_steady_states * ((onehots == 0) * 1)
 
             return b_steady_states, b_reverse_rates, b_og_states
 

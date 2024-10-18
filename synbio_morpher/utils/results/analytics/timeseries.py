@@ -8,7 +8,7 @@
 import logging
 import numpy as np
 import jax.numpy as jnp
-from typing import List, Tuple
+from typing import List, Tuple, Union
 from synbio_morpher.utils.misc.type_handling import merge_dicts
 from synbio_morpher.utils.results.analytics.naming import DIFF_KEY, RATIO_KEY
 
@@ -213,7 +213,7 @@ def generate_differences_ratios(analytics: dict, ref_analytics) -> Tuple[dict]:
     return differences, ratios
 
 
-def generate_analytics(data, time, labels: List[str], ref_circuit_data=None,
+def generate_analytics(data, time, labels: list, ref_circuit_data=None,
                        signal_onehot=None, signal_time=None):
     if data.shape[0] != len(labels):
         species_axis = data.shape.index(len(labels))
