@@ -107,7 +107,8 @@ class Evolver():
                         spec_iter = [
                             s for s in circuit.model.species if s.name == self.concurrent_species_to_mutate]
                     else:
-                        logging.warning(f'Could not find {self.concurrent_species_to_mutate} among the circuit species:')
+                        logging.warning(
+                            f'Could not find {self.concurrent_species_to_mutate} among the circuit species:')
                         logging.warning(circuit.species_names)
                 elif type(self.concurrent_species_to_mutate) == list:
                     spec_iter = []
@@ -132,7 +133,8 @@ class Evolver():
                     for mutation_counts in circuit.mutations_args['mutation_counts']:
                         for mutation_idx in range(mutation_counts):
 
-                            positions = mutation_sampler(len(sequence), mutation_nums_within_sequence).flatten().tolist()
+                            positions = mutation_sampler(
+                                len(sequence), mutation_nums_within_sequence).flatten().tolist()
                             # positions = positions if positions_chosen is not None else mutation_sampler(
                             #     len(sequence), mutation_nums_within_sequence).flatten()
                             mutation_types, positions = self.sample_mutations(
@@ -248,10 +250,10 @@ def load_mutations(circuit, filename=None):
             table.iloc[i]['template_name'])]
         if mutating_species not in circuit.mutations:
             circuit.mutations[mutating_species] = {table.iloc[i]['mutation_name']: Mutations(
-                template_species=mutating_species, **kwargs_from_table(Mutations, table=table.iloc[i]))} # type: ignore
+                template_species=mutating_species, **kwargs_from_table(Mutations, table=table.iloc[i]))}  # type: ignore
         else:
             circuit.mutations[mutating_species].update({table.iloc[i]['mutation_name']: Mutations(
-                template_species=mutating_species, **kwargs_from_table(Mutations, table=table.iloc[i]))}) # type: ignore
+                template_species=mutating_species, **kwargs_from_table(Mutations, table=table.iloc[i]))})  # type: ignore
         circuit.mutations[mutating_species][table.iloc[i]['mutation_name']].mutation_types = [int(
             v) for v in circuit.mutations[mutating_species][table.iloc[i]['mutation_name']].mutation_types]
         circuit.mutations[mutating_species][table.iloc[i]['mutation_name']].positions = [int(

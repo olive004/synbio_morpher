@@ -3,8 +3,8 @@
 # All rights reserved.
 
 # This source code is licensed under the MIT-style license found in the
-# LICENSE file in the root directory of this source tree. 
-    
+# LICENSE file in the root directory of this source tree.
+
 from functools import partial
 import os
 from fire import Fire
@@ -17,6 +17,7 @@ from synbio_morpher.utils.misc.database_handling import thresh_func, select_rows
 from synbio_morpher.utils.misc.string_handling import prettify_keys_for_label
 from synbio_morpher.utils.misc.scripts_io import get_search_dir
 from synbio_morpher.utils.results.analytics.naming import get_true_names_analytics
+from synbio_morpher.utils.results.analytics.timeseries import calculate_robustness
 from synbio_morpher.utils.results.experiments import Experiment, Protocol
 from synbio_morpher.utils.results.result_writer import ResultWriter
 from synbio_morpher.utils.results.visualisation import visualise_data
@@ -39,43 +40,40 @@ def main(config=None, data_writer=None):
         source_dirs = [source_dirs]
 
     protocols = visualisation_script_protocol_preamble(source_dirs)
-    
 
-    def visualise_all(data: pd.DataFrame, data_writer):
-        cols_analytics = get_true_names_analytics(data)
-        
-        for sp in data['sample_name'].unique():
-            visualise_means_std(data[data['sample_name'] == sp],
-                                cols_analytics, data_writer, extra_naming='_' + sp)
-
-            visualise_means_std(data[data['sample_name'] != sp],
-                                cols_analytics, data_writer, extra_naming='_not-' + sp)
-
-    def visualise_means_std(data: pd.DataFrame, cols: list, data_writer, extra_naming: str):
+    def vis(data: pd.DataFrame, data_writer, extra_naming: str = ''):
         """ Data from is multi index """
-        log_opts = [(True, True)]
-        
-        cols = get_true_names_analytics([c for c in data.columns if ('sensitivity' in c) or ('precision' in c)])
-        cols = [c for c in cols if ('ratio' not in c) and ('diff' not in c)]
-        cols_x=[c for c in cols if 'sensitivity' in c],
-        cols_y=[c for c in cols if 'precision' in c],
-        
-        
-        for m in list(data['mutation_num'].unique()) + ['all']:
+
+        def get_selection(m):
             if m == 'all':
-                hue = 'mutation_num'
-                selection_conditions = None
+                return None
             else:
-                hue = None
-                selection_conditions = [(
+                return [(
                     'mutation_num', operator.eq, m
                 )]
+
+        log_opts = [(True, True)]
+
+        cols = get_true_names_analytics(
+            [c for c in data.columns if ('sensitivity' in c) or ('precision' in c)])
+        cols = [c for c in cols if ('ratio' not in c) and ('diff' not in c)]
+        cols_x = [c for c in cols if 'sensitivity' in c],
+        cols_y = [c for c in cols if 'precision' in c],
+
+        data['robustness'] = calculate_robustness(
+            data[cols_x].to_numpy(), data[cols_y].to_numpy())
+        hue = 'robustness'
+
+        for m in list(data['mutation_num'].unique()) + ['all']:
+            data_selected = data
+            selection_conditions = get_selection(m)
             if selection_conditions:
                 data_selected = select_rows_by_conditional_cols(
                     data, selection_conditions)
-            else:
-                data_selected = data
-                
+
+            if data_selected.empty:
+                continue
+
             visualise_data(
                 data=data_selected,
                 data_writer=data_writer,
@@ -91,52 +89,14 @@ def main(config=None, data_writer=None):
                 title=f'Sensitivity vs. precision',
                 misc_histplot_kwargs={}
             )
-        
 
-        for c in cols:
-            range_df = round(data[c].max() -
-                             data[c].min(), 4)
-            mode = round(data[c].mode().iloc[0], 4)
-            for m in list(data['mutation_num'].unique()) + ['all']:
-                if m == 'all':
-                    hue = 'mutation_num'
-                    selection_conditions = None
-                else:
-                    hue = None
-                    selection_conditions = [(
-                        'mutation_num', operator.eq, m
-                    )]
-                if selection_conditions:
-                    data_selected = select_rows_by_conditional_cols(
-                        data, selection_conditions)
-                else:
-                    data_selected = data
-                    
-                for thresh in [False, 'outlier', 'exclude', 'lt', 'gt', 'lt_strict', 'gt_strict']:
-                    for s in ['mean', 'std']:
+    def visualise_all(data: pd.DataFrame, data_writer):
 
-                        if data_selected.empty():
-                            continue
-                        for log_opt in log_opts:
-                            log_text = '_log' if any(log_opt) else ''
-                            for normalise in [False]:  # , True]:
-                                visualise_data(
-                                    data=data_selected,
-                                    data_writer=data_writer,
-                                    cols_x=[(c, s)],
-                                    plot_type='histplot',
-                                    out_name=f'{c}_norm-{normalise}_thresh-{thresh}{log_text}_m{m}_{s}{extra_naming}',
-                                    hue=hue,
-                                    use_sns=True,
-                                    log_axis=log_opt,
-                                    xlabel=(
-                                        f'{prettify_keys_for_label(c)}', f'{s}'),
-                                    title=f'{prettify_keys_for_label(s)} of {prettify_keys_for_label(c)}\n for {m} mutations{thresh_text}{extra_text}',
-                                    misc_histplot_kwargs={'stat': 'probability' if normalise else 'count',
-                                                          'element': 'step'
-                                                          # 'hue_norm': [0, 1] if normalise else None
-                                                          }
-                                )
+        vis(data, data_writer)
+
+        # for sp in data['sample_name'].unique():
+        #     vis(data[data['sample_name'] == sp], data_writer, extra_naming='_' + sp)
+        #     vis(data[data['sample_name'] != sp], data_writer, extra_naming='_not-' + sp)
 
     protocols.append(
         Protocol(

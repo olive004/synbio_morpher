@@ -41,7 +41,7 @@ def main(config=None, data_writer=None):
     protocols = visualisation_script_protocol_preamble(source_dirs)
 
     def visualise_all(data: pd.DataFrame, data_writer, remove_noninteracting: bool = True):
-        cols_analytics = get_true_names_analytics(data)
+        cols_analytics = get_true_names_analytics(data.columns.to_list())
         # for interaction_type in INTERACTION_TYPES:
         #     cols = get_true_interaction_cols(
         #         data, interaction_type, remove_symmetrical=True)
@@ -93,9 +93,9 @@ def main(config=None, data_writer=None):
                                 data, selection_conditions)
                         else:
                             data_selected = data
-                        d = data_selected.groupby(['circuit_name', 'mutation_num'], as_index=False).agg(
-                            {c: ('mean', 'std')})
-                        if d.empty():
+                        d: pd.DataFrame = data_selected.groupby(['circuit_name', 'mutation_num'], as_index=False).agg(
+                            {c: ('mean', 'std')}) # type: ignore
+                        if d.empty:
                             continue
                         for log_opt in log_opts:
                             log_text = '_log' if any(log_opt) else ''
