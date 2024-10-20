@@ -51,13 +51,47 @@ def main(config=None, data_writer=None):
             visualise_means_std(data[data['sample_name'] != sp],
                                 cols_analytics, data_writer, extra_naming='_not-' + sp)
 
-    def visualise_means_std(data: pd.DataFrame, cols: list, data_writer, extra_naming: str = ''):
+    def visualise_means_std(data: pd.DataFrame, cols: list, data_writer, extra_naming: str):
         """ Data from is multi index """
-        log_opts = [(False, False), (True, False)]
-        outlier_std_threshold_y = 3
-        extra_text = ''
-        if extra_naming:
-            extra_text = f' ({prettify_keys_for_label(extra_naming)})'
+        log_opts = [(True, True)]
+        
+        cols = get_true_names_analytics([c for c in data.columns if ('sensitivity' in c) or ('precision' in c)])
+        cols = [c for c in cols if ('ratio' not in c) and ('diff' not in c)]
+        cols_x=[c for c in cols if 'sensitivity' in c],
+        cols_y=[c for c in cols if 'precision' in c],
+        
+        
+        for m in list(data['mutation_num'].unique()) + ['all']:
+            if m == 'all':
+                hue = 'mutation_num'
+                selection_conditions = None
+            else:
+                hue = None
+                selection_conditions = [(
+                    'mutation_num', operator.eq, m
+                )]
+            if selection_conditions:
+                data_selected = select_rows_by_conditional_cols(
+                    data, selection_conditions)
+            else:
+                data_selected = data
+                
+            visualise_data(
+                data=data_selected,
+                data_writer=data_writer,
+                cols_x=cols_x,
+                cols_y=cols_y,
+                plot_type='scatterplot',
+                out_name=f'robustness_m{m}{extra_naming}',
+                hue=hue,
+                use_sns=True,
+                log_axis=log_opts,
+                xlabel='Sensitivity',
+                ylabel='Precision',
+                title=f'Sensitivity vs. precision',
+                misc_histplot_kwargs={}
+            )
+        
 
         for c in cols:
             range_df = round(data[c].max() -

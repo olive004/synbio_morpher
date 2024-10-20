@@ -20,7 +20,7 @@ from synbio_morpher.utils.misc.units import SCIENTIFIC
 #     return F
 
 
-def equilibrium_constant_reparameterisation(E, initial: np.array):
+def equilibrium_constant_reparameterisation(E, initial: np.ndarray):
     """ Input: E is $\Delta G$ of binding in kcal/mol. 
     Output: equilibrium constant
 

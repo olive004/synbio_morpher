@@ -26,6 +26,7 @@ from synbio_morpher.utils.evolution.evolver import Evolver, apply_mutation_to_se
 from synbio_morpher.utils.evolution.mutation import get_mutation_type_mapping, reverse_mut_mapping
 from synbio_morpher.utils.misc.type_handling import flatten_listlike
 from synbio_morpher.utils.results.analytics.naming import get_true_interaction_cols
+from synbio_morpher.utils.results.analytics.timeseries import log_distance, sp_prod, vec_distance
 from synbio_morpher.utils.results.experiments import Experiment, Protocol
 from synbio_morpher.utils.results.writer import DataWriter
 from synbio_morpher.srv.io.loaders.circuit_loader import load_circuit
@@ -88,22 +89,6 @@ def plot_starting_circuits(starting_circ_rows, data, filt, data_writer, save: bo
     plt.savefig(fig_path)
 
 
-# Optimisation funcs
-def mag(vec, **kwargs):
-    return jnp.linalg.norm(vec, **kwargs)
-
-
-def vec_distance(s, p, d):
-    """ First row of each direction vector are the x's, second row are the y's """
-    P = jnp.array([s, p]).T
-    # P = [s.T, p.T]
-    sp_rep = np.repeat(d[:, 0][:, None], repeats=len(s), axis=-1).T[:, :, None]
-    AP = jnp.concatenate([sp_rep, P[:, :, None]], axis=-1)
-    area = mag(jnp.cross(AP, d[None, :, :], axis=-1), axis=-1)
-    D = area / mag(d)
-    return D
-
-
 def make_distance_func(data):
     sp_min = data[(
         data['sensitivity_wrt_species-6'] <= 1/data['precision_wrt_species-6']) | (
@@ -115,17 +100,6 @@ def make_distance_func(data):
     sp_right = np.array([sp_max[0], sp_min[1]])
     d = np.array([sp_left, sp_right]).T
     return partial(vec_distance, d=d)
-
-
-def sp_prod(s, p, sp_factor=1, s_weight=0):
-    """ Log product of s and p """
-    s_lin = 1/p
-    return s * (p * (s - s_lin))  # * sp_factor + s_weight)
-
-
-def log_distance(s, p):
-    lin = np.array([np.logspace(6, -3, 2), np.logspace(-6, 3, 2)])
-    return vec_distance(s, p, lin)
 
 
 # Simulation functions

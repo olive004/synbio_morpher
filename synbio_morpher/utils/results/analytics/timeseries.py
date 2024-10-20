@@ -8,7 +8,7 @@
 import logging
 import numpy as np
 import jax.numpy as jnp
-from typing import List, Tuple, Union
+from typing import List, Tuple, Optional
 from synbio_morpher.utils.misc.type_handling import merge_dicts
 from synbio_morpher.utils.results.analytics.naming import DIFF_KEY, RATIO_KEY
 
@@ -47,8 +47,7 @@ def calculate_precision_core(output_diff, starting_states, signal_diff, signal_0
     denom = jnp.where(signal_0 != 0, signal_diff / signal_0, 1)
     numer = jnp.where((starting_states != 0).astype(int),
                       output_diff / starting_states, 1)
-    precision = jnp.absolute(jnp.divide(
-        numer, denom))
+    precision = jnp.absolute(jnp.divide(numer, denom)) # type: ignore
     return jnp.divide(1, precision)
 
 
@@ -65,9 +64,9 @@ def calculate_sensitivity_core(output_diff, starting_states, signal_diff, signal
                       output_diff / starting_states, np.inf)
 
     return jnp.where(signal_0 != 0,
-                     jnp.absolute(jnp.divide(
-                         numer, signal_diff / signal_0)),
-                     np.inf)
+                     jnp.abs(jnp.divide(
+                         numer, signal_diff / signal_0)), # type: ignore
+                     np.inf) # type: ignore
     # return jnp.absolute(jnp.divide(
     #     numer, denom))
 
@@ -88,10 +87,16 @@ def compute_sensitivity_simple(starting_states, peaks, signal_factor):
     numer = jnp.where((starting_states != 0).astype(int),
                       (peaks - starting_states) / starting_states, np.inf)
     return jnp.absolute(jnp.divide(
-        numer, signal_factor))
+        numer, signal_factor)) # type: ignore
 
 
-def compute_rmse(data: np.ndarray, ref_circuit_data: np.ndarray):
+def calculate_robustness(s, p):
+    """ s = sensitivity, p = precision """
+    return np.log(log_distance(s=s, p=p) * np.log(sp_prod(
+        s=s, p=p, sp_factor=(p / s).max(), s_weight=(np.log(p) / (s)))))
+
+
+def compute_rmse(data: np.ndarray, ref_circuit_data: Optional[np.ndarray]):
     if ref_circuit_data is None:
         return jnp.zeros(shape=(jnp.shape(data)[0], 1))
     t_max = min([jnp.shape(data)[-1], jnp.shape(ref_circuit_data)[-1]])
@@ -124,15 +129,41 @@ def frequency(data):
     return freq
 
 
+def log_distance(s, p):
+    lin = np.array([np.logspace(6, -3, 2), np.logspace(-6, 3, 2)])
+    return vec_distance(s, p, lin)
+
+
+# Optimisation funcs
+def mag(vec, **kwargs):
+    return jnp.linalg.norm(vec, **kwargs)
+
+
+def sp_prod(s, p, sp_factor=1, s_weight=0):
+    """ Log product of s and p """
+    s_lin = 1/p
+    return s * (p * (s - s_lin))  # * sp_factor + s_weight)
+
+
+def vec_distance(s, p, d):
+    """ First row of each direction vector are the x's, second row are the y's """
+    P = jnp.array([s, p]).T
+    # P = [s.T, p.T]
+    sp_rep = np.repeat(d[:, 0][:, None], repeats=len(s), axis=-1).T[:, :, None]
+    AP = jnp.concatenate([sp_rep, P[:, :, None]], axis=-1)
+    area = mag(jnp.cross(AP, d[None, :, :], axis=-1), axis=-1)
+    D = area / mag(d)
+    return D
+
+
 def generate_base_analytics(data: jnp.ndarray, t: jnp.ndarray, labels: List[str],
-                            signal_onehot: jnp.ndarray, signal_time,
-                            ref_circuit_data: jnp.ndarray, include_deriv: bool = False) -> dict:
+                            signal_onehot: Optional[jnp.ndarray], signal_time,
+                            ref_circuit_data: Optional[jnp.ndarray], include_deriv: bool = False) -> dict:
     """ Assuming [species, time] for data """
     signal_idxs = None if signal_onehot is None else [
         int(i) for i in (np.where(signal_onehot == 1)[0])]
     if data is None:
         return {}
-
 
     analytics = {
         # 'initial_steady_states': jnp.expand_dims(data[:, 0], axis=1),
@@ -149,7 +180,7 @@ def generate_base_analytics(data: jnp.ndarray, t: jnp.ndarray, labels: List[str]
 
     analytics['steady_states'] = data[:, -1]
 
-    analytics['RMSE'] = compute_rmse(data, ref_circuit_data).squeeze()
+    analytics['RMSE'] = compute_rmse(data, ref_circuit_data).squeeze() # type: ignore
 
     first_derivative = compute_derivative(data)
     if include_deriv:
@@ -161,7 +192,7 @@ def generate_base_analytics(data: jnp.ndarray, t: jnp.ndarray, labels: List[str]
     )
 
     peaks = compute_peaks(analytics['initial_steady_states'], analytics['steady_states'],
-                      analytics['max_amount'], analytics['min_amount'])
+                          analytics['max_amount'], analytics['min_amount'])
 
     analytics['overshoot'] = compute_overshoot(
         steady_states=analytics['steady_states'],
@@ -193,7 +224,7 @@ def generate_base_analytics(data: jnp.ndarray, t: jnp.ndarray, labels: List[str]
     return analytics
 
 
-def generate_differences_ratios(analytics: dict, ref_analytics) -> Tuple[dict]:
+def generate_differences_ratios(analytics: dict, ref_analytics) -> Tuple[dict, dict]:
     t_axis = 1
     differences = {}
     ratios = {}
@@ -213,11 +244,11 @@ def generate_differences_ratios(analytics: dict, ref_analytics) -> Tuple[dict]:
     return differences, ratios
 
 
-def generate_analytics(data, time, labels: list, ref_circuit_data=None,
-                       signal_onehot=None, signal_time=None):
+def generate_analytics(data: jnp.ndarray, time, labels: list, ref_circuit_data: Optional[jnp.ndarray]=None,
+                       signal_onehot: Optional[jnp.ndarray]=None, signal_time=None):
     if data.shape[0] != len(labels):
         species_axis = data.shape.index(len(labels))
-        data = np.swapaxes(data, 0, species_axis)
+        data = np.swapaxes(data, 0, species_axis) # type: ignore
     analytics = generate_base_analytics(data=data, t=time, labels=labels,
                                         signal_onehot=signal_onehot, signal_time=signal_time,
                                         ref_circuit_data=ref_circuit_data)
