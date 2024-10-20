@@ -52,7 +52,7 @@ def main(config=None, data_writer=None):
                     'mutation_num', operator.eq, m
                 )]
 
-        log_opt = (True, True)
+        log_opts = [(False, False), (True, True)]
 
         cols = get_true_names_analytics(
             [c for c in data.columns if ('sensitivity' in c) or ('precision' in c)])
@@ -62,7 +62,8 @@ def main(config=None, data_writer=None):
 
         data['robustness'] = calculate_robustness(
             data[cols_x].to_numpy().squeeze(), data[cols_y].to_numpy().squeeze())
-        hue = 'robustness'
+        hue = 'robustness' if (
+            ~data['robustness'].isna()).sum() > 0 else 'overshoot'
 
         for m in list(data['mutation_num'].unique()) + ['all']:
             data_selected = data
@@ -74,21 +75,24 @@ def main(config=None, data_writer=None):
             if data_selected.empty:
                 continue
 
-            visualise_data(
-                data=data_selected,
-                data_writer=data_writer,
-                cols_x=cols_x,
-                cols_y=cols_y,
-                plot_type='scatter_plot',
-                out_name=f'robustness_m{m}{extra_naming}',
-                hue=hue,
-                use_sns=True,
-                log_axis=log_opt,
-                xlabel='Sensitivity',
-                ylabel='Precision',
-                title=f'Sensitivity vs. precision',
-                misc_histplot_kwargs={}
-            )
+            for log_opt in log_opts:
+
+                text_log = '_log' if log_opt[0] else ''
+                visualise_data(
+                    data=data_selected,
+                    data_writer=data_writer,
+                    cols_x=cols_x,
+                    cols_y=cols_y,
+                    plot_type='scatter_plot',
+                    out_name=f'robustness_m{m}{extra_naming}{text_log}',
+                    hue=hue,
+                    use_sns=True,
+                    log_axis=log_opt,
+                    xlabel='Sensitivity',
+                    ylabel='Precision',
+                    title=f'Sensitivity vs. precision',
+                    misc_histplot_kwargs={}
+                )
 
     def visualise_all(data: pd.DataFrame, data_writer):
 
