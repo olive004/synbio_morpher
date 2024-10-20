@@ -249,10 +249,10 @@ def load_mutations(circuit, filename=None):
         mutating_species = circuit.model.species[species_names.index(
             table.iloc[i]['template_name'])]
         if mutating_species not in circuit.mutations:
-            circuit.mutations[mutating_species] = {table.iloc[i]['mutation_name']: Mutations(
+            circuit.mutations[mutating_species] = {table['mutation_name'].iloc[i]: Mutations(
                 template_species=mutating_species, **kwargs_from_table(Mutations, table=table.iloc[i]))}  # type: ignore
         else:
-            circuit.mutations[mutating_species].update({table.iloc[i]['mutation_name']: Mutations(
+            circuit.mutations[mutating_species].update({table['mutation_name'].iloc[i]: Mutations(
                 template_species=mutating_species, **kwargs_from_table(Mutations, table=table.iloc[i]))})  # type: ignore
         circuit.mutations[mutating_species][table.iloc[i]['mutation_name']].mutation_types = [int(
             v) for v in circuit.mutations[mutating_species][table.iloc[i]['mutation_name']].mutation_types]

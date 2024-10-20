@@ -124,7 +124,7 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "x_vis_0_histplots": {
+        "vis_0_histplots": {
             "experiment": {
                 "purpose": "vis_0_histplots"
             },
@@ -138,7 +138,7 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "x_vis_0_histplots_nosig": {
+        "vis_0_histplots_nosig": {
             "experiment": {
                 "purpose": "vis_0_histplots_nosig"
             },
@@ -155,7 +155,7 @@
                 "inputs": ["RNA_0"]
             }
         },
-        "x_vis_1_histplots_interactions": {
+        "vis_1_histplots_interactions": {
             "experiment": {
                 "purpose": "vis_1_histplots_interactions"
             },
@@ -169,7 +169,7 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "x_vis_2_histplots_diffs_ratios": {
+        "vis_2_histplots_diffs_ratios": {
             "experiment": {
                 "purpose": "vis_2_histplots_diffs_ratios"
             },
@@ -183,7 +183,7 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "x_vis_2_histplots_diffs_ratios_nosig": {
+        "vis_2_histplots_diffs_ratios_nosig": {
             "experiment": {
                 "purpose": "vis_2_histplots_diffs_ratios_nosig"
             },
@@ -200,7 +200,7 @@
                 "inputs": ["RNA_0"]
             }
         },
-        "x_vis_3_mutation_types_positions_1": {
+        "vis_3_mutation_types_positions_1": {
             "experiment": {
                 "purpose": "vis_3_mutation_types_positions_1"
             },
@@ -214,7 +214,7 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "x_vis_3_mutation_types_positions_2": {
+        "vis_3_mutation_types_positions_2": {
             "experiment": {
                 "purpose": "vis_3_mutation_types_positions_2"
             },
@@ -228,7 +228,7 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "x_vis_4_histplots_thresholded": {
+        "vis_4_histplots_thresholded": {
             "experiment": {
                 "purpose": "vis_4_histplots_thresholded"
             },
@@ -242,7 +242,7 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "x_vis_5_means_analytics": {
+        "vis_5_means_analytics": {
             "experiment": {
                 "purpose": "vis_5_means_analytics"
             },

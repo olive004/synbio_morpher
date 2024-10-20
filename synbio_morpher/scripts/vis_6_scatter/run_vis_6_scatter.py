@@ -52,16 +52,16 @@ def main(config=None, data_writer=None):
                     'mutation_num', operator.eq, m
                 )]
 
-        log_opts = [(True, True)]
+        log_opt = (True, True)
 
         cols = get_true_names_analytics(
             [c for c in data.columns if ('sensitivity' in c) or ('precision' in c)])
         cols = [c for c in cols if ('ratio' not in c) and ('diff' not in c)]
-        cols_x = [c for c in cols if 'sensitivity' in c],
-        cols_y = [c for c in cols if 'precision' in c],
+        cols_x = [c for c in cols if 'sensitivity' in c]
+        cols_y = [c for c in cols if 'precision' in c]
 
         data['robustness'] = calculate_robustness(
-            data[cols_x].to_numpy(), data[cols_y].to_numpy())
+            data[cols_x].to_numpy().squeeze(), data[cols_y].to_numpy().squeeze())
         hue = 'robustness'
 
         for m in list(data['mutation_num'].unique()) + ['all']:
@@ -79,11 +79,11 @@ def main(config=None, data_writer=None):
                 data_writer=data_writer,
                 cols_x=cols_x,
                 cols_y=cols_y,
-                plot_type='scatterplot',
+                plot_type='scatter_plot',
                 out_name=f'robustness_m{m}{extra_naming}',
                 hue=hue,
                 use_sns=True,
-                log_axis=log_opts,
+                log_axis=log_opt,
                 xlabel='Sensitivity',
                 ylabel='Precision',
                 title=f'Sensitivity vs. precision',
