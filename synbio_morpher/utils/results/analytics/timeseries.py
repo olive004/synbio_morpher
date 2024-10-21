@@ -90,8 +90,9 @@ def compute_sensitivity_simple(starting_states, peaks, signal_factor):
         numer, signal_factor)) # type: ignore
 
 
-def calculate_robustness(s, p):
-    """ s = sensitivity, p = precision """
+def calculate_adaptation(s, p):
+    """ Adaptation = robustness to noise
+    s = sensitivity, p = precision """
     return np.log(log_distance(s=s, p=p) * np.log(sp_prod(
         s=s, p=p, sp_factor=(p / s).max(), s_weight=(np.log(p) / s))))
 

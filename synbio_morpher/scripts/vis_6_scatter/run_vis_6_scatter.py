@@ -17,7 +17,7 @@ from synbio_morpher.utils.misc.database_handling import thresh_func, select_rows
 from synbio_morpher.utils.misc.string_handling import prettify_keys_for_label
 from synbio_morpher.utils.misc.scripts_io import get_search_dir
 from synbio_morpher.utils.results.analytics.naming import get_true_names_analytics
-from synbio_morpher.utils.results.analytics.timeseries import calculate_robustness
+from synbio_morpher.utils.results.analytics.timeseries import calculate_adaptation
 from synbio_morpher.utils.results.experiments import Experiment, Protocol
 from synbio_morpher.utils.results.result_writer import ResultWriter
 from synbio_morpher.utils.results.visualisation import visualise_data
@@ -60,10 +60,10 @@ def main(config=None, data_writer=None):
         cols_x = [c for c in cols if 'sensitivity' in c]
         cols_y = [c for c in cols if 'precision' in c]
 
-        data['robustness'] = calculate_robustness(
+        data['adaptation'] = calculate_adaptation(
             data[cols_x].to_numpy().squeeze(), data[cols_y].to_numpy().squeeze())
-        hue = 'robustness' if (
-            ~data['robustness'].isna()).sum() > 0 else 'overshoot'
+        hue = 'adaptation' if (
+            ~data['adaptation'].isna()).sum() > 0 else 'overshoot'
 
         for m in list(data['mutation_num'].unique()) + ['all']:
             data_selected = data
@@ -84,7 +84,7 @@ def main(config=None, data_writer=None):
                     cols_x=cols_x,
                     cols_y=cols_y,
                     plot_type='scatter_plot',
-                    out_name=f'robustness_m{m}{extra_naming}{text_log}',
+                    out_name=f'adaptation_m{m}{extra_naming}{text_log}',
                     hue=hue,
                     use_sns=True,
                     log_axis=log_opt,
