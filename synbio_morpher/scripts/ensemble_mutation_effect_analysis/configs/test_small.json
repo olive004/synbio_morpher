@@ -77,7 +77,7 @@
                 "function_name": "step_function",
                 "function_kwargs": {
                     "impulse_center": 1, 
-                    "impulse_halfwidth": 5, 
+                    "impulse_halfwidth": 0.5, 
                     "target": 2
                 }
             },
@@ -85,7 +85,7 @@
                 "dt0": 0.01,
                 "dt1": 0.5,
                 "t0": 0,
-                "t1": 1,
+                "t1": 3,
                 "tmax": 120000,
                 "solver": "diffrax",
                 "use_batch_mutations": true,
