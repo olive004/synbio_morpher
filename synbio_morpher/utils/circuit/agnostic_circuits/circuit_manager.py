@@ -225,7 +225,7 @@ class CircuitModeller():
         return circuits
 
     def run_interaction_simulator(self, species: List[Species], quantities, filename=None) -> MolecularInteractions:
-        data = {s: s.sequence for s in species}
+        data = {s: s.physical_data for s in species}
         # if filename is not None:
         #     return self.interaction_simulator.run((filename, data), compute_by_filename=True)
         # else:

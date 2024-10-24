@@ -126,7 +126,7 @@ class Evolver():
 
             for specie in spec_iter:
                 circuit.mutations[specie.name] = {}
-                sequence = specie.sequence
+                sequence = specie.physical_data
                 if not sequence:
                     continue
                 for mutation_nums_within_sequence in circuit.mutations_args['mutation_nums_within_sequence']:
@@ -164,7 +164,7 @@ class Evolver():
             spec_iter = make_species_iter(circuit)
             for i, specie in enumerate(spec_iter):
                 circuit.mutations[specie.name] = {}
-                sequence = specie.sequence
+                sequence = specie.physical_data
                 sequence_l = len(sequence)
                 if sequence_l == 0:
                     continue
@@ -224,7 +224,7 @@ class Evolver():
                 mutation_idx),
             template_species=specie,
             template_name=specie.name,
-            template_seq=specie.sequence,
+            template_seq=specie.physical_data,
             mutation_types=mutation_types,
             count=mutation_count,
             positions=positions,
@@ -272,7 +272,7 @@ def implement_mutation(circuit: Circuit, mutation: Mutations):
     if mutation.template_name in circuit.species_names:
         sidx = circuit.species_names.index(mutation.template_name)
         # circuit.model.species[sidx].name = mutation.mutation_name
-        circuit.model.species[sidx].sequence = mutation.get_sequence()
+        circuit.model.species[sidx].physical_data = mutation.get_sequence()
     else:
         raise KeyError(
             f'Could not find specie {mutation.template_name} in model for mutation {mutation.mutation_name}')

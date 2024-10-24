@@ -125,7 +125,7 @@ def bioreaction_sim_dfx_expanded(y0, t0, t1, dt0,
                            y0=y0.squeeze(),
                            saveat=saveat, max_steps=max_steps,
                            stepsize_controller=stepsize_controller)
-    return sol.ys, sol.ts
+    return sol.ts, sol.ys
 
 
 def bioreaction_sim_dfx_naive(y0: np.ndarray, reverse_rates,
@@ -152,4 +152,4 @@ def bioreaction_sim_dfx_naive(y0: np.ndarray, reverse_rates,
             saves_y[save_index] = y
             save_index += 1
 
-    return saves_y, saves_t
+    return saves_t, saves_y

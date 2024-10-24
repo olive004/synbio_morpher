@@ -276,7 +276,7 @@ def process_for_next_run(circuits: list, data_writer: DataWriter):
 
     for i, c in enumerate(circuits):
         circuits[i].name = make_next_name(c.name)
-        # sequences = {s.name: s.sequence for s in c.model.species if s.sequence}
+        # sequences = {s.name: s.physical_data for s in c.model.species if s.physical_data}
         sequences = load_seq_from_FASTA(c.data.source, as_type='dict')
         circuits[i].data.source = write_mutated_circuit(
             name=circuits[i].name, subname='ref_circuit', sequences=sequences, data_writer=data_writer)

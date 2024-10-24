@@ -10,6 +10,7 @@ import os
 from fire import Fire
 import operator
 import pandas as pd
+import numpy as np
 
 from synbio_morpher.srv.io.manage.script_manager import script_preamble, visualisation_script_protocol_preamble
 from synbio_morpher.utils.data.data_format_tools.common import load_json_as_dict
@@ -62,39 +63,44 @@ def main(config=None, data_writer=None):
 
         data['adaptation'] = calculate_adaptation(
             data[cols_x].to_numpy().squeeze(), data[cols_y].to_numpy().squeeze())
-        hue = 'adaptation' if (
-            ~data['adaptation'].isna()).sum() > 0 else 'overshoot'
+        # hue = 'adaptation' if (~data['adaptation'].isna()).sum() > 0 else 'overshoot'
+        hues = ['adaptation', 'overshoot', 'sample_name']
 
+        # for m in ['all']:
         for m in list(data['mutation_num'].unique()) + ['all']:
             data_selected = data
             selection_conditions = get_selection(m)
             if selection_conditions:
                 data_selected = select_rows_by_conditional_cols(
                     data, selection_conditions)
-                hue = 'adaptation' if (
-                    ~data_selected['adaptation'].isna()).sum() == int(0.5 * len(data_selected)) else 'overshoot'
+                # hue = 'adaptation' if (
+                #     ~data_selected['adaptation'].isna()).sum() >= int(0.5 * len(data_selected)) else 'overshoot'
 
             if data_selected.empty:
                 continue
+            
+            for hue in hues:
+                
+                if data_selected[hue].isna().sum() == len(data_selected):
+                    hue = None
 
-            for log_opt in log_opts:
+                for log_opt in log_opts:
 
-                text_log = '_log' if log_opt[0] else ''
-                visualise_data(
-                    data=data_selected,
-                    data_writer=data_writer,
-                    cols_x=cols_x,
-                    cols_y=cols_y,
-                    plot_type='scatter_plot',
-                    out_name=f'adaptation_m{m}{extra_naming}{text_log}',
-                    hue=hue,
-                    use_sns=True,
-                    log_axis=log_opt,
-                    xlabel='Sensitivity',
-                    ylabel='Precision',
-                    title=f'Sensitivity vs. precision',
-                    misc_histplot_kwargs={}
-                )
+                    text_log = '_log' if log_opt[0] else ''
+                    visualise_data(
+                        data=data_selected,
+                        data_writer=data_writer,
+                        cols_x=cols_x,
+                        cols_y=cols_y,
+                        plot_type='scatter_plot',
+                        out_name=f'adaptation_m{m}{extra_naming}{text_log}_{hue}',
+                        hue=hue,
+                        use_sns=True,
+                        log_axis=log_opt,
+                        xlabel='Sensitivity',
+                        ylabel='Precision',
+                        title=f'Sensitivity vs. precision',
+                    )
 
     def visualise_all(data: pd.DataFrame, data_writer):
 

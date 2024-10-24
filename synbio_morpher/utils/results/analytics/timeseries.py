@@ -94,14 +94,18 @@ def compute_sensitivity_simple(starting_states, peaks, signal_factor):
         numer, signal_factor)) # type: ignore
 
 
-def calculate_adaptation(s, p):
-    """ Adaptation = robustness to noise
+def calculate_adaptation(s, p, alpha=3, s_center=7, p_center=7.5):
+    """ Adaptation = robustness to noise. Greater than 0 is good.
     s = sensitivity, p = precision 
     High when s > 1 and p > 10
     """
     # a = jnp.exp(s) * s * p
     # a = jnp.log10(s) * s * jnp.power(2, jnp.log10(p))
-    a = jnp.exp(jnp.log10(s)) * jnp.exp(jnp.log10(p) - 1)
+    # a = jnp.exp(jnp.log10(s)) * jnp.exp(jnp.log10(p) - 1)
+    # a = jnp.log10(a)
+    s_log = jnp.log10(s)
+    p_log = jnp.log10(p)
+    a = -(alpha*(s_log - s_center)**2 + (p_log - p_center)**2) + 1000
     # a = jnp.log10(log_distance(s=s, p=p)) * sp_prod(s, p)
     # return sp_prod(s, p)
     # return jnp.log10(log_distance(s=s, p=p)) * sp_prod(

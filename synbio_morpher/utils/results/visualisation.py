@@ -383,10 +383,11 @@ class VisODE():
             data = data.rename(
                 columns={plot_kwargs.get('hue'): new_hue})
             plot_kwargs['hue'] = new_hue
+            pal = plot_kwargs.get('palette', sns.color_palette("viridis", len(data[plot_kwargs.get('hue')].unique())))
             plot_kwargs.update({
                 # 'palette': sns.color_palette("husl", len(data[plot_kwargs.get('hue')].unique()))
                 # 'palette': sns.color_palette("plasma", len(data[plot_kwargs.get('hue')].unique()))
-                'palette': sns.color_palette("viridis", len(data[plot_kwargs.get('hue')].unique()))
+                'palette': pal
             })
         else:
             if 'palette' in plot_kwargs:
@@ -441,22 +442,19 @@ class VisODE():
     def sns_scatterplot(self, out_path: str, x: str, y: str, data: pd.DataFrame,
                         title: Optional[str] = None, xlabel=None, ylabel=None,
                         **plot_kwargs):
-        import seaborn as sns
+        plot_kwargs['palette'] = plot_kwargs.get('palette', 'viridis')
         self.sns_generic_plot(sns.scatterplot, out_path,
                               x, y, data, title, **plot_kwargs)
 
     def sns_violinplot(self, out_path: str, x: str, y: str, data: pd.DataFrame,
                        title: Optional[str] = None, xlabel=None, ylabel=None,
                        **plot_kwargs):
-        import seaborn as sns
         self.sns_generic_plot(sns.violinplot, out_path, x, y, data, title,
                               figsize=(10, 6), **plot_kwargs)
 
     def sns_lineplot(self, out_path: str, x: str, y: str, data: pd.DataFrame,
                      title: Optional[str] = None, xlabel=None, ylabel=None,
                      **plot_kwargs):
-        import seaborn as sns
-
         if plot_kwargs.get('hue'):
             plot_kwargs.update({
                 # 'palette': sns.color_palette("husl", len(data[plot_kwargs.get('hue')].unique()))
@@ -470,7 +468,6 @@ class VisODE():
     # Make visualisations for each analytic chosen
     def heatmap(self, data: pd.DataFrame, out_path: str, out_type='png',
                 new_vis=False, vmin=None, vmax=None, **plot_kwrgs):
-        import seaborn as sns
         sns.set_theme()
 
         fig = plt.figure(figsize=self.figsize)
@@ -486,7 +483,6 @@ class VisODE():
                      histplot_kwargs: Optional[dict] = None,
                      **plot_kwargs):
         """ log_axis: use logarithmic axes in (x-axis, y-axis) """
-        import seaborn as sns
         sns.set_context('paper')
 
         histplot_kwargs = {} if histplot_kwargs is None else histplot_kwargs
