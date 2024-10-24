@@ -35,12 +35,16 @@ def compute_overshoot(steady_states, peaks):
     return jnp.absolute(peaks - steady_states)
 
 
-def compute_peaks(initial_steady_states, final_steady_states, maxa, mina):
+def compute_peaks_deprecated(initial_steady_states, final_steady_states, maxa, mina):
     return jnp.where(
         initial_steady_states < final_steady_states,
         maxa - mina + initial_steady_states,
         mina - maxa + initial_steady_states
     )
+    
+    
+def compute_peaks(initial_steady_states, final_steady_states, maxa, mina):
+    return maxa
 
 
 def calculate_precision_core(output_diff, starting_states, signal_diff, signal_0) -> jnp.ndarray:
@@ -93,12 +97,14 @@ def compute_sensitivity_simple(starting_states, peaks, signal_factor):
 def calculate_adaptation(s, p):
     """ Adaptation = robustness to noise
     s = sensitivity, p = precision """
-    return sp_prod(s, p)
-    # return jnp.log(log_distance(s=s, p=p)) * sp_prod(s, p)
-    # return jnp.log(log_distance(s=s, p=p)) * sp_prod(
+    a = jnp.exp(s) * s * p
+    return a
+    # return sp_prod(s, p)
+    # return jnp.log10(log_distance(s=s, p=p)) * sp_prod(s, p)
+    # return jnp.log10(log_distance(s=s, p=p)) * sp_prod(
     #     s=s, p=p, sp_factor=(p / s).max(), s_weight=1)
-    # return jnp.log(log_distance(s=s, p=p) * jnp.log(sp_prod(
-    #     s=s, p=p, sp_factor=(p / s).max(), s_weight=(jnp.log(p) / s))))
+    # return jnp.log10(log_distance(s=s, p=p) * jnp.log10(sp_prod(
+    #     s=s, p=p, sp_factor=(p / s).max(), s_weight=(jnp.log10(p) / s))))
 
 
 def compute_rmse(data: np.ndarray, ref_circuit_data: Optional[np.ndarray]):
