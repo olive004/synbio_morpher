@@ -432,7 +432,7 @@ class CircuitModeller():
 
             b_steady_states = np.zeros((len(circuits), len(circuits[0].model.species)))
             b_og_states = np.array([c.result_collector.get_result(
-                        'steady_states').analytics['steady_states'].flatten(
+                        'steady_states').analytics['steady_states'].flatten( # type: ignore
             ) for i, c in enumerate(circuits)])
             b_reverse_rates = np.zeros(
                 (len(circuits), *circuits[0].qreactions.reactions.reverse_rates.shape))
@@ -482,13 +482,13 @@ class CircuitModeller():
             b_new_copynumbers = np.swapaxes(b_new_copynumbers, 1, 2)
 
         # Fix first entry for signal species -> Warning: deletes final element in simulated data
+        # We need to do this so that the precision and sensitivity calculations are correct
         for i, c in enumerate(circuits):
             if not c.use_prod_and_deg:
                 b_new_copynumbers[i, :, :] = np.concatenate([np.expand_dims(
                     b_og_states[i, :], axis=1), b_new_copynumbers[i, :, :-1]], axis=1)
 
         # Get analytics batched too
-
         ref_circuits = [s for s in circuits if s.subname == 'ref_circuit']
         ref_idxs = [circuits.index(s) for s in ref_circuits]
         b_analytics_l = []
