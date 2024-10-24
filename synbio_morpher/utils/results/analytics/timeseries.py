@@ -16,14 +16,6 @@ from synbio_morpher.utils.results.analytics.naming import DIFF_KEY, RATIO_KEY
 TIMEAXIS = 1
 
 
-def compute_peaks(initial_steady_states, final_steady_states, maxa, mina):
-    return jnp.where(
-        initial_steady_states < final_steady_states,
-        maxa - mina + initial_steady_states,
-        mina - maxa + initial_steady_states
-    )
-
-
 def compute_derivative(data):
     if data.shape[TIMEAXIS] <= 1:
         return np.ones_like(data) * np.inf
@@ -43,12 +35,20 @@ def compute_overshoot(steady_states, peaks):
     return jnp.absolute(peaks - steady_states)
 
 
+def compute_peaks(initial_steady_states, final_steady_states, maxa, mina):
+    return jnp.where(
+        initial_steady_states < final_steady_states,
+        maxa - mina + initial_steady_states,
+        mina - maxa + initial_steady_states
+    )
+
+
 def calculate_precision_core(output_diff, starting_states, signal_diff, signal_0) -> jnp.ndarray:
-    denom = jnp.where(signal_0 != 0, signal_diff / signal_0, 1)
-    numer = jnp.where((starting_states != 0).astype(int),
+    numer = jnp.where(signal_0 != 0, signal_diff / signal_0, 1)
+    denom = jnp.where((starting_states != 0).astype(int),
                       output_diff / starting_states, 1)
-    precision = jnp.absolute(jnp.divide(numer, denom)) # type: ignore
-    return jnp.divide(1, precision)
+    return jnp.absolute(jnp.divide(numer, denom)) # type: ignore
+    # return jnp.divide(1, precision)
 
 
 def compute_precision(starting_states, steady_states, signal_0, signal_1):
