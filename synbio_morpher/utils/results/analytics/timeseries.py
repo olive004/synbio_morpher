@@ -65,14 +65,12 @@ def compute_precision(starting_states, steady_states, signal_0, signal_1):
 def calculate_sensitivity_core(output_diff, starting_states, signal_diff, signal_0) -> jnp.ndarray:
     # denom = jnp.where(signal_0 != 0, signal_diff / signal_0, np.inf)
     numer = jnp.where((starting_states != 0).astype(int),
-                      output_diff / starting_states, np.inf)
+                      jnp.where(output_diff != 0, output_diff, np.nan) / starting_states, np.inf)
 
     return jnp.where(signal_0 != 0,
                      jnp.abs(jnp.divide(
                          numer, signal_diff / signal_0)), # type: ignore
                      np.inf) # type: ignore
-    # return jnp.absolute(jnp.divide(
-    #     numer, denom))
 
 
 def compute_sensitivity(signal_idx: int, starting_states, peaks):
