@@ -93,8 +93,12 @@ def compute_sensitivity_simple(starting_states, peaks, signal_factor):
 def calculate_adaptation(s, p):
     """ Adaptation = robustness to noise
     s = sensitivity, p = precision """
-    return np.log(log_distance(s=s, p=p) * np.log(sp_prod(
-        s=s, p=p, sp_factor=(p / s).max(), s_weight=(np.log(p) / s))))
+    return sp_prod(s, p)
+    # return jnp.log(log_distance(s=s, p=p)) * sp_prod(s, p)
+    # return jnp.log(log_distance(s=s, p=p)) * sp_prod(
+    #     s=s, p=p, sp_factor=(p / s).max(), s_weight=1)
+    # return jnp.log(log_distance(s=s, p=p) * jnp.log(sp_prod(
+    #     s=s, p=p, sp_factor=(p / s).max(), s_weight=(jnp.log(p) / s))))
 
 
 def compute_rmse(data: np.ndarray, ref_circuit_data: Optional[np.ndarray]):

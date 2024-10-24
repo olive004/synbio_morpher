@@ -29,7 +29,7 @@
                 "name": "IntaRNA",
                 "postprocess": true
             },
-            "interaction_file_keyword": ["energies", "eqconstants", "binding_rates_dissociation"],
+            "interaction_file_keyword": ["energies", "eqconstants", "binding_rates_dissociation", "binding_sites"],
             "molecular_params": "./synbio_morpher/utils/common/configs/RNA_circuit/molecular_params.json",
             "experiment": {
                 "purpose": "gather_interaction_stats"
@@ -96,7 +96,8 @@
                 "threshold_steady_states": 0.05, 
                 "use_rate_scaling": true,
                 "method": "Dopri5",
-                "stepsize_controller": "adaptive"
+                "stepsize_controller": "adaptive",
+                "use_initial_to_add_signal": true
             },
             "simulation_steady_state": {
                 "method": "Dopri5",

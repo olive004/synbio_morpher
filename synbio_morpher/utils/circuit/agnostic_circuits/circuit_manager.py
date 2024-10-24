@@ -430,40 +430,36 @@ class CircuitModeller():
 
         def prepare_batch_params(circuits: List[Circuit]):
 
-            b_steady_states = [None] * len(circuits)
+            b_steady_states = np.zeros((len(circuits), len(circuits[0].model.species)))
+            b_og_states = np.array([c.result_collector.get_result(
+                        'steady_states').analytics['steady_states'].flatten(
+            ) for i, c in enumerate(circuits)])
             b_reverse_rates = np.zeros(
                 (len(circuits), *circuits[0].qreactions.reactions.reverse_rates.shape))
 
-            species_chosen = circuits[0].model.species[np.argmax(
-                signal.onehot)]
-            other_species = flatten_listlike(
-                [r.output for r in circuits[0].model.reactions if species_chosen in r.input])
-            onehots = np.array([1 if s in other_species + [species_chosen]
-                               else 0 for s in circuits[0].model.species])
+            add_sig_to_all_sigspecies = False 
+            onehots = signal.onehot
+            if add_sig_to_all_sigspecies and (not self.use_initial_to_add_signal):
+                species_chosen = circuits[0].model.species[np.argmax(
+                    signal.onehot)]
+                other_species = flatten_listlike(
+                    [r.output for r in circuits[0].model.reactions if species_chosen in r.input])
+                onehots_all_sigspecies = np.array([1 if s in other_species + [species_chosen]
+                                else 0 for s in circuits[0].model.species])
+                onehots = onehots_all_sigspecies
             for i, c in enumerate(circuits):
                 analytics_stst = c.result_collector.get_result(
                         'steady_states').analytics
                 if analytics_stst is None:
                     raise ValueError(f'Could not find analytics for steady state result.')
                 if not c.use_prod_and_deg:
-                    stst = analytics_stst['steady_states'].flatten()
-                    if self.use_initial_to_add_signal:
-                        inst = analytics_stst['initial_steady_states'].flatten()
-                        b_steady_states[i] = stst * ((signal.onehot == 0) * 1) + \
-                            (inst *
-                             signal.func.keywords['target']) * signal.onehot
-                    else:
-                        b_steady_states[i] = stst * ((onehots == 0) * 1) + \
-                            (stst * signal.func.keywords['target']) * onehots
-
+                    stst_key = 'initial_steady_states' if self.use_initial_to_add_signal else 'steady_states'
+                    stst = analytics_stst[stst_key].flatten()
+                    b_steady_states[i] = stst * ((onehots == 0) * 1) + \
+                        (stst * signal.func.keywords['target']) * onehots
                 else:
                     b_steady_states[i] = analytics_stst['steady_states'].flatten()
                 b_reverse_rates[i] = c.qreactions.reactions.reverse_rates
-            b_steady_states = np.asarray(b_steady_states)
-            b_reverse_rates = np.asarray(b_reverse_rates)
-            # b_og_states = np.array([analytics_stst['steady_states'].flatten(
-            # ) * onehots + b_steady_states[i] * ((onehots == 0) * 1) for i, c in enumerate(circuits)])
-            b_og_states = b_steady_states * onehots + b_steady_states * ((onehots == 0) * 1)
 
             return b_steady_states, b_reverse_rates, b_og_states
 
@@ -527,8 +523,8 @@ class CircuitModeller():
             analytics_func = jax.vmap(partial(
                 generate_analytics, time=t, labels=[
                     s.name for s in ref_circuit.model.species],
-                signal_onehot=signal.onehot, signal_time=signal_time,
-                ref_circuit_data=ref_circuit_data))
+                signal_onehot=signal.onehot, signal_time=signal_time, # type: ignore
+                ref_circuit_data=ref_circuit_data)) # type: ignore
             b_analytics = analytics_func(
                 data=b_new_copynumbers[ref_idx:ref_idx2])
             b_analytics_l = append_nest_dicts(

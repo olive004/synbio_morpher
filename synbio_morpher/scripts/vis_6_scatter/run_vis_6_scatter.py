@@ -71,6 +71,8 @@ def main(config=None, data_writer=None):
             if selection_conditions:
                 data_selected = select_rows_by_conditional_cols(
                     data, selection_conditions)
+                hue = 'adaptation' if (
+                    ~data_selected['adaptation'].isna()).sum() == int(0.5 * len(data_selected)) else 'overshoot'
 
             if data_selected.empty:
                 continue
