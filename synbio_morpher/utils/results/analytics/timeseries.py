@@ -35,20 +35,17 @@ def compute_overshoot(steady_states, peaks):
     return jnp.absolute(peaks - steady_states)
 
 
-def compute_peaks_deprecated(initial_steady_states, final_steady_states, maxa, mina):
+def compute_peaks_deprecated(initial_steady_states: jnp.ndarray, final_steady_states: jnp.ndarray, maxa: jnp.ndarray, mina: jnp.ndarray):
     return jnp.where(
         initial_steady_states < final_steady_states,
         maxa - mina + initial_steady_states,
         mina - maxa + initial_steady_states
     )
-    
-    
-def compute_peaks(final_steady_states, maxa, mina):
-    return jnp.where(
-        maxa > final_steady_states,
-        maxa,
-        mina
-    )
+
+
+def compute_peaks(initial_steady_states: jnp.ndarray, final_steady_states: jnp.ndarray, maxa: jnp.ndarray, mina: jnp.ndarray):
+    peak = jnp.where(final_steady_states > initial_steady_states, mina, maxa)
+    return jnp.where(initial_steady_states < peak, peak, maxa if peak is mina else mina)
 
 
 def calculate_precision_core(output_diff, starting_states, signal_diff, signal_0) -> jnp.ndarray:
