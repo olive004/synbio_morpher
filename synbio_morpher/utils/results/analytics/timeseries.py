@@ -43,8 +43,12 @@ def compute_peaks_deprecated(initial_steady_states, final_steady_states, maxa, m
     )
     
     
-def compute_peaks(initial_steady_states, final_steady_states, maxa, mina):
-    return maxa
+def compute_peaks(final_steady_states, maxa, mina):
+    return jnp.where(
+        maxa > final_steady_states,
+        maxa,
+        mina
+    )
 
 
 def calculate_precision_core(output_diff, starting_states, signal_diff, signal_0) -> jnp.ndarray:
@@ -210,7 +214,7 @@ def generate_base_analytics(data: jnp.ndarray, t: jnp.ndarray, labels: List[str]
         steady_states=analytics['steady_states']
     )
 
-    peaks = compute_peaks(analytics['initial_steady_states'], analytics['steady_states'],
+    peaks = compute_peaks(analytics['steady_states'],
                           analytics['max_amount'], analytics['min_amount'])
 
     analytics['overshoot'] = compute_overshoot(
