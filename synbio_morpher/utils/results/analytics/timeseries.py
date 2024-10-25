@@ -211,7 +211,7 @@ def generate_base_analytics(data: jnp.ndarray, t: jnp.ndarray, labels: List[str]
         steady_states=analytics['steady_states']
     )
 
-    peaks = compute_peaks(analytics['steady_states'],
+    peaks = compute_peaks(analytics['initial_steady_states'], analytics['steady_states'],
                           analytics['max_amount'], analytics['min_amount'])
 
     analytics['overshoot'] = compute_overshoot(
