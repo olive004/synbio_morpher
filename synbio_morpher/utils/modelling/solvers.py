@@ -6,31 +6,31 @@ from synbio_morpher.srv.parameter_prediction.simulator import make_piecewise_ste
 def get_diffrax_solver(solver_type):
 
     solvers = {
-        'Tsit5': dfx.Tsit5(),
-        'Dopri5': dfx.Dopri5(),
-        'Dopri8': dfx.Dopri8(),
-        'Heun': dfx.Heun(),
-        'Euler': dfx.Euler(),
-        'Midpoint': dfx.Midpoint(),
-        'Ralston': dfx.Ralston(),
-        'Bosh3': dfx.Bosh3(),
-        'ImplicitEuler': dfx.ImplicitEuler(),
-        'Kvaerno3': dfx.Kvaerno3(),
-        'Kvaerno4': dfx.Kvaerno4(),
-        'Kvaerno5': dfx.Kvaerno5(),
-        'Sil3': dfx.Sil3(),
-        'KenCarp3': dfx.KenCarp3(),
-        'KenCarp4': dfx.KenCarp4(),
-        'KenCarp5': dfx.KenCarp5(),
-        'SemiImplicitEuler': dfx.SemiImplicitEuler(),
-        'ReversibleHeun': dfx.ReversibleHeun(),
-        'LeapfrogMidpoint': dfx.LeapfrogMidpoint()
+        'Tsit5': dfx.Tsit5,
+        'Dopri5': dfx.Dopri5,
+        'Dopri8': dfx.Dopri8,
+        'Heun': dfx.Heun,
+        'Euler': dfx.Euler,
+        'Midpoint': dfx.Midpoint,
+        'Ralston': dfx.Ralston,
+        'Bosh3': dfx.Bosh3,
+        'ImplicitEuler': dfx.ImplicitEuler,
+        'Kvaerno3': dfx.Kvaerno3,
+        'Kvaerno4': dfx.Kvaerno4,
+        'Kvaerno5': dfx.Kvaerno5,
+        'Sil3': dfx.Sil3,
+        'KenCarp3': dfx.KenCarp3,
+        'KenCarp4': dfx.KenCarp4,
+        'KenCarp5': dfx.KenCarp5,
+        'SemiImplicitEuler': dfx.SemiImplicitEuler,
+        'ReversibleHeun': dfx.ReversibleHeun,
+        'LeapfrogMidpoint': dfx.LeapfrogMidpoint
     }
 
     assert solver_type in list(solvers.keys(
     )), f'Diffrax solver option {solver_type} not found. See https://docs.kidger.site/diffrax/api/solvers/ode_solvers/ for valid solvers.'
 
-    return solvers[solver_type]
+    return solvers[solver_type]()
 
 
 def make_stepsize_controller(t0, t1, dt0, dt1, choice: str, **kwargs):
@@ -40,7 +40,7 @@ def make_stepsize_controller(t0, t1, dt0, dt1, choice: str, **kwargs):
     elif choice == 'piecewise':
         return make_piecewise_stepcontrol(t0=t0, t1=t1, dt0=dt0, dt1=dt1, **kwargs)
     elif choice == 'adaptive':
-        return dfx.PIDController(rtol=1e-3, atol=1e-5)
+        return dfx.PIDController(rtol=1e-7, atol=1e-9)
     else:
         raise ValueError(
             f'The stepsize controller option `{choice}` is not available.')

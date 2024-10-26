@@ -6,7 +6,7 @@
 # LICENSE file in the root directory of this source tree.
 
 from copy import deepcopy
-from typing import List
+from typing import List, Tuple, Union, Optional
 from functools import partial
 from datetime import datetime
 import multiprocessing
@@ -20,6 +20,7 @@ import logging
 import diffrax as dfx
 import numpy as np
 import jax
+import jax.numpy as jnp
 # jax.config.update('jax_platform_name', 'cpu')
 
 from scipy import integrate
@@ -28,18 +29,24 @@ from bioreaction.simulation.simfuncs.basic_de import bioreaction_sim, bioreactio
 from bioreaction.simulation.manager import simulate_steady_states
 
 from synbio_morpher.srv.parameter_prediction.simulator import SIMULATOR_UNITS, make_piecewise_stepcontrol
-from synbio_morpher.srv.parameter_prediction.interactions import InteractionDataHandler, InteractionSimulator, INTERACTION_FIELDS_TO_WRITE
+from synbio_morpher.srv.parameter_prediction.interactions import InteractionSimulator, INTERACTION_FIELDS_TO_WRITE, MolecularInteractions
 from synbio_morpher.utils.circuit.agnostic_circuits.circuit import Circuit, interactions_to_df
 from synbio_morpher.utils.misc.helper import vanilla_return
 from synbio_morpher.utils.misc.numerical import invert_onehot, zero_out_negs
 from synbio_morpher.utils.misc.runtime import clear_caches
 from synbio_morpher.utils.misc.type_handling import flatten_nested_dict, flatten_listlike, append_nest_dicts
 from synbio_morpher.utils.results.visualisation import VisODE
-from synbio_morpher.utils.modelling.deterministic import bioreaction_sim_dfx_expanded
+from synbio_morpher.utils.modelling.deterministic import bioreaction_sim_dfx_expanded, bioreaction_sim_dfx_naive
 from synbio_morpher.utils.modelling.solvers import get_diffrax_solver, make_stepsize_controller
-from synbio_morpher.utils.evolution.mutation import implement_mutation
+from synbio_morpher.utils.evolution.evolver import implement_mutation
+from synbio_morpher.utils.evolution.mutation import Mutations
 from synbio_morpher.utils.results.analytics.timeseries import generate_analytics
 from synbio_morpher.utils.results.result_writer import ResultWriter
+
+
+# Set modelling environment variables
+# os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
+os.environ["XLA_PYTHON_CLIENT_ALLOCATOR"] = "platform"
 
 
 def wrap_queue_res(k, inp, q, f, **kwargs):
@@ -54,7 +61,8 @@ def wrap_queue_res(k, inp, q, f, **kwargs):
 class CircuitModeller():
 
     def __init__(self, result_writer=None, config: dict = {}) -> None:
-        self.result_writer = ResultWriter() if result_writer is None else result_writer
+        self.result_writer = ResultWriter(
+            None) if result_writer is None else result_writer
         self.steady_state_args = config['simulation_steady_state']
         self.simulator_args = config['interaction_simulator']
         self.simulation_args = config.get('simulation', {})
@@ -81,11 +89,13 @@ class CircuitModeller():
         self.debug_mode = config.get('experiment', {}).get('debug_mode', False)
         self.sim_func = None
 
-        # os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
-        os.environ["XLA_PYTHON_CLIENT_ALLOCATOR"] = "platform"
-
         jax.config.update('jax_platform_name', config.get(
             'simulation', {}).get('device', 'cpu'))
+
+        if self.debug_mode:
+            jax.config.update("jax_disable_jit", True)
+            if self.debug_mode == 1:
+                os.environ["EQX_ON_ERROR"] = "breakpoint"
 
     def init_circuit(self, circuit: Circuit) -> Circuit:
         if self.simulation_args.get('use_rate_scaling', True):
@@ -102,7 +112,8 @@ class CircuitModeller():
     def compute_interactions_core(self, circuit: Circuit) -> Circuit:
 
         if circuit.interactions_state == 'uninitialised' and not self.debug_mode:
-            if self.simulator_args['compute_by_filename'] and circuit.subname == "ref_circuit" and os.path.exists(circuit.data.source):
+            if self.simulator_args['compute_by_filename'] and (circuit.subname == "ref_circuit") and (
+                circuit.data.source is not None) and os.path.exists(circuit.data.source):
                 filename = circuit.data.source
             else:
                 filename = None
@@ -213,7 +224,7 @@ class CircuitModeller():
                 circuits[i] = self.compute_interactions(c)
         return circuits
 
-    def run_interaction_simulator(self, species: List[Species], quantities, filename=None) -> InteractionDataHandler:
+    def run_interaction_simulator(self, species: List[Species], quantities, filename=None) -> MolecularInteractions:
         data = {s: s.physical_data for s in species}
         # if filename is not None:
         #     return self.interaction_simulator.run((filename, data), compute_by_filename=True)
@@ -241,8 +252,8 @@ class CircuitModeller():
         return circuits
 
     def compute_steady_states(self, circuits: List[Circuit],
-                              solver_type: str = 'jax', use_zero_rates: bool = False) -> List[Circuit]:
-
+                              solver_type: str = 'jax', use_zero_rates: bool = False) -> Tuple[np.ndarray, np.ndarray]:
+        t = np.zeros(0)
         if solver_type == 'ivp':
             b_copynumbers = []
             for circuit in circuits:
@@ -253,14 +264,14 @@ class CircuitModeller():
                         ((circuit.qreactions.reactions.reverse_rates -
                           circuit.qreactions.reactions.forward_rates) < 1e2) * 1
 
-                signal_onehot = np.zeros_like(
-                    circuit.signal.reactions_onehot) if circuit.use_prod_and_deg else np.zeros_like(circuit.signal.onehot)
+                signal_onehot = jnp.zeros_like(
+                    circuit.signal.reactions_onehot) if circuit.use_prod_and_deg else jnp.zeros_like(circuit.signal.onehot)
                 steady_state_result = integrate.solve_ivp(
                     partial(bioreaction_sim, args=None, reactions=r, signal=vanilla_return,
                             signal_onehot=signal_onehot),
                     (self.t0, self.t1),
                     y0=circuit.qreactions.quantities,
-                    method=self.steady_state_args.get('method', 'DOP853'))
+                    method=self.steady_state_args.get('method', 'Dopri5'))
                 if not steady_state_result.success:
                     raise ValueError(
                         'Steady state could not be found through solve_ivp - possibly because units '
@@ -271,6 +282,7 @@ class CircuitModeller():
 
         elif solver_type == 'diffrax':
             ref_circuit = circuits[0]
+            # Assuming all forward rates are the same
             forward_rates = ref_circuit.qreactions.reactions.forward_rates
             reverse_rates = np.asarray(
                 [c.qreactions.reactions.reverse_rates for c in circuits])
@@ -278,17 +290,27 @@ class CircuitModeller():
             signal_onehot = np.zeros_like(
                 ref_circuit.signal.reactions_onehot) if ref_circuit.use_prod_and_deg else np.zeros_like(ref_circuit.signal.onehot)
 
-            sim_func = jax.vmap(partial(bioreaction_sim_dfx_expanded,
-                                        t0=self.t0, t1=self.t1, dt0=self.dt0,
-                                        signal=vanilla_return, signal_onehot=signal_onehot,
-                                        inputs=ref_circuit.qreactions.reactions.inputs,
-                                        outputs=ref_circuit.qreactions.reactions.outputs,
-                                        forward_rates=forward_rates,
-                                        solver=get_diffrax_solver(
-                                            self.steady_state_args.get('method', 'Dopri5')),
-                                        saveat=dfx.SaveAt(
-                                            ts=np.linspace(self.t0, self.t1, int(np.min([200, self.t1-self.t0])))),
-                                        stepsize_controller=make_stepsize_controller(self.t0, self.t1, self.dt0, self.dt1, choice='piecewise')))
+            if self.debug_mode == 2:
+                sim_func = partial(bioreaction_sim_dfx_naive,
+                                   t0=self.t0, t1=self.t1, dt0=self.dt0,
+                                   inputs=ref_circuit.qreactions.reactions.inputs,
+                                   outputs=ref_circuit.qreactions.reactions.outputs,
+                                   forward_rates=forward_rates,
+                                   save_every_n_tsteps=5
+                                   )
+            else:
+                sim_func = jax.vmap(partial(bioreaction_sim_dfx_expanded,
+                                            t0=self.t0, t1=self.t1, dt0=self.dt0,
+                                            signal=vanilla_return, signal_onehot=signal_onehot,
+                                            inputs=ref_circuit.qreactions.reactions.inputs,
+                                            outputs=ref_circuit.qreactions.reactions.outputs,
+                                            forward_rates=forward_rates,
+                                            solver=get_diffrax_solver(
+                                                self.steady_state_args.get('method', 'Dopri5')),
+                                            saveat=dfx.SaveAt(
+                                                ts=np.linspace(self.t0, self.t1, int(np.min([200, self.t1-self.t0])))),
+                                            stepsize_controller=make_stepsize_controller(self.t0, self.t1, self.dt0, self.dt1,
+                                                                                         choice=self.steady_state_args.get('stepsize_controller', 'adaptive'))))
 
             b_copynumbers, t = simulate_steady_states(
                 y0=y0, total_time=self.tmax, sim_func=sim_func,
@@ -299,8 +321,8 @@ class CircuitModeller():
 
             b_copynumbers = np.swapaxes(b_copynumbers, 1, 2)
 
-        elif solver_type == 'torchode':
-            raise NotImplementedError
+        elif solver_type in ['torchode', 'torchdiffeq']:
+            raise NotImplementedError()
             # import torchode as tode
             # import torch
             # ref_circuit = circuits[0]
@@ -327,28 +349,31 @@ class CircuitModeller():
             # self.solver = torch.compile(solver)
             # sol = self.solver.solve(prob)
 
-        elif solver_type == 'torchdiffeq':
-            t_eval = np.linspace(self.t0, self.t1, 100)
-            raise NotImplementedError
+        # elif solver_type == 'torchdiffeq':
+            # t_eval = np.linspace(self.t0, self.t1, 100)
             # tdeq.odeint_adjoint(sim_func, starting_states, t)
+
+        else:
+            raise ValueError(
+                f'The chosen solver `{solver_type}` is not supported.')
 
         return np.asarray(b_copynumbers), np.squeeze(t)
 
-    def model_circuit(self, y0: np.ndarray, circuit: Circuit):
-        assert np.shape(y0)[circuit.time_axis] == 1, 'Please only use 1-d ' \
-            f'initial copynumbers instead of {np.shape(y0)}'
+    # def model_circuit(self, y0: np.ndarray, circuit: Circuit):
+    #     assert np.shape(y0)[circuit.time_axis] == 1, 'Please only use 1-d ' \
+    #         f'initial copynumbers instead of {np.shape(y0)}'
 
-        modelling_func = partial(bioreaction_sim, args=None,
-                                 reactions=circuit.qreactions.reactions,
-                                 signal=circuit.signal.func,
-                                 signal_onehot=circuit.signal.reactions_onehot)
+    #     modelling_func = partial(bioreaction_sim, args=None,
+    #                              reactions=circuit.qreactions.reactions,
+    #                              signal=circuit.signal.func,
+    #                              signal_onehot=jnp.array(circuit.signal.reactions_onehot))
 
-        copynumbers = self.iterate_modelling_func(y0, modelling_func,
-                                                  max_time=self.t1,
-                                                  time_interval=self.dt0,
-                                                  signal_f=circuit.signal.func,
-                                                  signal_onehot=circuit.signal.onehot)
-        return copynumbers
+    #     copynumbers = self.iterate_modelling_func(y0, modelling_func,
+    #                                               max_time=self.t1,
+    #                                               time_interval=self.dt0,
+    #                                               signal_f=circuit.signal.func,
+    #                                               signal_onehot=circuit.signal.onehot)
+    #     return copynumbers
 
     def iterate_modelling_func(self, init_copynumbers,
                                modelling_func, max_time,
@@ -375,15 +400,15 @@ class CircuitModeller():
         return copynumbers
 
     def scale_rates(self, circuits: List[Circuit], batch: bool = True) -> List[Circuit]:
-        forward_rates = [None] * len(circuits)
-        reverse_rates = [None] * len(circuits)
+        forward_rates = np.zeros(
+            (len(circuits), *circuits[0].qreactions.reactions.forward_rates.shape))
+        reverse_rates = np.zeros(
+            (len(circuits), *circuits[0].qreactions.reactions.forward_rates.shape))
 
         for i, c in enumerate(circuits):
             forward_rates[i] = np.array(c.qreactions.reactions.forward_rates)
             reverse_rates[i] = np.array(c.qreactions.reactions.reverse_rates)
 
-        forward_rates, reverse_rates = np.array(
-            forward_rates), np.array(reverse_rates)
         rate_max = np.max([np.max(np.asarray(forward_rates)),
                           np.max(np.asarray(reverse_rates))])
 
@@ -391,7 +416,7 @@ class CircuitModeller():
         #     circuits[i].qreactions.reactions.forward_rates = circuits[i].qreactions.reactions.forward_rates / rate_max
         #     circuits[i].qreactions.reactions.reverse_rates = circuits[i].qreactions.reactions.reverse_rates / rate_max
 
-        self.dt0 = np.min([1 / (5 * rate_max), 0.1])
+        self.dt0 = np.min([1 / (5 * rate_max), self.dt0])
         self.dt1 = self.dt1_factor * self.dt0
 
         return circuits
@@ -405,37 +430,36 @@ class CircuitModeller():
 
         def prepare_batch_params(circuits: List[Circuit]):
 
-            b_steady_states = [None] * len(circuits)
-            b_reverse_rates = [None] * len(circuits)
+            b_steady_states = np.zeros((len(circuits), len(circuits[0].model.species)))
+            b_og_states = np.array([c.result_collector.get_result(
+                        'steady_states').analytics['steady_states'].flatten( # type: ignore
+            ) for i, c in enumerate(circuits)])
+            b_reverse_rates = np.zeros(
+                (len(circuits), *circuits[0].qreactions.reactions.reverse_rates.shape))
 
-            species_chosen = circuits[0].model.species[np.argmax(
-                signal.onehot)]
-            other_species = flatten_listlike(
-                [r.output for r in circuits[0].model.reactions if species_chosen in r.input])
-            onehots = np.array([1 if s in other_species + [species_chosen]
-                               else 0 for s in circuits[0].model.species])
+            add_sig_to_all_sigspecies = False 
+            onehots = signal.onehot
+            if add_sig_to_all_sigspecies and (not self.use_initial_to_add_signal):
+                species_chosen = circuits[0].model.species[np.argmax(
+                    signal.onehot)]
+                other_species = flatten_listlike(
+                    [r.output for r in circuits[0].model.reactions if species_chosen in r.input])
+                onehots_all_sigspecies = np.array([1 if s in other_species + [species_chosen]
+                                else 0 for s in circuits[0].model.species])
+                onehots = onehots_all_sigspecies
             for i, c in enumerate(circuits):
+                analytics_stst = c.result_collector.get_result(
+                        'steady_states').analytics
+                if analytics_stst is None:
+                    raise ValueError(f'Could not find analytics for steady state result.')
                 if not c.use_prod_and_deg:
-                    stst = c.result_collector.get_result(
-                        'steady_states').analytics['steady_states'].flatten()
-                    if self.use_initial_to_add_signal:
-                        inst = c.result_collector.get_result(
-                            'steady_states').analytics['initial_steady_states'].flatten()
-                        b_steady_states[i] = stst * ((signal.onehot == 0) * 1) + \
-                            (inst *
-                             signal.func.keywords['target']) * signal.onehot
-                    else:
-                        b_steady_states[i] = stst * ((onehots == 0) * 1) + \
-                            (stst * signal.func.keywords['target']) * onehots
-
+                    stst_key = 'initial_steady_states' if self.use_initial_to_add_signal else 'steady_states'
+                    stst = analytics_stst[stst_key].flatten()
+                    b_steady_states[i] = stst * ((onehots == 0) * 1) + \
+                        (stst * signal.func.keywords['target']) * onehots
                 else:
-                    b_steady_states[i] = c.result_collector.get_result(
-                        'steady_states').analytics['steady_states'].flatten()
+                    b_steady_states[i] = analytics_stst['steady_states'].flatten()
                 b_reverse_rates[i] = c.qreactions.reactions.reverse_rates
-            b_steady_states = np.asarray(b_steady_states)
-            b_reverse_rates = np.asarray(b_reverse_rates)
-            b_og_states = np.array([c.result_collector.get_result('steady_states').analytics['steady_states'].flatten(
-            ) * onehots + b_steady_states[i] * ((onehots == 0) * 1) for i, c in enumerate(circuits)])
 
             return b_steady_states, b_reverse_rates, b_og_states
 
@@ -458,20 +482,20 @@ class CircuitModeller():
             b_new_copynumbers = np.swapaxes(b_new_copynumbers, 1, 2)
 
         # Fix first entry for signal species -> Warning: deletes final element in simulated data
+        # We need to do this so that the precision and sensitivity calculations are correct
         for i, c in enumerate(circuits):
             if not c.use_prod_and_deg:
                 b_new_copynumbers[i, :, :] = np.concatenate([np.expand_dims(
                     b_og_states[i, :], axis=1), b_new_copynumbers[i, :, :-1]], axis=1)
 
         # Get analytics batched too
-
         ref_circuits = [s for s in circuits if s.subname == 'ref_circuit']
         ref_idxs = [circuits.index(s) for s in ref_circuits]
         b_analytics_l = []
 
         # First check if the ref_circuit is leading
         if ref_circuit.name not in [c.name for c in ref_circuits]:
-            ref_idxs.insert(0, None)
+            ref_idxs.insert(0, None) # type: ignore
         else:
             assert circuits.index(
                 ref_circuit) == 0 or circuits[0].name == ref_circuit.name, f'The reference circuit should be leading or at idx 0, but is at idx {circuits.index(ref_circuit)}'
@@ -499,8 +523,8 @@ class CircuitModeller():
             analytics_func = jax.vmap(partial(
                 generate_analytics, time=t, labels=[
                     s.name for s in ref_circuit.model.species],
-                signal_onehot=signal.onehot, signal_time=signal_time,
-                ref_circuit_data=ref_circuit_data))
+                signal_onehot=signal.onehot, signal_time=signal_time, # type: ignore
+                ref_circuit_data=ref_circuit_data)) # type: ignore
             b_analytics = analytics_func(
                 data=b_new_copynumbers[ref_idx:ref_idx2])
             b_analytics_l = append_nest_dicts(
@@ -516,13 +540,16 @@ class CircuitModeller():
         for i, (circuit, analytics) in enumerate(zip(circuits, b_analytics_l)):
             if self.discard_numerical_mutations and circuit.subname != 'ref_circuit':
                 sig_data = None
+                vis_func = lambda **kwargs: kwargs
             else:
                 sig_data = b_new_copynumbers[i]
+                vis_func = VisODE().plot
+
             circuits[i].result_collector.add_result(
                 data=sig_data,
                 name='signal',
                 category='time_series',
-                vis_func=VisODE().plot,
+                vis_func=vis_func,
                 analytics=analytics,
                 vis_kwargs={'t': t,
                             'legend': circuit.species_names,
@@ -532,20 +559,24 @@ class CircuitModeller():
         clear_caches()
         return circuits
 
-    def make_subcircuit(self, circuit: Circuit, mutation_name: str, mutation=None):
+    def make_subcircuit(self, circuit: Circuit, mutation_name: str, mutation: Optional[Mutations] = None):
 
         subcircuit = deepcopy(circuit)
         subcircuit.reset_to_initial_state()
         subcircuit.strip_to_core()
         if mutation is None:
-            mutation = circuit.mutations.get(mutation_name)
+            mutation_from_circ = circuit.mutations[mutation_name]
+            if type(mutation_from_circ) == Mutations:
+                mutation = mutation_from_circ
+            else:
+                raise ValueError(f'Mutation not found for circuit {circuit}.')
         subcircuit.subname = mutation_name
 
         subcircuit = implement_mutation(circuit=subcircuit, mutation=mutation)
         return subcircuit
 
     def load_mutations(self, circuit: Circuit):
-        subcircuits = [Circuit(config=None, as_mutation=True)
+        subcircuits = [Circuit(config={}, as_mutation=True)
                        for m in flatten_nested_dict(circuit.mutations)]
         for i, (m_name, m) in enumerate(flatten_nested_dict(circuit.mutations).items()):
             if not m:
@@ -581,13 +612,12 @@ class CircuitModeller():
             # logging.info(f'Running methods on mutation {name} ({i})')
             if include_normal_run and i == 0:
                 self.result_writer.unsubdivide_last_dir()
-                circuit = self.apply_to_circuit(
-                    circuit, methods, ref_circuit=circuit)
+                circuit = self.apply_to_circuit(circuit, methods)
                 self.result_writer.subdivide_writing(
                     'mutations', safe_dir_change=False)
             subcircuit = self.make_subcircuit(circuit, name, mutation)
             self.result_writer.subdivide_writing(name, safe_dir_change=False)
-            self.apply_to_circuit(subcircuit, methods, ref_circuit=circuit)
+            self.apply_to_circuit(subcircuit, methods)
             self.result_writer.unsubdivide_last_dir()
         self.result_writer.unsubdivide()
         return circuit
@@ -628,7 +658,9 @@ class CircuitModeller():
                             # t0=True, t1=True),
                             ts=np.linspace(self.t0, self.t1, 500)),  # int(np.min([500, self.t1-self.t0]))))
                         # ts=np.interp(np.logspace(0, 2, num=500), [1, np.power(10, 2)], [self.t0, self.t1])),  # Save more points early in the sim
-                        stepsize_controller=make_stepsize_controller(self.t0, self.t1, self.dt0, self.dt1, choice='piecewise'))))
+                        stepsize_controller=make_stepsize_controller(self.t0, self.t1, self.dt0, self.dt1,
+                                                                     choice=self.simulation_args.get('stepsize_controller', 'adaptive'))
+                        )))
 
         elif self.simulation_args['solver'] == 'ivp':
             # way slower
@@ -648,7 +680,7 @@ class CircuitModeller():
                         ),
                         t_span=(self.t0, self.t1),
                         y0=y0i,
-                        method=self.steady_state_args.get('method', 'DOP853')
+                        method=self.steady_state_args.get('method', 'Dopri5')
                     )
                     if not signal_result.success:
                         raise ValueError(
@@ -665,11 +697,11 @@ class CircuitModeller():
     def batch_circuits(self,
                        circuits: List[Circuit],
                        methods: dict,
-                       batch_size: int = None,
+                       batch_size: int = 0,
                        include_normal_run: bool = True,
                        write_to_subsystem=True):
 
-        batch_size = len(circuits) if batch_size is None else batch_size
+        batch_size = len(circuits) if batch_size == 0 else batch_size
 
         num_subcircuits = [len(flatten_nested_dict(
             c.mutations)) + 1 for c in circuits]
@@ -699,7 +731,7 @@ class CircuitModeller():
 
             # Preallocate then create subcircuits - otherwise memory leak
             subcircuits_time = datetime.now()
-            subcircuits = [None] * sum(num_subcircuits[vi:vf])
+            subcircuits = list([circuits[0]] * sum(num_subcircuits[vi:vf]))
             c_idx = 0
             for i, circuit in enumerate(circuits[vi: vf]):
                 curr_subcircuits = self.load_mutations(circuit)
@@ -708,9 +740,11 @@ class CircuitModeller():
                             len(curr_subcircuits)] = curr_subcircuits
                 c_idx = c_idx + 1+len(curr_subcircuits)
 
-            if None in subcircuits:
-                subcircuits = list(
-                    filter(lambda item: item is not None, subcircuits))
+            # if None in subcircuits:
+            #     subcircuits = list(
+            #         filter(lambda item: item is not None, subcircuits))
+            if c_idx < len(subcircuits):
+                subcircuits = subcircuits[:c_idx]
             subcircuits_time = datetime.now() - subcircuits_time
             logging.warning(
                 f'\t\tMaking subcircuits {int(sum(num_subcircuits[:vi]))} - {int(sum(num_subcircuits[:vf]))} took {subcircuits_time.total_seconds()}s')
@@ -741,9 +775,9 @@ class CircuitModeller():
     def run_batch(self,
                   subcircuits: List[Circuit],
                   methods: dict,
-                  leading_ref_circuit: Circuit = None,
+                  leading_ref_circuit: Circuit,
                   include_normal_run: bool = True,
-                  write_to_subsystem: bool = True) -> List[Circuit]:
+                  write_to_subsystem: bool = True) -> Circuit:
 
         for method, kwargs in methods.items():
             method_time = datetime.now()
@@ -792,6 +826,8 @@ class CircuitModeller():
         ref_circuits = [c for c in subcircuits if c.subname == 'ref_circuit']
         if ref_circuits:
             ref_circuit = ref_circuits[-1]
+        else:
+            ref_circuit = leading_ref_circuit
         del subcircuits
         return ref_circuit
 

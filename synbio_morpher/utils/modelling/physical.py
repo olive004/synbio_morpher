@@ -6,6 +6,7 @@
 # LICENSE file in the root directory of this source tree. 
     
 import numpy as np
+import jax.numpy as jnp
 from synbio_morpher.utils.misc.units import SCIENTIFIC
 
 
@@ -20,7 +21,7 @@ from synbio_morpher.utils.misc.units import SCIENTIFIC
 #     return F
 
 
-def equilibrium_constant_reparameterisation(E, initial: np.array):
+def equilibrium_constant_reparameterisation(E, initial: jnp.ndarray):
     """ Input: E is $\Delta G$ of binding in kcal/mol. 
     Output: equilibrium constant
 
@@ -28,7 +29,7 @@ def equilibrium_constant_reparameterisation(E, initial: np.array):
     equation was derived under the assumption that all unbound species 
     start with the same concentration and have the same interactions """
     # return 1/initial * (1/F(E) - 1)
-    Fs = np.exp(-0.8 * (E + 10))
+    Fs = jnp.exp(-0.8 * (E + 10))
     return Fs/initial
 
 
@@ -59,3 +60,8 @@ def eqconstant_to_rates(eqconstants, k_a):
     
     k_d = np.divide(k_a, eqconstants)
     return k_a*np.ones_like(k_d), k_d
+
+
+def rates_to_eqconstant(k_a, k_d):
+    eqconstants = np.divide(k_a, k_d)
+    return eqconstants
