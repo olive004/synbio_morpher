@@ -52,7 +52,7 @@ def calculate_precision_core(output_diff, starting_states, signal_diff, signal_0
     numer = jnp.where(signal_0 != 0, signal_diff / signal_0, 1)
     denom = jnp.where((starting_states != 0).astype(int),
                       output_diff / starting_states, 1)
-    return jnp.absolute(jnp.divide(numer, denom)) # type: ignore
+    return jnp.absolute(jnp.divide(numer, denom))  # type: ignore
     # return jnp.divide(1, precision)
 
 
@@ -70,8 +70,8 @@ def calculate_sensitivity_core(output_diff, starting_states, signal_diff, signal
 
     return jnp.where(signal_0 != 0,
                      jnp.abs(jnp.divide(
-                         numer, signal_diff / signal_0)), # type: ignore
-                     np.inf) # type: ignore
+                         numer, signal_diff / signal_0)),  # type: ignore
+                     np.inf)  # type: ignore
 
 
 def compute_sensitivity(signal_idx: int, starting_states, peaks):
@@ -86,11 +86,24 @@ def compute_sensitivity(signal_idx: int, starting_states, peaks):
     return calculate_sensitivity_core(output_diff, starting_states, signal_diff, signal_0)
 
 
+def compute_sensitivity2(signal_idx: int, starting_states, minv, maxv):
+    if signal_idx is None:
+        return None
+    # Using max instead of peaks because you can only add signal
+    signal_1 = maxv[signal_idx]
+    signal_0 = starting_states[signal_idx]
+
+    output_diff = maxv - minv
+    signal_diff = signal_1 - signal_0
+
+    return calculate_sensitivity_core(output_diff, starting_states, signal_diff, signal_0)
+
+
 def compute_sensitivity_simple(starting_states, peaks, signal_factor):
     numer = jnp.where((starting_states != 0).astype(int),
                       (peaks - starting_states) / starting_states, np.inf)
     return jnp.absolute(jnp.divide(
-        numer, signal_factor)) # type: ignore
+        numer, signal_factor))  # type: ignore
 
 
 def calculate_adaptation(s, p, alpha=3, s_center=7, p_center=7.5):
@@ -112,7 +125,7 @@ def calculate_adaptation(s, p, alpha=3, s_center=7, p_center=7.5):
     # return jnp.log10(log_distance(s=s, p=p) * jnp.log10(sp_prod(
     #     s=s, p=p, sp_factor=(p / s).max(), s_weight=(jnp.log10(p) / s))))
     return jnp.where((a > -jnp.inf) & (a < jnp.inf),
-                     a, 
+                     a,
                      jnp.nan)
 
 
@@ -200,7 +213,8 @@ def generate_base_analytics(data: jnp.ndarray, t: jnp.ndarray, labels: List[str]
 
     analytics['steady_states'] = data[:, -1]
 
-    analytics['RMSE'] = compute_rmse(data, ref_circuit_data).squeeze() # type: ignore
+    analytics['RMSE'] = compute_rmse(
+        data, ref_circuit_data).squeeze()  # type: ignore
 
     first_derivative = compute_derivative(data)
     if include_deriv:
@@ -264,11 +278,11 @@ def generate_differences_ratios(analytics: dict, ref_analytics) -> Tuple[dict, d
     return differences, ratios
 
 
-def generate_analytics(data: jnp.ndarray, time, labels: list, ref_circuit_data: Optional[jnp.ndarray]=None,
-                       signal_onehot: Optional[jnp.ndarray]=None, signal_time=None):
+def generate_analytics(data: jnp.ndarray, time, labels: list, ref_circuit_data: Optional[jnp.ndarray] = None,
+                       signal_onehot: Optional[jnp.ndarray] = None, signal_time=None):
     if data.shape[0] != len(labels):
         species_axis = data.shape.index(len(labels))
-        data = np.swapaxes(data, 0, species_axis) # type: ignore
+        data = np.swapaxes(data, 0, species_axis)  # type: ignore
     analytics = generate_base_analytics(data=data, t=time, labels=labels,
                                         signal_onehot=signal_onehot, signal_time=signal_time,
                                         ref_circuit_data=ref_circuit_data)
