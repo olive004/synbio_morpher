@@ -16,6 +16,49 @@ from synbio_morpher.utils.results.analytics.naming import DIFF_KEY, RATIO_KEY
 TIMEAXIS = 1
 
 
+def calculate_adaptation(s, p, alpha=3, s_center=7, p_center=7.5):
+    """ Adaptation = robustness to noise. Greater than 0 is good.
+    s = sensitivity, p = precision 
+    High when s > 1 and p > 10
+    """
+    s_log = jnp.log10(s)
+    p_log = jnp.log10(p)
+    a = -(alpha*(s_log - s_center)**2 + (p_log - p_center)**2) + 1000
+    return jnp.where((a > -jnp.inf) & (a < jnp.inf),
+                     a,
+                     jnp.nan)
+    
+    
+def compute_adaptability_full(ys_steady, ys_signal, idx_sig, use_sensitivity_func1):
+    """ ts: time series with dimensions [t, species] """
+
+    if use_sensitivity_func1:
+        peaks = compute_peaks(ys_steady[-1], ys_signal[-1],
+                              ys_signal.max(axis=0), ys_signal.min(axis=0))
+
+        s = compute_sensitivity(
+            signal_idx=idx_sig,
+            starting_states=ys_steady[-1],
+            peaks=peaks,
+        )
+    else:
+        s = compute_sensitivity2(
+            starting_states=ys_steady[-1],
+            minv=ys_signal.min(axis=0),
+            maxv=ys_signal.max(axis=0),
+            signal_0=ys_steady[-1, idx_sig],
+            signal_1=ys_signal[0, idx_sig]
+        )
+    p = compute_precision(
+        starting_states=ys_steady[-1],
+        steady_states=ys_signal[-1],
+        signal_0=ys_steady[-1, idx_sig],
+        signal_1=ys_signal[0, idx_sig])
+    a = calculate_adaptation(s, p)
+    
+    return a, s, p
+
+
 def compute_derivative(data):
     if data.shape[TIMEAXIS] <= 1:
         return np.ones_like(data) * np.inf
@@ -98,29 +141,6 @@ def compute_sensitivity_simple(starting_states, peaks, signal_factor):
                       (peaks - starting_states) / starting_states, np.inf)
     return jnp.absolute(jnp.divide(
         numer, signal_factor))  # type: ignore
-
-
-def calculate_adaptation(s, p, alpha=3, s_center=7, p_center=7.5):
-    """ Adaptation = robustness to noise. Greater than 0 is good.
-    s = sensitivity, p = precision 
-    High when s > 1 and p > 10
-    """
-    # a = jnp.exp(s) * s * p
-    # a = jnp.log10(s) * s * jnp.power(2, jnp.log10(p))
-    # a = jnp.exp(jnp.log10(s)) * jnp.exp(jnp.log10(p) - 1)
-    # a = jnp.log10(a)
-    s_log = jnp.log10(s)
-    p_log = jnp.log10(p)
-    a = -(alpha*(s_log - s_center)**2 + (p_log - p_center)**2) + 1000
-    # a = jnp.log10(log_distance(s=s, p=p)) * sp_prod(s, p)
-    # return sp_prod(s, p)
-    # return jnp.log10(log_distance(s=s, p=p)) * sp_prod(
-    #     s=s, p=p, sp_factor=(p / s).max(), s_weight=1)
-    # return jnp.log10(log_distance(s=s, p=p) * jnp.log10(sp_prod(
-    #     s=s, p=p, sp_factor=(p / s).max(), s_weight=(jnp.log10(p) / s))))
-    return jnp.where((a > -jnp.inf) & (a < jnp.inf),
-                     a,
-                     jnp.nan)
 
 
 def compute_rmse(data: np.ndarray, ref_circuit_data: Optional[np.ndarray]):

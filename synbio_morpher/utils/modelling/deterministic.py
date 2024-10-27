@@ -6,7 +6,7 @@
 # LICENSE file in the root directory of this source tree.
 
 from functools import partial
-from typing import Union
+from typing import Union, Optional
 import numpy as np
 import jax
 import jax.numpy as jnp
@@ -104,7 +104,7 @@ def bioreaction_sim_wrapper(qreactions: QuantifiedReactions, t0, t1, dt0,
 
 def bioreaction_sim_dfx_expanded(y0, t0, t1, dt0,
                                  inputs, outputs, forward_rates, reverse_rates,
-                                 signal, signal_onehot: Union[int, np.ndarray],
+                                 signal=None, signal_onehot: Optional[Union[int, np.ndarray]]=None,
                                  solver=dfx.Tsit5(),
                                  saveat=dfx.SaveAt(
                                      t0=True, t1=True, steps=True),
