@@ -86,13 +86,7 @@ def compute_sensitivity(signal_idx: int, starting_states, peaks):
     return calculate_sensitivity_core(output_diff, starting_states, signal_diff, signal_0)
 
 
-def compute_sensitivity2(signal_idx: int, starting_states, minv, maxv):
-    if signal_idx is None:
-        return None
-    # Using max instead of peaks because you can only add signal
-    signal_1 = maxv[signal_idx]
-    signal_0 = starting_states[signal_idx]
-
+def compute_sensitivity2(starting_states, minv, maxv, signal_1, signal_0):
     output_diff = maxv - minv
     signal_diff = signal_1 - signal_0
 
