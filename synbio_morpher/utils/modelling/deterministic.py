@@ -104,7 +104,7 @@ def bioreaction_sim_wrapper(qreactions: QuantifiedReactions, t0, t1, dt0,
 
 def bioreaction_sim_dfx_expanded(y0, t0, t1, dt0,
                                  inputs, outputs, forward_rates, reverse_rates,
-                                 signal=None, signal_onehot: Optional[Union[int, np.ndarray]]=None,
+                                 signal=None, signal_onehot: Optional[Union[int, np.ndarray]] = None,
                                  solver=dfx.Tsit5(),
                                  saveat=dfx.SaveAt(
                                      t0=True, t1=True, steps=True),
@@ -121,10 +121,10 @@ def bioreaction_sim_dfx_expanded(y0, t0, t1, dt0,
                 )
     )
     sol = dfx.diffeqsolve(term, solver,
-                           t0=t0, t1=t1, dt0=dt0,
-                           y0=y0.squeeze(),
-                           saveat=saveat, max_steps=max_steps,
-                           stepsize_controller=stepsize_controller)
+                          t0=t0, t1=t1, dt0=dt0,
+                          y0=y0.squeeze(),
+                          saveat=saveat, max_steps=max_steps,
+                          stepsize_controller=stepsize_controller)
     return sol.ts, sol.ys
 
 
@@ -133,6 +133,7 @@ def bioreaction_sim_dfx_naive(y0: np.ndarray, reverse_rates,
                               inputs, outputs, forward_rates,
                               save_every_n_tsteps: int = 1
                               ):
+    """ Naive version of bioreaction_sim_dfx_expanded that does not use diffrax's ODE solver. """
 
     y = y0.copy()
     saves_t = np.arange(t0, t1, dt0*save_every_n_tsteps)
