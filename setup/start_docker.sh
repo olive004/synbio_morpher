@@ -24,7 +24,8 @@ sudo docker create -it \
 --mount type=bind,source="$(pwd)",target=/workdir \
 genetic_glitch:latest
 sudo docker container start gcg
-sudo docker exec -it gcg /bin/bash 
+sudo docker exec -it gcg bash setup/post_install.sh
+sudo docker exec -it gcg /bin/bash
 # sudo docker container stop gcg
 
 # Docusaurus
