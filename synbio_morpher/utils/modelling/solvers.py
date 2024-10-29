@@ -95,9 +95,9 @@ def simulate_steady_states(y0, total_time, sim_func, t0, t1,
 
     ti = t0
     iter_time = datetime.now()
-    ys = y0
-    ys_full = ys
-    ts_full = 0
+    # ys = y0
+    # ys_full = ys
+    # ts_full = 0
     while True:
         if ti == t0:
             y00 = y0
