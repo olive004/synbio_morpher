@@ -9,24 +9,19 @@ from copy import deepcopy
 from typing import List, Tuple, Union, Optional
 from functools import partial
 from datetime import datetime
-import multiprocessing
-import threading
 import concurrent.futures
 import inspect
 import os
 import gc
-# import sys
 import logging
 import diffrax as dfx
 import numpy as np
 import jax
 import jax.numpy as jnp
-# jax.config.update('jax_platform_name', 'cpu')
-
 from scipy import integrate
+
 from bioreaction.model.data_containers import Species
 from bioreaction.simulation.simfuncs.basic_de import bioreaction_sim, bioreaction_sim_expanded
-from bioreaction.simulation.manager import simulate_steady_states
 
 from synbio_morpher.srv.parameter_prediction.simulator import SIMULATOR_UNITS, make_piecewise_stepcontrol
 from synbio_morpher.srv.parameter_prediction.interactions import InteractionSimulator, INTERACTION_FIELDS_TO_WRITE, MolecularInteractions
@@ -37,7 +32,7 @@ from synbio_morpher.utils.misc.runtime import clear_caches
 from synbio_morpher.utils.misc.type_handling import flatten_nested_dict, flatten_listlike, append_nest_dicts
 from synbio_morpher.utils.results.visualisation import VisODE
 from synbio_morpher.utils.modelling.deterministic import bioreaction_sim_dfx_expanded, bioreaction_sim_dfx_naive
-from synbio_morpher.utils.modelling.solvers import get_diffrax_solver, make_stepsize_controller
+from synbio_morpher.utils.modelling.solvers import get_diffrax_solver, make_stepsize_controller, simulate_steady_states
 from synbio_morpher.utils.evolution.evolver import implement_mutation
 from synbio_morpher.utils.evolution.mutation import Mutations
 from synbio_morpher.utils.results.analytics.timeseries import generate_analytics
