@@ -35,6 +35,10 @@ sudo docker exec -it gcg bash setup/post_install.sh
 sudo docker exec -it gcg /bin/bash
 # sudo docker container stop gcg
 
+if [ "$(id -un)" != "wadh6511" ]; then
+    bash $source_directory/post_install2.sh
+fi
+
 # Docusaurus
 # 1. Started by installing Node.js and following installation guide https://github.com/nodejs/help/wiki/Installation
 # 1.a Added to end of ~/.profile 
