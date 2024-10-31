@@ -44,15 +44,6 @@ from synbio_morpher.utils.results.result_writer import ResultWriter
 os.environ["XLA_PYTHON_CLIENT_ALLOCATOR"] = "platform"
 
 
-def wrap_queue_res(k, inp, q, f, **kwargs):
-    print(k)
-    print(inp)
-    v = f(*inp, **kwargs)
-    q.put(v)
-    print(v)
-    # return v
-
-
 class CircuitModeller():
 
     def __init__(self, result_writer=None, config: dict = {}) -> None:
@@ -173,42 +164,6 @@ class CircuitModeller():
                     self.compute_interactions, circuits[i:j]))
                 circuits[i:j] = results
 
-            # manager = multiprocessing.Manager()
-            # rets = []
-            # q = multiprocessing.Queue()
-            # for i in range(0, len(circuits), n_threads):
-            #     # creating processes
-            #     j = i + n_threads if i + \
-            #         n_threads < len(circuits) else len(circuits)
-            #     # d = manager.dict()
-            #     processes = [multiprocessing.Process(
-            #         target=partial(wrap_queue_res,
-            #                        f=self.compute_interactions),
-            #         args=(ii, (circuits[ii],), q)
-            #     ) for ii in range(i, j)]
-
-            #     for p in processes:
-            #         p.start()
-            #     for p in processes:
-            #         ret = q.get() # will block
-            #         rets.append(ret)
-            #     # completing process
-            #     for p in processes:
-            #         p.join()
-
-            #     # circuits[i:j] = [d[ii] for ii in range(i, j)]
-            # circuits = rets
-
-            # for i in range(0, len(circuits), n_threads):
-            #     j = i + n_threads if i + \
-            #         n_threads < len(circuits) else len(circuits)
-            #     pool = multiprocessing.Pool(j - i)
-            #     # d = {}
-            #     # k = np.arange(i, j)
-            #     # circuits[i:j] = pool.map(
-            #     #     partial(wrap_dict_result, f=self.compute_interactions, d=d), list(zip(k, circuits[i:j])))
-            #     circuits[i:j] = pool.map(
-            #         self.compute_interactions, circuits[i:j])
         else:
             if self.simulator_args['name'] == 'IntaRNA':
                 logging.warning(
