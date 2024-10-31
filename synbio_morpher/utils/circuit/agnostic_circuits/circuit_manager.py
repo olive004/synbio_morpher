@@ -176,9 +176,6 @@ class CircuitModeller():
 
     def run_interaction_simulator(self, species: List[Species], quantities, filename=None) -> MolecularInteractions:
         data = {s: s.physical_data for s in species}
-        # if filename is not None:
-        #     return self.interaction_simulator.run((filename, data), compute_by_filename=True)
-        # else:
         return self.interaction_simulator.run(data, quantities=quantities, compute_by_filename=False)
 
     def find_steady_states(self, circuits: List[Circuit], batch=True) -> List[Circuit]:
@@ -273,81 +270,12 @@ class CircuitModeller():
 
         elif solver_type in ['torchode', 'torchdiffeq']:
             raise NotImplementedError()
-            # import torchode as tode
-            # import torch
-            # ref_circuit = circuits[0]
-            # forward_rates = ref_circuit.qreactions.reactions.forward_rates
-            # reverse_rates = np.asarray(
-            #     [c.qreactions.reactions.reverse_rates for c in circuits])
-            # y0 = np.asarray([c.qreactions.quantities for c in circuits])
-            # signal_onehot = np.zeros_like(
-            #     ref_circuit.signal.reactions_onehot) if ref_circuit.use_prod_and_deg else np.zeros_like(ref_circuit.signal.onehot)
-
-            # sim_func = partial(bioreaction_sim_expanded,
-            #                             inputs=ref_circuit.qreactions.reactions.inputs,
-            #                             outputs=ref_circuit.qreactions.reactions.outputs,
-            #                 forward_rates=forward_rates.squeeze(), reverse_rates=reverse_rates.squeeze()
-            #                 )
-
-            # t_eval = np.linspace(self.t0, self.t1, int(np.min([200, self.t1-self.t0]))).repeat(len(circuits))
-            # prob = tode.InitialValueProblem(y0=y0, t_eval=t_eval)
-            # odeterm = tode.ODETerm(sim_func, with_args=True)
-            # step_method = tode.Dopri5(term=odeterm)
-            # step_controller = tode.PIDController(
-            #     atol=1e-4, rtol=1e-2, pcoeff=0.2, icoeff=0.5, dcoeff=0.0, term=odeterm)
-            # solver = tode.AutoDiffAdjoint(step_method, step_controller)
-            # self.solver = torch.compile(solver)
-            # sol = self.solver.solve(prob)
-
-        # elif solver_type == 'torchdiffeq':
-            # t_eval = np.linspace(self.t0, self.t1, 100)
-            # tdeq.odeint_adjoint(sim_func, starting_states, t)
 
         else:
             raise ValueError(
                 f'The chosen solver `{solver_type}` is not supported.')
 
         return np.asarray(b_copynumbers), np.squeeze(t)
-
-    # def model_circuit(self, y0: np.ndarray, circuit: Circuit):
-    #     assert np.shape(y0)[circuit.time_axis] == 1, 'Please only use 1-d ' \
-    #         f'initial copynumbers instead of {np.shape(y0)}'
-
-    #     modelling_func = partial(bioreaction_sim, args=None,
-    #                              reactions=circuit.qreactions.reactions,
-    #                              signal=circuit.signal.func,
-    #                              signal_onehot=jnp.array(circuit.signal.reactions_onehot))
-
-    #     copynumbers = self.iterate_modelling_func(y0, modelling_func,
-    #                                               max_time=self.t1,
-    #                                               time_interval=self.dt0,
-    #                                               signal_f=circuit.signal.func,
-    #                                               signal_onehot=circuit.signal.onehot)
-    #     return copynumbers
-
-    def iterate_modelling_func(self, init_copynumbers,
-                               modelling_func, max_time,
-                               time_interval,
-                               signal_f=None,
-                               signal_onehot=0):
-        """ Loop the modelling function.
-        IMPORTANT! Modeller already includes the dt, or the length of the time step taken. """
-
-        time = np.arange(0, max_time-1, time_interval)
-        copynumbers = np.concatenate((init_copynumbers, np.zeros(
-            (np.shape(init_copynumbers)[0], len(time)))), axis=1)
-        current_copynumbers = init_copynumbers.flatten()
-        for i, t in enumerate(time):
-            dxdt = modelling_func(
-                t, copynumbers[:, i])
-            current_copynumbers = np.add(
-                dxdt, current_copynumbers)
-            if signal_f is not None:
-                current_copynumbers = current_copynumbers * invert_onehot(signal_onehot) + \
-                    signal_onehot * signal_f(t)
-            copynumbers[:, i +
-                        1] = zero_out_negs(current_copynumbers)
-        return copynumbers
 
     def scale_rates(self, circuits: List[Circuit], batch: bool = True) -> List[Circuit]:
         forward_rates = np.zeros(
