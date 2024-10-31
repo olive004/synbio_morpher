@@ -10,6 +10,8 @@ FROM nvidia/cuda:12.0.0-cudnn8-devel-ubuntu20.04 AS workdir_build
 ################################################################################
 WORKDIR /usr/lib
 COPY ./requirements.txt /usr/lib/install_requirements/requirements.txt
+
+# Install requirements
 RUN apt-get update && \
     yes | apt-get install python3-pip
 RUN yes | apt install git
@@ -17,7 +19,7 @@ RUN cd /usr/lib/install_requirements && \
     pip install -r ./requirements.txt 
 RUN pip install jax==0.4.13
 RUN pip install --upgrade "jax[cuda12_pip]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
-RUN pip install -e git+https://github.com/Steel-Lab-Oxford/core-bioreaction-simulation.git@47391ff32aa2e0e9dcbb4541efb526ff6c43e427#egg=bioreaction
+RUN pip install git+https://github.com/Steel-Lab-Oxford/core-bioreaction-simulation.git@47391ff32aa2e0e9dcbb4541efb526ff6c43e427#egg=bioreaction
 RUN export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/cuda/lib64:/
 
 ################################################################################
