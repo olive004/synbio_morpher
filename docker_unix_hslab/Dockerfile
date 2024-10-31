@@ -3,7 +3,7 @@
 # https://quay.io/repository/biocontainers/intarna
 FROM quay.io/biocontainers/intarna:3.3.2--pl5321h7ff8a90_0 AS intarna_build
 
-FROM nvidia/cuda:12.6.0-cudnn-devel-ubuntu22.04 AS workdir_build
+FROM nvidia/cuda:12.0.0-cudnn8-devel-ubuntu20.04 AS workdir_build
 
 ################################################################################
 #  Install python dependencies
@@ -15,12 +15,10 @@ RUN apt-get update && \
 RUN yes | apt install git
 RUN cd /usr/lib/install_requirements && \
     pip install -r ./requirements.txt 
-RUN pip install jax==0.4.29
+RUN pip install jax==0.4.13
 RUN pip install --upgrade "jax[cuda12_pip]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
-# RUN python3 -m pipinstall "jax[cuda11_cudnn86]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 RUN pip install -e git+https://github.com/Steel-Lab-Oxford/core-bioreaction-simulation.git@47391ff32aa2e0e9dcbb4541efb526ff6c43e427#egg=bioreaction
 RUN export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/cuda/lib64:/
-# RUN pip install "jax[cuda11_pip]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 
 ################################################################################
 #  setup environment
@@ -31,7 +29,6 @@ ENV NVIDIA_VISIBLE_DEVICES=all
 ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
 ENV MNT=./..
 WORKDIR /workdir
-# ENTRYPOINT ["/bin/bash"]
 
 ################################################################################
 #  Copy IntaRNA dependencies
@@ -39,19 +36,3 @@ WORKDIR /workdir
 COPY --from=intarna_build /usr/local/bin/IntaRNA /usr/local/bin/
 COPY --from=intarna_build /usr/local/include/IntaRNA /usr/local/include/
 COPY --from=intarna_build /usr/local/lib/* /usr/local/lib/
-# COPY --from=intarna_build /usr/lib/x86_64-linux-gnu/* /usr/lib/x86_64-linux-gnu/
-
-
-################################################################################
-#  Install conda and IntaRNA dependencies
-################################################################################
-# RUN yes | apt-get install wget && \
-#     wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-# RUN (sleep 1; echo yes; sleep 1; echo /root/miniconda3; sleep 1; echo yes) | bash Miniconda3-latest-Linux-x86_64.sh
-# RUN . /root/miniconda3/bin/activate && \
-#     yes | conda install -c conda-forge -c bioconda intarna
-
-# # Switch up the IntaRNAs
-# RUN mv /root/miniconda3/bin/IntaRNA /root/miniconda3/bin/IntaRNA2
-# RUN mv /usr/local/bin/IntaRNA /root/miniconda3/bin/IntaRNA
-# RUN ln -s /root/miniconda3/bin/IntaRNA /usr/local/bin/IntaRNA

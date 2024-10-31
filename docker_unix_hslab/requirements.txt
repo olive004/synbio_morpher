@@ -1,0 +1,31 @@
+argparse
+biopython
+bokeh
+-e git+https://github.com/Steel-Lab-Oxford/core-bioreaction-simulation.git@47391ff32aa2e0e9dcbb4541efb526ff6c43e427#egg=bioreaction
+celluloid
+chex
+fire
+# jax==0.4.29
+# -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+# jaxlib==0.4.29+cuda12.cudnn91 -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html 
+jupyter
+diffrax
+matplotlib
+networkx
+numpy
+nvidia-cudnn-cu12
+optax
+pandas
+plotly.express
+pyvis
+scipy
+seaborn
+six
+tensorflow==2.12.0
+tensorflow-probability==0.16.0
+torch
+torchvision
+tqdm
+umap-learn
+wandb
+# wheel

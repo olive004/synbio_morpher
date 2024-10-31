@@ -5,17 +5,24 @@ sudo docker pull docker/dockerfile:1
 sudo docker pull quay.io/biocontainers/intarna:3.3.2--pl5321h7ff8a90_0
 # sudo docker run --rm -it --entrypoint bash quay.io/biocontainers/intarna:3.3.2--pl5321h7ff8a90_0
 # sudo docker pull nvidia/cuda:12.1.0-devel-ubuntu22.04
-sudo docker pull nvidia/cuda:12.6.0-cudnn-devel-ubuntu22.04
 
 # If image not built yet
-sudo docker build -t genetic_glitch:latest docker_unix
+if [ "$(id -un)" != "wadh6511" ]; then
+    sudo docker pull nvidia/cuda:12.0.0-cudnn8-devel-ubuntu20.04
+    source_directory="docker_unix_hslab"
+else
+    sudo docker pull nvidia/cuda:12.6.0-cudnn-devel-ubuntu22.04
+    source_directory="docker_unix"
+fi
+
+sudo docker build -t genetic_glitch:latest $source_directory
 
 # sudo ctr run --rm -t \
 #     --runc-binary=/usr/bin/nvidia-container-runtime \
 #     --env NVIDIA_VISIBLE_DEVICES=all \
 #     sudo docker.io/nvidia/cuda:11.6.2-base-ubuntu20.04 \
 #     cuda-11.6.2-base-ubuntu20.04 nvidia-smi
-cp ./requirements.txt ./docker_unix
+cp ./requirements.txt ./$source_directory
 
 sudo docker create -it \
 --rm \
