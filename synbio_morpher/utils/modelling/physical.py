@@ -5,7 +5,7 @@
 # This source code is licensed under the MIT-style license found in the
 # LICENSE file in the root directory of this source tree. 
     
-import numpy as np
+import numpy as jnp
 import jax.numpy as jnp
 from synbio_morpher.utils.misc.units import SCIENTIFIC
 
@@ -17,7 +17,7 @@ from synbio_morpher.utils.misc.units import SCIENTIFIC
 #     ). See the notebook `explanations/binding_energy_reparameterisation` for 
 #     more details.
 #     The binding energy is in units of kcal/mol """
-#     F = (1-0.01)/(1+np.exp(-(E/2 + 5))) + 0.01
+#     F = (1-0.01)/(1+jnp.exp(-(E/2 + 5))) + 0.01
 #     return F
 
 
@@ -35,7 +35,7 @@ def equilibrium_constant_reparameterisation(E, initial: jnp.ndarray):
 
 def gibbs_K(E):
     """ In J/mol. dG = - RT ln(K) """
-    K = np.exp(np.divide(-E, SCIENTIFIC['RT']))
+    K = jnp.exp(jnp.divide(-E, SCIENTIFIC['RT']))
     return K
 
 
@@ -46,7 +46,7 @@ def gibbs_K_cal(E):
     AG = - RT ln(kb/kd)
     K = e^(- G / RT)
     """
-    K = np.exp(np.divide(-E, SCIENTIFIC['RT_cal']))
+    K = jnp.exp(jnp.divide(-E, SCIENTIFIC['RT_cal']))
     return K
 
 
@@ -58,10 +58,10 @@ def eqconstant_to_rates(eqconstants, k_a):
     eqconstants: unitless but in terms of mol
     k_d: unbinding rate per s"""
     
-    k_d = np.divide(k_a, eqconstants)
-    return k_a*np.ones_like(k_d), k_d
+    k_d = jnp.divide(k_a, eqconstants)
+    return k_a*jnp.ones_like(k_d), k_d
 
 
 def rates_to_eqconstant(k_a, k_d):
-    eqconstants = np.divide(k_a, k_d)
+    eqconstants = jnp.divide(k_a, k_d)
     return eqconstants
