@@ -23,4 +23,4 @@ Miniconda3*
 !requirements.txt
 synbio_morpher/srv/parameter_prediction/IntaRNA
 synbio_morpher/srv/parameter_prediction/RNAstructure
-!data/summarise_simulation/2023_07_17_222747
+!data/summarise_simulation/2023_07_17_222747/*
