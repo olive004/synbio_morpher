@@ -109,7 +109,7 @@ class CircuitModeller():
             interactions = self.run_interaction_simulator(
                 species=input_species,
                 filename=filename,
-                quantities=[circuit.qreactions.reactants[reactant_species.index(s)].quantity for s in input_species])
+                quantities=jnp.array([circuit.qreactions.reactants[reactant_species.index(s)].quantity for s in input_species]))
             circuit.interactions = interactions
             circuit.interactions_state = 'computed'
         elif circuit.interactions_state == 'loaded' or (circuit.interactions_state == 'computed'):
@@ -174,7 +174,7 @@ class CircuitModeller():
                 circuits[i] = self.compute_interactions(c)
         return circuits
 
-    def run_interaction_simulator(self, species: List[Species], quantities, filename=None) -> MolecularInteractions:
+    def run_interaction_simulator(self, species: List[Species], quantities: jnp.ndarray, filename=None) -> MolecularInteractions:
         data = {s: s.physical_data for s in species}
         return self.interaction_simulator.run(data, quantities=quantities, compute_by_filename=False)
 
