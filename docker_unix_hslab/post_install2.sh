@@ -16,5 +16,5 @@ curl -sS https://bootstrap.pypa.io/get-pip.py | python3.11
 python3 --version
 # python3.10 -m pip install ipython
 
-# pip install git+https://github.com/Steel-Lab-Oxford/core-bioreaction-simulation.git@47391ff32aa2e0e9dcbb4541efb526ff6c43e427#egg=bioreaction
+# pip install git+https://github.com/Steel-Lab-Oxford/core-bioreaction-simulation.git@599990dcac56e7678f45269d2fc9df736d25f356#egg=bioreaction
 pip install -e src/bioreaction
