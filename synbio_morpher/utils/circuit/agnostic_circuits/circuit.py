@@ -113,6 +113,7 @@ class Circuit():
         else:
             self.interactions = InteractionMatrix(
                 matrix_paths=interaction_cfg, interactions_loaded=interactions_loaded, experiment_config=config).interactions
+            self.interactions_state = 'loaded'
 
     def get_input_species(self):
         return sorted(get_unique(flatten_listlike([r.input for r in self.model.reactions if r.output])))

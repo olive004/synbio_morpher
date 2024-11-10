@@ -59,7 +59,7 @@ class CircuitModeller():
         self.discard_numerical_mutations = config['experiment'].get(
             'no_numerical', False)
         self.use_initial_to_add_signal = config.get(
-            'simulation', {}).get('use_initial_to_add_signal', True)
+            'simulation', {}).get('use_initial_to_add_signal', False)
         self.dt0 = config.get('simulation', {}).get('dt0', 0.3)
         self.dt1_factor = config.get('simulation', {}).get('dt1_factor', 5)
         self.dt1 = config.get('simulation', {}).get(
@@ -97,7 +97,7 @@ class CircuitModeller():
 
     def compute_interactions_core(self, circuit: Circuit) -> Circuit:
 
-        if circuit.interactions_state == 'uninitialised' and not self.debug_mode:
+        if circuit.interactions_state == 'uninitialised' and (not self.debug_mode):
             if self.simulator_args['compute_by_filename'] and (circuit.subname == "ref_circuit") and (
                 circuit.data.source is not None) and os.path.exists(circuit.data.source):
                 filename = circuit.data.source

@@ -406,7 +406,8 @@ class VisODE():
                 **plot_kwargs
             ).set(title=title)
             if plot_kwargs.get('hue') and not (data[x].min() is np.nan and data[x].max() is np.nan):
-                sns.move_legend(ax, "upper left", bbox_to_anchor=(1, 1))
+                if ax.get_legend() is not None:
+                    sns.move_legend(ax, "upper left", bbox_to_anchor=(1, 1))
             f.savefig(out_path, bbox_inches='tight')
             plt.close()
         except KeyError as error:

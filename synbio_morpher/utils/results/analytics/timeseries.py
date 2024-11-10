@@ -87,7 +87,7 @@ def compute_peaks_deprecated(initial_steady_states: jnp.ndarray, final_steady_st
 
 
 def compute_peaks(initial_steady_states: jnp.ndarray, final_steady_states: jnp.ndarray, maxa: jnp.ndarray, mina: jnp.ndarray):
-    peak = jnp.where(final_steady_states > initial_steady_states, mina, maxa)
+    peak = jnp.where(final_steady_states > initial_steady_states, maxa, mina)
     return jnp.where(initial_steady_states < peak, peak, maxa if peak is mina else mina)
 
 
@@ -239,8 +239,10 @@ def generate_base_analytics(data: jnp.ndarray, t: jnp.ndarray, labels: List[str]
         steady_states=analytics['steady_states']
     )
 
-    peaks = compute_peaks(analytics['initial_steady_states'], analytics['steady_states'],
-                          analytics['max_amount'], analytics['min_amount'])
+    peaks = compute_peaks(initial_steady_states=analytics['initial_steady_states'], 
+                          final_steady_states=analytics['steady_states'],
+                          maxa=analytics['max_amount'], 
+                          mina=analytics['min_amount'])
 
     analytics['overshoot'] = compute_overshoot(
         steady_states=analytics['steady_states'],
@@ -262,12 +264,18 @@ def generate_base_analytics(data: jnp.ndarray, t: jnp.ndarray, labels: List[str]
             t_end = np.min([len(t), data.shape[1]])
             analytics[f'response_time_wrt_species-{s_idx}'] = compute_step_response_times(
                 data=data[:, :t_end], t=t[:t_end], steady_states=analytics['steady_states'][:, None],
-                # deriv=first_derivative[:, :t_end],
                 signal_time=signal_time)
 
             analytics[f'sensitivity_wrt_species-{s_idx}'] = compute_sensitivity(
                 signal_idx=s_idx, peaks=peaks, starting_states=analytics['initial_steady_states']
             )
+            # analytics[f'sensitivity2_wrt_species-{s_idx}'] = compute_sensitivity2(
+            #     starting_states=analytics['initial_steady_states'],
+            #     minv=analytics['min_amount'],
+            #     maxv=analytics['max_amount'],
+            #     signal_0=analytics['initial_steady_states'][s_idx],
+            #     signal_1=analytics['steady_states'][s_idx]
+            # )
 
     return analytics
 
