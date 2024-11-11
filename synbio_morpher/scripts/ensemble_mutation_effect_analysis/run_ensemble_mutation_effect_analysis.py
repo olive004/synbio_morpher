@@ -23,7 +23,7 @@ def main(config=None, data_writer=None):
         # "synbio_morpher", "scripts", "ensemble_mutation_effect_analysis", "configs", "test_small_loaded.json"))
         # "synbio_morpher", "scripts", "ensemble_mutation_effect_analysis", "configs", "distribution_of_energies.json"))
         # "synbio_morpher", "scripts", "ensemble_mutation_effect_analysis", "configs", "distribution_of_energies_loaded.json"))
-        # "synbio_morpher", "scripts", "ensemble_mutation_effect_analysis", "configs", "test_small.json"))
-        "synbio_morpher", "scripts", "ensemble_mutation_effect_analysis", "configs", "test_small_vis.json"))
+        "synbio_morpher", "scripts", "ensemble_mutation_effect_analysis", "configs", "test_small.json"))
+        # "synbio_morpher", "scripts", "ensemble_mutation_effect_analysis", "configs", "test_small_vis.json"))
 
     ensemble_func(config, data_writer)
