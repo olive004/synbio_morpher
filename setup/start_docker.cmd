@@ -1,6 +1,6 @@
 @REM # See README.md in the root project directory for docker setup instructions
 docker pull docker/dockerfile:1
-docker pull quay.io/biocontainers/intarna:3.3.2--pl5321h7ff8a90_0
+docker pull quay.io/biocontainers/intarna:3.4.1--pl5321hdcf5f25_0
 docker pull nvidia/cuda:12.6.0-cudnn-devel-ubuntu22.04
 
 @REM # If image not built yet
