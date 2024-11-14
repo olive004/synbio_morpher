@@ -5,7 +5,7 @@ sudo docker pull quay.io/biocontainers/intarna:3.4.1--pl5321hdcf5f25_0
 
 # If image not built yet
 if [ "$(id -un)" != "wadh6511" ]; then
-    sudo docker pull nvidia/cuda:12.0.0-cudnn8-devel-ubuntu20.04
+    sudo docker pull nvidia/cuda:12.0.0-cudnn8-devel-ubuntu22.04
     source_directory="docker_unix_hslab"
 else
     sudo docker pull nvidia/cuda:12.6.0-cudnn-devel-ubuntu22.04

@@ -3,7 +3,7 @@
 # https://quay.io/repository/biocontainers/intarna
 FROM quay.io/biocontainers/intarna:3.4.1--pl5321hdcf5f25_0 AS intarna_build
 
-FROM nvidia/cuda:12.0.0-cudnn8-devel-ubuntu20.04 AS workdir_build
+FROM nvidia/cuda:12.0.0-cudnn8-devel-ubuntu22.04 AS workdir_build
 
 ################################################################################
 #  Install python dependencies
@@ -17,7 +17,7 @@ RUN apt-get update && \
 RUN yes | apt install git
 RUN cd /usr/lib/install_requirements && \
     pip install -r ./requirements.txt 
-RUN pip install jax==0.4.13
+# RUN pip install jax==0.4.13
 RUN pip install --upgrade "jax[cuda12_pip]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 RUN pip install git+https://github.com/Steel-Lab-Oxford/core-bioreaction-simulation.git@599990dcac56e7678f45269d2fc9df736d25f356#egg=bioreaction
 RUN export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/cuda/lib64:/
