@@ -1,7 +1,6 @@
 argparse
 biopython
 bokeh
--e git+https://github.com/Steel-Lab-Oxford/core-bioreaction-simulation.git@599990dcac56e7678f45269d2fc9df736d25f356#egg=bioreaction
 celluloid
 chex
 fire
@@ -28,4 +27,5 @@ torchvision
 tqdm
 umap-learn
 wandb
-# wheel
+
+# -e git+https://github.com/Steel-Lab-Oxford/core-bioreaction-simulation.git@599990dcac56e7678f45269d2fc9df736d25f356#egg=bioreaction
