@@ -325,6 +325,7 @@ class CircuitModeller():
                                 else 0 for s in circuits[0].model.species])
                 onehots = onehots_all_sigspecies
             for i, c in enumerate(circuits):
+                """ Default """
                 analytics_stst = c.result_collector.get_result(
                         'steady_states').analytics
                 if analytics_stst is None:
