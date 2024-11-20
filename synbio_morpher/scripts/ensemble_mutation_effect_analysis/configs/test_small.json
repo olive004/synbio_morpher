@@ -94,7 +94,7 @@
                 "interaction_factor": 1,
                 "batch_size": 800,
                 "max_circuits": 60000,
-                "device": "gpu",
+                "device": "cpu",
                 "threshold_steady_states": 0.05, 
                 "use_initial_to_add_signal": false,
                 "use_rate_scaling": true,
