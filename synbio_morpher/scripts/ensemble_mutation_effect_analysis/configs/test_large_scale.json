@@ -10,17 +10,19 @@
             },
             "experiment": {
                 "purpose": "generate_species_templates",
-                "debug_mode": false
+                "no_visualisations": false,
+                "no_numerical": false,
+                "debug_mode": 0
             },
             "molecular_params": "./synbio_morpher/utils/common/configs/RNA_circuit/molecular_params.json",
             "circuit_generation": {
-                "repetitions": 3,
+                "repetitions": 12000,
                 "species_count": 3,
                 "sequence_length": 20,
                 "generator_protocol": "random",
                 "proportion_to_mutate": 0.5,
                 "template": null,
-                "seed": 8
+                "seed": 9
             },
             "system_type": "RNA"
         },
@@ -65,11 +67,11 @@
             },
             "mutations_args": {
                 "algorithm": "random",
-                "mutation_counts": 2,
-                "mutation_nums_within_sequence": [1],
+                "mutation_counts": 8,
+                "mutation_nums_within_sequence": [1, 2, 3, 5, 7, 10, 15],
                 "mutation_nums_per_position": 1,
                 "concurrent_species_to_mutate": "single_species_at_a_time",
-                "seed": 3
+                "seed": 0
             },
             "signal": {
                 "inputs": ["RNA_0"],
@@ -77,7 +79,7 @@
                 "function_name": "step_function",
                 "function_kwargs": {
                     "impulse_center": 1, 
-                    "impulse_halfwidth": 5, 
+                    "impulse_halfwidth": 0.5, 
                     "target": 2
                 }
             },
@@ -85,19 +87,19 @@
                 "dt0": 0.01,
                 "dt1": 0.5,
                 "t0": 0,
-                "t1": 1,
-                "tmax": 120000,
+                "t1": 500,
+                "tmax": 2000,
                 "solver": "diffrax",
                 "use_batch_mutations": true,
                 "interaction_factor": 1,
-                "batch_size": 5,
+                "batch_size": 1000,
                 "max_circuits": 60000,
-                "device": "cpu",
+                "device": "gpu",
                 "threshold_steady_states": 0.05, 
+                "use_initial_to_add_signal": false,
                 "use_rate_scaling": true,
                 "method": "Dopri5",
-                "stepsize_controller": "adaptive",
-                "use_initial_to_add_signal": false
+                "stepsize_controller": "adaptive"
             },
             "simulation_steady_state": {
                 "method": "Dopri5",
@@ -119,7 +121,20 @@
             "source_dirs": {
                 "is_source_dir_incomplete": true,
                 "source_dir": "./data/ensemble_mutation_effect_analysis",
-                "purpose_to_get_source_dir_from": "generate_species_templates",
+                "purpose_to_get_source_dir_from": "mutation_effect_on_interactions_signal",
+                "source_dir_actually_used_POSTERITY": null
+            },
+            "preprocessing_func": null,
+            "only_visualise_circuits": false
+        },
+        "vis_6_scatter": {
+            "experiment": {
+                "purpose": "vis_6_scatter"
+            },
+            "source_dirs": {
+                "is_source_dir_incomplete": true,
+                "source_dir": "./data/ensemble_mutation_effect_analysis",
+                "purpose_to_get_source_dir_from": "summarise_simulation",
                 "source_dir_actually_used_POSTERITY": null
             },
             "preprocessing_func": null,
@@ -246,19 +261,6 @@
         "vis_5_means_analytics": {
             "experiment": {
                 "purpose": "vis_5_means_analytics"
-            },
-            "source_dirs": {
-                "is_source_dir_incomplete": true,
-                "source_dir": "./data/ensemble_mutation_effect_analysis",
-                "purpose_to_get_source_dir_from": "summarise_simulation",
-                "source_dir_actually_used_POSTERITY": null
-            },
-            "preprocessing_func": null,
-            "only_visualise_circuits": false
-        },
-        "vis_6_scatter": {
-            "experiment": {
-                "purpose": "vis_6_scatter"
             },
             "source_dirs": {
                 "is_source_dir_incomplete": true,

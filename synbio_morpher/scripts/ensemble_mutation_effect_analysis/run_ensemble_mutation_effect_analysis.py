@@ -18,12 +18,12 @@ def main(config=None, data_writer=None):
 
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
         # "synbio_morpher", "scripts", "ensemble_mutation_effect_analysis", "configs", "test_ensemble.json"))
-        # "synbio_morpher", "scripts", "ensemble_mutation_effect_analysis", "configs", "test_large_scale.json"))
+        "synbio_morpher", "scripts", "ensemble_mutation_effect_analysis", "configs", "test_large_scale.json"))
         # "synbio_morpher", "scripts", "ensemble_mutation_effect_analysis", "configs", "test_large_scale_loaded.json"))
         # "synbio_morpher", "scripts", "ensemble_mutation_effect_analysis", "configs", "test_small_loaded.json"))
         # "synbio_morpher", "scripts", "ensemble_mutation_effect_analysis", "configs", "distribution_of_energies.json"))
         # "synbio_morpher", "scripts", "ensemble_mutation_effect_analysis", "configs", "distribution_of_energies_loaded.json"))
-        "synbio_morpher", "scripts", "ensemble_mutation_effect_analysis", "configs", "test_small.json"))
+        # "synbio_morpher", "scripts", "ensemble_mutation_effect_analysis", "configs", "test_small.json"))
         # "synbio_morpher", "scripts", "ensemble_mutation_effect_analysis", "configs", "test_small_vis.json"))
 
     ensemble_func(config, data_writer)
