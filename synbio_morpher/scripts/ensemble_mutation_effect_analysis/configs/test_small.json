@@ -16,7 +16,7 @@
             },
             "molecular_params": "./synbio_morpher/utils/common/configs/RNA_circuit/molecular_params.json",
             "circuit_generation": {
-                "repetitions": 300,
+                "repetitions": 500,
                 "species_count": 3,
                 "sequence_length": 20,
                 "generator_protocol": "random",
@@ -94,7 +94,7 @@
                 "interaction_factor": 1,
                 "batch_size": 800,
                 "max_circuits": 60000,
-                "device": "cpu",
+                "device": "gpu",
                 "threshold_steady_states": 0.05, 
                 "use_initial_to_add_signal": false,
                 "use_rate_scaling": true,

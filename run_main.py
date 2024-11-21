@@ -11,7 +11,7 @@ from fire import Fire
 # from synbio_morpher.scripts.ensemble_generate_circuits.run_ensemble_generate_circuits import main
 # from synbio_morpher.scripts.gather_interaction_stats.run_gather_interaction_stats import main
 # from synbio_morpher.scripts.mutation_effect_on_interactions_signal.run_mutation_effect_on_interactions_signal import main
-# from synbio_morpher.scripts.summarise_simulation.run_summarise_simulation import main
+from synbio_morpher.scripts.summarise_simulation.run_summarise_simulation import main
 # from synbio_morpher.scripts.analyse_mutated_templates.run_analyse_mutated_templates import main
 # from synbio_morpher.scripts.vis_0_histplots.run_vis_0_histplots import main
 # from synbio_morpher.scripts.vis_0_histplots_nosig.run_vis_0_histplots_nosig import main
@@ -22,7 +22,7 @@ from fire import Fire
 # from synbio_morpher.scripts.vis_3_mutation_types_positions_2.run_vis_3_mutation_types_positions_2 import main
 # from synbio_morpher.scripts.vis_4_histplots_thresholded.run_vis_4_histplots_thresholded import main
 # from synbio_morpher.scripts.vis_5_means_analytics.run_vis_5_means_analytics import main
-from synbio_morpher.scripts.ensemble_mutation_effect_analysis.run_ensemble_mutation_effect_analysis import main
+# from synbio_morpher.scripts.ensemble_mutation_effect_analysis.run_ensemble_mutation_effect_analysis import main
 # from synbio_morpher.scripts.ensemble_visualisation.run_ensemble_visualisation import main
 # from synbio_morpher.scripts.parameter_based_simulation.run_parameter_based_simulation import main
 # from synbio_morpher.scripts.stitch_parameter_grid.run_stitch_parameter_grid import main

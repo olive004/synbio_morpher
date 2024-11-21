@@ -74,8 +74,13 @@ class CircuitModeller():
         self.debug_mode = config.get('experiment', {}).get('debug_mode', False)
         self.sim_func = None
 
-        jax.config.update('jax_platform_name', config.get(
-            'simulation', {}).get('device', 'cpu'))
+        try:
+            jax.config.update('jax_platform_name', config.get(
+                'simulation', {}).get('device', 'gpu'))
+        except:
+            jax.config.update('jax_platform_name', 'cpu')
+            logging.warning(
+                'Could not set device to GPU, defaulting to CPU.')
 
         if self.debug_mode:
             jax.config.update("jax_disable_jit", True)
@@ -145,6 +150,7 @@ class CircuitModeller():
         return circuit
 
     def compute_interactions_batch(self, circuits: List[Circuit], batch=True):
+        """ This will not work with GPU """
         # Make sure multi-threading is on
         if self.simulator_args['name'] == 'IntaRNA':
             if self.simulator_args['simulator_kwargs']['threads'] > 1:
