@@ -10,8 +10,8 @@
             },
             "experiment": {
                 "purpose": "generate_species_templates",
-                "no_visualisations": false,
-                "no_numerical": false,
+                "no_visualisations": true,
+                "no_numerical": true,
                 "debug_mode": 0
             },
             "molecular_params": "./synbio_morpher/utils/common/configs/RNA_circuit/molecular_params.json",
@@ -50,8 +50,8 @@
             "data_path": null,
             "experiment": {
                 "purpose": "mutation_effect_on_interactions_signal",
-                "no_visualisations": false,
-                "no_numerical": false,
+                "no_visualisations": true,
+                "no_numerical": true,
                 "debug_mode": 0
             },
             "interaction_simulator": {
@@ -92,7 +92,7 @@
                 "solver": "diffrax",
                 "use_batch_mutations": true,
                 "interaction_factor": 1,
-                "batch_size": 3000,
+                "batch_size": 4000,
                 "max_circuits": 60000,
                 "device": "gpu",
                 "threshold_steady_states": 0.05, 
