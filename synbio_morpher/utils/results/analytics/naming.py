@@ -91,7 +91,7 @@ def get_true_names_analytics(candidate_cols: Optional[Union[List[str], dict]]) -
 
 def get_true_interaction_cols(data: pd.DataFrame, interaction_attr, remove_symmetrical=False, num_species=None) -> list:
     if num_species is None and ('sample_name' in data):
-        num_species = len(data['sample_name'].unique())
+        num_species = len(data[~data['sample_name'].isna()]['sample_name'].unique())
     elif num_species is None:
         num_species = 3
         logging.warning(f'Assuming that the number of species is {num_species}')
