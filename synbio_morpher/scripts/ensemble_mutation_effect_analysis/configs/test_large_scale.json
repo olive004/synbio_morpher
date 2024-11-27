@@ -16,13 +16,13 @@
             },
             "molecular_params": "./synbio_morpher/utils/common/configs/RNA_circuit/molecular_params.json",
             "circuit_generation": {
-                "repetitions": 12000,
+                "repetitions": 5000,
                 "species_count": 3,
                 "sequence_length": 20,
                 "generator_protocol": "random",
                 "proportion_to_mutate": 0.5,
                 "template": null,
-                "seed": 9
+                "seed": 10
             },
             "system_type": "RNA"
         },
