@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 import jax.numpy as jnp
 import jax
+import jaxlib
 import importlib
 
 from synbio_morpher.srv.io.manage.sys_interface import PACKAGE_NAME, DATA_DIR
@@ -138,7 +139,7 @@ def process_dict_for_json(dict_like) -> Union[list, dict]:
             dict_like[k] = process_dict_for_json(v)
         elif type(v) == np.bool_:
             dict_like[k] = bool(v)
-        elif type(v) == np.ndarray or (type(v) == jnp.ndarray) or (type(v) == jax.Array):
+        elif type(v) == np.ndarray or (type(v) == jnp.ndarray) or (type(v) == jax.Array) or (type(v) == jaxlib.xla_extension.ArrayImpl):
             dict_like[k] = v.tolist()
         elif type(v) == np.float32 or type(v) == np.int64 or type(v) == np.float16:
             dict_like[k] = str(v)
