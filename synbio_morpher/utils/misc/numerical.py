@@ -10,6 +10,7 @@ import logging
 from math import factorial
 from typing import Union, List
 import numpy as np
+import jax.numpy as jnp
 import re
 import pandas as pd
 
@@ -227,20 +228,24 @@ def is_within_range(number, range_tuple):
 
 
 def make_symmetrical(matrix):
-    """ Thank you Copilot. Matrix should be square. """
-    return (matrix + matrix.T) / 2
+    # """ Thank you Copilot. Matrix should be square. """
+    # return (matrix + matrix.T) / 2
+    return matrix + matrix.T - np.diag(matrix.diagonal())
 
 
-def make_symmetrical_matrix_from_sequence(arr, side_length: int):
+def make_symmetrical_matrix_from_sequence(arr: np.ndarray, side_length: int):
     """ For a flat 1D array, make a symmetrical 2D matrix filling
     in the upper triangle with the 1D array. """
     if arr.ndim > 1:
         logging.warning('For flat 1D sequence array, remember to squeeze')
-    i = np.triu(
-        np.arange(side_length * side_length).reshape(side_length, side_length))
-    # idxs = np.interp(ii, np.unique(ii), np.arange(len(arr))).astype(int)
+    # i = np.triu(
+    #     np.arange(side_length * side_length).reshape(side_length, side_length))
+    # # idxs = np.interp(ii, np.unique(ii), np.arange(len(arr))).astype(int)
+    # ii = i + i.T - np.diag(i.diagonal())
+    
+    i = np.triu(np.cumsum(np.triu(np.ones(3))).reshape(side_length, side_length) - 1).astype(int)
     ii = i + i.T - np.diag(i.diagonal())
-    return arr[ii.flatten()].reshape(side_length, side_length)
+    return arr[ii].reshape(side_length, side_length)
 
 
 def make_symmetrical_matrix_from_sequence_nojax(arr, side_length: int):

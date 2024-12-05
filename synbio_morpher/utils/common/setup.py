@@ -8,9 +8,7 @@
 import logging
 from copy import deepcopy
 from typing import List, Union, Optional
-from bioreaction.model.data_containers import BasicModel
 from synbio_morpher.srv.io.manage.data_manager import DataManager
-from synbio_morpher.utils.data.common import Data
 from synbio_morpher.utils.data.data_format_tools.common import load_json_as_dict
 from synbio_morpher.utils.misc.units import per_mol_to_per_molecule
 from synbio_morpher.utils.misc.io import isolate_filename
@@ -80,7 +78,7 @@ def compose_kwargs(config: dict, prev_configs: Optional[dict] = None) -> dict:
         "interaction_simulator": config["interaction_simulator"],
         "molecular_params": config["molecular_params"],
         "mutations_args": cast_all_values_as_list(config["mutations_args"]),
-        "name": isolate_filename(data_manager.data.source),
+        "name": config.get('name', isolate_filename(data_manager.data.source)),
         "signal": config["signal"],
         "simulation": config["simulation"],
         "simulation_steady_state": config["simulation_steady_state"],

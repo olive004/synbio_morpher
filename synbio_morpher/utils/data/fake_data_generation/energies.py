@@ -2,7 +2,7 @@
 
 import numpy as np
 from functools import partial
-from synbio_morpher.utils.misc.numerical import make_symmetrical
+from synbio_morpher.utils.misc.numerical import make_symmetrical_matrix_from_sequence
 import jax
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -19,9 +19,13 @@ def generate_energies(n_circuits: int, n_species: int, len_seq: int, p_null: flo
     """
     fn = partial(transform_to_rna_energies, len_seq=len_seq,
                  p_null=p_null) if type_energies == 'RNA' else lambda x: x
-    energies = fn(np.random.rand(n_circuits, n_species, n_species))
     if symmetrical:
-        energies = np.array(jax.vmap(make_symmetrical)(energies))
+        n_interacting = int(np.sum(np.arange(n_species + 1)))
+        energies = fn(np.random.rand(n_circuits, n_interacting))
+        energies = np.array(jax.vmap(partial(
+            make_symmetrical_matrix_from_sequence, side_length=n_species))(energies))
+    else:
+        energies = fn(np.random.rand(n_circuits, n_species, n_species))
     return energies
 
 
@@ -45,6 +49,7 @@ def transform_to_rna_energies(rnd: np.ndarray, len_seq: int, p_null: float) -> n
 
 
 def main():
-    e = generate_energies(3000, 3, 20, 0.1, symmetrical=True, type_energies='RNA')
+    e = generate_energies(
+        3000, 3, 20, 0.1, symmetrical=True, type_energies='RNA')
     sns.histplot(e[:, np.triu_indices(3)].flatten(), bins=50, element='step')
     plt.savefig('test.png')

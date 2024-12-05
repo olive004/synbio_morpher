@@ -4,7 +4,7 @@
         "postprocess": true
     },
     "experiment": {
-        "purpose": "generate_interactions",
+        "purpose": "simulate_by_interaction",
         "debug_mode": false
     },
     "molecular_params": "./synbio_morpher/utils/common/configs/RNA_circuit/molecular_params.json",
@@ -12,8 +12,11 @@
         "repetitions": 100000,
         "species_count": 3,
         "sequence_length": 20,
-        "generator_protocol": "template_mutate",
-        "proportion_to_mutate": 0.5
+        "perc_non_interacting": 0.1
+    },
+    "identities": {
+        "input": "RNA_0",
+        "output": "RNA_2"
     },
     "system_type": "RNA"
 }

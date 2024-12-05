@@ -136,7 +136,7 @@ class CircuitModeller():
         circuit.update_species_simulated_rates(circuit.interactions)
         return circuit
 
-    def write_interactions(self, circuit):
+    def write_interactions(self, circuit: Circuit):
         for filename_addon in sorted(INTERACTION_FIELDS_TO_WRITE):
             interaction_matrix = circuit.interactions.__getattribute__(
                 filename_addon)

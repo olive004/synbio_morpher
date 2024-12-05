@@ -193,7 +193,8 @@ class InteractionDataHandler():
         return interactions
 
     def parse(self, data: dict) -> MolecularInteractions:
-        eqconstants, energies, a_rates, d_rates, binding = self.make_matrix(data)
+        eqconstants, energies, a_rates, d_rates, binding = self.make_matrix(
+            data)
         raw = {s.name: v for s, v in data.items()}
         return MolecularInteractions(
             binding_rates_association=a_rates,
