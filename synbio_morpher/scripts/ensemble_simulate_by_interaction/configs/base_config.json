@@ -17,7 +17,7 @@
             "molecular_params_factor": 1,
             "molecular_params": "./synbio_morpher/utils/common/configs/RNA_circuit/molecular_params.json",
             "circuit_generation": {
-                "repetitions": 10,
+                "repetitions": 1000000,
                 "species_count": 3,
                 "sequence_length": 20,
                 "perc_non_interacting": 0.1
@@ -41,8 +41,8 @@
                 "dt0": 0.01,
                 "dt1": 0.5,
                 "t0": 0,
-                "t1": 5,
-                "tmax": 5,
+                "t1": 500,
+                "tmax": 2000,
                 "solver": "diffrax",
                 "use_batch_mutations": true,
                 "interaction_factor": 1,
