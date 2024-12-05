@@ -39,21 +39,18 @@ def preprocess_energies(energies: np.ndarray, quantities: np.ndarray, sim_args: 
         }} for i, (eq, ba, bd, en) in enumerate(zip(eqconstants, a_rates, d_rates, energies))]
 
 
-def subdivide_simulate(circuits, data_writer, config_file):
-    data_writer.update_ensemble(os.path.join('simulate_by_interaction', 'circuits')) #, safe_dir_change=False)
-    CircuitModeller(result_writer=data_writer, config=config_file).batch_circuits(
-        circuits,
-        write_to_subsystem=True, batch_size=config_file['simulation'].get('batch_size', 100),
-        methods={
-            "compute_interactions": {},
-            "write_interactions": {},
-            "init_circuits": {'batch': True},
-            "simulate_signal_batch": {'ref_circuit': None,
-                                      'batch': True},
-            "write_results": {'no_visualisations': config_file['experiment'].get('no_visualisations', True),
-                              'no_numerical': config_file['experiment'].get('no_numerical', False)}
-        })
-    data_writer.update_ensemble(os.path.join('simulate_by_interaction')) #, safe_dir_change=False)
+# def rm_dupes(data_writer):
+#     dirs_to_rem = ['eqconstants', 'binding_rates_association',
+#                    'binding_rates_dissociation', 'energies', 'binding_sites']
+#     for dir_to_rem in dirs_to_rem:
+#         dn = os.path.join(data_writer.ensemble_write_dir, dir_to_rem)
+#         if os.path.exists(dn):
+#             for root, dirs, files in os.walk(dn, topdown=False):
+#                 for name in files:
+#                     os.remove(os.path.join(root, name))
+#                 for name in dirs:
+#                     os.rmdir(os.path.join(root, name))
+#             os.rmdir(dn)
 
 
 def main(config=None, data_writer=None):
@@ -96,20 +93,30 @@ def main(config=None, data_writer=None):
                 req_output=True,
                 name="making_circuit"
             ),
-            Protocol(
-                CircuitModeller(
-                    result_writer=data_writer, config=config_file).write_interactions,
-                req_input=True,
-                req_output=True,
-                name="compute_interaction_strengths"
-            )
+            # Protocol(
+            #     CircuitModeller(
+            #         result_writer=data_writer, config=config_file).write_interactions,
+            #     req_input=True,
+            #     req_output=True,
+            #     name="compute_interaction_strengths"
+            # )
         ],
-        Protocol(partial(subdivide_simulate,
-                         data_writer=data_writer,
-                         config_file=config_file),
-                 req_input=True,
-                 name="subdivide_and_simulate"
-                 )
+        Protocol(partial(CircuitModeller(result_writer=data_writer, config=config_file).batch_circuits,
+                         write_to_subsystem=True, batch_size=config_file['simulation'].get('batch_size', 100),
+                         methods={
+            "compute_interactions": {},
+            "write_interactions": {},
+            "init_circuits": {'batch': True},
+            "simulate_signal_batch": {'ref_circuit': None,
+                                      'batch': True},
+            "write_results": {'no_visualisations': config_file['experiment'].get('no_visualisations', True),
+                              'no_numerical': config_file['experiment'].get('no_numerical', False)}
+        }),
+            req_input=True,
+            name="simulate"
+        )
+        # Protocol(partial(rm_dupes, data_writer=data_writer),
+        #          req_input=False, name="remove_duplicates")
     ]
 
     experiment = Experiment(config=config, config_file=config_file, protocols=protocols,

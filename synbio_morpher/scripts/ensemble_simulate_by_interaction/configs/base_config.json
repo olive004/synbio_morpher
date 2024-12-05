@@ -41,8 +41,8 @@
                 "dt0": 0.01,
                 "dt1": 0.5,
                 "t0": 0,
-                "t1": 500,
-                "tmax": 2000,
+                "t1": 5,
+                "tmax": 5,
                 "solver": "diffrax",
                 "use_batch_mutations": true,
                 "interaction_factor": 1,
@@ -162,34 +162,6 @@
             "signal": {
                 "inputs": ["RNA_0"]
             }
-        },
-        "vis_3_mutation_types_positions_1": {
-            "experiment": {
-                "purpose": "vis_3_mutation_types_positions_1"
-            },
-            "source_dirs": {
-                "is_source_dir_incomplete": true,
-                "source_dir": "./data/ensemble_simulate_by_interaction",
-                "purpose_to_get_source_dir_from": "summarise_simulation",
-                "source_dir_actually_used_POSTERITY": null
-            },
-            "tabulated_info_differentiator": "mutation_num",
-            "preprocessing_func": null,
-            "only_visualise_circuits": false
-        },
-        "vis_3_mutation_types_positions_2": {
-            "experiment": {
-                "purpose": "vis_3_mutation_types_positions_2"
-            },
-            "source_dirs": {
-                "is_source_dir_incomplete": true,
-                "source_dir": "./data/ensemble_simulate_by_interaction",
-                "purpose_to_get_source_dir_from": "summarise_simulation",
-                "source_dir_actually_used_POSTERITY": null
-            },
-            "tabulated_info_differentiator": "mutation_num",
-            "preprocessing_func": null,
-            "only_visualise_circuits": false
         },
         "vis_4_histplots_thresholded": {
             "experiment": {
