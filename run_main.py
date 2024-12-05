@@ -22,7 +22,7 @@ from fire import Fire
 # from synbio_morpher.scripts.vis_3_mutation_types_positions_2.run_vis_3_mutation_types_positions_2 import main
 # from synbio_morpher.scripts.vis_4_histplots_thresholded.run_vis_4_histplots_thresholded import main
 # from synbio_morpher.scripts.vis_5_means_analytics.run_vis_5_means_analytics import main
-from synbio_morpher.scripts.ensemble_mutation_effect_analysis.run_ensemble_mutation_effect_analysis import main
+# from synbio_morpher.scripts.ensemble_mutation_effect_analysis.run_ensemble_mutation_effect_analysis import main
 # from synbio_morpher.scripts.ensemble_visualisation.run_ensemble_visualisation import main
 # from synbio_morpher.scripts.parameter_based_simulation.run_parameter_based_simulation import main
 # from synbio_morpher.scripts.stitch_parameter_grid.run_stitch_parameter_grid import main

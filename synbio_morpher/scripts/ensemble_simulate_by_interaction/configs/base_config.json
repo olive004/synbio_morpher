@@ -1,6 +1,6 @@
 {
     "experiment": {
-        "purpose": "ensemble_mutation_effect_analysis"
+        "purpose": "ensemble_simulate_by_interaction"
     },
     "base_configs_ensemble": {
         "simulate_by_interaction": {
@@ -67,8 +67,8 @@
             },
             "source_dirs": {
                 "is_source_dir_incomplete": true,
-                "source_dir": "./data/ensemble_mutation_effect_analysis",
-                "purpose_to_get_source_dir_from": "mutation_effect_on_interactions_signal",
+                "source_dir": "./data/ensemble_simulate_by_interaction",
+                "purpose_to_get_source_dir_from": "simulate_by_interaction",
                 "source_dir_actually_used_POSTERITY": null
             },
             "preprocessing_func": null,
@@ -80,7 +80,7 @@
             },
             "source_dirs": {
                 "is_source_dir_incomplete": true,
-                "source_dir": "./data/ensemble_mutation_effect_analysis",
+                "source_dir": "./data/ensemble_simulate_by_interaction",
                 "purpose_to_get_source_dir_from": "summarise_simulation",
                 "source_dir_actually_used_POSTERITY": null
             },
@@ -93,7 +93,7 @@
             },
             "source_dirs": {
                 "is_source_dir_incomplete": true,
-                "source_dir": "./data/ensemble_mutation_effect_analysis",
+                "source_dir": "./data/ensemble_simulate_by_interaction",
                 "purpose_to_get_source_dir_from": "summarise_simulation",
                 "source_dir_actually_used_POSTERITY": null
             },
@@ -107,7 +107,7 @@
             },
             "source_dirs": {
                 "is_source_dir_incomplete": true,
-                "source_dir": "./data/ensemble_mutation_effect_analysis",
+                "source_dir": "./data/ensemble_simulate_by_interaction",
                 "purpose_to_get_source_dir_from": "summarise_simulation",
                 "source_dir_actually_used_POSTERITY": null
             },
@@ -124,7 +124,7 @@
             },
             "source_dirs": {
                 "is_source_dir_incomplete": true,
-                "source_dir": "./data/ensemble_mutation_effect_analysis",
+                "source_dir": "./data/ensemble_simulate_by_interaction",
                 "purpose_to_get_source_dir_from": "summarise_simulation",
                 "source_dir_actually_used_POSTERITY": null
             },
@@ -138,7 +138,7 @@
             },
             "source_dirs": {
                 "is_source_dir_incomplete": true,
-                "source_dir": "./data/ensemble_mutation_effect_analysis",
+                "source_dir": "./data/ensemble_simulate_by_interaction",
                 "purpose_to_get_source_dir_from": "summarise_simulation",
                 "source_dir_actually_used_POSTERITY": null
             },
@@ -152,7 +152,7 @@
             },
             "source_dirs": {
                 "is_source_dir_incomplete": true,
-                "source_dir": "./data/ensemble_mutation_effect_analysis",
+                "source_dir": "./data/ensemble_simulate_by_interaction",
                 "purpose_to_get_source_dir_from": "summarise_simulation",
                 "source_dir_actually_used_POSTERITY": null
             },
@@ -169,7 +169,7 @@
             },
             "source_dirs": {
                 "is_source_dir_incomplete": true,
-                "source_dir": "./data/ensemble_mutation_effect_analysis",
+                "source_dir": "./data/ensemble_simulate_by_interaction",
                 "purpose_to_get_source_dir_from": "summarise_simulation",
                 "source_dir_actually_used_POSTERITY": null
             },
@@ -183,7 +183,7 @@
             },
             "source_dirs": {
                 "is_source_dir_incomplete": true,
-                "source_dir": "./data/ensemble_mutation_effect_analysis",
+                "source_dir": "./data/ensemble_simulate_by_interaction",
                 "purpose_to_get_source_dir_from": "summarise_simulation",
                 "source_dir_actually_used_POSTERITY": null
             },
@@ -197,7 +197,7 @@
             },
             "source_dirs": {
                 "is_source_dir_incomplete": true,
-                "source_dir": "./data/ensemble_mutation_effect_analysis",
+                "source_dir": "./data/ensemble_simulate_by_interaction",
                 "purpose_to_get_source_dir_from": "summarise_simulation",
                 "source_dir_actually_used_POSTERITY": null
             },
@@ -211,7 +211,7 @@
             },
             "source_dirs": {
                 "is_source_dir_incomplete": true,
-                "source_dir": "./data/ensemble_mutation_effect_analysis",
+                "source_dir": "./data/ensemble_simulate_by_interaction",
                 "purpose_to_get_source_dir_from": "summarise_simulation",
                 "source_dir_actually_used_POSTERITY": null
             },

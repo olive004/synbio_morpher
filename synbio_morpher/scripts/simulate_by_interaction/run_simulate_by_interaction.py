@@ -39,6 +39,23 @@ def preprocess_energies(energies: np.ndarray, quantities: np.ndarray, sim_args: 
         }} for i, (eq, ba, bd, en) in enumerate(zip(eqconstants, a_rates, d_rates, energies))]
 
 
+def subdivide_simulate(circuits, data_writer, config_file):
+    data_writer.update_ensemble(os.path.join('simulate_by_interaction', 'circuits')) #, safe_dir_change=False)
+    CircuitModeller(result_writer=data_writer, config=config_file).batch_circuits(
+        circuits,
+        write_to_subsystem=True, batch_size=config_file['simulation'].get('batch_size', 100),
+        methods={
+            "compute_interactions": {},
+            "write_interactions": {},
+            "init_circuits": {'batch': True},
+            "simulate_signal_batch": {'ref_circuit': None,
+                                      'batch': True},
+            "write_results": {'no_visualisations': config_file['experiment'].get('no_visualisations', True),
+                              'no_numerical': config_file['experiment'].get('no_numerical', False)}
+        })
+    data_writer.update_ensemble(os.path.join('simulate_by_interaction')) #, safe_dir_change=False)
+
+
 def main(config=None, data_writer=None):
     config, data_writer = script_preamble(config, data_writer, alt_cfg_filepath=os.path.join(
         "synbio_morpher", "scripts", "simulate_by_interaction", "configs", "base_config.json"))
@@ -87,20 +104,12 @@ def main(config=None, data_writer=None):
                 name="compute_interaction_strengths"
             )
         ],
-        Protocol(partial(CircuitModeller(result_writer=data_writer, config=config_file).batch_circuits,
-                             write_to_subsystem=True, batch_size=config_file['simulation'].get('batch_size', 100),
-                             methods={
-                "compute_interactions": {},
-                "write_interactions": {},
-                "init_circuits": {'batch': True},
-                "simulate_signal_batch": {'ref_circuit': None,
-                                          'batch': True},
-                "write_results": {'no_visualisations': config_file['experiment'].get('no_visualisations', True),
-                                  'no_numerical': config_file['experiment'].get('no_numerical', False)}
-            }),
-                req_input=True,
-                name="simulate_visualisations"
-            )
+        Protocol(partial(subdivide_simulate,
+                         data_writer=data_writer,
+                         config_file=config_file),
+                 req_input=True,
+                 name="subdivide_and_simulate"
+                 )
     ]
 
     experiment = Experiment(config=config, config_file=config_file, protocols=protocols,
