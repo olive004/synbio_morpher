@@ -4,13 +4,14 @@ import numpy as np
 from functools import partial
 from synbio_morpher.utils.misc.numerical import make_symmetrical
 import jax
+import seaborn as sns
 import matplotlib.pyplot as plt
 
 RNA_EU = 0
 RNA_EL = -1.5
 
 
-def generate_energies(n_circuits, n_species, len_seq, p_null, symmetrical=True, type_energies='RNA') -> np.ndarray:
+def generate_energies(n_circuits: int, n_species: int, len_seq: int, p_null: float, symmetrical=True, type_energies: str = 'RNA') -> np.ndarray:
     """
     Generate a list of interaction energies for n_circuits circuits with n_species species each.
     The sequence length (len_seq) is the approximate length of the interacting components if they existed.
@@ -32,12 +33,18 @@ def pepper_noninteracting(energies: np.ndarray, p_null: float) -> np.ndarray:
     return energies
 
 
-def transform_to_rna_energies(rnd, len_seq, p_null: float):
+def transform_to_rna_energies(rnd: np.ndarray, len_seq: int, p_null: float) -> np.ndarray:
     """
     Transform interaction energies to RNA interaction energies.
     """
-    rnd = np.log(rnd)
+    rnd = np.log(rnd + 5e-2)
     energies = np.interp(rnd, (rnd.min(), rnd.max()),
                          (RNA_EL*len_seq, RNA_EU*len_seq))
     energies = pepper_noninteracting(energies, p_null=p_null)
     return energies
+
+
+def main():
+    e = generate_energies(3000, 3, 20, 0.1, symmetrical=True, type_energies='RNA')
+    sns.histplot(e[:, np.triu_indices(3)].flatten(), bins=50, element='step')
+    plt.savefig('test.png')
