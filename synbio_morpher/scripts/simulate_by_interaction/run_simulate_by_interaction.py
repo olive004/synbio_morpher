@@ -69,7 +69,8 @@ def main(config=None, data_writer=None):
                     p_null=exp_configs.get("perc_non_interacting", 0.3),
                     symmetrical=True if config_file.get(
                         "system_type", "RNA") == 'RNA' else False,
-                    type_energies=config_file.get("system_type", "RNA")),
+                    type_energies=config_file.get("system_type", "RNA"),
+                    seed=exp_configs.get("seed", 0)),
             req_output=True,
             name="generating_energies"
         ),

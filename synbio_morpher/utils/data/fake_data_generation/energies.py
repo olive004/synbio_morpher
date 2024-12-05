@@ -11,7 +11,8 @@ RNA_EU = 0
 RNA_EL = -1.5
 
 
-def generate_energies(n_circuits: int, n_species: int, len_seq: int, p_null: float, symmetrical=True, type_energies: str = 'RNA') -> np.ndarray:
+def generate_energies(n_circuits: int, n_species: int, len_seq: int, p_null: float,
+                      seed: int, symmetrical=True, type_energies: str = 'RNA') -> np.ndarray:
     """
     Generate a list of interaction energies for n_circuits circuits with n_species species each.
     The sequence length (len_seq) is the approximate length of the interacting components if they existed.
@@ -21,7 +22,8 @@ def generate_energies(n_circuits: int, n_species: int, len_seq: int, p_null: flo
                  p_null=p_null) if type_energies == 'RNA' else lambda x: x
     if symmetrical:
         n_interacting = int(np.sum(np.arange(n_species + 1)))
-        energies = fn(np.random.rand(n_circuits, n_interacting))
+        energies = fn(np.array(jax.random.uniform(
+            jax.random.PRNGKey(seed), (n_circuits, n_interacting))))
         energies = np.array(jax.vmap(partial(
             make_symmetrical_matrix_from_sequence, side_length=n_species))(energies))
     else:
@@ -49,7 +51,7 @@ def transform_to_rna_energies(rnd: np.ndarray, len_seq: int, p_null: float) -> n
 
 
 def main():
-    e = generate_energies(
-        3000, 3, 20, 0.1, symmetrical=True, type_energies='RNA')
+    e = generate_energies(n_circuits=3000, n_species=3, len_seq=20, p_null=0.1,
+                          symmetrical=True, type_energies='RNA', seed=0)
     sns.histplot(e[:, np.triu_indices(3)].flatten(), bins=50, element='step')
     plt.savefig('test.png')
