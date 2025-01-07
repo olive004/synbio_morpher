@@ -23,6 +23,7 @@ from scipy import integrate
 from bioreaction.model.data_containers import Species
 from bioreaction.simulation.simfuncs.basic_de import bioreaction_sim, bioreaction_sim_expanded
 
+from synbio_morpher.srv.parameter_prediction.simulator import SIMULATOR_UNITS
 from synbio_morpher.srv.parameter_prediction.interactions import InteractionSimulator, INTERACTION_FIELDS_TO_WRITE, MolecularInteractions
 from synbio_morpher.utils.circuit.agnostic_circuits.circuit import Circuit, interactions_to_df
 from synbio_morpher.utils.misc.helper import vanilla_return
