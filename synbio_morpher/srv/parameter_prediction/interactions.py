@@ -31,11 +31,11 @@ class MolecularInteractions():
     precision = np.float32
 
     def __init__(self,
-                 binding_rates_association: np.ndarray,
-                 binding_rates_dissociation: np.ndarray,
-                 energies: np.ndarray,
-                 eqconstants: np.ndarray,
-                 binding_sites: np.ndarray,
+                 binding_rates_association: Union[np.ndarray, float],
+                 binding_rates_dissociation: Union[np.ndarray, float],
+                 energies: Union[np.ndarray, float],
+                 eqconstants: Union[np.ndarray, float],
+                 binding_sites: Union[np.ndarray, float],
                  units=None,
                  raw=None) -> None:
         self.binding_rates_association = binding_rates_association

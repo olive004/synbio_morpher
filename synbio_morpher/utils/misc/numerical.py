@@ -8,7 +8,7 @@
 
 import logging
 from math import factorial
-from typing import Union, List
+from typing import Tuple, Union, List
 import numpy as np
 import jax.numpy as jnp
 import re
@@ -62,7 +62,7 @@ def cast_astype(list_like, dtypes):
 
 def binary_arpeggiator(sequence: str, count: int):
     length = len(sequence)
-    interval = int(sequence / count)
+    interval = int(length / count)
     arpeggiation = np.arange(0, length, interval)
 
     for c in range(count):
@@ -194,7 +194,7 @@ def nan_to_replacement_string(obj, replacement_string=''):
         return obj
 
 
-def init_matrices(self, uniform_vals, ndims=2, init_type="rand") -> List[np.ndarray]:
+def init_matrices(self, uniform_vals, ndims=2, init_type="rand") -> Tuple[np.ndarray]:
     matrices = (self.init_matrix(ndims, init_type, val)
                 for val in uniform_vals)
     return tuple(matrices)
