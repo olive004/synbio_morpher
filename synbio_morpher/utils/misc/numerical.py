@@ -243,7 +243,7 @@ def make_symmetrical_matrix_from_sequence(arr: np.ndarray, side_length: int):
     # # idxs = np.interp(ii, np.unique(ii), np.arange(len(arr))).astype(int)
     # ii = i + i.T - np.diag(i.diagonal())
     
-    i = np.triu(np.cumsum(np.triu(np.ones(3))).reshape(side_length, side_length) - 1).astype(int)
+    i = np.triu(np.cumsum(np.triu(np.ones(side_length))).reshape(side_length, side_length) - 1).astype(int)
     ii = i + i.T - np.diag(i.diagonal())
     return arr[ii].reshape(side_length, side_length)
 

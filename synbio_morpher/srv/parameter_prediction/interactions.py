@@ -60,7 +60,7 @@ class InteractionMatrix():
     def __init__(self,  # config_args=None,
                  matrix_paths: Union[dict, None] = None,
                  experiment_dir: Union[None, str] = None,
-                 num_nodes: Union[None, int] = None,
+                 num_nodes: Optional[int] = None,
                  units: str = '',
                  experiment_config: Union[None, dict] = None,
                  interactions_loaded: Union[None, dict] = None,
@@ -73,8 +73,9 @@ class InteractionMatrix():
         self.experiment_dir = experiment_dir
         self.experiment_config = experiment_config
 
-        init_nodes = num_nodes if num_nodes is not None else 3
-        nans = np.zeros((init_nodes, init_nodes)) * np.nan
+        # if num_nodes is None:
+        #     num_nodes = 1
+        nans = np.nan  # np.zeros((num_nodes, num_nodes)) * np.nan
         self.interactions = MolecularInteractions(
             binding_rates_association=nans,
             binding_rates_dissociation=nans,
@@ -112,6 +113,16 @@ class InteractionMatrix():
             self.interactions.binding_rates_association = load_param(
                 filepath=None, param='association_binding_rate', experiment_config=experiment_config
             ) * np.ones_like(self.interactions.binding_rates_dissociation)
+            
+        self.post_init()
+            
+    def post_init(self):
+        vals = [len(v) for v in self.interactions.__dict__.values() if type(v) == np.array]
+        if vals:
+            max_len = np.max(vals)
+            for k, v in self.interactions.__dict__.items():
+                if (type(v) != np.array) and (type(v) != str) and np.isnan(v):
+                    self.interactions.__setattr__(k, np.zeros((max_len, max_len)) * np.nan)
 
     def load(self, filepath, quiet=True) -> Tuple[np.ndarray, str, list]:
         filetype = determine_file_format(filepath)
