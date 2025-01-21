@@ -21,7 +21,7 @@
                 "species_count": 3,
                 "sequence_length": 20,
                 "perc_non_interacting": 0.1,
-                "seed": 0
+                "seed": 1
             },
             "identities": {
                 "input": "RNA_0",
