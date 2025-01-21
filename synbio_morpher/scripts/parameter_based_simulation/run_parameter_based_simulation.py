@@ -150,7 +150,7 @@ def main(config: Optional[dict] = None, data_writer=None):
         save = 10
         save_every = int(num_iterations / save)
         start_time = datetime.now()
-        for batch_i in range(num_iterations):
+        for batch_i in range(config.get('batch_to_skip_to', 0), num_iterations):
             logging.info(
                 f'\n\nBatch {batch_i} out of {num_iterations}, each of size {batch_size}. Run time so far: {datetime.now() - start_time}\n')
             circuits, all_interaction_strength_choices = run_batch(batch_i=batch_i,
