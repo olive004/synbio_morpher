@@ -48,8 +48,8 @@
         "solver": "diffrax",
         "use_batch_mutations": true,
         "interaction_factor": 1,
-        "batch_size": 10000,
-        "max_circuits": 40000,
+        "batch_size": 15000,
+        "max_circuits": 60000,
         "device": "gpu",
         "threshold_steady_states": 0.01, 
         "use_initial_to_add_signal": false,
@@ -63,6 +63,6 @@
     },
     "include_prod_deg": false,
     "system_type": "RNA",
-    "batch_size": 10000,
+    "batch_size": 15000,
     "batch_to_skip_to": 14
 }
