@@ -38,11 +38,12 @@ def main(config=None, data_writer=None):
     experiment_settings = experiment_config['experiment']
     num_subprocesses = 1
     if experiment_settings['parallelise']:
-        num_subprocesses = experiment_settings['num_subprocesses']
+        num_subprocesses = experiment_settings.get('num_subprocesses', 1)
 
     # If there was multithreading, load each parameter_grid one by one from subfolders
     def load_parameter_grids():
         all_parameter_grids = {}
+        print(source_dir)
         subprocess_dirs = get_subprocesses_dirnames(source_dir)
         if type(subprocess_dirs) != list:
             raise ValueError(f'Directories from {source_dir} did not return as a list.')
