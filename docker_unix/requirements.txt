@@ -1,7 +1,7 @@
 argparse
 biopython
-bokeh
-celluloid
+# bokeh
+# celluloid
 chex
 fire
 # jax==0.4.29
@@ -12,18 +12,16 @@ diffrax
 matplotlib
 networkx
 numpy
-nvidia-cudnn-cu12
+# nvidia-cudnn-cu12
 optax
 pandas
 plotly.express
 pyvis
 scipy
 seaborn
-six
-tensorflow==2.12.0
-tensorflow-probability==0.16.0
+# six
 torch
-torchvision
+# torchvision
 tqdm
 umap-learn
 wandb
