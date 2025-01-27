@@ -104,7 +104,7 @@ class CircuitModeller():
 
         if circuit.interactions_state == 'uninitialised' and (not self.debug_mode):
             if self.simulator_args['compute_by_filename'] and (circuit.subname == "ref_circuit") and (
-                circuit.data.source is not None) and os.path.exists(circuit.data.source):
+                    circuit.data.source is not None) and os.path.exists(circuit.data.source):
                 filename = circuit.data.source
             else:
                 filename = None
@@ -314,14 +314,16 @@ class CircuitModeller():
 
         def prepare_batch_params(circuits: List[Circuit]):
 
-            b_steady_states = np.zeros((len(circuits), len(circuits[0].model.species)))
+            b_steady_states = np.zeros(
+                (len(circuits), len(circuits[0].model.species)))
             b_og_states = np.array([c.result_collector.get_result(
-                        'steady_states').analytics['steady_states'].flatten( # type: ignore
+                # type: ignore
+                'steady_states').analytics['steady_states'].flatten(
             ) for i, c in enumerate(circuits)])
             b_reverse_rates = np.zeros(
                 (len(circuits), *circuits[0].qreactions.reactions.reverse_rates.shape))
 
-            add_sig_to_all_sigspecies = False 
+            add_sig_to_all_sigspecies = False
             onehots = signal.onehot
             if add_sig_to_all_sigspecies and (not self.use_initial_to_add_signal):
                 species_chosen = circuits[0].model.species[np.argmax(
@@ -329,14 +331,15 @@ class CircuitModeller():
                 other_species = flatten_listlike(
                     [r.output for r in circuits[0].model.reactions if species_chosen in r.input])
                 onehots_all_sigspecies = np.array([1 if s in other_species + [species_chosen]
-                                else 0 for s in circuits[0].model.species])
+                                                   else 0 for s in circuits[0].model.species])
                 onehots = onehots_all_sigspecies
             for i, c in enumerate(circuits):
                 """ Default """
                 analytics_stst = c.result_collector.get_result(
-                        'steady_states').analytics
+                    'steady_states').analytics
                 if analytics_stst is None:
-                    raise ValueError(f'Could not find analytics for steady state result.')
+                    raise ValueError(
+                        f'Could not find analytics for steady state result.')
                 if not c.use_prod_and_deg:
                     stst_key = 'initial_steady_states' if self.use_initial_to_add_signal else 'steady_states'
                     stst = analytics_stst[stst_key].flatten()
@@ -380,7 +383,7 @@ class CircuitModeller():
 
         # First check if the ref_circuit is leading
         if ref_circuit.name not in [c.name for c in ref_circuits]:
-            ref_idxs.insert(0, None) # type: ignore
+            ref_idxs.insert(0, None)  # type: ignore
         else:
             assert circuits.index(
                 ref_circuit) == 0 or circuits[0].name == ref_circuit.name, f'The reference circuit should be leading or at idx 0, but is at idx {circuits.index(ref_circuit)}'
@@ -408,8 +411,8 @@ class CircuitModeller():
             analytics_func = jax.vmap(partial(
                 generate_analytics, time=t, labels=[
                     s.name for s in ref_circuit.model.species],
-                signal_onehot=signal.onehot, signal_time=signal_time, # type: ignore
-                ref_circuit_data=ref_circuit_data)) # type: ignore
+                signal_onehot=signal.onehot, signal_time=signal_time,  # type: ignore
+                ref_circuit_data=ref_circuit_data))  # type: ignore
             b_analytics = analytics_func(
                 data=b_new_copynumbers[ref_idx:ref_idx2])
             b_analytics_l = append_nest_dicts(
@@ -584,9 +587,11 @@ class CircuitModeller():
                        methods: dict,
                        batch_size: int = 0,
                        include_normal_run: bool = True,
-                       write_to_subsystem=True):
+                       write_to_subsystem=True,
+                       cleanup=True):
 
         batch_size = len(circuits) if batch_size == 0 else batch_size
+        n_circuits = len(circuits)
 
         num_subcircuits = [len(flatten_nested_dict(
             c.mutations)) + 1 for c in circuits]
@@ -605,20 +610,21 @@ class CircuitModeller():
             next_viable = 0
 
         logging.warning(
-            f'\tFrom {len(circuits)} circuits, a total of {tot_subcircuits} mutated circuits will be simulated.')
+            f'\tFrom {n_circuits} circuits, a total of {tot_subcircuits} mutated circuits will be simulated.')
 
         start_time = datetime.now()
         for i, vi in enumerate(viable_circuit_nums[:-1]):
             single_batch_time = datetime.now()
-            vf = min(viable_circuit_nums[i+1], len(circuits))
+            vf = min(viable_circuit_nums[i+1], n_circuits)
             logging.warning(
-                f'\t\tStarting new round of viable circuits ({vi} - {vf} / {len(circuits)})')
+                f'\t\tStarting new round of viable circuits ({vi} - {vf} / {n_circuits})')
 
             # Preallocate then create subcircuits - otherwise memory leak
             subcircuits_time = datetime.now()
-            subcircuits = list([circuits[0]] * sum(num_subcircuits[vi:vf]))
+            subcircuits = list([np.nan] * sum(num_subcircuits[vi:vf]))
             c_idx = 0
-            for i, circuit in enumerate(circuits[vi: vf]):
+            curr_subcircuits = []
+            for i, circuit in enumerate(circuits[vi:vf]):
                 curr_subcircuits = self.load_mutations(circuit)
                 subcircuits[c_idx] = circuit
                 subcircuits[c_idx+1:c_idx+1 +
@@ -635,10 +641,12 @@ class CircuitModeller():
                 f'\t\tMaking subcircuits {int(sum(num_subcircuits[:vi]))} - {int(sum(num_subcircuits[:vf]))} took {subcircuits_time.total_seconds()}s')
 
             # Batch
+            gc.collect()
             ref_circuit = subcircuits[0]
+            b_circuits = []
             for b in range(0, len(subcircuits), batch_size):
                 logging.warning(
-                    f'\tBatching {b} - {b+batch_size} circuits (out of {int(sum(num_subcircuits[:vi]))} - {int(sum(num_subcircuits[:vf]))} (total: {tot_subcircuits})) (Circuits: {vi} - {vf} of {len(circuits)})')
+                    f'\tBatching {b} - {b+batch_size} circuits (out of {int(sum(num_subcircuits[:vi]))} - {int(sum(num_subcircuits[:vf]))} (total: {tot_subcircuits})) (Circuits: {vi} - {vf} of {n_circuits})')
                 bf = b+batch_size if b + \
                     batch_size < len(subcircuits) else len(subcircuits)
 
@@ -652,8 +660,13 @@ class CircuitModeller():
 
             single_batch_time = datetime.now() - single_batch_time
             logging.warning(
-                f'Single batch: {single_batch_time} \nProjected time: {single_batch_time.total_seconds() * len(subcircuits)/tot_subcircuits}s \nTotal time: {str(datetime.now() - start_time)}')
-            del subcircuits
+                f'Single batch: {single_batch_time} \nProjected time: {single_batch_time.total_seconds() * sum(num_subcircuits[vi:vf])/tot_subcircuits}s \nTotal time: {str(datetime.now() - start_time)}')
+            if cleanup:
+                del subcircuits
+                del b_circuits
+                del ref_circuit
+                del curr_subcircuits
+                del circuits[vi:vf]
             gc.collect()
         return circuits
 

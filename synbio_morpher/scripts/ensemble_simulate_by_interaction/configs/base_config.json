@@ -21,7 +21,7 @@
                 "species_count": 3,
                 "sequence_length": 20,
                 "perc_non_interacting": 0.1,
-                "seed": 2
+                "seed": 3
             },
             "identities": {
                 "input": "RNA_0",
@@ -42,12 +42,12 @@
                 "dt0": 0.01,
                 "dt1": 0.5,
                 "t0": 0,
-                "t1": 500,
-                "tmax": 3000,
+                "t1": 2000,
+                "tmax": 30000,
                 "solver": "diffrax",
                 "use_batch_mutations": true,
                 "interaction_factor": 1,
-                "batch_size": 2000,
+                "batch_size": 4000,
                 "max_circuits": 60000,
                 "device": "gpu",
                 "threshold_steady_states": 0.001, 
