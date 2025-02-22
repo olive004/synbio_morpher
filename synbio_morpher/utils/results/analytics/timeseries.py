@@ -5,11 +5,11 @@
 # This source code is licensed under the MIT-style license found in the
 # LICENSE file in the root directory of this source tree.
 
-import logging
+
 import numpy as np
 import jax.numpy as jnp
 from typing import List, Tuple, Optional
-from synbio_morpher.utils.misc.type_handling import merge_dicts
+# from synbio_morpher.utils.misc.type_handling import merge_dicts
 from synbio_morpher.utils.results.analytics.naming import DIFF_KEY, RATIO_KEY
 
 
@@ -152,12 +152,13 @@ def compute_rmse(data: np.ndarray, ref_circuit_data: Optional[np.ndarray]):
 
 
 def compute_step_response_times(data, t, steady_states, signal_time: int):
-    """ Assumes that data starts pre-perturbation, but after an initial steady state 
+    """ Compute the % settling time of the step response.
+    Assumes that data starts pre-perturbation, but after an initial steady state 
     has been reached. """
 
-    margin_stst = 0.001
-    is_data_outside_stst = (data > (steady_states + steady_states * margin_stst)
-                            ) | (data < (steady_states - steady_states * margin_stst))
+    perc_settling_time = 0.01
+    is_data_outside_stst = (data > (steady_states + steady_states * perc_settling_time)
+                            ) | (data < (steady_states - steady_states * perc_settling_time))
 
     tstop = jnp.max(t * is_data_outside_stst, axis=1)
 
@@ -263,7 +264,8 @@ def generate_base_analytics(data: jnp.ndarray, t: jnp.ndarray, labels: List[str]
             # t axis: 1
             t_end = np.min([len(t), data.shape[1]])
             analytics[f'response_time_wrt_species-{s_idx}'] = compute_step_response_times(
-                data=data[:, :t_end], t=t[:t_end], steady_states=analytics['steady_states'][:, None],
+                data=data[:, :t_end], t=t[:t_end], 
+                steady_states=analytics['steady_states'][:, None],
                 signal_time=signal_time)
 
             analytics[f'sensitivity_wrt_species-{s_idx}'] = compute_sensitivity(
@@ -314,7 +316,7 @@ def generate_analytics(data: jnp.ndarray, time, labels: list, ref_circuit_data: 
     #                                         signal_onehot=signal_onehot, signal_time=signal_time,
     #                                         ref_circuit_data=ref_circuit_data)
     # differences, ratios = generate_differences_ratios(analytics, ref_analytics)
-    # return merge_dicts(analytics, differences, ratios)
+    return merge_dicts(analytics, differences, ratios)
     return analytics
 
 
