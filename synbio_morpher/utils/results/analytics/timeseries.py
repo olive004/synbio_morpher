@@ -160,7 +160,8 @@ def compute_step_response_times(data, t, steady_states, signal_time: int):
     is_data_outside_stst = (data > (steady_states + steady_states * perc_settling_time)
                             ) | (data < (steady_states - steady_states * perc_settling_time))
 
-    tstop = jnp.max(t * is_data_outside_stst, axis=1)
+    tpre = jnp.max(t * is_data_outside_stst, axis=1)
+    tstop = jnp.where(tpre != 0, jnp.min(t * (t > tpre)), np.inf)
 
     response_times = jnp.where(
         tstop != 0,
