@@ -255,7 +255,11 @@ def generate_base_analytics(data: jnp.ndarray, t: jnp.ndarray, labels: List[str]
         signal_labels = list(map(labels.__getitem__, signal_idxs))
         for s, s_idx in zip(signal_labels, signal_idxs):
 
-            analytics[f'precision_wrt_species-{s_idx}'] = compute_precision(
+            p_name = 'precision' if len(signal_idxs) == 1 else f'precision'
+            r_name = 'response_time' if len(signal_idxs) == 1 else f'response_time'
+            s_name = 'sensitivity' if len(signal_idxs) == 1 else f'sensitivity'
+
+            analytics[p_name] = compute_precision(
                 starting_states=analytics['initial_steady_states'],
                 steady_states=analytics['steady_states'],
                 signal_0=analytics['initial_steady_states'][s_idx],
@@ -264,22 +268,14 @@ def generate_base_analytics(data: jnp.ndarray, t: jnp.ndarray, labels: List[str]
 
             # t axis: 1
             t_end = np.min([len(t), data.shape[1]])
-            analytics[f'response_time_wrt_species-{s_idx}'] = compute_step_response_times(
+            analytics[r_name] = compute_step_response_times(
                 data=data[:, :t_end], t=t[:t_end], 
                 steady_states=analytics['steady_states'][:, None],
                 signal_time=signal_time)
 
-            analytics[f'sensitivity_wrt_species-{s_idx}'] = compute_sensitivity(
+            analytics[s_name] = compute_sensitivity(
                 signal_idx=s_idx, peaks=peaks, starting_states=analytics['initial_steady_states']
             )
-            # analytics[f'sensitivity2_wrt_species-{s_idx}'] = compute_sensitivity2(
-            #     starting_states=analytics['initial_steady_states'],
-            #     minv=analytics['min_amount'],
-            #     maxv=analytics['max_amount'],
-            #     signal_0=analytics['initial_steady_states'][s_idx],
-            #     signal_1=analytics['steady_states'][s_idx]
-            # )
-
     return analytics
 
 
@@ -317,7 +313,7 @@ def generate_analytics(data: jnp.ndarray, time, labels: list, ref_circuit_data: 
     #                                         signal_onehot=signal_onehot, signal_time=signal_time,
     #                                         ref_circuit_data=ref_circuit_data)
     # differences, ratios = generate_differences_ratios(analytics, ref_analytics)
-    return merge_dicts(analytics, differences, ratios)
+    # return merge_dicts(analytics, differences, ratios)
     return analytics
 
 
