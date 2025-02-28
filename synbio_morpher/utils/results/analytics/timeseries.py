@@ -255,9 +255,9 @@ def generate_base_analytics(data: jnp.ndarray, t: jnp.ndarray, labels: List[str]
         signal_labels = list(map(labels.__getitem__, signal_idxs))
         for s, s_idx in zip(signal_labels, signal_idxs):
 
-            p_name = 'precision' if len(signal_idxs) == 1 else f'precision'
-            r_name = 'response_time' if len(signal_idxs) == 1 else f'response_time'
-            s_name = 'sensitivity' if len(signal_idxs) == 1 else f'sensitivity'
+            p_name = 'precision' if len(signal_idxs) == 1 else f'precision_wrt_species-{s_idx}'
+            r_name = 'response_time' if len(signal_idxs) == 1 else f'response_time_wrt_species-{s_idx}'
+            s_name = 'sensitivity' if len(signal_idxs) == 1 else f'sensitivity_wrt_species-{s_idx}'
 
             analytics[p_name] = compute_precision(
                 starting_states=analytics['initial_steady_states'],
