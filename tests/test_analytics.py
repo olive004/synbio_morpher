@@ -142,9 +142,9 @@ class TestAnalytics(unittest.TestCase):
                 'min_amount',
                 'RMSE',
                 'steady_states',
-                'response_time_wrt_species-6',
-                'precision_wrt_species-6',
-                'sensitivity_wrt_species-6'
+                'response_time',
+                'precision',
+                'sensitivity'
             ]
             self.assertTrue(all(info[positive_cols] > 0))
 

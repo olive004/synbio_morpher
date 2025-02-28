@@ -41,13 +41,13 @@ def pick_circuits(config: dict, data: pd.DataFrame, init_sample_size: int = 1000
     data = data.iloc[np.random.choice(
         np.arange(len(data)), size=init_sample_size, replace=False)]
 
-    sensitivity_range = data['sensitivity_wrt_species-6'] > (data['sensitivity_wrt_species-6'].max() *
+    sensitivity_range = data['sensitivity'] > (data['sensitivity'].max() *
                                                              percentile)
     starting_circ_rows = data[sensitivity_range].sort_values(
-        by=['sensitivity_wrt_species-6', 'precision_wrt_species-6'], ascending=False)
+        by=['sensitivity', 'precision'], ascending=False)
 
     logging.info(
-        f'Picking circuits that have a sensitivity in the {percentile * 100}th percentile of at least {data["sensitivity_wrt_species-6"].max() * percentile}')
+        f'Picking circuits that have a sensitivity in the {percentile * 100}th percentile of at least {data["sensitivity"].max() * percentile}')
     return starting_circ_rows
 
 
@@ -78,7 +78,7 @@ def plot_starting_circuits(starting_circ_rows, data, filt, data_writer, save: bo
     data['Starting circuit'] = (data['circuit_name'].isin(starting_circ_rows['circuit_name'])) & \
         (data['mutation_name'].isin(starting_circ_rows['mutation_name'])) & filt
     sns.scatterplot(
-        data.sort_values(by='Starting circuit'), x='sensitivity_wrt_species-6', y='precision_wrt_species-6',
+        data.sort_values(by='Starting circuit'), x='sensitivity', y='precision',
         hue='Starting circuit', alpha=((data.sort_values(by='Starting circuit')['Starting circuit'] + 0.1)/1.1)
     )
     plt.xscale('log')
@@ -91,11 +91,11 @@ def plot_starting_circuits(starting_circ_rows, data, filt, data_writer, save: bo
 
 def make_distance_func(data):
     sp_min = data[(
-        data['sensitivity_wrt_species-6'] <= 1/data['precision_wrt_species-6']) | (
-            data['precision_wrt_species-6'] <= 1/data['sensitivity_wrt_species-6'])][['sensitivity_wrt_species-6', 'precision_wrt_species-6']].min().to_numpy()
+        data['sensitivity'] <= 1/data['precision']) | (
+            data['precision'] <= 1/data['sensitivity'])][['sensitivity', 'precision']].min().to_numpy()
     sp_max = data[(
-        data['sensitivity_wrt_species-6'] <= 1/data['precision_wrt_species-6']) | (
-            data['precision_wrt_species-6'] <= 1/data['sensitivity_wrt_species-6'])][['sensitivity_wrt_species-6', 'precision_wrt_species-6']].max().to_numpy()
+        data['sensitivity'] <= 1/data['precision']) | (
+            data['precision'] <= 1/data['sensitivity'])][['sensitivity', 'precision']].max().to_numpy()
     sp_left = np.array([sp_min[0], sp_max[1]])
     sp_right = np.array([sp_max[0], sp_min[1]])
     d = np.array([sp_left, sp_right]).T
@@ -171,9 +171,9 @@ def choose_next(batch: list, data_writer, distance_func, choose_max: int = 4, ta
         for t in target_species:
             t_idx = t_idxs[t]
             d[f'Sensitivity species-{t}'] = np.asarray(
-                [b['sensitivity_wrt_species-6'][t_idx] for b in batch_analytics])
+                [b['sensitivity'][t_idx] for b in batch_analytics])
             d[f'Precision species-{t}'] = np.asarray(
-                [b['precision_wrt_species-6'][t_idx] for b in batch_analytics])
+                [b['precision'][t_idx] for b in batch_analytics])
             d[f'Overshoot species-{t}'] = np.asarray(
                 [b['overshoot'][t_idx] for b in batch_analytics])
 
@@ -183,8 +183,8 @@ def choose_next(batch: list, data_writer, distance_func, choose_max: int = 4, ta
             d[f'Parent Precision species-{t}'] = jax.tree_util.tree_map(
                 lambda n: rs[rs['Name'] == n][f'Precision species-{t}'].iloc[0], d['Name'].to_list())
 
-            # d[f'dS species-{t}'] = np.asarray([b['sensitivity_wrt_species-6_diff_to_base_circuit'][t_idx] for b in batch_analytics])
-            # d[f'dP species-{t}'] = np.asarray([b['precision_wrt_species-6_diff_to_base_circuit'][t_idx] for b in batch_analytics])
+            # d[f'dS species-{t}'] = np.asarray([b['sensitivity_diff_to_base_circuit'][t_idx] for b in batch_analytics])
+            # d[f'dP species-{t}'] = np.asarray([b['precision_diff_to_base_circuit'][t_idx] for b in batch_analytics])
             d[f'dS species-{t}'] = d[f'Sensitivity species-{t}'] - \
                 d[f'Parent Sensitivity species-{t}']
             d[f'dP species-{t}'] = d[f'Precision species-{t}'] - \

@@ -29,12 +29,12 @@ def proc_info(info):
     info['num_interacting_all'] = info['num_interacting'] + \
         info['num_self_interacting']
     info['sp_distance'] = 0
-    info.loc[(info['sensitivity_wrt_species-6'] <= 1) & (info['precision_wrt_species-6'] <= 10), 'sp_distance'] = np.sqrt(
-        np.power(1-info['sensitivity_wrt_species-6'], 2) + np.power(10 - info['precision_wrt_species-6'], 2))
-    info.loc[(info['sensitivity_wrt_species-6'] <= 1) & (info['precision_wrt_species-6']
-                                                         > 10), 'sp_distance'] = np.absolute(info['sensitivity_wrt_species-6'] - 1)
-    info.loc[(info['sensitivity_wrt_species-6'] > 1) & (info['precision_wrt_species-6']
-                                                        <= 10), 'sp_distance'] = np.absolute(info['precision_wrt_species-6'] - 10)
+    info.loc[(info['sensitivity'] <= 1) & (info['precision'] <= 10), 'sp_distance'] = np.sqrt(
+        np.power(1-info['sensitivity'], 2) + np.power(10 - info['precision'], 2))
+    info.loc[(info['sensitivity'] <= 1) & (info['precision']
+                                                         > 10), 'sp_distance'] = np.absolute(info['sensitivity'] - 1)
+    info.loc[(info['sensitivity'] > 1) & (info['precision']
+                                                        <= 10), 'sp_distance'] = np.absolute(info['precision'] - 10)
 
     if type(info['mutation_type'].iloc[0]) == str:
         info['mutation_type'] = convert_liststr_to_list(
@@ -171,15 +171,15 @@ def get_named_aggs(info: pd.DataFrame, include_log: bool = False) -> dict:
         'overshoot',
         'RMSE',
         'steady_states',
-        # 'response_time_wrt_species-6',
-        # 'response_time_wrt_species-6_diff_to_base_circuit',
-        # 'response_time_wrt_species-6_ratio_from_mutation_to_base',
-        'precision_wrt_species-6',
-        'precision_wrt_species-6_diff_to_base_circuit',
-        'precision_wrt_species-6_ratio_from_mutation_to_base',
-        'sensitivity_wrt_species-6',
-        'sensitivity_wrt_species-6_diff_to_base_circuit',
-        'sensitivity_wrt_species-6_ratio_from_mutation_to_base',
+        # 'response_time',
+        # 'response_time_diff_to_base_circuit',
+        # 'response_time_ratio_from_mutation_to_base',
+        'precision',
+        'precision_diff_to_base_circuit',
+        'precision_ratio_from_mutation_to_base',
+        'sensitivity',
+        'sensitivity_diff_to_base_circuit',
+        'sensitivity_ratio_from_mutation_to_base',
         'fold_change_diff_to_base_circuit',
         # 'initial_steady_states_diff_to_base_circuit',
         # 'max_amount_diff_to_base_circuit', 'min_amount_diff_to_base_circuit',
