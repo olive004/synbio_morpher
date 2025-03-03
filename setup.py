@@ -8,7 +8,7 @@ if __name__ == "__main__":
         authors=[
             {'name': "Olivia Gallup", 'email': "olivia.gallup@gmail.com"}
         ],
-        version='0.0.901',
+        version='0.0.902',
         license='LICENSE',
         description='Build, simulate, and analyse genetic circuits and the effect of mutations.',
         readme="README.md",
