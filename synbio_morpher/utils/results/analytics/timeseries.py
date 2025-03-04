@@ -161,6 +161,7 @@ def compute_step_response_times(data, t, steady_states, signal_time: int):
                             ) | (data < (steady_states - steady_states * perc_settling_time))
 
     tpre = jnp.max(t * is_data_outside_stst, axis=-1).reshape(-1, 1)
+    del is_data_outside_stst  # free up memory
     t_stable = t * (t > tpre)
     t_stable = jnp.where(t_stable != 0, t_stable, np.inf)
     tstop = jnp.min(t_stable, axis=-1)
